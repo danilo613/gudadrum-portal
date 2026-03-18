@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GUDADRUM ORCHESTRA MEMBER PORTAL</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <style>* { box-sizing: border-box; margin: 0; padding: 0; }</style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useEffect } = React;
+
+const STORAGE_KEY = "guda_config_v3";
+const ADMIN_PASS = "vidanova";
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQfqkrQg8AKGyz5KSPfpyvfK1A7vWRgJqVJU2_S6R-uyToXj3XB3LOp4ZsaoHuP3yyHxAZwb8anQGmj/pub?gid=0&single=true&output=csv";
+const DIAGNOSIS_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScm_t7QDz08DYO75O5R5bxVNzB1C_H5KPeunGjQMBvaRKLauA/viewform?embedded=true";
+
+const LEVEL_ICON = {
+  "種": "🫘", "蕾": "🌱", "若幹": "🌿", "主幹": "🌿🌿",
+  "若柱": "🌲", "主柱": "🌲🌲", "大黒柱": "🌳",
+  "幹": "🌿", "柱": "🌲",
+};
+const LEVEL_ORDER = ["大黒柱","主柱","若柱","主幹","若幹","蕾","種","柱","幹"];
+
+const CURRICULUM = [
+  "グーダドラムの基礎「響かせる」",
+  "リズムの基礎⑴「リズムを知る」",
+  "リズムの基礎⑵「リズムを感じる」",
+  "楽曲の基礎⑴ フレーズを覚える",
+  "楽曲の基礎⑵ フレーズを繋げる",
+  "楽曲の応用⑴ リズムを整える",
+  "楽曲の応用⑵ 楽曲をブラッシュアップ",
+];
+
+const C = {
+  olive: "#708238", sand: "#E2C5A0", choco: "#4B3621", moss: "#8A9A5B",
+  bg: "#f0ebe0", bgLight: "#faf7f2", border: "rgba(112,130,56,0.2)",
+};
+
+function parseCsv(text) {
+  const lines = text.trim().split("\n").map(l =>
+    l.split(",").map(c => c.trim().replace(/^"|"$/g, ""))
+  );
+  const headers = lines[0];
+  return lines.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((h, i) => { obj[h] = row[i] || ""; });
+    return obj;
+  });
+}
+
+function rowToMember(r) {
+  return {
+    name: String(r["名前"] || r["name"] || ""),
+    password: String(r["パスワード"] || r["password"] || ""),
+    level: String(r["段階"] || r["レベル"] || r["level"] || ""),
+    strengths: String(r["強み"] || r["strengths"] || ""),
+    challenge: String(r["課題"] || r["challenge"] || ""),
+    goal: String(r["目標"] || r["goal"] || ""),
+    history: String(r["履歴"] || r["history"] || "").split(/[;；]/).map(s => s.trim()).filter(Boolean),
+    scales: String(r["マイ音階"] || ""),
+    sheets: String(r["持っている楽譜"] || ""),
+    songs: String(r["演奏できる楽曲"] || ""),
+    completedLevels: parseInt(r["受講済み段階"] || "0"),
+    openness: parseInt(r["音の開放度"] || "0"),
+    quality: parseInt(r["音質調整"] || "0"),
+    tempo: parseInt(r["テンポキープ"] || "0"),
+    ghost: parseInt(r["ゴースト"] || r["ゴーストクオリティ"] || "0"),
+    groove: parseInt(r["グルーヴ"] || "0"),
+    diagnosisDate: String(r["診断日"] || "").split("T")[0],
+  };
+}
+
+const DEMO_MEMBERS = [
+  { name: "田中花子", password: "1234", level: "主柱", strengths: "リズム感;安定したビート", challenge: "アドリブソロの表現力を高める", goal: "次回公演でソロパートを担当", history: ["3/10 練習", "3/3 練習"], scales: "ドレミファソ", sheets: "春ノ舞;太鼓の達人", songs: "春ノ舞", completedLevels: 2, openness: 4, quality: 3, tempo: 5, ghost: 2, groove: 4, diagnosisDate: "2025-03-10" },
+  { name: "鈴木太郎", password: "5678", level: "若幹", strengths: "音の粒立ち;集中力", challenge: "テンポキープ", goal: "120bpmで安定演奏", history: ["3/10 練習"], scales: "ドレミ", sheets: "春ノ舞", songs: "", completedLevels: 1, openness: 0, quality: 0, tempo: 0, ghost: 0, groove: 0, diagnosisDate: "" },
+];
+
+function loadSavedMembers() {
+  try {
+    const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (cfg && cfg.jsonData) {
+      const rows = JSON.parse(cfg.jsonData);
+      const parsed = rows.map(rowToMember).filter(m => m.name);
+      if (parsed.length > 0) return parsed;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function RadarChart({ m }) {
+  const labels = ["音の開放度", "音質調整", "テンポキープ", "ゴースト", "グルーヴ"];
+  const values = [m.openness, m.quality, m.tempo, m.ghost, m.groove];
+  const n = 5, W = 200, H = 180, cx = W/2, cy = H/2, r = 60;
+  const ao = -Math.PI/2;
+  const angle = i => ao + (2*Math.PI*i)/n;
+  const pt = (i, v) => [cx + r*(v/5)*Math.cos(angle(i)), cy + r*(v/5)*Math.sin(angle(i))];
+  const tip = i => [cx + r*Math.cos(angle(i)), cy + r*Math.sin(angle(i))];
+  const grid = lv => Array.from({length:n}, (_, i) => pt(i,lv).join(",")).join(" ");
+  const poly = values.map((v,i) => pt(i,v).join(",")).join(" ");
+  const labelInfo = [
+    {i:0,dx:0,dy:-14,anchor:"middle"},{i:1,dx:10,dy:0,anchor:"start"},
+    {i:2,dx:10,dy:0,anchor:"start"},{i:3,dx:-10,dy:0,anchor:"end"},{i:4,dx:-10,dy:0,anchor:"end"},
+  ];
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`}>
+      {[1,2,3,4,5].map(l => <polygon key={l} points={grid(l)} fill="none" stroke="rgba(226,197,160,0.2)" strokeWidth="0.5"/>)}
+      {Array.from({length:n}, (_, i) => { const [x,y]=tip(i); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(226,197,160,0.2)" strokeWidth="0.5"/>; })}
+      <polygon points={poly} fill="rgba(226,197,160,0.2)" stroke="#E2C5A0" strokeWidth="1.5"/>
+      {values.map((v,i) => { const [x,y]=pt(i,v); return <circle key={i} cx={x} cy={y} r="2.5" fill="#E2C5A0"/>; })}
+      {labelInfo.map(({i,dx,dy,anchor}) => { const [tx,ty]=tip(i); return <text key={i} x={tx+dx} y={ty+dy} textAnchor={anchor} dominantBaseline="middle" style={{fontSize:8,fill:"rgba(226,197,160,0.9)",fontFamily:"inherit",fontWeight:500}}>{labels[i]}</text>; })}
+      {values.map((v,i) => { const [x,y]=pt(i,v); return <text key={i} x={x} y={y-6} textAnchor="middle" style={{fontSize:8,fill:"#fff",fontFamily:"inherit",fontWeight:700}}>{v}</text>; })}
+    </svg>
+  );
+}
+
+function MiniRadar({ m, size=56 }) {
+  const values = [m.openness, m.quality, m.tempo, m.ghost, m.groove];
+  const n = 5, cx = size/2, cy = size/2, r = size*0.38, ao = -Math.PI/2;
+  const pt = (i,v) => { const a=ao+(2*Math.PI*i)/n; return [cx+r*(v/5)*Math.cos(a),cy+r*(v/5)*Math.sin(a)]; };
+  const tip = i => { const a=ao+(2*Math.PI*i)/n; return [cx+r*Math.cos(a),cy+r*Math.sin(a)]; };
+  const grid = lv => Array.from({length:n},(_,i)=>pt(i,lv).join(",")).join(" ");
+  const poly = values.map((v,i)=>pt(i,v).join(",")).join(" ");
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      {[1,2,3,4,5].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>)}
+      {Array.from({length:n},(_,i)=>{ const [x,y]=tip(i); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>; })}
+      {m.diagnosisDate
+        ? <polygon points={poly} fill="rgba(112,130,56,0.25)" stroke="#708238" strokeWidth="1"/>
+        : <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" style={{fontSize:9,fill:"#8A9A5B"}}>未</text>
+      }
+    </svg>
+  );
+}
+
+function App() {
+  const saved = loadSavedMembers();
+  const [members, setMembers] = useState(saved || DEMO_MEMBERS);
+  const [isDemo, setIsDemo] = useState(!saved);
+  const [page, setPage] = useState("login");
+  const [selectedName, setSelectedName] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginErr, setLoginErr] = useState("");
+  const [currentMember, setCurrentMember] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
+  const [fetchMsg, setFetchMsg] = useState("");
+  const [isFromAdmin, setIsFromAdmin] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => { autoFetch(); }, []);
+
+  async function autoFetch() {
+    try {
+      const res = await fetch(CSV_URL);
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const text = await res.text();
+      const rows = parseCsv(text);
+      const all = rows.map(rowToMember).filter(m => m.name);
+      if (all.length > 0) { setMembers(all); setIsDemo(false); setFetchMsg(""); }
+    } catch(e) { setFetchMsg("❌ " + e.message); }
+  }
+
+  function handleLogin() {
+    setLoginErr("");
+    if (!selectedName) { setLoginErr("名前を選択してください"); return; }
+    if (selectedName === "__admin__") {
+      if (password === ADMIN_PASS) { setPage("admin"); setPassword(""); }
+      else setLoginErr("管理者パスワードが違います");
+      return;
+    }
+    const norm = s => s.replace(/\s/g, "");
+    const m = members.find(m => norm(m.name) === norm(selectedName));
+    if (!m) { setLoginErr("メンバーが見つかりません"); return; }
+    if (m.password && m.password !== password) { setLoginErr("パスワードが違います"); return; }
+    setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword("");
+  }
+
+  const SettingsModal = () => {
+    const [localJson, setLocalJson] = useState(() => {
+      try { const c = JSON.parse(localStorage.getItem(STORAGE_KEY)); return c && c.jsonData ? c.jsonData : ""; } catch(e) { return ""; }
+    });
+    const [err, setErr] = useState("");
+    const [ok, setOk] = useState("");
+    function handleSave() {
+      setErr(""); setOk("");
+      if (!localJson.trim()) { setErr("JSONを貼り付けてください"); return; }
+      try {
+        const rows = JSON.parse(localJson);
+        const parsed = rows.map(rowToMember).filter(m => m.name);
+        if (!parsed.length) { setErr("名前のあるデータが見つかりません"); return; }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ jsonData: localJson }));
+        setMembers(parsed); setIsDemo(false);
+        setOk("✅ " + parsed.length + "名のデータを読み込みました！");
+        setTimeout(() => setShowSettings(false), 1200);
+      } catch(e) { setErr("JSONの形式が正しくありません: " + e.message); }
+    }
+    return (
+      <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20,overflowY:"auto"}}>
+        <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:32,width:"100%",maxWidth:520}}>
+          <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:6}}>⚙️ メンバーデータ更新</h3>
+          <p style={{fontSize:12,color:C.moss,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開いてJSONをコピーし、下に貼り付けてください。</p>
+          <a href="https://script.google.com/macros/s/AKfycbwKXRqD0eo4ab7wfU0G2KRVoofZUwph4cPpBms-IxtScPI_lk6SwlQ5K_wbAbIpVZDqMQ/exec?id=1_JaI72YIgZviZiYG-Hp1vwpNURTwb5o_7CvLRZhmmus&gid=0" target="_blank" rel="noreferrer"
+            style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,textDecoration:"none",fontWeight:600}}>
+            🔗 GASを開く（新しいタブ）
+          </a>
+          <textarea value={localJson} onChange={e => setLocalJson(e.target.value)} placeholder='[{"名前":"田中花子",...}]'
+            style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 14px",color:C.choco,fontSize:11,fontFamily:"monospace",resize:"vertical",minHeight:120,outline:"none",lineHeight:1.5}}/>
+          {err && <p style={{fontSize:13,color:"#a04030",marginTop:8}}>{err}</p>}
+          {ok && <p style={{fontSize:13,color:C.olive,marginTop:8}}>{ok}</p>}
+          <div style={{display:"flex",gap:10,marginTop:16}}>
+            <button onClick={() => setShowSettings(false)} style={{flex:1,padding:11,borderRadius:10,border:"none",background:"rgba(75,54,33,0.08)",color:C.moss,fontSize:13,fontWeight:600,cursor:"pointer"}}>キャンセル</button>
+            <button onClick={handleSave} style={{flex:1,padding:11,borderRadius:10,border:"none",background:`linear-gradient(135deg,${C.olive},${C.choco})`,color:C.sand,fontSize:13,fontWeight:600,cursor:"pointer"}}>保存</button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const topbar = (title, actions) => (
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 24px",borderBottom:"1px solid "+C.border,background:"rgba(240,235,224,0.95)",position:"sticky",top:0,zIndex:10}}>
+      <div style={{display:"flex",alignItems:"center",gap:10}}>
+        <span style={{fontSize:20}}>🌿</span>
+        <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.olive}}>{title}</span>
+      </div>
+      <div style={{display:"flex",gap:8}}>{actions}</div>
+    </div>
+  );
+
+  const iconBtn = (label, onClick) => (
+    <button onClick={onClick} style={{background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,borderRadius:8,padding:"7px 12px",color:C.olive,fontSize:12,cursor:"pointer"}}>{label}</button>
+  );
+
+  const cardValue = (value) => {
+    if (!value) return <span style={{color:C.moss}}>−</span>;
+    const items = value.split(/[;；]/).map(s => s.trim()).filter(Boolean);
+    if (items.length <= 1) return <span>{value}</span>;
+    return <>{items.map((v,i) => <div key={i} style={{paddingBottom:i<items.length-1?6:0}}>{v}</div>)}</>;
+  };
+
+  const card = (icon, label, value, full) => (
+    <div style={{gridColumn:full?"1 / -1":"auto",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:16,padding:"20px 18px",boxShadow:"0 2px 12px rgba(75,54,33,0.06)"}}>
+      <p style={{fontSize:13,letterSpacing:"0.12em",color:C.moss,marginBottom:10,fontWeight:500,display:"flex",alignItems:"center",gap:8}}>
+        <span style={{fontSize:16}}>{icon}</span>{label}
+      </p>
+      <p style={{fontSize:14,color:C.choco,lineHeight:1.8}}>{cardValue(value)}</p>
+    </div>
+  );
+
+  const sortedMembers = [...members].sort((a,b) => {
+    const ai = LEVEL_ORDER.indexOf(a.level), bi = LEVEL_ORDER.indexOf(b.level);
+    return (ai===-1?99:ai)-(bi===-1?99:bi);
+  });
+
+  if (page === "login") return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#e8e2d4 0%,#d4ccb8 100%)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:24}}>
+      <div style={{fontSize:48,marginBottom:8}}>🌿</div>
+      <div style={{fontSize:22,fontWeight:700,letterSpacing:"0.12em",color:C.choco,marginBottom:4}}>GUDADRUM ORCHESTRA</div>
+      <div style={{fontSize:12,color:C.moss,letterSpacing:"0.18em",marginBottom:36}}>MEMBER PORTAL</div>
+      <div style={{width:"100%",maxWidth:380,background:"rgba(255,255,255,0.75)",border:"1px solid "+C.border,borderRadius:20,padding:"32px 28px",boxShadow:"0 8px 32px rgba(75,54,33,0.12)"}}>
+        <label style={{fontSize:11,letterSpacing:"0.15em",color:C.olive,display:"block",marginBottom:8}}>MEMBER</label>
+        <select value={selectedName} onChange={e => { setSelectedName(e.target.value); setLoginErr(""); }}
+          style={{width:"100%",background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"12px 16px",color:C.choco,fontSize:15,outline:"none",marginBottom:16,appearance:"none"}}>
+          <option value="">-- 名前を選択 --</option>
+          {members.map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
+          <option value="__admin__">🔧 管理者</option>
+        </select>
+        <label style={{fontSize:11,letterSpacing:"0.15em",color:C.olive,display:"block",marginBottom:8}}>PASSWORD</label>
+        <input type="password" placeholder="パスワードを入力" value={password}
+          onChange={e => { setPassword(e.target.value); setLoginErr(""); }}
+          onKeyDown={e => e.key === "Enter" && handleLogin()}
+          style={{width:"100%",background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"12px 16px",color:C.choco,fontSize:15,outline:"none",marginBottom:20}}/>
+        <button onClick={handleLogin}
+          style={{width:"100%",padding:14,borderRadius:12,border:"none",background:`linear-gradient(135deg,${C.olive},${C.choco})`,color:C.sand,fontSize:15,fontWeight:700,letterSpacing:"0.1em",cursor:"pointer"}}>
+          ログイン →
+        </button>
+        {loginErr && <p style={{fontSize:13,color:"#a04030",textAlign:"center",marginTop:12}}>{loginErr}</p>}
+        {fetchMsg && <p style={{fontSize:10,color:"#a04030",textAlign:"center",marginTop:8}}>{fetchMsg}</p>}
+      </div>
+      <p style={{fontSize:11,color:C.moss,textAlign:"center",marginTop:20}}>{isDemo ? "📋 デモデータで表示中" : ""}</p>
+      {showSettings && <SettingsModal/>}
+    </div>
+  );
+
+  if (page === "admin") return (
+    <div style={{minHeight:"100vh",background:C.bg}}>
+      {topbar("管理者ダッシュボード", [
+        iconBtn("🔄 データ更新", () => setShowSettings(true)),
+        iconBtn("ログアウト", () => setPage("login")),
+      ])}
+      <div style={{padding:"28px 24px",maxWidth:720,margin:"0 auto"}}>
+        <p style={{fontSize:11,color:C.moss,marginBottom:16}}>{isDemo ? "📋 デモデータで表示中" : "📊 スプシデータ読み込み済み（"+members.length+"名）"}</p>
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {sortedMembers.map(m => (
+            <div key={m.name} onClick={() => { setCurrentMember(m); setIsFromAdmin(true); setPage("member"); }}
+              style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 2px 8px rgba(75,54,33,0.06)",cursor:"pointer"}}
+              onMouseEnter={e => e.currentTarget.style.border="1px solid "+C.olive}
+              onMouseLeave={e => e.currentTarget.style.border="1px solid "+C.border}>
+              <p style={{fontSize:15,fontWeight:600,color:C.choco}}>{m.name}</p>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <MiniRadar m={m} size={56}/>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <span style={{fontSize:14,fontWeight:700,color:C.olive}}>{m.level||"−"}</span>
+                  {LEVEL_ICON[m.level] && <span style={{fontSize:18}}>{LEVEL_ICON[m.level]}</span>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      {showSettings && <SettingsModal/>}
+    </div>
+  );
+
+  const m = currentMember;
+  return (
+    <div style={{minHeight:"100vh",background:C.bg}}>
+      {showForm && (
+        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.7)",zIndex:200,display:"flex",flexDirection:"column"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 20px",background:C.choco,flexShrink:0}}>
+            <span style={{fontSize:13,fontWeight:700,color:C.sand}}>🎯 グーダドラム5つ項目診断受付</span>
+            <button onClick={() => setShowForm(false)} style={{background:"rgba(226,197,160,0.2)",border:"1px solid rgba(226,197,160,0.3)",borderRadius:8,padding:"6px 12px",color:C.sand,fontSize:12,cursor:"pointer"}}>✕ 閉じる</button>
+          </div>
+          <iframe src={DIAGNOSIS_FORM_URL} style={{flex:1,border:"none",width:"100%"}} title="診断受付フォーム"/>
+        </div>
+      )}
+      {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
+        iconBtn("← 管理者に戻る", () => setPage("admin")),
+        iconBtn("ログアウト", () => { setPage("login"); setCurrentMember(null); setSelectedName(""); }),
+      ] : [
+        iconBtn("ログアウト", () => { setPage("login"); setCurrentMember(null); setSelectedName(""); }),
+      ])}
+      <div style={{padding:"28px 24px",maxWidth:720,margin:"0 auto"}}>
+        <div style={{background:`linear-gradient(135deg,${C.choco} 0%,${C.olive} 100%)`,borderRadius:20,padding:"20px 24px",marginBottom:12,display:"flex",alignItems:"center",gap:20}}>
+          <div style={{flex:1}}>
+            <p style={{fontSize:11,letterSpacing:"0.15em",color:C.moss,marginBottom:4}}>WELCOME BACK</p>
+            <p style={{fontSize:24,fontWeight:700,color:C.sand,marginBottom:10}}>{m.name}</p>
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,background:"rgba(226,197,160,0.2)",border:"1px solid rgba(226,197,160,0.35)",borderRadius:50,padding:"6px 16px"}}>
+              <span style={{fontSize:11,color:"#d4e8a0",letterSpacing:"0.1em"}}>段階</span>
+              <span style={{fontSize:16,fontWeight:900,color:"#fff"}}>{m.level||"−"}</span>
+              {LEVEL_ICON[m.level] && <span style={{fontSize:18}}>{LEVEL_ICON[m.level]}</span>}
+            </div>
+          </div>
+          {m.diagnosisDate ? (
+            <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",gap:2,marginTop:60}}>
+              <RadarChart m={m}/>
+              <p style={{fontSize:9,color:"rgba(226,197,160,0.7)"}}>診断日：{m.diagnosisDate}</p>
+            </div>
+          ) : (
+            <div style={{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",width:90,height:90,background:"rgba(255,255,255,0.06)",border:"1px solid rgba(226,197,160,0.2)",borderRadius:12,gap:6}}>
+              <span style={{fontSize:20}}>🔒</span>
+              <span style={{fontSize:9,color:"rgba(226,197,160,0.5)",textAlign:"center",lineHeight:1.4}}>診断未受講</span>
+            </div>
+          )}
+        </div>
+        <div style={{marginBottom:20}}>
+          <a href="https://docs.google.com/forms/d/e/1FAIpQLScm_t7QDz08DYO75O5R5bxVNzB1C_H5KPeunGjQMBvaRKLauA/viewform" target="_blank" rel="noreferrer"
+            style={{display:"block",textAlign:"center",padding:"13px 16px",borderRadius:12,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,textDecoration:"none",letterSpacing:"0.05em"}}>
+            グーダドラム5つ項目診断受付
+          </a>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:20}}>
+          {card("💪","あなたの強み",m.strengths)}
+          {card("🎯","次回の目標",m.goal)}
+          {card("🎵","マイ音階",m.scales)}
+          {card("📜","持っている楽譜",m.sheets)}
+          {card("🎶","演奏できる楽曲",m.songs)}
+          {card("💬","DANiLO・講師陣からのコメント",m.challenge,true)}
+          <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:16,padding:"20px 18px",boxShadow:"0 2px 12px rgba(75,54,33,0.06)"}}>
+            <p style={{fontSize:13,letterSpacing:"0.12em",color:C.moss,marginBottom:14,fontWeight:500,display:"flex",alignItems:"center",gap:8}}>
+              <span style={{fontSize:16}}>📚</span>メインカリキュラム進捗
+            </p>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {CURRICULUM.map((title,i) => {
+                const done = i < m.completedLevels;
+                return (
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:12,background:done?"rgba(112,130,56,0.1)":"rgba(75,54,33,0.04)",borderRadius:10,padding:"10px 14px",opacity:done?1:0.6}}>
+                    <span style={{fontSize:18,flexShrink:0}}>{done?"✅":"🔒"}</span>
+                    <span style={{fontSize:13,color:done?C.choco:C.moss,fontWeight:done?500:400}}>{i+1}. {title}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          {m.history && m.history.length > 0 && (
+            <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:16,padding:"20px 18px",boxShadow:"0 2px 12px rgba(75,54,33,0.06)"}}>
+              <p style={{fontSize:13,letterSpacing:"0.12em",color:C.moss,marginBottom:12,fontWeight:500,display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:16}}>📅</span>これまでに参加したイベント
+              </p>
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {m.history.map((h,i) => (
+                  <div key={i} style={{background:"rgba(112,130,56,0.08)",borderRadius:10,padding:"10px 14px",fontSize:13,color:C.choco,lineHeight:1.6}}>{h}</div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+  </script>
+</body>
+</html>
