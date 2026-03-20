@@ -439,8 +439,7 @@ function App() {
         </div>
 
         {/* 演奏診断 */}
-        {m.diagnosisDate ? (
-          <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
             <p style={{fontSize:13,letterSpacing:"0.1em",color:C.label,marginBottom:14,fontWeight:500}}>
               🔍 演奏診断結果　<span style={{fontSize:10,fontWeight:400}}>診断日：{m.diagnosisDate}</span>
             </p>
@@ -471,13 +470,14 @@ function App() {
                 : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>未診断</p>
               }
             </div>
+          <div style={{borderTop:"1px solid "+C.border,paddingTop:14,marginTop:4,textAlign:"center"}}>
+            <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:6}}>🎵 演奏診断 未受講の方へ</p>
+            <p style={{fontSize:13,color:C.label,lineHeight:1.8}}>
+              演奏診断では、あなたの演奏の特徴を5つの項目で分析します。<br/>
+              ぜひ下のボタンからお申し込みください！
+            </p>
           </div>
-        ) : (
-          <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px",textAlign:"center"}}>
-            <p style={{fontSize:24,marginBottom:8}}>🔒</p>
-            <p style={{fontSize:13,color:C.label}}>演奏診断未受講です。下のボタンから受診してみましょう。</p>
-          </div>
-        )}
+        </div>
 
         {/* 診断受付ボタン */}
         <a href="https://docs.google.com/forms/d/13ZUqQCbra869TVQPwc0qZMLy5kelvGRVWX_6LmteHuM/edit" target="_blank" rel="noreferrer" style={BTN_STYLE}>
