@@ -1,23 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GUDADRUM ORCHESTRA - MEMBER PORTAL</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Noto Sans JP', sans-serif; }
-  </style>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
+import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "guda_config_v3";
 const ADMIN_PASS = "vidanova";
@@ -180,7 +161,7 @@ function MiniRadar({ m, size=48 }) {
   );
 }
 
-function App() {
+export default function App() {
   const saved = loadSavedMembers();
   const [members, setMembers] = useState(saved || DEMO_MEMBERS);
   const [isDemo, setIsDemo] = useState(!saved);
@@ -338,7 +319,6 @@ function App() {
         {loginErr && <p style={{fontSize:13,color:"#a04030",textAlign:"center",marginTop:12}}>{loginErr}</p>}
         {fetchMsg && <p style={{fontSize:10,color:"#a04030",textAlign:"center",marginTop:8}}>{fetchMsg}</p>}
       </div>
-      <p style={{fontSize:11,color:C.moss,textAlign:"center",marginTop:16}}>{isDemo?"📋 デモデータで表示中":"✅ スプレッドシートデータ読込済"}</p>
       {showSettings && <SettingsModal/>}
     </div>
   );
@@ -434,7 +414,7 @@ function App() {
                 {(m.points||0).toLocaleString()}
                 <span style={{fontSize:11,color:"#d4e8a0",marginLeft:2}}>P</span>
               </p>
-              <a href="https://docs.google.com/forms/d/e/1FAIpQLSfFsbisxGmhg_nEHXNwTeEnOZbztEj7gbEVuLpZkzg3pVeKqg/viewform" target="_blank" rel="noreferrer"
+              <a href="https://docs.google.com/forms/d/e/1FAIpQLSfFsbisxGmhg_nEHXNwTeEnOZbztEF_VFlvH725Sn078mm07Q/viewform?usp=dialog" target="_blank" rel="noreferrer"
                 style={{display:"inline-block",padding:"5px 12px",borderRadius:8,background:"rgba(255,255,255,0.2)",color:"#fff",fontSize:11,fontWeight:600,textDecoration:"none"}}>
                 ポイントを利用する
               </a>
@@ -452,10 +432,10 @@ function App() {
               <RadarChart m={m}/>
               <div style={{flex:1,minWidth:160,display:"flex",flexDirection:"column",gap:10}}>
                 {[
-                  {l:"音の開放度", a:"精神性・タイミング・脱力", desc:"音がどれだけ自由に、解放されて、美しく響いているか。\n＝ 脱力ができているか。\n＝ 心と身体がどれだけ音に対して開いているか。"},
-                  {l:"音質調整", a:"身体の使い方の調整／自己価値感", desc:"自分の身体・自分の存在を、どれだけ繊細に扱えているか。\n＝ 音の質を意図的に変化させられるか。"},
-                  {l:"テンポキープ", a:"技術向上・精神的安定・宇宙との同期", desc:"＝ 自分軸の安定性。テンポを一定に保ち続ける力。\n＝ 自分の内側にリズムの軸があるか。"},
-                  {l:"ゴースト", a:"強弱・洗練されたリズム", desc:"＝ 繊細さ・間・安定感・余白の感覚\n総合的に細かなニュアンスをどれだけ美しく、意図を持って扱えているか。\n音楽の波、うねりが表現できているか。"},
+                  {l:"音の開放度", a:"精神性・タイミング・脱力", desc:"音がどれだけ自由に、解放されて、\n美しく響いているか。\n　＝ 脱力ができているか。\n　＝ 心と身体がどれだけ音に対して開いているか。"},
+                  {l:"音質調整", a:"身体の使い方の調整／自己価値感", desc:"自分の身体・自分の存在を、\nどれだけ繊細に扱えているか。\n　＝ 音の質を意図的に変化させられるか。"},
+                  {l:"テンポキープ", a:"技術向上・精神的安定・宇宙との同期", desc:"自分軸の安定性。テンポを一定に保ち続ける力。\n　＝ 自分の内側にリズムの軸があるか。"},
+                  {l:"ゴースト", a:"強弱・洗練されたリズム", desc:"総合的に細かなニュアンスをどれだけ美しく、\n意図を持って扱えているか。\n音楽の波、うねりが表現できているか。\n　＝ 繊細さ・間・安定感・余白の感覚"},
                 ].map((x,i)=>(
                   <div key={i}>
                     <p style={{fontSize:12,color:C.choco,fontWeight:600,marginBottom:2}}>
@@ -484,7 +464,7 @@ function App() {
         )}
 
         {/* 診断受付ボタン */}
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLScm_t7QDz08DYO75O5R5bxVNzB1C_H5KP" target="_blank" rel="noreferrer" style={BTN_STYLE}>
+        <a href="https://docs.google.com/forms/d/13ZUqQCbra869TVQPwc0qZMLy5kelvGRVWX_6LmteHuM/edit" target="_blank" rel="noreferrer" style={BTN_STYLE}>
           グーダドラム5つ項目診断受付
         </a>
 
@@ -593,8 +573,3 @@ function App() {
     </div>
   );
 }
-
-    ReactDOM.render(React.createElement(App), document.getElementById('root'));
-  </script>
-</body>
-</html>
