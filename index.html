@@ -197,9 +197,11 @@ function App() {
   const [lessonSending, setLessonSending] = useState(false);
   const [lessonMsg, setLessonMsg] = useState("");
   const [lessonTab, setLessonTab] = useState("text"); // "text" or "diagnosis"
-  const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:""});
+  const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:""});
 
-  useEffect(() => { autoFetch(); }, []);
+  useEffect(() => {
+    autoFetch();
+  }, []);
   useEffect(() => {
     if (currentMember) {
       setMyMemo(localStorage.getItem("memo_"+currentMember.name) || "");
@@ -213,10 +215,12 @@ function App() {
       if (!res.ok) throw new Error("HTTP " + res.status);
       const data = await res.json();
       const all = data.map(rowToMember).filter(m => m.name);
-      alert("取得件数: " + all.length + " 件\n名前: " + all.map(m=>m.name).join(", "));
-      if (all.length > 0) { setMembers(all); setIsDemo(false); setFetchMsg(""); }
+      if (all.length > 0) {
+        setMembers([...all]);
+        setIsDemo(false);
+        setFetchMsg("");
+      }
     } catch(e) {
-      alert("エラー: " + e.message);
       setFetchMsg("✗ " + e.message);
     }
   }
@@ -241,8 +245,11 @@ function App() {
 
   function postDiagnosis() {
     const date = diagScores.date || new Date().toISOString().split("T")[0];
-    const columns = ["音の開放度","音質調整","テンポキープ","ゴースト","グルーヴ","診断日"].join(",");
-    const values  = [diagScores.openness, diagScores.quality, diagScores.tempo, diagScores.ghost, diagScores.groove, date].join(",");
+    const cols = ["音の開放度","音質調整","テンポキープ","ゴースト","グルーヴ","診断日"];
+    const vals = [diagScores.openness, diagScores.quality, diagScores.tempo, diagScores.ghost, diagScores.groove, date];
+    if (diagScores.daniloMsg.trim()) { cols.push("診断結果"); vals.push(diagScores.daniloMsg.trim()); }
+    const columns = cols.join(",");
+    const values = vals.join(",");
     const params = new URLSearchParams({
       action: "writeMulti",
       name: lessonModal,
@@ -414,8 +421,7 @@ function App() {
                 <select value={lessonColumn} onChange={e=>setLessonColumn(e.target.value)}
                   style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
                   <option value="課題">DANiLO・講師陣からのコメント</option>
-                  <option value="診断結果">診断の結果（DANiLOメッセージ）</option>
-                  <option value="強み">あなたの強み</option>
+                      <option value="強み">あなたの強み</option>
                   <option value="目標">目標</option>
                 </select>
                 <textarea value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
@@ -465,6 +471,12 @@ function App() {
                     <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>診断日</label>
                     <input type="date" value={diagScores.date} onChange={e=>setDiagScores(p=>({...p,date:e.target.value}))}
                       style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
+                  </div>
+                  <div>
+                    <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>DANiLOメッセージ（任意）</label>
+                    <textarea value={diagScores.daniloMsg} onChange={e=>setDiagScores(p=>({...p,daniloMsg:e.target.value}))}
+                      placeholder="診断の結果メッセージを入力...（;で改行）"
+                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80}}/>
                   </div>
                 </div>
                 <p style={{fontSize:10,color:C.moss,marginBottom:12}}>※ 各項目のタブが開きます。全て閉じると反映されます。</p>
