@@ -535,7 +535,6 @@ function App() {
                   <option value="課題">DANiLO・講師陣からのコメント</option>
                   <option value="強み">あなたの強み</option>
                   <option value="目標">目標</option>
-                  {!isInstructor && <option value="ポイント">ポイント</option>}
                 </select>
                 <textarea value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
                   placeholder="内容を入力...（;で改行されます）"
