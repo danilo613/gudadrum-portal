@@ -322,8 +322,8 @@ function App() {
     setLoginErr("");
     if (!selectedName) { setLoginErr("名前を選択してください"); return; }
     if (selectedName === "__admin__") {
-      if (password === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setPassword(""); }
-      else if (password === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setPassword(""); }
+      if (password === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setLessonTab("text"); setPassword(""); }
+      else if (password === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setLessonTab("text"); setPassword(""); }
       else setLoginErr("パスワードが違います");
       return;
     }
@@ -446,7 +446,7 @@ function App() {
                   <p style={{fontSize:13,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
                 </div>
                 <MiniRadar m={m} size={48}/>
-                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");}}
+                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");}}
                   style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>
                   ✏️ 記録
                 </button>
@@ -517,7 +517,7 @@ function App() {
               )}
             </div>
 
-            {lessonTab === "text" ? (
+            {(lessonTab === "text" || isInstructor) ? (
               <>
                 {isInstructor && (
                   <div style={{marginBottom:14}}>
