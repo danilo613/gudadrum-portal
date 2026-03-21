@@ -114,6 +114,7 @@ function rowToMember(r) {
     commentNoriko: String(r["Yamashita Norikoコメント"] || ""),
     commentHiroko: String(r["hirokoコメント"] || ""),
     commentToon: String(r["灯音コメント"] || ""),
+    region: String(r["居住地域"] || ""),
     points: parseInt(r["ポイント"] || "0"),
   };
 }
@@ -547,7 +548,10 @@ function App() {
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <BadgeImage level={m.level} size={48}/>
                 <div style={{flex:1}}>
-                  <p style={{fontSize:15,fontWeight:600,color:C.choco,marginBottom:2}}>{m.name}</p>
+                  <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:2}}>
+                    <p style={{fontSize:15,fontWeight:600,color:C.choco}}>{m.name}</p>
+                    {m.region && <p style={{fontSize:11,color:C.label}}>{m.region}</p>}
+                  </div>
                   <p style={{fontSize:13,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
                 </div>
                 <MiniRadar m={m} size={48}/>
