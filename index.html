@@ -464,7 +464,6 @@ function App() {
               }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>付与・減算する</button>
             </div>
             <button onClick={()=>{
-              if(!window.confirm(pointModal.name+"のポイントを0にリセットしますか？"))return;
               const params = new URLSearchParams({action:"write",name:pointModal.name,column:"ポイント",value:"0",overwrite:"true"});
               gasWrite({action:"write",name:pointModal.name,column:"ポイント",value:"0",overwrite:"true"}).then(d=>{
                 if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ リセット完了！");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);}
