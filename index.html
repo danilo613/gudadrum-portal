@@ -571,6 +571,135 @@ function App() {
               <div key={region} style={{marginBottom:8}}>
                 <p style={{fontSize:11,fontWeight:700,color:C.olive,padding:"6px 4px",borderBottom:"1px solid "+C.border,marginBottom:8}}>📍 {region}（{ms.length}名）</p>
                 <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {ms.map(m=>(
+                    <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);setScheduleOpen(false);setMyDataOpen(false);setCommentOpen(false);setCurriculumOpen(false);}}
+                      style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
+                      onMouseEnter={e=>e.currentTarget.style.border="1px solid "+C.olive}
+                      onMouseLeave={e=>e.currentTarget.style.border="1px solid "+C.border}>
+                      <div style={{display:"flex",alignItems:"center",gap:12}}>
+                        <BadgeImage level={m.level} size={48}/>
+                        <div style={{flex:1}}>
+                          <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:2}}>
+                            <p style={{fontSize:15,fontWeight:600,color:C.choco}}>{m.name}</p>
+                            {m.region && <p style={{fontSize:11,color:C.label}}>{m.region}</p>}
+                          </div>
+                          <p style={{fontSize:13,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
+                        </div>
+                        <MiniRadar m={m} size={48}/>
+                        <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
+                        {!isInstructor && (<button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>)}
+                        {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : sortedMembers.map(m=>(
+            <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);setScheduleOpen(false);setMyDataOpen(false);setCommentOpen(false);setCurriculumOpen(false);}}
+              style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
+              onMouseEnter={e=>e.currentTarget.style.border="1px solid "+C.olive}
+              onMouseLeave={e=>e.currentTarget.style.border="1px solid "+C.border}>
+              <div style={{display:"flex",alignItems:"center",gap:12}}>
+                <BadgeImage level={m.level} size={48}/>
+                <div style={{flex:1}}>
+                  <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:2}}>
+                    <p style={{fontSize:15,fontWeight:600,color:C.choco}}>{m.name}</p>
+                    {m.region && <p style={{fontSize:11,color:C.label}}>{m.region}</p>}
+                  </div>
+                  <p style={{fontSize:13,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
+                </div>
+                <MiniRadar m={m} size={48}/>
+                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
+                {!isInstructor && (<button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>)}
+                {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  if (page === "admin") return (
+    <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      {topbar("管理者ダッシュボード",[
+        iconBtn("🔄 データ更新",()=>setShowSettings(true)),
+        iconBtn("ログアウト",()=>setPage("login")),
+      ])}
+      <div style={{padding:"24px",maxWidth:720,margin:"0 auto"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+          <p style={{fontSize:11,color:C.label}}>{isDemo?"📋 デモデータで表示中":"✅ スプレッドシートデータ"}</p>
+          <div style={{display:"flex",gap:6}}>
+            <select value={sortKey} onChange={e=>setSortKey(e.target.value)}
+              style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
+              <option value="level">段階順</option>
+              <option value="region">地域順</option>
+            </select>
+            <select value={filterSong} onChange={e=>setFilterSong(e.target.value)}
+              style={{fontSize:11,color:"#3a7a8a",background:"rgba(58,122,138,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
+              <option value="">🎵 楽曲で絞込</option>
+              {SONGS.map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+        {!isInstructor && (
+          <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
+            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+C.olive,background:showSurvey?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:showSurvey?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+            📊 アンケート結果 {showSurvey?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showSurvey && (
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+            {!surveyLoaded ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
+            ) : surveyResults.length === 0 ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>回答データがありません</p>
+            ) : surveyResults.map(r => (
+              <div key={r.name} style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                  <div>
+                    <p style={{fontSize:13,fontWeight:700,color:C.choco}}>{r.name}</p>
+                    <p style={{fontSize:10,color:C.moss}}>回答日：{r.timestamp}</p>
+                  </div>
+
+                </div>
+                <div style={{display:"flex",gap:8,marginBottom:8}}>
+                  {[
+                    {label:"A", count:r.aCount, total:r.aTotal, color:"#8a9a3a"},
+                    {label:"B", count:r.bCount, total:r.bTotal, color:"#3a7a8a"},
+                    {label:"C", count:r.cCount, total:r.cTotal, color:"#8a5a3a"},
+                  ].map(({label,count,total,color})=>(
+                    <div key={label} style={{flex:1,background:"rgba(0,0,0,0.04)",borderRadius:8,padding:"8px",textAlign:"center"}}>
+                      <p style={{fontSize:11,fontWeight:700,color:color,marginBottom:4}}>{label}</p>
+                      <p style={{fontSize:16,fontWeight:700,color:C.choco}}>{count}<span style={{fontSize:10,color:C.label}}>/{total}</span></p>
+                      <div style={{height:4,background:"rgba(0,0,0,0.1)",borderRadius:2,marginTop:4}}>
+                        <div style={{height:"100%",width:(total>0?count/total*100:0)+"%",background:color,borderRadius:2}}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {r.checkedItems.length > 0 && (
+                  <details style={{fontSize:11,color:C.label}}>
+                    <summary style={{cursor:"pointer",marginBottom:4}}>選択項目を見る（{r.checkedItems.length}項目）</summary>
+                    <div style={{marginTop:4,lineHeight:1.8}}>
+                      {r.checkedItems.map((item,i)=><span key={i} style={{display:"inline-block",background:"rgba(112,130,56,0.1)",borderRadius:4,padding:"1px 6px",margin:"2px",fontSize:10}}>{item}</span>)}
+                    </div>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {sortKey === "region" ? (
+            Object.entries(
+              sortedMembers.reduce((acc,m)=>{ const r=m.region||"未設定"; if(!acc[r])acc[r]=[]; acc[r].push(m); return acc; },{})
+            ).map(([region,ms])=>(
+              <div key={region} style={{marginBottom:8}}>
+                <p style={{fontSize:11,fontWeight:700,color:C.olive,padding:"6px 4px",borderBottom:"1px solid "+C.border,marginBottom:8}}>📍 {region}（{ms.length}名）</p>
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
                 {ms.map(m=>(
                   <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);setScheduleOpen(false);setMyDataOpen(false);setCommentOpen(false);setCurriculumOpen(false);}}
                     style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
@@ -608,10 +737,6 @@ function App() {
               </div>
             </div>
           ))}
-                ))}
-                </div>
-              </div>
-            ))
           ) : sortedMembers.map(m=>(
             <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);setScheduleOpen(false);setMyDataOpen(false);setCommentOpen(false);setCurriculumOpen(false);}}
               style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
