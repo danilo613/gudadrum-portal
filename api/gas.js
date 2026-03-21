@@ -4,18 +4,23 @@ export default async function handler(req, res) {
   const url = query ? `${GAS_URL}?${query}` : GAS_URL;
   
   try {
-    // GASは302リダイレクトを返すので手動でフォロー
     const response = await fetch(url, { redirect: "manual" });
     const location = response.headers.get("location");
-    
-    const finalUrl = location || url;
-    const finalResponse = await fetch(finalUrl);
-    const text = await finalResponse.text();
+    const status = response.status;
     
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Content-Type", "application/json");
-    res.send(text);
+    res.json({ 
+      status, 
+      location, 
+      url,
+      headers: Object.fromEntries(response.headers.entries())
+    });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
 }
+```
+
+これでリダイレクト先のURLが確認できます。更新してこのURLを開いてください：
+```
+https://gudadrum-portal.vercel.app/api/gas?action=notion
