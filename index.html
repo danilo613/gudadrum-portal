@@ -200,6 +200,7 @@ function App() {
   const [applyingMember, setApplyingMember] = useState(null);
   const [applyMsg, setApplyMsg] = useState({});
   const [showSurvey, setShowSurvey] = useState(false);
+  const [surveyModal, setSurveyModal] = useState(null);
   const [isFromAdmin, setIsFromAdmin] = useState(false);
   const [myMemo, setMyMemo] = useState("");
   const [myGoal, setMyGoal] = useState("");
@@ -547,12 +548,68 @@ function App() {
                     🎁 P
                   </button>
                 )}
+                {!isInstructor && (() => {
+                  const sr = surveyResults.find(r => r.name === m.name);
+                  return sr ? (
+                    <button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}}
+                      style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                      📊
+                    </button>
+                  ) : null;
+                })()}
               </div>
             </div>
           ))}
         </div>
       </div>
       {showSettings && <SettingsModal/>}
+      {surveyModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
+          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"85vh",overflowY:"auto"}}>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>📊 アンケート結果</h3>
+            <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{surveyModal.name}</strong></p>
+            <p style={{fontSize:10,color:C.moss,marginBottom:16}}>回答日：{surveyModal.timestamp}</p>
+            <div style={{display:"flex",gap:8,marginBottom:16}}>
+              {[
+                {label:"A", count:surveyModal.aCount, total:surveyModal.aTotal, color:"#8a9a3a", desc:"体験・直感タイプ"},
+                {label:"B", count:surveyModal.bCount, total:surveyModal.bTotal, color:"#3a7a8a", desc:"成長志向タイプ"},
+                {label:"C", count:surveyModal.cCount, total:surveyModal.cTotal, color:"#8a5a3a", desc:"精神性・深化タイプ"},
+              ].map(({label,count,total,color,desc})=>(
+                <div key={label} style={{flex:1,background:"rgba(0,0,0,0.04)",borderRadius:10,padding:"12px 8px",textAlign:"center"}}>
+                  <p style={{fontSize:12,fontWeight:700,color:color,marginBottom:2}}>{label}</p>
+                  <p style={{fontSize:9,color:C.label,marginBottom:6}}>{desc}</p>
+                  <p style={{fontSize:20,fontWeight:700,color:C.choco}}>{count}<span style={{fontSize:11,color:C.label}}>/{total}</span></p>
+                  <div style={{height:6,background:"rgba(0,0,0,0.1)",borderRadius:3,marginTop:6}}>
+                    <div style={{height:"100%",width:(total>0?count/total*100:0)+"%",background:color,borderRadius:3,transition:"width 0.3s"}}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {surveyModal.checkedItems.length > 0 && (
+              <div style={{marginBottom:16}}>
+                <p style={{fontSize:11,fontWeight:600,color:C.label,marginBottom:8}}>選択した項目（{surveyModal.checkedItems.length}項目）</p>
+                <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                  {surveyModal.checkedItems.map((item,i)=>(
+                    <span key={i} style={{
+                      background: item.match(/^A-/)?"rgba(138,154,58,0.15)": item.match(/^B-/)?"rgba(58,122,138,0.15)":"rgba(138,90,58,0.15)",
+                      color: item.match(/^A-/)?"#8a9a3a": item.match(/^B-/)?"#3a7a8a":"#8a5a3a",
+                      borderRadius:6,padding:"3px 8px",fontSize:11,fontWeight:500
+                    }}>{item}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {applyMsg[surveyModal.name] && <p style={{fontSize:12,color:applyMsg[surveyModal.name].startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{applyMsg[surveyModal.name]}</p>}
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setSurveyModal(null)} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>閉じる</button>
+              <button onClick={()=>applySurvey(surveyModal)} disabled={applyingMember===surveyModal.name}
+                style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",opacity:applyingMember===surveyModal.name?0.6:1}}>
+                {applyingMember===surveyModal.name?"反映中...":"📥 スプシに反映"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {pointModal && (
         <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:400}}>
