@@ -18,7 +18,9 @@
 
 
 const STORAGE_KEY = "guda_config_v3";
-const ADMIN_PASS = "vidanova";
+const ADMIN_PASS = "1919";
+const INSTRUCTOR_PASS = "2525";
+const INSTRUCTORS = ["Yamashita Noriko", "hiroko", "灯音(to•o•n)"];
 const CSV_URL = "/api/gas";
 
 const BADGE_IMAGES = {
@@ -109,6 +111,9 @@ function rowToMember(r) {
     groove: parseInt(r["グルーヴ"] || "0"),
     diagnosisDate: String(r["診断日"] || "").split("T")[0],
     diagnosisResult: String(r["診断結果"] || ""),
+    commentNoriko: String(r["Yamashita Norikoコメント"] || ""),
+    commentHiroko: String(r["hirokoコメント"] || ""),
+    commentToon: String(r["灯音コメント"] || ""),
     points: parseInt(r["ポイント"] || "0"),
   };
 }
@@ -181,6 +186,7 @@ function MiniRadar({ m, size=48 }) {
 function App() {
   const [members, setMembers] = useState(DEMO_MEMBERS);
   const [isDemo, setIsDemo] = useState(true);
+  const [isInstructor, setIsInstructor] = useState(false);
   const [page, setPage] = useState("login");
   const [selectedName, setSelectedName] = useState("");
   const [password, setPassword] = useState("");
@@ -203,6 +209,7 @@ function App() {
   const [lessonSending, setLessonSending] = useState(false);
   const [lessonMsg, setLessonMsg] = useState("");
   const [lessonTab, setLessonTab] = useState("text");
+  const [instructorName, setInstructorName] = useState("");
   const [pointModal, setPointModal] = useState(null);
   const [pointValue, setPointValue] = useState("");
   const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
@@ -276,7 +283,18 @@ function App() {
     if (!lessonValue.trim()) { setLessonMsg("内容を入力してください"); return; }
     setLessonMsg("送信中...");
     try {
-      const data = await gasWrite({action:"write", name:lessonModal, column:lessonColumn, value:lessonValue, overwrite:overwrite?"true":"false"});
+      const today = new Date();
+      const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
+      const sender = isInstructor ? (instructorName || "講師") : "DANiLO";
+      const autoOverwrite = ["強み","目標"].includes(lessonColumn);
+      const formattedValue = (overwrite || autoOverwrite) ? lessonValue : dateStr + " " + sender + ": " + lessonValue;
+      // 講師の場合は講師専用列に書き込む
+      let targetColumn = lessonColumn;
+      if (isInstructor && lessonColumn === "課題") {
+        const colMap = {"Yamashita Noriko":"Yamashita Norikoコメント", "hiroko":"hirokoコメント", "灯音(to•o•n)":"灯音コメント"};
+        targetColumn = colMap[instructorName] || "課題";
+      }
+      const data = await gasWrite({action:"write", name:lessonModal, column:targetColumn, value:formattedValue, overwrite:(overwrite||autoOverwrite)?"true":"false"});
       if (data.error) throw new Error(data.error);
       setLessonMsg("✅ 送信完了！");
       setLessonValue("");
@@ -303,8 +321,9 @@ function App() {
     setLoginErr("");
     if (!selectedName) { setLoginErr("名前を選択してください"); return; }
     if (selectedName === "__admin__") {
-      if (password === ADMIN_PASS) { setPage("admin"); setPassword(""); }
-      else setLoginErr("管理者パスワードが違います");
+      if (password === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setPassword(""); }
+      else if (password === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setPassword(""); }
+      else setLoginErr("パスワードが違います");
       return;
     }
     const norm = s => s.replace(/\s/g,"");
@@ -386,7 +405,7 @@ function App() {
           style={{width:"100%",background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"11px 14px",fontSize:14,color:C.choco,marginBottom:16,cursor:"pointer",boxSizing:"border-box"}}>
           <option value="">-- 名前を選択 --</option>
           {members.map(m=><option key={m.name} value={m.name}>{m.name}</option>)}
-          <option value="__admin__">🔑 管理者</option>
+          <option value="__admin__">🔑 管理者・講師</option>
         </select>
         <label style={{fontSize:11,letterSpacing:"0.15em",color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>PASSWORD</label>
         <input type="password" placeholder="パスワードを入力" value={password}
@@ -430,10 +449,12 @@ function App() {
                   style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>
                   ✏️ 記録
                 </button>
-                <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}}
-                  style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
-                  🎁 P
-                </button>
+                {!isInstructor && (
+                  <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}}
+                    style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                    🎁 P
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -487,20 +508,33 @@ function App() {
                 style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="text"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="text"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>
                 📝 コメント記録
               </button>
-              <button onClick={()=>{setLessonTab("diagnosis");setLessonMsg("");}}
-                style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="diagnosis"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="diagnosis"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>
-                🎯 演奏診断スコア
-              </button>
+              {!isInstructor && (
+                <button onClick={()=>{setLessonTab("diagnosis");setLessonMsg("");}}
+                  style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="diagnosis"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="diagnosis"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                  🎯 演奏診断スコア
+                </button>
+              )}
             </div>
 
             {lessonTab === "text" ? (
               <>
+                {isInstructor && (
+                  <div style={{marginBottom:14}}>
+                    <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>講師名</label>
+                    <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
+                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,cursor:"pointer"}}>
+                      <option value="">-- 選択してください --</option>
+                      {INSTRUCTORS.map(n=><option key={n} value={n}>{n}</option>)}
+                    </select>
+                  </div>
+                )}
                 <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>書き込む項目</label>
                 <select value={lessonColumn} onChange={e=>setLessonColumn(e.target.value)}
                   style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
                   <option value="課題">DANiLO・講師陣からのコメント</option>
-                      <option value="強み">あなたの強み</option>
+                  <option value="強み">あなたの強み</option>
                   <option value="目標">目標</option>
+                  {!isInstructor && <option value="ポイント">ポイント</option>}
                 </select>
                 <textarea value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
                   placeholder="内容を入力...（;で改行されます）"
@@ -762,11 +796,20 @@ function App() {
           {commentOpen && (
             <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
               <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
-              <div style={{maxHeight:"6.4em",overflowY:"auto"}}>
-                {m.challenge
-                  ? splitItems(m.challenge).map((line,i) => <p key={i} style={{fontSize:14,color:C.choco,lineHeight:1.6,marginBottom:4}}>{line}</p>)
-                  : <p style={{fontSize:14,color:"#a09080",fontStyle:"italic"}}>−</p>
-                }
+              <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                {[
+                  {label:"DANiLO", data:m.challenge, color:"#708238"},
+                  {label:"Yamashita Noriko", data:m.commentNoriko, color:"#8a6a3a"},
+                  {label:"hiroko", data:m.commentHiroko, color:"#6a5a8a"},
+                  {label:"灯音(to•o•n)", data:m.commentToon, color:"#3a7a8a"},
+                ].map(({label,data,color})=> data ? (
+                  <div key={label}>
+                    <p style={{fontSize:10,fontWeight:700,color:color,marginBottom:4,letterSpacing:"0.08em"}}>◆ {label}</p>
+                    <div style={{maxHeight:"5em",overflowY:"auto"}}>
+                      {splitItems(data).map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.6,marginBottom:3}}>{line}</p>)}
+                    </div>
+                  </div>
+                ) : null)}
               </div>
             </div>
           )}
