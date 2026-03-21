@@ -202,7 +202,10 @@ function App() {
   const [lessonValue, setLessonValue] = useState("");
   const [lessonSending, setLessonSending] = useState(false);
   const [lessonMsg, setLessonMsg] = useState("");
-  const [lessonTab, setLessonTab] = useState("text"); // "text" or "diagnosis"
+  const [lessonTab, setLessonTab] = useState("text");
+  const [pointModal, setPointModal] = useState(null);
+  const [pointValue, setPointValue] = useState("");
+  const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
   const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:""});
 
   useEffect(() => {
@@ -428,12 +431,50 @@ function App() {
                   style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>
                   ✏️ 記録
                 </button>
+                <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}}
+                  style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                  🎁 P
+                </button>
               </div>
             </div>
           ))}
         </div>
       </div>
       {showSettings && <SettingsModal/>}
+      {pointModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
+          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:400}}>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>🎁 ポイント管理</h3>
+            <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{pointModal.name}</strong></p>
+            <p style={{fontSize:13,color:C.olive,fontWeight:700,marginBottom:16}}>現在のポイント：{pointModal.points} P</p>
+            <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>付与・減算するポイント数</label>
+            <input type="number" value={pointValue} onChange={e=>setPointValue(e.target.value)}
+              placeholder="例: 100 または -50"
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:14,color:C.choco,marginBottom:8}}/>
+            <p style={{fontSize:10,color:C.moss,marginBottom:12}}>※ 追加は正の数、減算はマイナス（例：-50）で入力</p>
+            {pointMsg && <p style={{fontSize:13,color:pointMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{pointMsg}</p>}
+            <div style={{display:"flex",gap:8,marginBottom:8}}>
+              <button onClick={()=>{setPointModal(null);setPointMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
+              <button onClick={()=>{
+                if(!pointValue){setPointMsg("ポイント数を入力してください");return;}
+                const newP = pointModal.points + parseInt(pointValue);
+                const params = new URLSearchParams({action:"write",name:pointModal.name,column:"ポイント",value:String(newP),overwrite:"true"});
+                window.open("https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?"+params.toString(),"_blank");
+                setPointMsg("done");
+              }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>付与・減算する</button>
+            </div>
+            <button onClick={()=>{
+              if(!window.confirm(pointModal.name+"のポイントを0にリセットしますか？"))return;
+              const params = new URLSearchParams({action:"write",name:pointModal.name,column:"ポイント",value:"0",overwrite:"true"});
+              window.open("https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?"+params.toString(),"_blank");
+              setPointMsg("done");
+            }} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer"}}>🔄 ポイントをリセット（0にする）</button>
+            {pointMsg === "done" && (
+              <button onClick={()=>{setPointModal(null);setPointMsg("");autoFetch();}} style={{width:"100%",marginTop:10,padding:11,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>閉じてデータ更新 🔄</button>
+            )}
+          </div>
+        </div>
+      )}
       {lessonModal && (
         <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto"}}>
