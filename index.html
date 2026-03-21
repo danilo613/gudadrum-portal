@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
   <title>GUDADRUM ORCHESTRA - MEMBER PORTAL</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -139,13 +140,13 @@ function BadgeImage({ level, size = 56 }) {
 function RadarChart({ m }) {
   const labels = ["音の開放度","音質調整","テンポキープ","ゴースト","グルーヴ"];
   const values = [m.openness, m.quality, m.tempo, m.ghost, m.groove];
-  const n=5, W=200, H=180, cx=W/2, cy=H/2, r=60, ao=-Math.PI/2;
+  const n=5, W=240, H=210, cx=W/2, cy=H/2, r=60, ao=-Math.PI/2;
   const angle = i => ao+(2*Math.PI*i)/n;
   const pt = (i,v) => [cx+r*(v/5)*Math.cos(angle(i)), cy+r*(v/5)*Math.sin(angle(i))];
   const tip = i => [cx+r*Math.cos(angle(i)), cy+r*Math.sin(angle(i))];
   const grid = lv => Array.from({length:n},(_,i)=>pt(i,lv).join(",")).join(" ");
   const poly = values.map((v,i)=>pt(i,v).join(",")).join(" ");
-  const li = [{i:0,dx:0,dy:-18,a:"middle"},{i:1,dx:10,dy:0,a:"start"},{i:2,dx:10,dy:0,a:"start"},{i:3,dx:-10,dy:0,a:"end"},{i:4,dx:-10,dy:0,a:"end"}];
+  const li = [{i:0,dx:0,dy:-14,a:"middle"},{i:1,dx:14,dy:4,a:"start"},{i:2,dx:14,dy:-4,a:"start"},{i:3,dx:-14,dy:-4,a:"end"},{i:4,dx:-14,dy:4,a:"end"}];
   return (
     <svg width={W} height={H} viewBox={"0 0 "+W+" "+H}>
       {[1,2,3,4,5].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>)}
@@ -215,29 +216,50 @@ function App() {
     }
   }, [currentMember]);
 
-  async function autoFetch() {
-    try {
-      const res = await fetch(CSV_URL);
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      const all = data.map(rowToMember).filter(m => m.name);
-      if (all.length > 0) {
-        setMembers([...all]);
-        setIsDemo(false);
-        setFetchMsg("");
-      }
-    } catch(e) {
-      setFetchMsg("✗ " + e.message);
-    }
+  function autoFetch() {
+    return new Promise((resolve) => {
+      const cbName = "gasCb_" + Date.now();
+      window[cbName] = function(data) {
+        try {
+          const all = data.map(rowToMember).filter(m => m.name);
+          if (all.length > 0) { setMembers([...all]); setIsDemo(false); setFetchMsg(""); }
+        } catch(e) { setFetchMsg("✗ " + e.message); }
+        delete window[cbName];
+        const el = document.getElementById(cbName);
+        if (el) el.remove();
+        resolve();
+      };
+      const script = document.createElement("script");
+      script.id = cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?callback=" + cbName;
+      script.onerror = function() {
+        setFetchMsg("✗ データ取得失敗");
+        delete window[cbName];
+        resolve();
+      };
+      document.body.appendChild(script);
+    });
   }
 
-  async function fetchNotion() {
-    try {
-      const res = await fetch("/api/gas?action=notion");
-      if (!res.ok) throw new Error("HTTP " + res.status);
-      const data = await res.json();
-      if (data.items) setNotionItems(data.items);
-    } catch(e) {}
+  function fetchNotion() {
+    return new Promise((resolve) => {
+      const cbName = "notionCb_" + Date.now();
+      window[cbName] = function(data) {
+        if (data.items) setNotionItems(data.items);
+        delete window[cbName];
+        const el = document.getElementById(cbName);
+        if (el) el.remove();
+        resolve();
+      };
+      const script = document.createElement("script");
+      script.id = cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?action=notion&callback=" + cbName;
+      script.onerror = function() {
+        delete window[cbName];
+        resolve();
+      };
+      document.body.appendChild(script);
+    });
   }
 
   function buildGasUrl(overwrite) {
@@ -248,7 +270,7 @@ function App() {
       value: lessonValue,
       overwrite: overwrite ? "true" : "false",
     });
-    return "https://script.google.com/macros/s/AKfycbxv_el3FDOfKuMutYwZTd2NGY3uyLZzGgyYzeuF18iyhqi3P3azdEDzxPhjueFjuepXcQ/exec?" + params.toString();
+    return "https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?" + params.toString();
   }
 
   function postLesson(overwrite) {
@@ -271,7 +293,7 @@ function App() {
       columns: columns,
       values: values,
     });
-    window.open("https://script.google.com/macros/s/AKfycbxv_el3FDOfKuMutYwZTd2NGY3uyLZzGgyYzeuF18iyhqi3P3azdEDzxPhjueFjuepXcQ/exec?" + params.toString(), "_blank");
+    window.open("https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?" + params.toString(), "_blank");
     setLessonMsg("done");
   }
 
@@ -314,7 +336,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbxv_el3FDOfKuMutYwZTd2NGY3uyLZzGgyYzeuF18iyhqi3P3azdEDzxPhjueFjuepXcQ/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -710,7 +732,7 @@ function App() {
         {/* DANiLOコメント */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
           <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,color:C.label,fontWeight:500}}>💬 DANiLO・講師陣からのコメント</span>
+            <span style={{fontSize:13,color:C.label,fontWeight:700}}>💬 DANiLO・講師陣からのコメント</span>
             <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
           </button>
           {commentOpen && (
@@ -729,7 +751,7 @@ function App() {
         {/* メインカリキュラム */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
           <button onClick={()=>setCurriculumOpen(!curriculumOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,color:C.label,fontWeight:500}}>📚 メインカリキュラム進捗</span>
+            <span style={{fontSize:13,color:C.label,fontWeight:700}}>📚 メインカリキュラム進捗</span>
             <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:curriculumOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
           </button>
           {curriculumOpen && <div style={{borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
