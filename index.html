@@ -39,10 +39,10 @@ const CURRICULUM = [
   { title:"グーダドラムの基礎「響かせる」", url:"https://www.gudadrumjapan.com/kyzkmtm", password:"gdrmtd26" },
   { title:"リズムの基礎⑴「リズムを知る」", url:"https://www.gudadrumjapan.com/kyzrhmtm", password:"rhtmgdrm#mtm26" },
   { title:"リズムの基礎⑵「リズムを感じる」", url:"", password:"" },
-  { title:"楽曲の基礎⑴ フレーズを覚える", url:"", password:"" },
-  { title:"楽曲の基礎⑵ フレーズを繋げる", url:"", password:"" },
-  { title:"楽曲の応用⑴ リズムを整える", url:"", password:"" },
-  { title:"楽曲の応用⑵ 楽曲をブラッシュアップ", url:"", password:"" },
+  { title:"楽曲の基礎⑴「フレーズを覚える」", url:"", password:"" },
+  { title:"楽曲の基礎⑵「フレーズを繋げる」", url:"", password:"" },
+  { title:"楽曲の応用⑴「リズムを整える」", url:"", password:"" },
+  { title:"楽曲の応用⑵「楽曲をブラッシュアップ」", url:"", password:"" },
 ];
 
 const C = {
@@ -192,6 +192,10 @@ function App() {
   const [myMemo, setMyMemo] = useState("");
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [myDataOpen, setMyDataOpen] = useState(false);
+  const [commentOpen, setCommentOpen] = useState(false);
+  const [curriculumOpen, setCurriculumOpen] = useState(false);
   const [lessonModal, setLessonModal] = useState(null);
   const [lessonColumn, setLessonColumn] = useState("課題");
   const [lessonValue, setLessonValue] = useState("");
@@ -283,7 +287,7 @@ function App() {
     const m = members.find(m => norm(m.name) === norm(selectedName));
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
     if (m.password && m.password !== password) { setLoginErr("パスワードが違います"); return; }
-    setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false);
+    setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false);
   }
 
   const SettingsModal = () => {
@@ -387,7 +391,7 @@ function App() {
         <p style={{fontSize:11,color:C.label,marginBottom:16}}>{isDemo?"📋 デモデータで表示中":"✅ スプレッドシートデータ"}</p>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {sortedMembers.map(m=>(
-            <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);}}
+            <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);setScheduleOpen(false);setMyDataOpen(false);setCommentOpen(false);setCurriculumOpen(false);}}
               style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
               onMouseEnter={e=>e.currentTarget.style.border="1px solid "+C.olive}
               onMouseLeave={e=>e.currentTarget.style.border="1px solid "+C.border}>
@@ -617,28 +621,36 @@ function App() {
 
         {/* 今後のスケジュール */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <div style={{padding:"14px 16px",borderBottom:"1px solid "+C.border,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>📅 今後のスケジュール</p>
-            <a href="https://able-chemistry-1ee.notion.site/schedule-2fb2b1d0bdf9802bb6c6d2bdd79fbdb5?pvs=74" target="_blank" rel="noreferrer"
-              style={{fontSize:11,color:C.olive,fontWeight:600,textDecoration:"none"}}>すべて見る →</a>
-          </div>
-          <div style={{maxHeight:"7.2em",overflowY:"auto",padding:"10px 16px"}}>
-            {notionItems.length > 0 ? (
-              notionItems.map((item,i) => (
-                <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.8,paddingLeft:item.text.startsWith("　")?"8px":"0"}}>{item.text}</p>
-              ))
-            ) : (
-              <p style={{fontSize:13,color:C.label}}>読み込み中...</p>
-            )}
-          </div>
+          <button onClick={()=>setScheduleOpen(!scheduleOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>📅 今後のスケジュール</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:scheduleOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {scheduleOpen && (
+            <>
+              <div style={{borderTop:"1px solid "+C.border,display:"flex",justifyContent:"flex-end",padding:"6px 16px"}}>
+                <a href="https://able-chemistry-1ee.notion.site/schedule-2fb2b1d0bdf9802bb6c6d2bdd79fbdb5?pvs=74" target="_blank" rel="noreferrer"
+                  style={{fontSize:11,color:C.olive,fontWeight:600,textDecoration:"none"}}>すべて見る →</a>
+              </div>
+              <div style={{maxHeight:"7.2em",overflowY:"auto",padding:"0 16px 12px"}}>
+                {notionItems.length > 0 ? (
+                  notionItems.map((item,i) => (
+                    <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.8,paddingLeft:item.text.startsWith("　")?"8px":"0"}}>{item.text}</p>
+                  ))
+                ) : (
+                  <p style={{fontSize:13,color:C.label}}>読み込み中...</p>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         {/* マイデータ */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <div style={{padding:"14px 16px",borderBottom:"1px solid "+C.border}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>📋 マイデータ</p>
-          </div>
-          <div style={{padding:"0 16px"}}>
+          <button onClick={()=>setMyDataOpen(!myDataOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>📋 マイデータ</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:myDataOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
               {icon:"💪", label:"あなたの強み", items:splitItems(m.strengths)},
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
@@ -679,26 +691,35 @@ function App() {
                   style={{width:"100%",background:"rgba(240,235,226,0.6)",border:"1px solid "+C.border,borderRadius:8,padding:8,fontSize:13,color:C.choco,resize:"none",height:70,boxSizing:"border-box"}}/>
               </div>
             </div>
-          </div>
+          </div>}
         </div>
 
         {/* DANiLOコメント */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px"}}>
-          <div style={{display:"flex",alignItems:"baseline",gap:10,marginBottom:10}}>
-            <p style={{fontSize:13,color:C.label,fontWeight:500}}>💬 DANiLO・講師陣からのコメント</p>
-            <p style={{fontSize:10,color:C.moss}}>※ 下にスクロールで過去のログも見られます</p>
-          </div>
-          <div style={{maxHeight:"6.4em",overflowY:"auto",lineHeight:1.6}}>
-            {m.challenge
-              ? splitItems(m.challenge).map((line,i) => <p key={i} style={{fontSize:14,color:C.choco,lineHeight:1.6,marginBottom:4}}>{line}</p>)
-              : <p style={{fontSize:14,color:"#a09080",fontStyle:"italic"}}>−</p>
-            }
-          </div>
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+          <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,color:C.label,fontWeight:500}}>💬 DANiLO・講師陣からのコメント</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {commentOpen && (
+            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
+              <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
+              <div style={{maxHeight:"6.4em",overflowY:"auto"}}>
+                {m.challenge
+                  ? splitItems(m.challenge).map((line,i) => <p key={i} style={{fontSize:14,color:C.choco,lineHeight:1.6,marginBottom:4}}>{line}</p>)
+                  : <p style={{fontSize:14,color:"#a09080",fontStyle:"italic"}}>−</p>
+                }
+              </div>
+            </div>
+          )}
         </div>
 
         {/* メインカリキュラム */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px"}}>
-          <p style={{fontSize:13,color:C.label,marginBottom:14,fontWeight:500}}>📚 メインカリキュラム進捗</p>
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+          <button onClick={()=>setCurriculumOpen(!curriculumOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,color:C.label,fontWeight:500}}>📚 メインカリキュラム進捗</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:curriculumOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {curriculumOpen && <div style={{borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
           <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
             {CURRICULUM.map((item,i)=>{
               const done = i < m.completedLevels;
@@ -726,6 +747,7 @@ function App() {
           <a href="https://www.gudadrumjapan.com/tchng" target="_blank" rel="noreferrer" style={BTN_STYLE}>
             メインカリキュラムを受講する
           </a>
+          </div>}
         </div>
 
 
