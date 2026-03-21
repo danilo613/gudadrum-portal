@@ -265,40 +265,39 @@ function App() {
     });
   }
 
-  function buildGasUrl(overwrite) {
-    const params = new URLSearchParams({
-      action: "write",
-      name: lessonModal,
-      column: lessonColumn,
-      value: lessonValue,
-      overwrite: overwrite ? "true" : "false",
-    });
-    return "https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?" + params.toString();
+
+  async function gasWrite(params) {
+    const url = "/api/gas?" + new URLSearchParams(params).toString();
+    const res = await fetch(url);
+    return await res.json();
   }
 
-  function postLesson(overwrite) {
+  async function postLesson(overwrite) {
     if (!lessonValue.trim()) { setLessonMsg("内容を入力してください"); return; }
-    window.open(buildGasUrl(overwrite), "_blank");
-    setLessonMsg("✅ タブを閉じるとスプシに反映されます。その後「データ更新」ボタンを押してください。");
-    setTimeout(() => { setLessonModal(null); setLessonMsg(""); }, 3000);
+    setLessonMsg("送信中...");
+    try {
+      const data = await gasWrite({action:"write", name:lessonModal, column:lessonColumn, value:lessonValue, overwrite:overwrite?"true":"false"});
+      if (data.error) throw new Error(data.error);
+      setLessonMsg("✅ 送信完了！");
+      setLessonValue("");
+      setTimeout(() => { setLessonModal(null); setLessonMsg(""); autoFetch(); }, 1500);
+    } catch(e) { setLessonMsg("❌ エラー: " + e.message); }
   }
 
-  function postDiagnosis() {
+  async function postDiagnosis() {
     const date = diagScores.date || new Date().toISOString().split("T")[0];
     const cols = ["音の開放度","音質調整","テンポキープ","ゴースト","グルーヴ","診断日"];
     const vals = [diagScores.openness, diagScores.quality, diagScores.tempo, diagScores.ghost, diagScores.groove, date];
-    if (diagScores.daniloMsg.trim()) { cols.push("診断結果"); vals.push(diagScores.daniloMsg.trim()); }
-    const columns = cols.join(",");
-    const values = vals.join(",");
-    const params = new URLSearchParams({
-      action: "writeMulti",
-      name: lessonModal,
-      columns: columns,
-      values: values,
-    });
-    window.open("https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?" + params.toString(), "_blank");
-    setLessonMsg("done");
+    if (diagScores.daniloMsg && diagScores.daniloMsg.trim()) { cols.push("診断結果"); vals.push(diagScores.daniloMsg.trim()); }
+    setLessonMsg("送信中...");
+    try {
+      const data = await gasWrite({action:"writeMulti", name:lessonModal, columns:cols.join(","), values:vals.join(",")});
+      if (data.error) throw new Error(data.error);
+      setLessonMsg("✅ 送信完了！");
+      setTimeout(() => { setLessonModal(null); setLessonMsg(""); autoFetch(); }, 1500);
+    } catch(e) { setLessonMsg("❌ エラー: " + e.message); }
   }
+
 
   function handleLogin() {
     setLoginErr("");
@@ -459,15 +458,17 @@ function App() {
                 if(!pointValue){setPointMsg("ポイント数を入力してください");return;}
                 const newP = pointModal.points + parseInt(pointValue);
                 const params = new URLSearchParams({action:"write",name:pointModal.name,column:"ポイント",value:String(newP),overwrite:"true"});
-                window.open("https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?"+params.toString(),"_blank");
-                setPointMsg("done");
+                gasWrite({action:"write",name:pointModal.name,column:"ポイント",value:String(newP),overwrite:"true"}).then(d=>{
+                  if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);}
+                }).catch(e=>setPointMsg("❌ "+e.message));
               }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>付与・減算する</button>
             </div>
             <button onClick={()=>{
               if(!window.confirm(pointModal.name+"のポイントを0にリセットしますか？"))return;
               const params = new URLSearchParams({action:"write",name:pointModal.name,column:"ポイント",value:"0",overwrite:"true"});
-              window.open("https://script.google.com/macros/s/AKfycbxc5jypY5N-Z2Zsj2qtWQKVaRg76GJfzLa1UX1dPlRZfNKJhJFh1vbglT_iw1QLs49OJA/exec?"+params.toString(),"_blank");
-              setPointMsg("done");
+              gasWrite({action:"write",name:pointModal.name,column:"ポイント",value:"0",overwrite:"true"}).then(d=>{
+                if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ リセット完了！");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);}
+              }).catch(e=>setPointMsg("❌ "+e.message));
             }} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer"}}>🔄 ポイントをリセット（0にする）</button>
             {pointMsg === "done" && (
               <button onClick={()=>{setPointModal(null);setPointMsg("");autoFetch();}} style={{width:"100%",marginTop:10,padding:11,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>閉じてデータ更新 🔄</button>
@@ -506,21 +507,12 @@ function App() {
                   placeholder="内容を入力...（;で改行されます）"
                   style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:10,fontSize:13,color:C.choco,height:100,resize:"vertical",marginBottom:8}}/>
                 <p style={{fontSize:10,color:C.moss,marginBottom:12}}>※ 追記：既存内容に日付＋新内容を追加。上書き：完全に置き換え。</p>
-                {lessonMsg === "done" ? (
-                  <div>
-                    <p style={{fontSize:13,color:C.olive,marginBottom:12}}>✅ タブで書き込み完了を確認したら下のボタンを押してください</p>
-                    <button onClick={()=>{setLessonModal(null);setLessonMsg("");autoFetch();}} style={{width:"100%",padding:11,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>閉じてデータ更新 🔄</button>
-                  </div>
-                ) : (
-                  <>
-                    {lessonMsg && <p style={{fontSize:13,color:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                    <div style={{display:"flex",gap:8}}>
-                      <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                      <button onClick={()=>postLesson(false)} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>追記する</button>
-                      <button onClick={()=>postLesson(true)} style={{flex:1,padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer"}}>上書き</button>
-                    </div>
-                  </>
-                )}
+                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
+                  <button onClick={()=>postLesson(false)} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>追記する</button>
+                  <button onClick={()=>postLesson(true)} style={{flex:1,padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer"}}>上書き</button>
+                </div>
               </>
             ) : (
               <>
@@ -558,20 +550,11 @@ function App() {
                   </div>
                 </div>
                 <p style={{fontSize:10,color:C.moss,marginBottom:12}}>※ 各項目のタブが開きます。全て閉じると反映されます。</p>
-                {lessonMsg === "done" ? (
-                  <div>
-                    <p style={{fontSize:13,color:C.olive,marginBottom:12}}>✅ タブで書き込み完了を確認したら下のボタンを押してください</p>
-                    <button onClick={()=>{setLessonModal(null);setLessonMsg("");autoFetch();}} style={{width:"100%",padding:11,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>閉じてデータ更新 🔄</button>
-                  </div>
-                ) : (
-                  <>
-                    {lessonMsg && <p style={{fontSize:13,color:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                    <div style={{display:"flex",gap:8}}>
-                      <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                      <button onClick={postDiagnosis} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>スプシに反映する</button>
-                    </div>
-                  </>
-                )}
+                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
+                  <button onClick={postDiagnosis} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>スプシに反映する</button>
+                </div>
               </>
             )}
           </div>
