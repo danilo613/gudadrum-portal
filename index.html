@@ -933,8 +933,9 @@ function App() {
         {(()=>{
           const myScheds = memberSchedules.filter(s=>s["名前"]===m.name);
           const today = new Date(); today.setHours(0,0,0,0);
-          const upcoming = myScheds.filter(s=>new Date(s["日付"])>=today).sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
-          const past = myScheds.filter(s=>new Date(s["日付"])<today).sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
+          const toDate = s => { const d=new Date(s["日付"]); return isNaN(d.getTime())||d.getFullYear()<=1900 ? new Date("9999-12-31") : d; };
+          const upcoming = myScheds.filter(s=>toDate(s)>=today).sort((a,b)=>toDate(a)-toDate(b));
+          const past = myScheds.filter(s=>toDate(s)<today).sort((a,b)=>toDate(b)-toDate(a));
           const all = [...upcoming, ...past];
           // デバッグ：空でも表示
           return (
@@ -946,11 +947,17 @@ function App() {
               {mySchedOpen && (
                 <div style={{borderTop:"1px solid "+C.border,padding:"10px 16px 14px"}}>
                   {all.map((s,i)=>{
-                    const isPast = new Date(s["日付"]) < today;
+                    const rawDate = s["日付"];
+                    const d = new Date(rawDate);
+                    const isValidDate = !isNaN(d.getTime()) && d.getFullYear() > 1900;
+                    const fmtDate = isValidDate
+                      ? d.getFullYear() + "年" + (d.getMonth()+1) + "月" + d.getDate() + "日"
+                      : String(rawDate);
+                    const isPast = isValidDate && d < today;
                     return (
                       <div key={i} style={{display:"flex",gap:10,padding:"8px 0",borderBottom:i<all.length-1?"1px solid rgba(112,130,56,0.1)":"none",opacity:isPast?0.5:1}}>
-                        <div style={{minWidth:80}}>
-                          <p style={{fontSize:12,fontWeight:600,color:isPast?C.label:C.choco}}>{s["日付"]}</p>
+                        <div style={{minWidth:90}}>
+                          <p style={{fontSize:12,fontWeight:600,color:isPast?C.label:C.choco}}>{fmtDate}</p>
                           {s["時間"] && <p style={{fontSize:11,color:C.label}}>{s["時間"]}</p>}
                         </div>
                         <div style={{flex:1}}>
