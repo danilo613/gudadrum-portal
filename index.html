@@ -779,7 +779,7 @@ function App() {
                 ) : pointHistory.slice().reverse().map((h,i)=>(
                   <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 4px",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
                     <div>
-                      <p style={{fontSize:11,color:C.label}}>{h["日付"]}</p>
+                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
                       <p style={{fontSize:11,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}</p>
                     </div>
                     <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030"}}>
@@ -958,10 +958,10 @@ function App() {
               ) : pointHistory.filter(h=>h["名前"]===m.name).slice().reverse().map((h,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
                   <div>
-                    <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
-                    <p style={{fontSize:12,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}</p>
+                    <p style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
+                    <p style={{fontSize:12,color:"#fff",fontWeight:500}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}</p>
                   </div>
-                  <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030"}}>
+                  <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#d4e8a0":"#ffaaaa"}}>
                     {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
                   </p>
                 </div>
