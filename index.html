@@ -220,6 +220,9 @@ function App() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [mySchedOpen, setMySchedOpen] = useState(true);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [pointHistory, setPointHistory] = useState([]);
+  const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
+  const [pointNote, setPointNote] = useState("");
   const [feedbackName, setFeedbackName] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState("");
@@ -265,7 +268,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzZL4mt3T8lC54rwm62zTOPxTPtW53kngcJ95Ne51NsbRUUmQH0vFYOaCkFRd4-_btIhg/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwgTGCjHusUbQM0UUwPSdoKQnZVhdZbJs9vuUcuR2dCNL7uikRunjoe5ynCyfgh_93DJg/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -287,13 +290,21 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzZL4mt3T8lC54rwm62zTOPxTPtW53kngcJ95Ne51NsbRUUmQH0vFYOaCkFRd4-_btIhg/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwgTGCjHusUbQM0UUwPSdoKQnZVhdZbJs9vuUcuR2dCNL7uikRunjoe5ynCyfgh_93DJg/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
       };
       document.body.appendChild(script);
     });
+  }
+
+  async function fetchPointHistory(name) {
+    try {
+      const res = await fetch("/api/gas?" + new URLSearchParams({action:"getpoints", name:name}));
+      const data = await res.json();
+      if (data.history) setPointHistory(data.history);
+    } catch(e) {}
   }
 
   async function sendFeedback() {
@@ -472,7 +483,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbzZL4mt3T8lC54rwm62zTOPxTPtW53kngcJ95Ne51NsbRUUmQH0vFYOaCkFRd4-_btIhg/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbwgTGCjHusUbQM0UUwPSdoKQnZVhdZbJs9vuUcuR2dCNL7uikRunjoe5ynCyfgh_93DJg/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -736,19 +747,46 @@ function App() {
             <input type="number" value={pointValue} onChange={e=>setPointValue(e.target.value)}
               placeholder="例: 100 または -50"
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:14,color:C.choco,marginBottom:8}}/>
-            <p style={{fontSize:10,color:C.moss,marginBottom:12}}>※ 追加は正の数、減算はマイナス（例：-50）で入力</p>
+            <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 追加は正の数、減算はマイナス（例：-50）で入力</p>
+            <input value={pointNote} onChange={e=>setPointNote(e.target.value)}
+              placeholder="備考（任意）例：練習会参加"
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.choco,marginBottom:12}}/>
             {pointMsg && <p style={{fontSize:13,color:pointMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{pointMsg}</p>}
             <div style={{display:"flex",gap:8,marginBottom:8}}>
               <button onClick={()=>{setPointModal(null);setPointMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
               <button onClick={()=>{
                 if(!pointValue){setPointMsg("ポイント数を入力してください");return;}
-                const newP = pointModal.points + parseInt(pointValue);
-                gasWrite({action:"write",name:pointModal.name,column:"ポイント",value:String(newP),overwrite:"true"}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
+                const diff = parseInt(pointValue);
+                const newP = pointModal.points + diff;
+                const type = diff >= 0 ? "付与" : "使用";
+                gasWrite({action:"addpoints", name:pointModal.name, points:String(diff), type:type, note:pointNote}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setPointNote("");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
               }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>付与・減算する</button>
             </div>
             <button onClick={()=>{
-              gasWrite({action:"write",name:pointModal.name,column:"ポイント",value:"0",overwrite:"true"}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ リセット完了！");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
-            }} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer"}}>🔄 ポイントをリセット（0にする）</button>
+              const curP = pointModal.points;
+              gasWrite({action:"addpoints", name:pointModal.name, points:String(-curP), type:"リセット", note:"ポイントリセット"}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ リセット完了！");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
+            }} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>🔄 ポイントをリセット（0にする）</button>
+            <button onClick={()=>{fetchPointHistory(pointModal.name);setPointHistoryOpen(!pointHistoryOpen);}}
+              style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+              📋 ポイント履歴を見る {pointHistoryOpen?"▲":"▼"}
+            </button>
+            {pointHistoryOpen && (
+              <div style={{marginTop:8,maxHeight:200,overflowY:"auto"}}>
+                {pointHistory.length === 0 ? (
+                  <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴がありません</p>
+                ) : pointHistory.slice().reverse().map((h,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 4px",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
+                    <div>
+                      <p style={{fontSize:11,color:C.label}}>{h["日付"]}</p>
+                      <p style={{fontSize:11,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}</p>
+                    </div>
+                    <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030"}}>
+                      {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
