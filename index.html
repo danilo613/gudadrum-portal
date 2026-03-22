@@ -958,7 +958,14 @@ function App() {
                       <div key={i} style={{display:"flex",gap:10,padding:"8px 0",borderBottom:i<all.length-1?"1px solid rgba(112,130,56,0.1)":"none",opacity:isPast?0.5:1}}>
                         <div style={{minWidth:90}}>
                           <p style={{fontSize:12,fontWeight:600,color:isPast?C.label:C.choco}}>{fmtDate}</p>
-                          {s["時間"] && <p style={{fontSize:11,color:C.label}}>{s["時間"]}</p>}
+                          {s["時間"] && (() => {
+                            const t = s["時間"];
+                            const d = new Date(t);
+                            const fmtTime = (!isNaN(d.getTime()) && d.getFullYear() <= 1900)
+                              ? (d.getHours() + ":" + String(d.getMinutes()).padStart(2,"0"))
+                              : String(t);
+                            return fmtTime ? <p style={{fontSize:11,color:C.label}}>{fmtTime}</p> : null;
+                          })()}
                         </div>
                         <div style={{flex:1}}>
                           <span style={{fontSize:11,fontWeight:700,color:"#fff",background:s["種別"]==="個人レッスン"?"#708238":s["種別"]==="練習会"?"#3a7a8a":"#8a6a3a",borderRadius:4,padding:"2px 6px",marginRight:6}}>{s["種別"]}</span>
