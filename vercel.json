@@ -4,5 +4,10 @@
       "source": "/api/gas",
       "destination": "https://script.google.com/macros/s/AKfycbyxylgMmIFylS3hzkwZWlFnZzi0lskEsq7j2cwdePaThHWLNPC6GqxlJZ7zT-g0Jbn5lg/exec"
     }
-  ]
+  ],
+  "functions": {
+    "api/gas.js": {
+      "maxDuration": 30
+    }
+  }
 }
