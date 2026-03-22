@@ -201,7 +201,7 @@ function App() {
   const [schedModal, setSchedModal] = useState(null);
   const [schedDate, setSchedDate] = useState("");
   const [schedTime, setSchedTime] = useState("");
-  const [schedType, setSchedType] = useState("個人レッスン");
+  const [schedType, setSchedType] = useState("個人レッスン:対面");
   const [schedNote, setSchedNote] = useState("");
   const [schedMsg, setSchedMsg] = useState("");
   const [surveyResults, setSurveyResults] = useState([]);
@@ -260,7 +260,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzEDD1I5RCnQdQ-7qTvRv__BNpOF06BOaUO2q6MwOS0MZjFrN5P-bn4puRP2S5dJtXqQw/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbyxylgMmIFylS3hzkwZWlFnZzi0lskEsq7j2cwdePaThHWLNPC6GqxlJZ7zT-g0Jbn5lg/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -282,7 +282,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzEDD1I5RCnQdQ-7qTvRv__BNpOF06BOaUO2q6MwOS0MZjFrN5P-bn4puRP2S5dJtXqQw/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbyxylgMmIFylS3hzkwZWlFnZzi0lskEsq7j2cwdePaThHWLNPC6GqxlJZ7zT-g0Jbn5lg/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -451,7 +451,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbzEDD1I5RCnQdQ-7qTvRv__BNpOF06BOaUO2q6MwOS0MZjFrN5P-bn4puRP2S5dJtXqQw/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbyxylgMmIFylS3hzkwZWlFnZzi0lskEsq7j2cwdePaThHWLNPC6GqxlJZ7zT-g0Jbn5lg/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -734,7 +734,15 @@ function App() {
                 <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>種別</label>
                 <select value={schedType} onChange={e=>setSchedType(e.target.value)}
                   style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,cursor:"pointer"}}>
-                  <option value="個人レッスン">個人レッスン</option>
+                  <option value="個人レッスン:対面">個人レッスン:対面</option>
+                  <option value="個人レッスン:zoom">個人レッスン:zoom</option>
+                  <option value="講師定期レッスン:対面">講師定期レッスン:対面</option>
+                  <option value="講師定期レッスン:zoom">講師定期レッスン:zoom</option>
+                  <option value="講師個別相談:zoom">講師個別相談:zoom</option>
+                  <option value="作曲レッスン:対面">作曲レッスン:対面</option>
+                  <option value="作曲レッスン:zoom">作曲レッスン:zoom</option>
+                  <option value="即興レッスン:対面">即興レッスン:対面</option>
+                  <option value="即興レッスン:zoom">即興レッスン:zoom</option>
                   <option value="練習会">練習会</option>
                   <option value="イベント">イベント</option>
                   <option value="その他">その他</option>
@@ -968,8 +976,15 @@ function App() {
                           })()}
                         </div>
                         <div style={{flex:1}}>
-                          <span style={{fontSize:11,fontWeight:700,color:"#fff",background:s["種別"]==="個人レッスン"?"#708238":s["種別"]==="練習会"?"#3a7a8a":"#8a6a3a",borderRadius:4,padding:"2px 6px",marginRight:6}}>{s["種別"]}</span>
+                          <span style={{fontSize:11,fontWeight:700,color:"#fff",background:s["種別"].includes("対面")?"#708238":s["種別"].includes("zoom")?"#3a7a8a":s["種別"]==="練習会"?"#5a6a8a":"#8a6a3a",borderRadius:4,padding:"2px 6px",marginRight:6}}>{s["種別"]}</span>
                           {s["備考"] && <p style={{fontSize:12,color:C.label,marginTop:4}}>{s["備考"]}</p>}
+                          {s["種別"].includes("zoom") && (
+                            <div style={{marginTop:6,background:"rgba(58,122,138,0.08)",borderRadius:6,padding:"6px 8px"}}>
+                              <a href="https://us06web.zoom.us/j/7484259893?pwd=97rxQJ8xoSZyKiDRLCgD5ITIq9a0KT.1" target="_blank" rel="noreferrer"
+                                style={{fontSize:11,color:"#3a7a8a",fontWeight:600,textDecoration:"none"}}>🎥 Zoomに参加する</a>
+                              <p style={{fontSize:10,color:C.label,marginTop:2}}>ID: 748 425 9893　パスコード: 77793</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
