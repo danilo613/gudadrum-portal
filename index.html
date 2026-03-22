@@ -662,8 +662,8 @@ function App() {
                         <BadgeImage level={m.level} size={48}/>
                         <div style={{flex:1}}>
                           <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:2}}>
-                            <p style={{fontSize:15,fontWeight:600,color:C.choco}}>{m.name}</p>
-                            {m.region && <p style={{fontSize:11,color:C.label}}>{m.region}</p>}
+                            <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
+                            {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
                           </div>
                           <p style={{fontSize:13,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
                         </div>
@@ -686,7 +686,7 @@ function App() {
               <div style={{display:"flex",alignItems:"center",gap:12}}>
                 <BadgeImage level={m.level} size={48}/>
                 <div style={{flex:1}}>
-                  <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{m.name}</p>
+                  <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
                   <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                     <p style={{fontSize:12,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
                     {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
@@ -1229,9 +1229,9 @@ function App() {
               const done = i < m.completedLevels;
               return (
                 <div key={i} style={{background:done?"rgba(112,130,56,0.1)":"rgba(0,0,0,0.03)",borderRadius:10,padding:"10px 14px"}}>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}>
-                    <span style={{fontSize:16,flexShrink:0}}>{done?"✅":"🔒"}</span>
-                    <span style={{fontSize:13,color:done?C.choco:C.label,fontWeight:done?500:400}}>{item.title}</span>
+                  <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
+                    <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{done?"✅":"🔒"}</span>
+                    <span style={{fontSize:13,color:done?C.choco:C.label,fontWeight:done?500:400,wordBreak:"keep-all",lineHeight:1.5}}>{item.title}</span>
                   </div>
                   {done && item.url && (
                     <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8,marginLeft:24}}>
