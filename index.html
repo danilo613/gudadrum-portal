@@ -21,7 +21,7 @@ const STORAGE_KEY = "guda_config_v3";
 const ADMIN_PASS = "1919";
 const INSTRUCTOR_PASS = "2525";
 const INSTRUCTORS = ["Yamashita Noriko", "hiroko", "灯音(to•o•n)"];
-const SONGS = ["蒼〜aoi〜","iridescence","艶麗〜enrei〜","NoStAlGiE","heart beat of L**E","dreamy EYES","春ノ舞","秋霖〜shuhrin〜","water lily〜水面〜","めぐみの空","holy child","water lily","Re:Grace","添音〜embrace〜"];
+const SONGS = ["蒼〜aoi〜","iridescence","艶麗〜enrei〜","NoStAlGiE","heart beat of L**E","dreamy EYES","春ノ舞","秋霖〜shuhrin〜","water lily〜水面〜","めぐみの空","holy child","water lily","Re:Grace","添音〜embrace〜","祈音〜Inorion〜","fare well"];
 const CSV_URL = "/api/gas";
 
 const BADGE_IMAGES = {
@@ -210,7 +210,8 @@ function App() {
   const [applyMsg, setApplyMsg] = useState({});
   const [showSurvey, setShowSurvey] = useState(false);
   const [sortKey, setSortKey] = useState("level");
-  const [filterSong, setFilterSong] = useState("");
+  const [filterSongs, setFilterSongs] = useState([]);
+  const [showSongFilter, setShowSongFilter] = useState(false);
   const [surveyModal, setSurveyModal] = useState(null);
   const [isFromAdmin, setIsFromAdmin] = useState(false);
   const [myMemo, setMyMemo] = useState("");
@@ -482,8 +483,8 @@ function App() {
     <button onClick={onClick} style={{background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,borderRadius:8,padding:"6px 12px",fontSize:12,color:C.olive,cursor:"pointer",fontWeight:600}}>{label}</button>
   );
 
-  const filteredMembers = filterSong
-    ? members.filter(m => (m.songs||"").includes(filterSong))
+  const filteredMembers = filterSongs.length > 0
+    ? members.filter(m => filterSongs.every(s => (m.songs||"").includes(s)))
     : members;
 
   const sortedMembers = sortKey === "region"
@@ -539,11 +540,28 @@ function App() {
               <option value="level">段階順</option>
               <option value="region">地域順</option>
             </select>
-            <select value={filterSong} onChange={e=>setFilterSong(e.target.value)}
-              style={{fontSize:11,color:"#3a7a8a",background:"rgba(58,122,138,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
-              <option value="">🎵 楽曲で絞込</option>
-              {SONGS.map(s=><option key={s} value={s}>{s}</option>)}
-            </select>
+            <div style={{position:"relative"}}>
+              <button onClick={()=>setShowSongFilter(!showSongFilter)}
+                style={{fontSize:11,color:"#3a7a8a",background:filterSongs.length>0?"rgba(58,122,138,0.2)":"rgba(58,122,138,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer",whiteSpace:"nowrap"}}>
+                🎵 {filterSongs.length>0?filterSongs.length+"曲選択中":"楽曲で絞込"} {showSongFilter?"▲":"▼"}
+              </button>
+              {filterSongs.length>0 && (
+                <button onClick={()=>{setFilterSongs([]);setShowSongFilter(false);}}
+                  style={{fontSize:10,color:"#3a7a8a",background:"transparent",border:"none",cursor:"pointer",marginLeft:2}}>✕</button>
+              )}
+              {showSongFilter && (
+                <div style={{position:"absolute",top:"100%",right:0,zIndex:50,background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"8px",minWidth:220,maxHeight:300,overflowY:"auto",boxShadow:"0 4px 12px rgba(0,0,0,0.15)"}}>
+                  {SONGS.map(s=>(
+                    <label key={s} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px",cursor:"pointer",borderRadius:6,background:filterSongs.includes(s)?"rgba(58,122,138,0.1)":"transparent"}}>
+                      <input type="checkbox" checked={filterSongs.includes(s)} onChange={()=>{
+                        setFilterSongs(prev => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s]);
+                      }} style={{accentColor:"#3a7a8a"}}/>
+                      <span style={{fontSize:11,color:C.choco}}>{s}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
         {!isInstructor && (
