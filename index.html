@@ -62,7 +62,7 @@ const BTN_STYLE = {
 };
 
 function splitItems(str) {
-  return String(str || "").split(/[|｜;；]/).map(s => s.trim()).filter(Boolean);
+  return String(str || "").split(/[|｜;；,，]/).map(s => s.trim()).filter(Boolean);
 }
 
 function parseCsvLine(line) {
