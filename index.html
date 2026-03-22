@@ -222,6 +222,7 @@ function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
+  const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
   const [pointNote, setPointNote] = useState("");
   const [feedbackName, setFeedbackName] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
@@ -940,11 +941,32 @@ function App() {
                 <span style={{fontSize:11,color:"#d4e8a0",marginLeft:2}}>P</span>
               </p>
               <a href="https://docs.google.com/forms/d/e/1FAIpQLSfFsbisxGmhg_nEHXNwTeEnOZbztEF_VFlvH725Sn078mm07Q/viewform?usp=dialog" target="_blank" rel="noreferrer"
-                style={{display:"inline-block",padding:"5px 12px",borderRadius:8,background:"rgba(255,255,255,0.2)",color:"#fff",fontSize:11,fontWeight:600,textDecoration:"none"}}>
+                style={{display:"inline-block",padding:"5px 12px",borderRadius:8,background:"rgba(255,255,255,0.2)",color:"#fff",fontSize:11,fontWeight:600,textDecoration:"none",marginBottom:6}}>
                 ポイントを利用する
               </a>
+              <button onClick={()=>{fetchPointHistory(m.name);setMyPointHistoryOpen(!myPointHistoryOpen);}}
+                style={{display:"block",width:"100%",padding:"5px 12px",borderRadius:8,background:"rgba(255,255,255,0.15)",color:"#fff",fontSize:11,fontWeight:600,border:"none",cursor:"pointer"}}>
+                📋 ポイント履歴 {myPointHistoryOpen ? "▲" : "▼"}
+              </button>
             </div>
           </div>
+          {myPointHistoryOpen && (
+            <div style={{marginTop:8,padding:"0 4px"}}>
+              {pointHistory.filter(h=>h["名前"]===m.name).length === 0 ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center"}}>履歴がありません</p>
+              ) : pointHistory.filter(h=>h["名前"]===m.name).slice().reverse().map((h,i)=>(
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
+                  <div>
+                    <p style={{fontSize:11,color:C.label}}>{h["日付"]}</p>
+                    <p style={{fontSize:12,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}</p>
+                  </div>
+                  <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030"}}>
+                    {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* 演奏診断 */}
