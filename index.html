@@ -251,6 +251,7 @@ function App() {
     if (currentMember) {
       setMyMemo(localStorage.getItem("memo_"+currentMember.name) || "");
       setMyGoal(localStorage.getItem("goal_"+currentMember.name) || "");
+      fetchPointHistory(currentMember.name);
     }
   }, [currentMember]);
 
@@ -944,10 +945,10 @@ function App() {
                 style={{display:"inline-block",padding:"5px 12px",borderRadius:8,background:"rgba(255,255,255,0.2)",color:"#fff",fontSize:11,fontWeight:600,textDecoration:"none",marginBottom:6}}>
                 ポイントを利用する
               </a>
-              <button onClick={()=>{fetchPointHistory(m.name);setMyPointHistoryOpen(!myPointHistoryOpen);}}
-                style={{display:"block",width:"100%",padding:"5px 12px",borderRadius:8,background:"rgba(255,255,255,0.15)",color:"#fff",fontSize:11,fontWeight:600,border:"none",cursor:"pointer"}}>
+              <p onClick={()=>setMyPointHistoryOpen(!myPointHistoryOpen)}
+                style={{fontSize:11,color:"rgba(255,255,255,0.8)",cursor:"pointer",marginTop:4}}>
                 📋 ポイント履歴 {myPointHistoryOpen ? "▲" : "▼"}
-              </button>
+              </p>
             </div>
           </div>
           {myPointHistoryOpen && (
