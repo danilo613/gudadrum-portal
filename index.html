@@ -217,6 +217,7 @@ function App() {
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [mySchedOpen, setMySchedOpen] = useState(true);
   const [myDataOpen, setMyDataOpen] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
   const [curriculumOpen, setCurriculumOpen] = useState(false);
@@ -935,14 +936,14 @@ function App() {
           const upcoming = myScheds.filter(s=>new Date(s["日付"])>=today).sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
           const past = myScheds.filter(s=>new Date(s["日付"])<today).sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
           const all = [...upcoming, ...past];
-          if (all.length === 0) return null;
+          // デバッグ：空でも表示
           return (
             <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-              <button onClick={()=>setScheduleOpen(!scheduleOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+              <button onClick={()=>setMySchedOpen(!mySchedOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
                 <span style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>🗓 マイスケジュール</span>
-                <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:scheduleOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+                <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:mySchedOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
               </button>
-              {scheduleOpen && (
+              {mySchedOpen && (
                 <div style={{borderTop:"1px solid "+C.border,padding:"10px 16px 14px"}}>
                   {all.map((s,i)=>{
                     const isPast = new Date(s["日付"]) < today;
