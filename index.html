@@ -290,6 +290,28 @@ function App() {
     });
   }
 
+  async function fetchSchedules() {
+    try {
+      const res = await fetch("/api/gas?action=getschedule");
+      const data = await res.json();
+      if (data.schedules) setMemberSchedules(data.schedules);
+    } catch(e) {}
+  }
+
+  async function addSchedule() {
+    if (!schedDate) { setSchedMsg("日付を入力してください"); return; }
+    setSchedMsg("送信中...");
+    try {
+      const data = await gasWrite({action:"addschedule", name:schedModal, date:schedDate, time:schedTime, type:schedType, note:schedNote});
+      if (data.error) throw new Error(data.error);
+      setSchedMsg("✅ 追加しました！");
+      setSchedDate(""); setSchedTime(""); setSchedNote("");
+      fetchSchedules();
+      setTimeout(()=>{setSchedModal(null);setSchedMsg("");}, 1500);
+    } catch(e) { setSchedMsg("❌ "+e.message); }
+  }
+
+
 
   async function fetchSurvey() {
     try {
