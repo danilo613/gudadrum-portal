@@ -768,7 +768,7 @@ function App() {
             }} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>🔄 ポイントをリセット（0にする）</button>
             <button onClick={()=>{fetchPointHistory(pointModal.name);setPointHistoryOpen(!pointHistoryOpen);}}
               style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,fontWeight:600,cursor:"pointer"}}>
-              📋 ポイント履歴を見る {pointHistoryOpen?"▲":"▼"}
+              📋 ポイント履歴を見る {pointHistoryOpen ? "▲" : "▼"}
             </button>
             {pointHistoryOpen && (
               <div style={{marginTop:8,maxHeight:200,overflowY:"auto"}}>
