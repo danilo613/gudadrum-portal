@@ -658,20 +658,22 @@ function App() {
                       style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
                       onMouseEnter={e=>e.currentTarget.style.border="1px solid "+C.olive}
                       onMouseLeave={e=>e.currentTarget.style.border="1px solid "+C.border}>
-                      <div style={{display:"flex",alignItems:"center",gap:12}}>
+                      <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <BadgeImage level={m.level} size={48}/>
-                        <div style={{flex:1}}>
-                          <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:2}}>
-                            <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
+                        <div style={{flex:1,minWidth:0}}>
+                          <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
+                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                            <p style={{fontSize:12,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
                             {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
                           </div>
-                          <p style={{fontSize:13,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
                         </div>
-                        <MiniRadar m={m} size={48}/>
-                        <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
-                        <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
-                        {!isInstructor && (<button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>)}
-                        {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
+                        <MiniRadar m={m} size={44}/>
+                      </div>
+                      <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
+                        <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
+                        <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
+                        {!isInstructor && (<button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>)}
+                        {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
                       </div>
                     </div>
                   ))}
@@ -683,20 +685,22 @@ function App() {
               style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
               onMouseEnter={e=>e.currentTarget.style.border="1px solid "+C.olive}
               onMouseLeave={e=>e.currentTarget.style.border="1px solid "+C.border}>
-              <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <BadgeImage level={m.level} size={48}/>
-                <div style={{flex:1}}>
+                <div style={{flex:1,minWidth:0}}>
                   <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
-                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6}}>
                     <p style={{fontSize:12,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
                     {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
                   </div>
                 </div>
-                <MiniRadar m={m} size={48}/>
-                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
-                <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
-                {!isInstructor && (<button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>)}
-                {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{flexShrink:0,padding:"6px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
+                <MiniRadar m={m} size={44}/>
+              </div>
+              <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
+                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
+                <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
+                {!isInstructor && (<button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>)}
+                {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
               </div>
             </div>
           ))}
