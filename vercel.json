@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/gas",
-      "destination": "https://script.google.com/macros/s/AKfycbxO91cbG2Gk8Tf3gDqncMSGZTKmr_xbhInqduKUMxHQqvzv8mdasgcRSePF5yJ2A09eLw/exec"
+      "destination": "https://script.google.com/macros/s/AKfycbyI82jwTzTP24ZzykR__Zu6uUXCQ8Od97_lK4x7ew8AKmAGIHomNvU6_tOrt9MXiI3sog/exec"
     }
   ],
   "functions": {
