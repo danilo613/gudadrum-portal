@@ -1098,7 +1098,7 @@ function App() {
                           onClick={()=>setPastSchedOpen(p=>({...p,["hist_"+s["日付"]+s["種別"]]:!isOpen}))}>
                           <div>
                             <p style={{fontSize:12,fontWeight:700,color:C.choco}}>{fmtDate}</p>
-                            <p style={{fontSize:11,color:C.label}}>{s["種別"]}{s["備考"]?" · "+s["備考"]:""}</p>
+                            <p style={{fontSize:11,color:C.label}}>{s["種別"]}{s["備考"]?" · "+s["備考"]:""}{s["入力者"]?" (" + s["入力者"] + ")":""}</p>
                           </div>
                           <div style={{display:"flex",alignItems:"center",gap:8}}>
                             {comments.length>0 && <span style={{fontSize:10,color:C.olive,fontWeight:600}}>💬 {comments.length}件</span>}
