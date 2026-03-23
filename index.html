@@ -202,6 +202,7 @@ function App() {
   const [workshopHeaders, setWorkshopHeaders] = useState([]);
   const [showWorkshop, setShowWorkshop] = useState(false);
   const [workshopLoaded, setWorkshopLoaded] = useState(false);
+  const [loginData, setLoginData] = useState([]);
   const [workshopFilter, setWorkshopFilter] = useState("all");
   const [memberSchedules, setMemberSchedules] = useState([]);
   const [schedModal, setSchedModal] = useState(null);
@@ -282,7 +283,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwtM-J9AwdhQa02GEahHo3lhsaVhshZb71pSwPW7E_dweGvNvjEaYoADycY_HYY-SAffA/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -304,7 +305,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwtM-J9AwdhQa02GEahHo3lhsaVhshZb71pSwPW7E_dweGvNvjEaYoADycY_HYY-SAffA/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -380,6 +381,20 @@ function App() {
   }
 
 
+
+  async function fetchLogins() {
+    try {
+      const res = await fetch("/api/gas?action=getlogins");
+      const data = await res.json();
+      if (data.logins) setLoginData(data.logins);
+    } catch(e) {}
+  }
+
+  async function recordLogin(name) {
+    try {
+      await fetch("/api/gas?" + new URLSearchParams({action:"addlogin", name:name}));
+    } catch(e) {}
+  }
 
   async function fetchWorkshop() {
     try {
@@ -527,7 +542,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbwtM-J9AwdhQa02GEahHo3lhsaVhshZb71pSwPW7E_dweGvNvjEaYoADycY_HYY-SAffA/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -890,9 +905,15 @@ function App() {
                         <BadgeImage level={m.level} size={48}/>
                         <div style={{flex:1,minWidth:0}}>
                           <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
-                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                             <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{m.level||"−"}</p>
                             {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
+                            {(()=>{
+                              const logs = loginData.filter(l=>l.name===m.name);
+                              if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
+                              const last = logs[logs.length-1].date.slice(0,10);
+                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
+                            })()}
                           </div>
                         </div>
                         <MiniRadar m={m} size={44}/>
@@ -918,9 +939,15 @@ function App() {
                 <BadgeImage level={m.level} size={48}/>
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
-                  <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}> 
                     <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{m.level||"−"}</p>
                     {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
+                    {(()=>{
+                      const logs = loginData.filter(l=>l.name===m.name);
+                      if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
+                      const last = logs[logs.length-1].date.slice(0,10);
+                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
+                    })()}
                   </div>
                 </div>
                 <MiniRadar m={m} size={44}/>
