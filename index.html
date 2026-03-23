@@ -197,6 +197,10 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [fetchMsg, setFetchMsg] = useState("");
   const [notionItems, setNotionItems] = useState([]);
+  const [workshopData, setWorkshopData] = useState([]);
+  const [workshopHeaders, setWorkshopHeaders] = useState([]);
+  const [showWorkshop, setShowWorkshop] = useState(false);
+  const [workshopLoaded, setWorkshopLoaded] = useState(false);
   const [memberSchedules, setMemberSchedules] = useState([]);
   const [schedModal, setSchedModal] = useState(null);
   const [schedDate, setSchedDate] = useState("");
@@ -276,7 +280,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbwtZqZ90w8Q6V5IbFv-modJC3eYCdkKuJ4BKuE9jkr8Jfg5CRVq53f2F8azo_W7K0xYpQ/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -298,7 +302,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbwtZqZ90w8Q6V5IbFv-modJC3eYCdkKuJ4BKuE9jkr8Jfg5CRVq53f2F8azo_W7K0xYpQ/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -374,6 +378,14 @@ function App() {
   }
 
 
+
+  async function fetchWorkshop() {
+    try {
+      const res = await fetch("/api/gas?action=getworkshop");
+      const data = await res.json();
+      if (data.rows) { setWorkshopData(data.rows); setWorkshopHeaders(data.headers||[]); setWorkshopLoaded(true); }
+    } catch(e) {}
+  }
 
   async function fetchSurvey() {
     try {
@@ -512,7 +524,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbwtZqZ90w8Q6V5IbFv-modJC3eYCdkKuJ4BKuE9jkr8Jfg5CRVq53f2F8azo_W7K0xYpQ/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
