@@ -778,6 +778,16 @@ function App() {
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>{isInstructor?"🎁 ポイント付与":"🎁 ポイント管理"}</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{pointModal.name}</strong></p>
             <p style={{fontSize:13,color:C.olive,fontWeight:700,marginBottom:16}}>現在のポイント：{pointModal.points} P</p>
+            {isInstructor && (
+              <div style={{marginBottom:14}}>
+                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>講師名</label>
+                <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
+                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,cursor:"pointer"}}>
+                  <option value="">-- 選択してください --</option>
+                  {INSTRUCTORS.map(n=><option key={n} value={n}>{n}</option>)}
+                </select>
+              </div>
+            )}
             <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>付与・減算するポイント数</label>
             <input type="number" value={pointValue} onChange={e=>setPointValue(e.target.value)}
               min={isInstructor?"0":undefined}
