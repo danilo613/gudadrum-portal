@@ -276,7 +276,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbyI82jwTzTP24ZzykR__Zu6uUXCQ8Od97_lK4x7ew8AKmAGIHomNvU6_tOrt9MXiI3sog/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwtZqZ90w8Q6V5IbFv-modJC3eYCdkKuJ4BKuE9jkr8Jfg5CRVq53f2F8azo_W7K0xYpQ/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -298,7 +298,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbyI82jwTzTP24ZzykR__Zu6uUXCQ8Od97_lK4x7ew8AKmAGIHomNvU6_tOrt9MXiI3sog/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbwtZqZ90w8Q6V5IbFv-modJC3eYCdkKuJ4BKuE9jkr8Jfg5CRVq53f2F8azo_W7K0xYpQ/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -512,7 +512,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbyI82jwTzTP24ZzykR__Zu6uUXCQ8Od97_lK4x7ew8AKmAGIHomNvU6_tOrt9MXiI3sog/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbwtZqZ90w8Q6V5IbFv-modJC3eYCdkKuJ4BKuE9jkr8Jfg5CRVq53f2F8azo_W7K0xYpQ/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -690,7 +690,7 @@ function App() {
                         <div style={{flex:1,minWidth:0}}>
                           <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
                           <div style={{display:"flex",alignItems:"center",gap:6}}>
-                            <p style={{fontSize:12,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
+                            <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{m.level||"−"}</p>
                             {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
                           </div>
                         </div>
@@ -718,7 +718,7 @@ function App() {
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
                   <div style={{display:"flex",alignItems:"center",gap:6}}>
-                    <p style={{fontSize:12,fontWeight:700,color:LEVEL_COLOR}}>{m.level||"−"}</p>
+                    <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{m.level||"−"}</p>
                     {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
                   </div>
                 </div>
@@ -795,7 +795,8 @@ function App() {
                 const diff = parseInt(pointValue);
                 const newP = pointModal.points + diff;
                 const type = diff >= 0 ? "付与" : "使用";
-                gasWrite({action:"addpoints", name:pointModal.name, points:String(diff), type:type, note:pointNote}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setPointNote("");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
+                const recorder = isInstructor ? (instructorName || "講師") : "DANiLO";
+                gasWrite({action:"addpoints", name:pointModal.name, points:String(diff), type:type, note:pointNote, recorder:recorder}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setPointNote("");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
               }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>{isInstructor?"付与する":"付与・減算する"}</button>
             </div>
             {!isInstructor && (
@@ -816,7 +817,7 @@ function App() {
                   <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 4px",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
                     <div>
                       <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
-                      <p style={{fontSize:11,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}</p>
+                      <p style={{fontSize:11,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
                     </div>
                     <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030"}}>
                       {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
@@ -1101,7 +1102,7 @@ function App() {
                 <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
                   <div>
                     <p style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
-                    <p style={{fontSize:12,color:"#fff",fontWeight:500}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}</p>
+                    <p style={{fontSize:12,color:"#fff",fontWeight:500}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
                   </div>
                   <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#d4e8a0":"#ffaaaa"}}>
                     {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
@@ -1312,7 +1313,7 @@ function App() {
           </button>
           {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
-              {icon:"💪", label:"あなたの強み", items:splitItems(m.strengths)},
+              {icon:"💪", label:"あなたの強み", items:splitItems(m.strengths), isStrengths:true},
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
@@ -1322,7 +1323,18 @@ function App() {
                 <div style={{flex:1,minWidth:0}}>
                   <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,marginBottom:3,fontWeight:500}}>{label}</p>
                   {items.length > 0
-                    ? items.map((v,j) => <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>)
+                    ? items.map((v,j) => {
+                        if (isStrengths) {
+                          const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*(.+)$/s);
+                          if (match) return (
+                            <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
+                              <p style={{fontSize:13,color:C.choco,lineHeight:1.8}}>{match[3].trim()}</p>
+                              <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
+                            </div>
+                          );
+                        }
+                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>;
+                      })
                     : <p style={{fontSize:13,color:C.label}}>−</p>
                   }
                 </div>
