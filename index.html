@@ -846,6 +846,36 @@ function App() {
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440,maxHeight:"90vh",overflowY:"auto"}}>
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>📅 スケジュール管理</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:12}}>対象：<strong>{schedModal}</strong></p>
+            {memberSchedules.filter(s=>s["名前"]===schedModal && new Date(s["日付"]) < new Date()).length > 0 && (
+              <div style={{marginBottom:16}}>
+                <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>💬 過去の予定へコメント追記</p>
+                <div style={{maxHeight:160,overflowY:"auto",display:"flex",flexDirection:"column",gap:6}}>
+                  {memberSchedules.filter(s=>s["名前"]===schedModal && new Date(s["日付"]) < new Date())
+                    .sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]))
+                    .map((s,i)=>{
+                      const d=new Date(s["日付"]);
+                      const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
+                      return (
+                        <div key={i} style={{background:"rgba(0,0,0,0.04)",borderRadius:8,padding:"8px 10px"}}>
+                          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:8}}>
+                            <div style={{flex:1,minWidth:0}}>
+                              <p style={{fontSize:11,color:C.choco,fontWeight:600}}>{fmtDate}</p>
+                              <p style={{fontSize:10,color:C.label}}>{s["種別"]}</p>
+                              {s["コメント"] && <p style={{fontSize:11,color:C.olive,marginTop:2,lineHeight:1.5}}>💬 {s["コメント"]}</p>}
+                            </div>
+                            <button onClick={()=>{setSchedCommentModal({name:schedModal,date:s["日付"],type:s["種別"]});setSchedComment(s["コメント"]||"");setSchedCommentMsg("");}}
+                              style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>
+                              {s["コメント"]?"編集":"追記"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  }
+                </div>
+              </div>
+            )}
+            <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>➕ 新しい予定を追加</p>
 
             <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
               <div>
