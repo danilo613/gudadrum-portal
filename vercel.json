@@ -1,13 +1,4 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/gas",
-      "destination": "https://script.google.com/macros/s/AKfycbwtZqZ90w8Q6V5IbFv-modJC3eYCdkKuJ4BKuE9jkr8Jfg5CRVq53f2F8azo_W7K0xYpQ/exec"
-    }
-  ],
-  "functions": {
-    "api/gas.js": {
-      "maxDuration": 30
-    }
-  }
+  "rewrites": [{"source": "/api/gas", "destination": "https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec"}],
+  "functions": {"api/gas.js": {"maxDuration": 30}}
 }
