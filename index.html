@@ -660,13 +660,11 @@ function App() {
             📊 アンケート結果 {showSurvey?"▲":"▼"}
           </button>
         )}
-        {!isInstructor && (
-          <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
-            🧪 練習会データ {showWorkshop?"▲":"▼"}
-          </button>
-        )}
-        {showWorkshop && !isInstructor && (
+        <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          🧪 練習会データ {showWorkshop?"▲":"▼"}
+        </button>
+        {showWorkshop && (
           <div style={{marginBottom:16}}>
             {!workshopLoaded ? (
               <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
