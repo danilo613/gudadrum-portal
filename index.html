@@ -1430,7 +1430,7 @@ function App() {
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
-            ].map(({icon,label,items},i)=>(
+            ].map(({icon,label,items,isStrengths},i)=>(
               <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
                 <span style={{fontSize:15,flexShrink:0,marginTop:1}}>{icon}</span>
                 <div style={{flex:1,minWidth:0}}>
@@ -1438,7 +1438,7 @@ function App() {
                   {items.length > 0
                     ? items.map((v,j) => {
                         if (isStrengths) {
-                          const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*(.+)$/s);
+                          const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                           if (match) return (
                             <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
                               <p style={{fontSize:13,color:C.choco,lineHeight:1.8}}>{match[3].trim()}</p>
