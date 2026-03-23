@@ -838,23 +838,57 @@ function App() {
                 .sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
               if (scheds.length === 0) return <p style={{fontSize:13,color:C.label,textAlign:"center"}}>過去の予定はありません</p>;
               return (
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
                   {scheds.map((s,i)=>{
                     const d=new Date(s["日付"]);
                     const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
+                    const isOpen = pastSchedOpen["hist_"+s["日付"]+s["種別"]] || false;
+                    // コメントから記録者を抽出（"2026/3/23 DANiLO: 内容" の形式）
+                    const parseComment = (c) => {
+                      if (!c) return [];
+                      return c.split(";").map(line=>{
+                        const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*(.+)$/);
+                        if (m) return {date:m[1], author:m[2].trim(), text:m[3].trim()};
+                        return {date:"", author:"", text:line.trim()};
+                      }).filter(x=>x.text);
+                    };
+                    const comments = parseComment(s["コメント"]);
                     return (
-                      <div key={i} style={{background:"rgba(0,0,0,0.04)",borderRadius:10,padding:"10px 12px"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
-                          <div style={{flex:1}}>
+                      <div key={i} style={{background:"rgba(0,0,0,0.04)",borderRadius:10,overflow:"hidden"}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",cursor:"pointer"}}
+                          onClick={()=>setPastSchedOpen(p=>({...p,["hist_"+s["日付"]+s["種別"]]:!isOpen}))}>
+                          <div>
                             <p style={{fontSize:12,fontWeight:700,color:C.choco}}>{fmtDate}</p>
-                            <p style={{fontSize:11,color:C.label,marginBottom:s["コメント"]?6:0}}>{s["種別"]}{s["備考"]?" · "+s["備考"]:""}</p>
-                            {s["コメント"] && <p style={{fontSize:12,color:C.choco,lineHeight:1.6,paddingLeft:8,borderLeft:"2px solid "+C.olive}}>{s["コメント"]}</p>}
+                            <p style={{fontSize:11,color:C.label}}>{s["種別"]}{s["備考"]?" · "+s["備考"]:""}</p>
                           </div>
-                          <button onClick={()=>{setSchedCommentModal({name:schedHistoryModal,date:s["日付"],type:s["種別"]});setSchedComment(s["コメント"]||"");setSchedCommentMsg("");}}
-                            style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>
-                            {s["コメント"]?"編集":"追記"}
-                          </button>
+                          <div style={{display:"flex",alignItems:"center",gap:8}}>
+                            {comments.length>0 && <span style={{fontSize:10,color:C.olive,fontWeight:600}}>💬 {comments.length}件</span>}
+                            <span style={{fontSize:11,color:C.olive}}>{isOpen?"▲":"▼"}</span>
+                          </div>
                         </div>
+                        {isOpen && (
+                          <div style={{borderTop:"1px solid rgba(112,130,56,0.15)",padding:"10px 12px"}}>
+                            {comments.length > 0 ? (
+                              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
+                                {comments.map((c,j)=>(
+                                  <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+C.olive}}>
+                                    <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                      <p style={{fontSize:10,color:C.olive,fontWeight:700}}>{c.author}</p>
+                                      {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
+                                    </div>
+                                    <p style={{fontSize:12,color:C.choco,lineHeight:1.6}}>{c.text}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p style={{fontSize:12,color:C.label,marginBottom:10}}>コメントなし</p>
+                            )}
+                            <button onClick={()=>{setSchedCommentModal({name:schedHistoryModal,date:s["日付"],type:s["種別"]});setSchedComment(s["コメント"]||"");setSchedCommentMsg("");}}
+                              style={{padding:"4px 12px",borderRadius:6,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                              {comments.length>0?"編集・追記":"追記"}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
