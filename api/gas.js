@@ -8,8 +8,3 @@ export default async function handler(req) {
   const text = await res.text();
   return new Response(text, { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
 }
-```
-
-3つ更新後に、このURLを開いてデータが返ってくるか確認してください：
-```
-https://gudadrum-portal.vercel.app/api/gas?action=getworkshop
