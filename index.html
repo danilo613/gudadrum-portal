@@ -1097,7 +1097,7 @@ function App() {
                     // コメントから記録者を抽出（"2026/3/23 DANiLO: 内容" の形式）
                     const parseComment = (c) => {
                       if (!c) return [];
-                      return c.split(/(?<!\n);(?!\n)/).map(line=>{
+                      return c.split("\n").map(line=>{
                         const trimmed = line.trim();
                         if (!trimmed) return null;
                         const m = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
@@ -1260,7 +1260,7 @@ function App() {
                   })()}
                 </select>
                 <textarea value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
-                  placeholder="内容を入力...（;で改行されます）"
+                  placeholder="内容を入力...（;で別コメントに分けられます）"
                   style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:10,fontSize:13,color:C.choco,height:100,resize:"vertical",marginBottom:8}}/>
                 {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
                 <div style={{display:"flex",gap:8}}>
@@ -1296,7 +1296,7 @@ function App() {
                   </div>
                   <div>
                     <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>DANiLOメッセージ（任意）</label>
-                    <textarea value={diagScores.daniloMsg} onChange={e=>setDiagScores(p=>({...p,daniloMsg:e.target.value}))} placeholder="診断の結果メッセージを入力...（;で改行）" style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80}}/>
+                    <textarea value={diagScores.daniloMsg} onChange={e=>setDiagScores(p=>({...p,daniloMsg:e.target.value}))} placeholder="診断の結果メッセージを入力..." style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80}}/>
                   </div>
                 </div>
                 {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
@@ -1480,7 +1480,7 @@ function App() {
                         </div>
                         {isOpen && (
                           <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                            {s["コメント"].split(/(?<!\n);(?!\n)/).map((line,j)=>{
+                            {s["コメント"].split("\n").map((line,j)=>{
                               const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                               if (m) return (
                                 <div key={j} style={{marginBottom:j<s["コメント"].split(";").length-1?8:0}}>
@@ -1635,7 +1635,7 @@ function App() {
               <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
               <div style={{maxHeight:"8em",overflowY:"auto"}}>
                 {(()=>{
-                  const splitComment = (s) => String(s||"").split(/(?<!\n);(?!\n)/).map(x=>x.trim()).filter(Boolean);
+                  const splitComment = (s) => String(s||"").split("\n").map(x=>x.trim()).filter(Boolean);
                   const all = [
                     ...splitComment(m.challenge),
                     ...splitComment(m.commentNoriko),
