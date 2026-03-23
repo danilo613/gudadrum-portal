@@ -1,4 +1,4 @@
 {
-  "rewrites": [{"source": "/api/gas", "destination": "https://script.google.com/macros/s/AKfycbxMaflyWvU7So92QsPVKlhGEXmKfvNAMHjvyDY5dS8a_VM-wfDQ_h9-Qn49f9Im3yWxnA/exec"}],
+  "rewrites": [{"source": "/api/gas", "destination": "https://script.google.com/macros/s/AKfycbyk-nWvbdYOgb9LFV5pFM4XfWwSJcKXqarXG3yiARG4hXaYJGQY6gD7IUEa5WhAUYcLsQ/exec"}],
   "functions": {"api/gas.js": {"maxDuration": 30}}
 }
