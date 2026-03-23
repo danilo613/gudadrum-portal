@@ -1,4 +1,13 @@
 {
-  "rewrites": [{"source": "/api/gas", "destination": "https://script.google.com/macros/s/AKfycbwcGHc5kK_IMc1qNlP7e-DCfK5g8F9EcEO8C_D_Cqf6HfzFBlC2WQY0s7FdWD0rrxqagg/exec"}],
-  "functions": {"api/gas.js": {"maxDuration": 30}}
+  "rewrites": [
+    {
+      "source": "/api/gas",
+      "destination": "https://script.google.com/macros/s/AKfycbwtM-J9AwdhQa02GEahHo3lhsaVhshZb71pSwPW7E_dweGvNvjEaYoADycY_HYY-SAffA/exec"
+    }
+  ],
+  "functions": {
+    "api/gas.js": {
+      "maxDuration": 30
+    }
+  }
 }
