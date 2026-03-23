@@ -470,10 +470,22 @@ function App() {
       const today = new Date();
       const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
       const sender = isInstructor ? (instructorName || "講師") : "DANiLO";
+
+      // スケジュールコメントの場合
+      if (lessonColumn.startsWith("__sched__")) {
+        const parts = lessonColumn.replace("__sched__","").split("__");
+        const schedDate = parts[0];
+        const commentText = dateStr + " " + sender + ": " + lessonValue;
+        const data = await gasWrite({action:"addschedulecomment", name:lessonModal, date:schedDate, comment:commentText});
+        if (data.error) throw new Error(data.error);
+        setLessonMsg("✅ 送信完了！");
+        setLessonValue("");
+        setTimeout(() => { setLessonModal(null); setLessonMsg(""); fetchSchedules(); }, 1500);
+        return;
+      }
+
       const autoOverwrite = ["強み","目標"].includes(lessonColumn);
-      // 強み・目標は上書きだが日付と名前は付ける。手動上書きはそのまま。
       const formattedValue = overwrite ? lessonValue : dateStr + " " + sender + ": " + lessonValue;
-      // 講師の場合は講師専用列に書き込む
       let targetColumn = lessonColumn;
       if (isInstructor && lessonColumn === "課題") {
         const colMap = {"Yamashita Noriko":"Yamashita Norikoコメント", "hiroko":"hirokoコメント", "灯音(to•o•n)":"灯音コメント"};
