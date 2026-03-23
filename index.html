@@ -1586,7 +1586,7 @@ function App() {
                           const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                           if (match) return (
                             <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
-                              <p style={{fontSize:13,color:C.choco,lineHeight:1.8}}>{match[3].trim()}</p>
+                              <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{match[3].trim()}</p>
                               <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
                             </div>
                           );
