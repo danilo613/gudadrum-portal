@@ -719,6 +719,80 @@ function App() {
                       );
                     })}
                   </div>
+                  {/* スコア系円グラフ */}
+                  {(()=>{
+                    const SCORE_METRICS = [
+                      {key:"身体の状態、感覚", label:"身体の状態・感覚", options:["強く緊張","やや緊張","ニュートラル","やや緩む","とても緩む"]},
+                      {key:"場や人との一体感", label:"場や人との一体感", options:["分離感","少し距離","普通","つながり","深い一体感"]},
+                      {key:"時間の感覚（時の流れ） ", label:"時間の感覚", options:["気になった","時々意識","変化なし","時間忘れた","時空が広がる"]},
+                      {key:"この場に身を置いているときの安心感 ", label:"安心感", options:["強い不安","少し不安","普通","安心","深く安心"]},
+                    ];
+                    const targetRows = workshopFilter==="all" ? workshopData : workshopData.filter(r=>r["お名前"]===workshopFilter);
+                    const COLORS = ["#e07070","#e0a070","#d4c86a","#7aba8a","#5a8a6a"];
+                    const calcDist = (timing) => {
+                      const rows = targetRows.filter(r=>r["回答のタイミング"]===timing);
+                      return (key) => {
+                        const counts = [0,0,0,0,0];
+                        rows.forEach(r=>{
+                          const m = String(r[key]).match(/^[１-５1-5]/);
+                          if(m){ const map={"１":0,"1":0,"２":1,"2":1,"３":2,"3":2,"４":3,"4":3,"５":4,"5":4}; const idx=map[m[0]]; if(idx!==undefined) counts[idx]++; }
+                        });
+                        const total = counts.reduce((a,b)=>a+b,0);
+                        return counts.map(c=>total>0?Math.round(c/total*100):0);
+                      };
+                    };
+                    const beforeDist = calcDist("練習前");
+                    const afterDist = calcDist("練習後");
+                    const PieChart = ({dist, size=80}) => {
+                      let startAngle = -90;
+                      const cx=size/2, cy=size/2, r=size/2-4;
+                      const segments = dist.map((pct,i)=>{
+                        if(pct===0) return null;
+                        const angle = pct/100*360;
+                        const end = startAngle+angle;
+                        const x1=cx+r*Math.cos(startAngle*Math.PI/180), y1=cy+r*Math.sin(startAngle*Math.PI/180);
+                        const x2=cx+r*Math.cos(end*Math.PI/180), y2=cy+r*Math.sin(end*Math.PI/180);
+                        const large=angle>180?1:0;
+                        const d=`M${cx},${cy} L${x1},${y1} A${r},${r},0,${large},1,${x2},${y2} Z`;
+                        const seg = <path key={i} d={d} fill={COLORS[i]} stroke="#fff" strokeWidth="1"/>;
+                        startAngle = end;
+                        return seg;
+                      });
+                      return <svg width={size} height={size}>{segments}</svg>;
+                    };
+                    return (
+                      <div style={{marginTop:12}}>
+                        <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>📊 選択肢の分布（円グラフ）</p>
+                        {SCORE_METRICS.map(sm=>{
+                          const bd=beforeDist(sm.key), ad=afterDist(sm.key);
+                          return (
+                            <div key={sm.key} style={{marginBottom:14}}>
+                              <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:6}}>{sm.label}</p>
+                              <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
+                                <div style={{textAlign:"center"}}>
+                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習前</p>
+                                  <PieChart dist={bd}/>
+                                </div>
+                                <div style={{textAlign:"center"}}>
+                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習後</p>
+                                  <PieChart dist={ad}/>
+                                </div>
+                                <div style={{flex:1}}>
+                                  {sm.options.map((opt,i)=>(
+                                    <div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
+                                      <div style={{width:8,height:8,borderRadius:2,background:COLORS[i],flexShrink:0}}/>
+                                      <p style={{fontSize:10,color:C.choco}}>{opt}</p>
+                                      <p style={{fontSize:10,color:"#5a8a3a",marginLeft:"auto",fontWeight:600}}>{ad[i]>0?ad[i]+"%":""}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               );
             })()}
