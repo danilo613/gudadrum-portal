@@ -639,9 +639,75 @@ function App() {
         </div>
         {(
           <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+C.olive,background:showSurvey?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:showSurvey?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+C.olive,background:showSurvey?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:showSurvey?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
             📊 アンケート結果 {showSurvey?"▲":"▼"}
           </button>
+        )}
+        {!isInstructor && (
+          <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
+            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+            🧪 練習会データ {showWorkshop?"▲":"▼"}
+          </button>
+        )}
+        {showWorkshop && !isInstructor && (
+          <div style={{marginBottom:16}}>
+            {!workshopLoaded ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
+            ) : (()=>{
+              const parseNum = v => { const n=parseFloat(String(v).replace(/[^\d.]/g,"")); return isNaN(n)?null:n; };
+              const parseScore = v => { const m=String(v).match(/^[１-５1-5]/); if(!m)return null; const map={"１":1,"1":1,"２":2,"2":2,"３":3,"3":3,"４":4,"4":4,"５":5,"5":5}; return map[m[0]]||null; };
+              const METRICS = [
+                {key:"心拍数（30秒間）",label:"心拍数",parse:parseNum,lowerIsBetter:true},
+                {key:"30秒の呼吸数（吸気＆呼吸のセットで1カウント）",label:"呼吸数",parse:parseNum,lowerIsBetter:true},
+                {key:"身体の状態、感覚",label:"身体の状態",parse:parseScore,lowerIsBetter:false},
+                {key:"場や人との一体感",label:"一体感",parse:parseScore,lowerIsBetter:false},
+                {key:"時間の感覚（時の流れ） ",label:"時間の感覚",parse:parseScore,lowerIsBetter:false},
+                {key:"この場に身を置いているときの安心感 ",label:"安心感",parse:parseScore,lowerIsBetter:false},
+              ];
+              const calcAvg = (rows, timing) => {
+                const f = rows.filter(r=>r["回答のタイミング"]===timing);
+                const res={};
+                METRICS.forEach(m=>{ const vals=f.map(r=>m.parse(r[m.key])).filter(v=>v!==null); res[m.key]=vals.length>0?vals.reduce((a,b)=>a+b,0)/vals.length:null; });
+                return res;
+              };
+              const pct = (b,a,low) => { if(b===null||a===null||b===0)return null; const c=(a-b)/b*100; return low?-c:c; };
+              const names = [...new Set(workshopData.map(r=>r["お名前"]))].filter(Boolean).sort();
+              const bAvg = calcAvg(workshopFilter==="all"?workshopData:workshopData.filter(r=>r["お名前"]===workshopFilter), "練習前");
+              const aAvg = calcAvg(workshopFilter==="all"?workshopData:workshopData.filter(r=>r["お名前"]===workshopFilter), "練習後");
+              const label = workshopFilter==="all" ? `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）` : workshopFilter;
+              return (
+                <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <select value={workshopFilter} onChange={e=>setWorkshopFilter(e.target.value)}
+                    style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:12,color:C.choco,cursor:"pointer"}}>
+                    <option value="all">📊 全体平均</option>
+                    {names.map(n=><option key={n} value={n}>{n}</option>)}
+                  </select>
+                  <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+                    <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>{label}</p>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,marginBottom:4}}>
+                      <p style={{fontSize:10,color:C.label,fontWeight:600}}>項目</p>
+                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>前</p>
+                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>後</p>
+                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>変化</p>
+                    </div>
+                    {METRICS.map(m=>{
+                      const b=bAvg[m.key], a=aAvg[m.key], p=pct(b,a,m.lowerIsBetter);
+                      return (
+                        <div key={m.key} style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,padding:"5px 0",borderTop:"1px solid rgba(112,130,56,0.08)"}}>
+                          <p style={{fontSize:12,color:C.choco}}>{m.label}</p>
+                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{b!==null?b.toFixed(1):"−"}</p>
+                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{a!==null?a.toFixed(1):"−"}</p>
+                          <p style={{fontSize:12,fontWeight:700,textAlign:"center",color:p===null?"#aaa":p>0?"#5a8a3a":"#a04030"}}>
+                            {p===null?"−":(p>0?"+":"")+p.toFixed(0)+"%"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
         )}
         {showSurvey && (
           <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
