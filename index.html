@@ -675,8 +675,21 @@ function App() {
               const bAvg = calcAvg(workshopFilter==="all"?workshopData:workshopData.filter(r=>r["お名前"]===workshopFilter), "練習前");
               const aAvg = calcAvg(workshopFilter==="all"?workshopData:workshopData.filter(r=>r["お名前"]===workshopFilter), "練習後");
               const label = workshopFilter==="all" ? `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）` : workshopFilter;
+              // 累計計算
+              const totalSessions = new Set(workshopData.map(r=>r["練習会参加日"])).size;
+              const totalParticipants = workshopData.filter(r=>r["回答のタイミング"]==="練習前").length;
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                  <div style={{display:"flex",gap:8,marginBottom:4}}>
+                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
+                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>練習会 累計開催数</p>
+                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalSessions}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>回</span></p>
+                    </div>
+                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
+                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>累計参加人数</p>
+                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalParticipants}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>人</span></p>
+                    </div>
+                  </div>
                   <select value={workshopFilter} onChange={e=>setWorkshopFilter(e.target.value)}
                     style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:12,color:C.choco,cursor:"pointer"}}>
                     <option value="all">📊 全体平均</option>
