@@ -670,9 +670,9 @@ function App() {
               };
               const pct = (b,a,low) => { if(b===null||a===null||b===0)return null; const c=(a-b)/b*100; return low?-c:c; };
               const names = [...new Set(workshopData.map(r=>r["お名前"]))].filter(Boolean).sort();
-              const bAvg = calcAvg(workshopFilter==="all"?workshopData:workshopData.filter(r=>r["お名前"]===workshopFilter), "練習前");
-              const aAvg = calcAvg(workshopFilter==="all"?workshopData:workshopData.filter(r=>r["お名前"]===workshopFilter), "練習後");
-              const label = workshopFilter==="all" ? `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）` : workshopFilter;
+              const bAvg = calcAvg(workshopData, "練習前");
+              const aAvg = calcAvg(workshopData, "練習後");
+              const label = `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）`;
               // 累計計算
               const totalSessions = new Set(workshopData.map(r=>r["練習会参加日"])).size;
               const totalParticipants = workshopData.filter(r=>r["回答のタイミング"]==="練習前").length;
@@ -688,11 +688,7 @@ function App() {
                       <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalParticipants}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>人</span></p>
                     </div>
                   </div>
-                  <select value={workshopFilter} onChange={e=>setWorkshopFilter(e.target.value)}
-                    style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:12,color:C.choco,cursor:"pointer"}}>
-                    <option value="all">📊 全体平均</option>
-                    {names.map(n=><option key={n} value={n}>{n}</option>)}
-                  </select>
+
                   <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
                     <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>{label}</p>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,marginBottom:4}}>
@@ -723,7 +719,7 @@ function App() {
                       {key:"時間の感覚（時の流れ） ", label:"時間の感覚", options:["気になった","時々意識","変化なし","時間忘れた","時空が広がる"]},
                       {key:"この場に身を置いているときの安心感 ", label:"安心感", options:["強い不安","少し不安","普通","安心","深く安心"]},
                     ];
-                    const targetRows = workshopFilter==="all" ? workshopData : workshopData.filter(r=>r["お名前"]===workshopFilter);
+                    const targetRows = workshopData;
                     const COLORS = ["#e07070","#e0a070","#d4c86a","#7aba8a","#5a8a6a"];
                     const calcDist = (timing) => {
                       const rows = targetRows.filter(r=>r["回答のタイミング"]===timing);
@@ -768,7 +764,7 @@ function App() {
                             {key:"時間の感覚（時の流れ） ", label:"時間の感覚", best:"時空が広がる感じ"},
                             {key:"この場に身を置いているときの安心感 ", label:"安心感", best:"深く安心し、身を委ねられている"},
                           ].map(({key,label,best})=>{
-                            const tgt = workshopFilter==="all" ? workshopData : workshopData.filter(r=>r["お名前"]===workshopFilter);
+                            const tgt = workshopData;
                             const count = (timing) => {
                               const rows = tgt.filter(r=>r["回答のタイミング"]===timing);
                               if (rows.length===0) return 0;
