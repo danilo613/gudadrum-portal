@@ -1152,7 +1152,7 @@ function App() {
       {schedCommentModal && (
         <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:101,padding:20}}>
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>💬 コメント追記</h3>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>💬 コメント編集</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{schedCommentModal.name}</strong></p>
             <p style={{fontSize:11,color:C.moss,marginBottom:16}}>{schedCommentModal.date}　{schedCommentModal.type}</p>
             <textarea value={schedComment} onChange={e=>setSchedComment(e.target.value)}
@@ -1161,7 +1161,7 @@ function App() {
             {schedCommentMsg && <p style={{fontSize:12,color:schedCommentMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{schedCommentMsg}</p>}
             <div style={{display:"flex",gap:8}}>
               <button onClick={()=>{setSchedCommentModal(null);setSchedComment("");setSchedCommentMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-              <button onClick={addScheduleComment} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#7aba8a,#5a8a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>追記する</button>
+              <button onClick={addScheduleComment} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#7aba8a,#5a8a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>上書き保存</button>
             </div>
           </div>
         </div>
