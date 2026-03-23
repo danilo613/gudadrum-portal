@@ -1146,7 +1146,7 @@ function App() {
                     <select value={diagScores.diagSong} onChange={e=>setDiagScores(p=>({...p,diagSong:e.target.value}))}
                       style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,cursor:"pointer"}}>
                       <option value="">-- 楽曲を選択 --</option>
-                      {SONGS.map(s=><option key={s} value={s}>{s}</option>)}
+                      {[...SONGS,"即興"].map(s=><option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div>
