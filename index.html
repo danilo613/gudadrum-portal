@@ -112,6 +112,7 @@ function rowToMember(r) {
     groove: parseInt(r["グルーヴ"] || "0"),
     diagnosisDate: String(r["診断日"] || "").split("T")[0],
     diagnosisResult: String(r["診断結果"] || ""),
+    diagnosisSong: String(r["診断楽曲"] || ""),
     commentNoriko: String(r["Yamashita Norikoコメント"] || ""),
     commentHiroko: String(r["hirokoコメント"] || ""),
     commentToon: String(r["灯音コメント"] || ""),
@@ -251,7 +252,7 @@ function App() {
   const [pointModal, setPointModal] = useState(null);
   const [pointValue, setPointValue] = useState("");
   const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
-  const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:""});
+  const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:"",diagSong:""});
 
   useEffect(() => {
     autoFetch();
@@ -475,6 +476,7 @@ function App() {
     const cols = ["音の開放度","音質調整","テンポキープ","ゴースト","グルーヴ","診断日"];
     const vals = [diagScores.openness, diagScores.quality, diagScores.tempo, diagScores.ghost, diagScores.groove, date];
     if (diagScores.daniloMsg && diagScores.daniloMsg.trim()) { cols.push("診断結果"); vals.push(diagScores.daniloMsg.trim()); }
+    if (diagScores.diagSong && diagScores.diagSong.trim()) { cols.push("診断楽曲"); vals.push(diagScores.diagSong.trim()); }
     setLessonMsg("送信中...");
     try {
       const data = await gasWrite({action:"writeMulti", name:lessonModal, columns:cols.join(","), values:vals.join(",")});
@@ -1140,6 +1142,14 @@ function App() {
                     <input type="date" value={diagScores.date} onChange={e=>setDiagScores(p=>({...p,date:e.target.value}))} style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
                   </div>
                   <div>
+                    <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>診断楽曲</label>
+                    <select value={diagScores.diagSong} onChange={e=>setDiagScores(p=>({...p,diagSong:e.target.value}))}
+                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,cursor:"pointer"}}>
+                      <option value="">-- 楽曲を選択 --</option>
+                      {SONGS.map(s=><option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
                     <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>DANiLOメッセージ（任意）</label>
                     <textarea value={diagScores.daniloMsg} onChange={e=>setDiagScores(p=>({...p,daniloMsg:e.target.value}))} placeholder="診断の結果メッセージを入力...（;で改行）" style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80}}/>
                   </div>
@@ -1219,6 +1229,7 @@ function App() {
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
             <p style={{fontSize:13,letterSpacing:"0.1em",color:C.label,marginBottom:14,fontWeight:500}}>
               🔍 演奏診断結果　<span style={{fontSize:10,fontWeight:400}}>診断日：{m.diagnosisDate}</span>
+              {m.diagnosisSong && <span style={{fontSize:10,fontWeight:600,color:C.olive,marginLeft:8}}>🎵 {m.diagnosisSong}</span>}
             </p>
             <div style={{display:"flex",gap:20,flexWrap:"wrap",marginBottom:14}}>
               <RadarChart m={m}/>
