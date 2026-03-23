@@ -354,7 +354,7 @@ function App() {
         action: "addschedulecomment",
         name: schedCommentModal.name,
         date: schedCommentModal.date,
-        comment: schedComment,
+        comment: schedComment.replace(/\n/g, "↵"),
       }));
       const data = await res.json();
       if (data.success) {
@@ -475,7 +475,7 @@ function App() {
       if (lessonColumn.startsWith("__sched__")) {
         const parts = lessonColumn.replace("__sched__","").split("__");
         const schedDate = parts[0];
-        const commentText = dateStr + " " + sender + ": " + lessonValue;
+        const commentText = dateStr + " " + sender + ": " + lessonValue.replace(/\n/g, "↵");
         const data = await gasWrite({action:"addschedulecomment", name:lessonModal, date:schedDate, comment:commentText});
         if (data.error) throw new Error(data.error);
         setLessonMsg("✅ 送信完了！");
@@ -1101,7 +1101,7 @@ function App() {
                         const trimmed = line.trim();
                         if (!trimmed) return null;
                         const m = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                        if (m) return {date:m[1], author:m[2].trim(), text:m[3].trim()};
+                        if (m) return {date:m[1], author:m[2].trim(), text:m[3].trim().replace(/↵/g, "\n")};
                         return {date:"", author:"", text:trimmed};
                       }).filter(x=>x&&x.text);
                     };
@@ -1129,7 +1129,7 @@ function App() {
                                       <p style={{fontSize:10,color:C.olive,fontWeight:700}}>{c.author}</p>
                                       {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
                                     </div>
-                                    <p style={{fontSize:12,color:C.choco,lineHeight:1.6}}>{c.text}</p>
+                                    <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
                                   </div>
                                 ))}
                               </div>
