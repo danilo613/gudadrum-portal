@@ -1213,12 +1213,29 @@ function App() {
                       </div>
                     )}
                     {s["コメント"] && (
-                      <div style={{marginTop:6}}>
-                        <p onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                          style={{fontSize:11,color:C.olive,cursor:"pointer",fontWeight:600}}>
-                          💬 コメント {isOpen ? "▲" : "▼"}
-                        </p>
-                        {isOpen && <p style={{fontSize:12,color:C.choco,marginTop:4,lineHeight:1.6,paddingLeft:8,borderLeft:"2px solid "+C.olive}}>{s["コメント"]}</p>}
+                      <div style={{marginTop:8}}>
+                        <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
+                          style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:8,padding:"5px 12px",cursor:"pointer"}}>
+                          <span style={{fontSize:12,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
+                          <span style={{fontSize:11,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
+                        </div>
+                        {isOpen && (
+                          <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
+                            {s["コメント"].split(";").map((line,j)=>{
+                              const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*(.+)$/);
+                              if (m) return (
+                                <div key={j} style={{marginBottom:j<s["コメント"].split(";").length-1?8:0}}>
+                                  <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                    <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
+                                    <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
+                                  </div>
+                                  <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{m[3].trim()}</p>
+                                </div>
+                              );
+                              return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{line.trim()}</p> : null;
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
