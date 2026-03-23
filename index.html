@@ -1184,7 +1184,7 @@ function App() {
           if (myScheds.length === 0) return null;
           const today = new Date(); today.setHours(0,0,0,0);
           const toDate = s => { const d=new Date(s["日付"]); return isNaN(d.getTime())||d.getFullYear()<=1900 ? new Date("9999-12-31") : d; };
-          const upcoming = myScheds.filter(s=>toDate(s)>=today).sort((a,b)=>toDate(a)-toDate(b));
+          const upcoming = myScheds.filter(s=>toDate(s)>=today).sort((a,b)=>toDate(b)-toDate(a));
           const past = myScheds.filter(s=>toDate(s)<today).sort((a,b)=>toDate(b)-toDate(a));
 
           const renderSched = (s, i, isPastItem, total) => {
