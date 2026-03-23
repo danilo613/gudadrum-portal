@@ -1097,7 +1097,7 @@ function App() {
                     // コメントから記録者を抽出（"2026/3/23 DANiLO: 内容" の形式）
                     const parseComment = (c) => {
                       if (!c) return [];
-                      return c.split("##COMMENT##").map(line=>{
+                      return c.split(/(?<!\n);(?!\n)/).map(line=>{
                         const trimmed = line.trim();
                         if (!trimmed) return null;
                         const m = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
@@ -1480,7 +1480,7 @@ function App() {
                         </div>
                         {isOpen && (
                           <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                            {s["コメント"].split("##COMMENT##").map((line,j)=>{
+                            {s["コメント"].split(/(?<!\n);(?!\n)/).map((line,j)=>{
                               const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                               if (m) return (
                                 <div key={j} style={{marginBottom:j<s["コメント"].split(";").length-1?8:0}}>
@@ -1635,7 +1635,7 @@ function App() {
               <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
               <div style={{maxHeight:"8em",overflowY:"auto"}}>
                 {(()=>{
-                  const splitComment = (s) => String(s||"").split(/[;；]/).map(x=>x.trim()).filter(Boolean);
+                  const splitComment = (s) => String(s||"").split(/(?<!\n);(?!\n)/).map(x=>x.trim()).filter(Boolean);
                   const all = [
                     ...splitComment(m.challenge),
                     ...splitComment(m.commentNoriko),
