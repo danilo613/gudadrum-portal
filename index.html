@@ -37,7 +37,7 @@ const BADGE_IMAGES = {
 };
 
 const LEVEL_COLOR = "#f0e0a0";
-const LEVEL_ORDER = ["大黒柱","主柱","若柱","主幹","若幹","蕾","種"];
+const LEVEL_ORDER = ["大黒柱","主柱","若柱","主幹","若幹","蕾","種","柱","幹"];
 
 const CURRICULUM = [
   { title:"グーダドラムの基礎「響かせる」", url:"https://www.gudadrumjapan.com/kyzkmtm", password:"gdrmtd26" },
@@ -203,6 +203,8 @@ function App() {
   const [showWorkshop, setShowWorkshop] = useState(false);
   const [workshopLoaded, setWorkshopLoaded] = useState(false);
   const [loginData, setLoginData] = useState([]);
+  const [showAllPoints, setShowAllPoints] = useState(false);
+  const [allPointHistory, setAllPointHistory] = useState([]);
   const [workshopFilter, setWorkshopFilter] = useState("all");
   const [memberSchedules, setMemberSchedules] = useState([]);
   const [schedModal, setSchedModal] = useState(null);
@@ -254,15 +256,11 @@ function App() {
   const [pointValue, setPointValue] = useState("");
   const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
   const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:"",diagSong:""});
-  const [memberFbOpen, setMemberFbOpen] = useState({});
-  const [memberFbValue, setMemberFbValue] = useState({});
-  const [memberFbMsg, setMemberFbMsg] = useState({});
 
   useEffect(() => {
     autoFetch();
     fetchNotion();
     fetchSchedules();
-    fetchLogins();
   }, []);
   useEffect(() => {
     if (currentMember) {
@@ -287,7 +285,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycby3SMjqCIff2SQp0Hv9igjUwDvfkDZRzv6UfxlorZwjGah_jlbeLzKLD-kxiJqRNOZmYw/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbyk-nWvbdYOgb9LFV5pFM4XfWwSJcKXqarXG3yiARG4hXaYJGQY6gD7IUEa5WhAUYcLsQ/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -309,7 +307,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycby3SMjqCIff2SQp0Hv9igjUwDvfkDZRzv6UfxlorZwjGah_jlbeLzKLD-kxiJqRNOZmYw/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbyk-nWvbdYOgb9LFV5pFM4XfWwSJcKXqarXG3yiARG4hXaYJGQY6gD7IUEa5WhAUYcLsQ/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -387,6 +385,14 @@ function App() {
 
 
 
+  async function fetchAllPoints() {
+    try {
+      const res = await fetch("/api/gas?action=getpoints");
+      const data = await res.json();
+      if (data.history) setAllPointHistory(data.history);
+    } catch(e) {}
+  }
+
   async function fetchLogins() {
     try {
       const res = await fetch("/api/gas?action=getlogins");
@@ -461,44 +467,6 @@ function App() {
     setApplyingMember(null);
   }
 
-  async function postMemberFeedback(rawDate, type) {
-    const key = rawDate + type;
-    const value = (memberFbValue[key] || "").trim();
-    if (!value) { setMemberFbMsg(p=>({...p,[key]:"内容を入力してください"})); return; }
-    setMemberFbMsg(p=>({...p,[key]:"送信中..."}));
-    try {
-      const today = new Date();
-      const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
-      const commentText = dateStr + " " + currentMember.name + ": " + value;
-      const data = await gasWrite({action:"addschedulecomment", name:currentMember.name, date:rawDate, comment:commentText});
-      if (data.error) throw new Error(data.error);
-      setMemberFbMsg(p=>({...p,[key]:"✅ 送信しました！"}));
-      setMemberFbValue(p=>({...p,[key]:""}));
-      fetchSchedules();
-      setTimeout(()=>{ setMemberFbMsg(p=>({...p,[key]:""})); setMemberFbOpen(p=>({...p,[key]:false})); }, 1800);
-    } catch(e) { setMemberFbMsg(p=>({...p,[key]:"❌ "+e.message})); }
-  }
-
-  async function postCurriculumLevel(lv) {
-    setLessonMsg("送信中...");
-    try {
-      const data = await gasWrite({action:"write", name:lessonModal, column:"段階", value:lv, overwrite:"true"});
-      if (data.error) throw new Error(data.error);
-      setLessonMsg("✅ 段階を「"+lv+"」に設定しました！");
-      setTimeout(()=>{ autoFetch(); setLessonMsg(""); }, 1500);
-    } catch(e) { setLessonMsg("❌ "+e.message); }
-  }
-
-  async function postCurriculumCompleted(newVal) {
-    setLessonMsg("送信中...");
-    try {
-      const data = await gasWrite({action:"write", name:lessonModal, column:"受講済み段階", value:String(newVal), overwrite:"true"});
-      if (data.error) throw new Error(data.error);
-      setLessonMsg("✅ 更新しました！");
-      setTimeout(()=>{ autoFetch(); setLessonMsg(""); }, 1500);
-    } catch(e) { setLessonMsg("❌ "+e.message); }
-  }
-
   async function gasWrite(params) {
     const url = "/api/gas?" + new URLSearchParams(params).toString();
     const res = await fetch(url);
@@ -571,7 +539,6 @@ function App() {
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
     if (m.password && m.password !== password) { setLoginErr("パスワードが違います"); return; }
     setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false);
-    recordLogin(m.name);
   }
 
   const SettingsModal = () => {
@@ -598,7 +565,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycby3SMjqCIff2SQp0Hv9igjUwDvfkDZRzv6UfxlorZwjGah_jlbeLzKLD-kxiJqRNOZmYw/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbyk-nWvbdYOgb9LFV5pFM4XfWwSJcKXqarXG3yiARG4hXaYJGQY6gD7IUEa5WhAUYcLsQ/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -635,6 +602,12 @@ function App() {
 
   const sortedMembers = sortKey === "region"
     ? [...filteredMembers].sort((a,b) => (a.region||"").localeCompare(b.region||"", "ja"))
+    : sortKey === "login"
+    ? [...filteredMembers].sort((a,b) => {
+        const al = loginData.filter(l=>l.name===a.name).length;
+        const bl = loginData.filter(l=>l.name===b.name).length;
+        return bl - al;
+      })
     : [...filteredMembers].sort((a,b) => {
         const ai=LEVEL_ORDER.indexOf(a.level), bi=LEVEL_ORDER.indexOf(b.level);
         return (ai===-1?99:ai)-(bi===-1?99:bi);
@@ -685,6 +658,7 @@ function App() {
               style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
               <option value="level">段階順</option>
               <option value="region">地域順</option>
+              <option value="login">ログイン回数順</option>
             </select>
             <div style={{position:"relative"}}>
               <button onClick={()=>setShowSongFilter(!showSongFilter)}
@@ -710,6 +684,30 @@ function App() {
             </div>
           </div>
         </div>
+        {!isInstructor && (
+          <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointHistory.length) fetchAllPoints();}}
+            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#d4a840,#b8860b)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showAllPoints && (
+          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:12,maxHeight:300,overflowY:"auto"}}>
+            <p style={{fontSize:12,fontWeight:700,color:C.choco,marginBottom:10}}>🎁 全メンバーのポイント履歴</p>
+            {allPointHistory.length === 0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center"}}>履歴がありません</p>
+            ) : allPointHistory.slice().reverse().map((h,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
+                <div>
+                  <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
+                  <p style={{fontSize:10,color:C.label}}>{h["日付"]}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                </div>
+                <p style={{fontSize:13,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#5a8a3a":"#a04030"}}>
+                  {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
         {(
           <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
             style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+C.olive,background:showSurvey?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:showSurvey?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
@@ -965,10 +963,8 @@ function App() {
                             {(()=>{
                               const logs = loginData.filter(l=>l.name===m.name);
                               if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                              const raw = logs[logs.length-1].date;
-                              const d = new Date(raw.replace(/\//g,"-"));
-                              const fmtLast = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : raw.slice(0,10);
-                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{fmtLast}</p>;
+                              const last = logs[logs.length-1].date.slice(0,10);
+                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
                             })()}
                           </div>
                         </div>
@@ -1001,10 +997,8 @@ function App() {
                     {(()=>{
                       const logs = loginData.filter(l=>l.name===m.name);
                       if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                      const raw = logs[logs.length-1].date;
-                      const d = new Date(raw.replace(/\//g,"-"));
-                      const fmtLast = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : raw.slice(0,10);
-                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{fmtLast}</p>;
+                      const last = logs[logs.length-1].date.slice(0,10);
+                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
                     })()}
                   </div>
                 </div>
@@ -1141,18 +1135,18 @@ function App() {
                     const d=new Date(s["日付"]);
                     const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
                     const isOpen = pastSchedOpen["hist_"+s["日付"]+s["種別"]] || false;
+                    // コメントから記録者を抽出（"2026/3/23 DANiLO: 内容" の形式）
                     const parseComment = (c) => {
                       if (!c) return [];
-                      return c.split(/\s*;\s*/).map(line=>{
+                      return [c].map(line=>{
                         const trimmed = line.trim();
                         if (!trimmed) return null;
-                        const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                        if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
+                        const m = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                        if (m) return {date:m[1], author:m[2].trim(), text:m[3].trim()};
                         return {date:"", author:"", text:trimmed};
                       }).filter(x=>x&&x.text);
                     };
                     const comments = parseComment(s["コメント"]);
-                    const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
                     return (
                       <div key={i} style={{background:"rgba(0,0,0,0.04)",borderRadius:10,overflow:"hidden"}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",cursor:"pointer"}}
@@ -1170,19 +1164,15 @@ function App() {
                           <div style={{borderTop:"1px solid rgba(112,130,56,0.15)",padding:"10px 12px"}}>
                             {comments.length > 0 ? (
                               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
-                                {comments.map((c,j)=>{
-                                  const isStaff = INSTRUCTORS_LIST.includes(c.author);
-                                  return (
-                                    <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isStaff?C.olive:"#c8a870")}}>
-                                      <div style={{display:"flex",gap:8,marginBottom:2,alignItems:"center"}}>
-                                        <p style={{fontSize:10,color:isStaff?C.olive:"#8a6a3a",fontWeight:700}}>{c.author}</p>
-                                        {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
-                                        {!isStaff && <span style={{fontSize:9,color:"#8a6a3a",background:"rgba(184,134,11,0.12)",borderRadius:4,padding:"1px 5px"}}>メンバー</span>}
-                                      </div>
-                                      <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
+                                {comments.map((c,j)=>(
+                                  <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+C.olive}}>
+                                    <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                      <p style={{fontSize:10,color:C.olive,fontWeight:700}}>{c.author}</p>
+                                      {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
                                     </div>
-                                  );
-                                })}
+                                    <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
+                                  </div>
+                                ))}
                               </div>
                             ) : (
                               <p style={{fontSize:12,color:C.label,marginBottom:10}}>コメントなし</p>
@@ -1273,12 +1263,11 @@ function App() {
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto"}}>
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>✏️ 記録を送る</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:14}}>対象：<strong>{lessonModal}</strong></p>
-            <div style={{display:"flex",gap:8,marginBottom:18,flexWrap:"wrap"}}>
+            <div style={{display:"flex",gap:8,marginBottom:18}}>
               <button onClick={()=>{setLessonTab("text");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="text"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="text"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📝 コメント記録</button>
               {!isInstructor && (<button onClick={()=>{setLessonTab("diagnosis");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="diagnosis"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="diagnosis"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎯 演奏診断スコア</button>)}
-              {!isInstructor && (<button onClick={()=>{setLessonTab("curriculum");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="curriculum"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="curriculum"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📚 進捗・段階</button>)}
             </div>
-            {(lessonTab === "text" || isInstructor) && (
+            {(lessonTab === "text" || isInstructor) ? (
               <>
                 {isInstructor && (
                   <div style={{marginBottom:14}}>
@@ -1321,8 +1310,7 @@ function App() {
                 </div>
 
               </>
-            )}
-            {(!isInstructor && lessonTab === "diagnosis") && (
+            ) : (
               <>
                 <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
                   {[{key:"openness",label:"音の開放度"},{key:"quality",label:"音質調整"},{key:"tempo",label:"テンポキープ"},{key:"ghost",label:"ゴースト"},{key:"groove",label:"グルーヴ"}].map(({key,label})=>(
@@ -1358,48 +1346,6 @@ function App() {
                   <button onClick={postDiagnosis} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>スプシに反映する</button>
                 </div>
               </>
-            )}
-            {(!isInstructor && lessonTab === "curriculum") && (
-              <div>
-                <div style={{marginBottom:18}}>
-                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>🏅 段階を設定</label>
-                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                    {LEVEL_ORDER.map(lv=>{
-                      const cur = members.find(mb=>mb.name===lessonModal);
-                      const isCurrent = cur && cur.level === lv;
-                      return (
-                        <button key={lv} onClick={()=>postCurriculumLevel(lv)}
-                          style={{padding:"6px 14px",borderRadius:8,border:"2px solid "+(isCurrent?C.olive:C.border),background:isCurrent?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(255,255,255,0.8)",color:isCurrent?"#fff":C.choco,fontSize:13,fontWeight:isCurrent?700:400,cursor:"pointer"}}>
-                          {lv}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div style={{marginBottom:12}}>
-                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>📚 カリキュラム進捗（受講済みにチェック）</label>
-                  <p style={{fontSize:10,color:C.moss,marginBottom:10}}>※ チェックした数が「受講済み段階」に反映されます</p>
-                  {(()=>{
-                    const cur = members.find(mb=>mb.name===lessonModal);
-                    const currentCompleted = cur ? (cur.completedLevels||0) : 0;
-                    return (
-                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                        {CURRICULUM.map((item,i)=>{
-                          const done = i < currentCompleted;
-                          return (
-                            <label key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 12px",borderRadius:10,background:done?"rgba(112,130,56,0.1)":"rgba(0,0,0,0.03)",cursor:"pointer"}}>
-                              <input type="checkbox" checked={done} onChange={()=>postCurriculumCompleted(done ? i : i+1)} style={{marginTop:2,accentColor:C.olive,flexShrink:0}}/>
-                              <p style={{fontSize:12,color:done?C.choco:C.label,fontWeight:done?600:400,lineHeight:1.5}}>{item.title}</p>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
-                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginTop:12}}>{lessonMsg}</p>}
-                <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer",marginTop:16}}>閉じる</button>
-              </div>
             )}
           </div>
         </div>
@@ -1566,75 +1512,32 @@ function App() {
                         <p style={{fontSize:10,color:C.label,marginTop:2}}>ID: 748 425 9893　パスコード: 77793</p>
                       </div>
                     )}
-                    {(()=>{
-                      const fbKey = rawDate + s["種別"];
-                      const isFbOpen = memberFbOpen[fbKey] || false;
-                      const parseComments = (raw) => {
-                        if (!raw) return [];
-                        return raw.split(/\s*;\s*/).map(line=>{
-                          const trimmed = line.trim();
-                          if (!trimmed) return null;
-                          const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                          if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
-                          return {date:"", author:"", text:trimmed};
-                        }).filter(Boolean);
-                      };
-                      const comments = parseComments(s["コメント"]);
-                      const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
-                      return (
-                        <div style={{marginTop:8}}>
-                          {comments.length > 0 && (
-                            <div>
-                              <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                                style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:isOpen?6:0}}>
-                                <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック {comments.length}件</span>
-                                <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
-                              </div>
-                              {isOpen && (
-                                <div style={{background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"10px 12px"}}>
-                                  {comments.map((c,j)=>{
-                                    const isStaff = INSTRUCTORS_LIST.includes(c.author);
-                                    return (
-                                      <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isStaff?C.olive:"#c8a870"),marginBottom:j<comments.length-1?10:0}}>
-                                        <div style={{display:"flex",gap:8,marginBottom:2,alignItems:"center"}}>
-                                          <span style={{fontSize:10,fontWeight:700,color:isStaff?C.olive:"#8a6a3a"}}>{c.author}</span>
-                                          {c.date && <span style={{fontSize:10,color:C.label}}>{c.date}</span>}
-                                        </div>
-                                        <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{c.text}</p>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {isPastItem && !comments.some(c=>c.author.replace(/\s/g,"")===currentMember.name.replace(/\s/g,"")) && (
-                            <div style={{marginTop:6}}>
-                              {!isFbOpen ? (
-                                <button onClick={()=>setMemberFbOpen(p=>({...p,[fbKey]:true}))}
-                                  style={{fontSize:11,color:"#8a6a3a",background:"rgba(184,134,11,0.1)",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
-                                  ✏️ フィードバックを書く
-                                </button>
-                              ) : (
-                                <div style={{background:"rgba(240,225,190,0.4)",borderRadius:8,padding:"10px 12px",border:"1px solid rgba(184,134,11,0.2)"}}>
-                                  <p style={{fontSize:10,color:"#8a6a3a",marginBottom:6,fontWeight:600}}>📝 あなたのフィードバック</p>
-                                  <textarea value={memberFbValue[fbKey]||""} onChange={e=>setMemberFbValue(p=>({...p,[fbKey]:e.target.value}))}
-                                    placeholder="レッスンの感想・気づき・質問など..."
-                                    style={{width:"100%",background:"#fff",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80,boxSizing:"border-box"}}/>
-                                  {memberFbMsg[fbKey] && <p style={{fontSize:12,color:memberFbMsg[fbKey].startsWith("✅")?C.olive:"#a04030",marginTop:4}}>{memberFbMsg[fbKey]}</p>}
-                                  <div style={{display:"flex",gap:6,marginTop:8}}>
-                                    <button onClick={()=>{setMemberFbOpen(p=>({...p,[fbKey]:false}));setMemberFbMsg(p=>({...p,[fbKey]:""}));}}
-                                      style={{flex:1,padding:"6px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
-                                    <button onClick={()=>postMemberFeedback(rawDate, s["種別"])}
-                                      style={{flex:2,padding:"6px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                    {s["コメント"] && (
+                      <div style={{marginTop:8}}>
+                        <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
+                          style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>
+                          <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
+                          <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
                         </div>
-                      );
-                    })()}
+                        {isOpen && (
+                          <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
+                            {[s["コメント"]].map((line,j)=>{
+                              const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                              if (m) return (
+                                <div key={j} style={{marginBottom:j<s["コメント"].split(";").length-1?8:0}}>
+                                  <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                    <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
+                                    <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
+                                  </div>
+                                  <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{m[3].trim()}</p>
+                                </div>
+                              );
+                              return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{line.trim()}</p> : null;
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
