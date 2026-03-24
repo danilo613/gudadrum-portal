@@ -945,8 +945,10 @@ function App() {
                             {(()=>{
                               const logs = loginData.filter(l=>l.name===m.name);
                               if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                              const last = logs[logs.length-1].date.slice(0,10);
-                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
+                              const raw = logs[logs.length-1].date;
+                              const d = new Date(raw.replace(/\//g,"-"));
+                              const fmtLast = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : raw.slice(0,10);
+                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{fmtLast}</p>;
                             })()}
                           </div>
                         </div>
@@ -979,8 +981,10 @@ function App() {
                     {(()=>{
                       const logs = loginData.filter(l=>l.name===m.name);
                       if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                      const last = logs[logs.length-1].date.slice(0,10);
-                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
+                      const raw = logs[logs.length-1].date;
+                      const d = new Date(raw.replace(/\//g,"-"));
+                      const fmtLast = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : raw.slice(0,10);
+                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{fmtLast}</p>;
                     })()}
                   </div>
                 </div>
