@@ -1278,7 +1278,7 @@ function App() {
               {!isInstructor && (<button onClick={()=>{setLessonTab("diagnosis");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="diagnosis"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="diagnosis"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎯 演奏診断スコア</button>)}
               {!isInstructor && (<button onClick={()=>{setLessonTab("curriculum");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="curriculum"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="curriculum"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📚 進捗・段階</button>)}
             </div>
-            {(lessonTab === "text" || isInstructor) ? (
+            {(lessonTab === "text" || isInstructor) && (
               <>
                 {isInstructor && (
                   <div style={{marginBottom:14}}>
@@ -1322,6 +1322,9 @@ function App() {
 
               </>
             ) : (
+              </>
+            )}
+            {(!isInstructor && lessonTab === "diagnosis") && (
               <>
                 <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
                   {[{key:"openness",label:"音の開放度"},{key:"quality",label:"音質調整"},{key:"tempo",label:"テンポキープ"},{key:"ghost",label:"ゴースト"},{key:"groove",label:"グルーヴ"}].map(({key,label})=>(
@@ -1357,8 +1360,8 @@ function App() {
                   <button onClick={postDiagnosis} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>スプシに反映する</button>
                 </div>
               </>
-            ) : lessonTab === "curriculum" ? (
-              <>
+            )}
+            {(!isInstructor && lessonTab === "curriculum") && (
                 <div style={{marginBottom:18}}>
                   <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>🏅 段階を設定</label>
                   <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
