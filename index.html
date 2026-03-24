@@ -550,6 +550,7 @@ function App() {
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
     if (m.password && m.password !== password) { setLoginErr("パスワードが違います"); return; }
     setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false);
+    recordLogin(m.name);
   }
 
   const SettingsModal = () => {
