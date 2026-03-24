@@ -1540,7 +1540,7 @@ function App() {
                               )}
                             </div>
                           )}
-                          {isPastItem && (
+                          {isPastItem && !comments.some(c=>c.author===m.name) && (
                             <div style={{marginTop:6}}>
                               {!isFbOpen ? (
                                 <button onClick={()=>setMemberFbOpen(p=>({...p,[fbKey]:true}))}
