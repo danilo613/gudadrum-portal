@@ -261,6 +261,7 @@ function App() {
     autoFetch();
     fetchNotion();
     fetchSchedules();
+    fetchLogins();
   }, []);
   useEffect(() => {
     if (currentMember) {
@@ -699,7 +700,7 @@ function App() {
               <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
                 <div>
                   <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
-                  <p style={{fontSize:10,color:C.label}}>{h["日付"]}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                  <p style={{fontSize:10,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
                 </div>
                 <p style={{fontSize:13,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#5a8a3a":"#a04030"}}>
                   {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
