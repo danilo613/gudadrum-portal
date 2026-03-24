@@ -98,6 +98,9 @@ function rowToMember(r) {
     password: String(r["パスワード"] || r["password"] || ""),
     level: String(r["段階"] || r["レベル"] || r["level"] || ""),
     strengths: String(r["強み"] || r["strengths"] || ""),
+    strengthsNoriko: String(r["Yamashita Noriko強み"] || ""),
+    strengthsHiroko: String(r["hiroko強み"] || ""),
+    strengthsToon: String(r["灯音強み"] || ""),
     challenge: String(r["課題"] || r["challenge"] || ""),
     goal: String(r["目標"] || r["goal"] || ""),
     history: splitItems(r["履歴"] || r["history"] || ""),
@@ -495,7 +498,7 @@ function App() {
         return;
       }
 
-      const autoOverwrite = ["強み","目標"].includes(lessonColumn);
+      const autoOverwrite = ["強み","目標","Yamashita Noriko強み","hiroko強み","灯音強み"].includes(lessonColumn);
       const formattedValue = overwrite ? lessonValue : dateStr + " " + sender + ": " + lessonValue;
       let targetColumn = lessonColumn;
       if (isInstructor && lessonColumn === "課題") {
@@ -1284,7 +1287,10 @@ function App() {
                 <select value={lessonColumn} onChange={e=>setLessonColumn(e.target.value)}
                   style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
                   <option value="課題">DANiLO・講師陣からのコメント</option>
-                  <option value="強み">あなたの強み</option>
+                  {!isInstructor && <option value="強み">あなたの強み（DANiLO）</option>}
+                  {isInstructor && instructorName==="Yamashita Noriko" && <option value="Yamashita Noriko強み">あなたの強み（Noriko）</option>}
+                  {isInstructor && instructorName==="hiroko" && <option value="hiroko強み">あなたの強み（hiroko）</option>}
+                  {isInstructor && instructorName==="灯音(to•o•n)" && <option value="灯音強み">あなたの強み（灯音）</option>}
                   {(()=>{
                     const today = new Date(); today.setHours(0,0,0,0);
                     const upcoming = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])>=today)
@@ -1613,7 +1619,10 @@ function App() {
           </button>
           {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
-              {icon:"💪", label:"あなたの強み", items:splitItems(m.strengths), isStrengths:true},
+              {icon:"💪", label:"DANiLOより", items:splitItems(m.strengths), isStrengths:true},
+              ...(m.strengthsNoriko ? [{icon:"💪", label:"Yamashita Norikoより", items:splitItems(m.strengthsNoriko), isStrengths:true}] : []),
+              ...(m.strengthsHiroko ? [{icon:"💪", label:"hirokoより", items:splitItems(m.strengthsHiroko), isStrengths:true}] : []),
+              ...(m.strengthsToon ? [{icon:"💪", label:"灯音より", items:splitItems(m.strengthsToon), isStrengths:true}] : []),
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
