@@ -1291,6 +1291,16 @@ function App() {
                   {isInstructor && instructorName==="Yamashita Noriko" && <option value="Yamashita Noriko強み">あなたの強み（Noriko）</option>}
                   {isInstructor && instructorName==="hiroko" && <option value="hiroko強み">あなたの強み（hiroko）</option>}
                   {isInstructor && instructorName==="灯音(to•o•n)" && <option value="灯音強み">あなたの強み（灯音）</option>}
+                  {!isInstructor && <option value="段階">段階</option>}
+                  {!isInstructor && <option value="目標">目標</option>}
+                  {!isInstructor && <option value="マイ音階">マイ音階</option>}
+                  {!isInstructor && <option value="持っている楽譜">持っている楽譜</option>}
+                  {!isInstructor && <option value="演奏できる楽曲">演奏できる楽曲</option>}
+                  {!isInstructor && <option value="段階">段階</option>}
+                  {!isInstructor && <option value="目標">目標</option>}
+                  {!isInstructor && <option value="マイ音階">マイ音階</option>}
+                  {!isInstructor && <option value="持っている楽譜">持っている楽譜</option>}
+                  {!isInstructor && <option value="演奏できる楽曲">演奏できる楽曲</option>}
                   {(()=>{
                     const today = new Date(); today.setHours(0,0,0,0);
                     const upcoming = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])>=today)
