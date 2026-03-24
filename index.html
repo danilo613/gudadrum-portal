@@ -254,6 +254,9 @@ function App() {
   const [pointValue, setPointValue] = useState("");
   const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
   const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:"",diagSong:""});
+  const [memberFbOpen, setMemberFbOpen] = useState({}); // {rawDate+種別: bool}
+  const [memberFbValue, setMemberFbValue] = useState({}); // {rawDate+種別: string}
+  const [memberFbMsg, setMemberFbMsg] = useState({}); // {rawDate+種別: string}
 
   useEffect(() => {
     autoFetch();
@@ -461,6 +464,24 @@ function App() {
     const url = "/api/gas?" + new URLSearchParams(params).toString();
     const res = await fetch(url);
     return await res.json();
+  }
+
+  async function postMemberFeedback(rawDate, type) {
+    const key = rawDate + type;
+    const value = (memberFbValue[key] || "").trim();
+    if (!value) { setMemberFbMsg(p=>({...p,[key]:"内容を入力してください"})); return; }
+    setMemberFbMsg(p=>({...p,[key]:"送信中..."}));
+    try {
+      const today = new Date();
+      const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
+      const commentText = dateStr + " " + m.name + ": " + value;
+      const data = await gasWrite({action:"addschedulecomment", name:m.name, date:rawDate, comment:commentText});
+      if (data.error) throw new Error(data.error);
+      setMemberFbMsg(p=>({...p,[key]:"✅ 送信しました！"}));
+      setMemberFbValue(p=>({...p,[key]:""}));
+      fetchSchedules();
+      setTimeout(()=>{ setMemberFbMsg(p=>({...p,[key]:""})); setMemberFbOpen(p=>({...p,[key]:false})); }, 1800);
+    } catch(e) { setMemberFbMsg(p=>({...p,[key]:"❌ "+e.message})); }
   }
 
   async function postLesson(overwrite) {
@@ -1094,18 +1115,19 @@ function App() {
                     const d=new Date(s["日付"]);
                     const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
                     const isOpen = pastSchedOpen["hist_"+s["日付"]+s["種別"]] || false;
-                    // コメントから記録者を抽出（"2026/3/23 DANiLO: 内容" の形式）
+                    // コメントをセミコロン区切りで複数パース
                     const parseComment = (c) => {
                       if (!c) return [];
-                      return [c].map(line=>{
+                      return c.split(/\s*;\s*/).map(line=>{
                         const trimmed = line.trim();
                         if (!trimmed) return null;
-                        const m = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                        if (m) return {date:m[1], author:m[2].trim(), text:m[3].trim()};
+                        const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                        if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
                         return {date:"", author:"", text:trimmed};
                       }).filter(x=>x&&x.text);
                     };
                     const comments = parseComment(s["コメント"]);
+                    const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
                     return (
                       <div key={i} style={{background:"rgba(0,0,0,0.04)",borderRadius:10,overflow:"hidden"}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",cursor:"pointer"}}
@@ -1123,15 +1145,19 @@ function App() {
                           <div style={{borderTop:"1px solid rgba(112,130,56,0.15)",padding:"10px 12px"}}>
                             {comments.length > 0 ? (
                               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
-                                {comments.map((c,j)=>(
-                                  <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+C.olive}}>
-                                    <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                      <p style={{fontSize:10,color:C.olive,fontWeight:700}}>{c.author}</p>
-                                      {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
+                                {comments.map((c,j)=>{
+                                  const isStaff = INSTRUCTORS_LIST.includes(c.author);
+                                  return (
+                                    <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isStaff?C.olive:"#c8a870")}}>
+                                      <div style={{display:"flex",gap:8,marginBottom:2,alignItems:"center"}}>
+                                        <p style={{fontSize:10,color:isStaff?C.olive:"#8a6a3a",fontWeight:700}}>{c.author}</p>
+                                        {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
+                                        {!isStaff && <span style={{fontSize:9,color:"#8a6a3a",background:"rgba(184,134,11,0.12)",borderRadius:4,padding:"1px 5px"}}>メンバー</span>}
+                                      </div>
+                                      <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
                                     </div>
-                                    <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             ) : (
                               <p style={{fontSize:12,color:C.label,marginBottom:10}}>コメントなし</p>
@@ -1471,32 +1497,78 @@ function App() {
                         <p style={{fontSize:10,color:C.label,marginTop:2}}>ID: 748 425 9893　パスコード: 77793</p>
                       </div>
                     )}
-                    {s["コメント"] && (
-                      <div style={{marginTop:8}}>
-                        <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                          style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>
-                          <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
-                          <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
-                        </div>
-                        {isOpen && (
-                          <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                            {[s["コメント"]].map((line,j)=>{
-                              const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                              if (m) return (
-                                <div key={j} style={{marginBottom:j<s["コメント"].split(";").length-1?8:0}}>
-                                  <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                    <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
-                                    <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
-                                  </div>
-                                  <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{m[3].trim()}</p>
+                    {(()=>{
+                      const fbKey = rawDate + s["種別"];
+                      const isFbOpen = memberFbOpen[fbKey] || false;
+                      // コメントをセミコロン区切りで複数パース
+                      const parseComments = (raw) => {
+                        if (!raw) return [];
+                        return raw.split(/\s*;\s*/).map(line=>{
+                          const trimmed = line.trim();
+                          if (!trimmed) return null;
+                          const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                          if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
+                          return {date:"", author:"", text:trimmed};
+                        }).filter(Boolean);
+                      };
+                      const comments = parseComments(s["コメント"]);
+                      const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
+                      return (
+                        <div style={{marginTop:8}}>
+                          {comments.length > 0 && (
+                            <div>
+                              <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
+                                style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:isOpen?6:0}}>
+                                <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック {comments.length}件</span>
+                                <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
+                              </div>
+                              {isOpen && (
+                                <div style={{background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"10px 12px"}}>
+                                  {comments.map((c,j)=>{
+                                    const isStaff = INSTRUCTORS_LIST.includes(c.author);
+                                    return (
+                                      <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isStaff?C.olive:"#c8a870"),marginBottom:j<comments.length-1?10:0}}>
+                                        <div style={{display:"flex",gap:8,marginBottom:2,alignItems:"center"}}>
+                                          <span style={{fontSize:10,fontWeight:700,color:isStaff?C.olive:"#8a6a3a"}}>{c.author}</span>
+                                          {c.date && <span style={{fontSize:10,color:C.label}}>{c.date}</span>}
+                                        </div>
+                                        <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{c.text}</p>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              );
-                              return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{line.trim()}</p> : null;
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                              )}
+                            </div>
+                          )}
+                          {isPastItem && (
+                            <div style={{marginTop:6}}>
+                              {!isFbOpen ? (
+                                <button onClick={()=>setMemberFbOpen(p=>({...p,[fbKey]:true}))}
+                                  style={{fontSize:11,color:"#8a6a3a",background:"rgba(184,134,11,0.1)",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
+                                  ✏️ フィードバックを書く
+                                </button>
+                              ) : (
+                                <div style={{background:"rgba(240,225,190,0.4)",borderRadius:8,padding:"10px 12px",border:"1px solid rgba(184,134,11,0.2)"}}>
+                                  <p style={{fontSize:10,color:"#8a6a3a",marginBottom:6,fontWeight:600}}>📝 あなたのフィードバック</p>
+                                  <textarea
+                                    value={memberFbValue[fbKey]||""}
+                                    onChange={e=>setMemberFbValue(p=>({...p,[fbKey]:e.target.value}))}
+                                    placeholder="レッスンの感想・気づき・質問など..."
+                                    style={{width:"100%",background:"#fff",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80,boxSizing:"border-box"}}/>
+                                  {memberFbMsg[fbKey] && <p style={{fontSize:12,color:memberFbMsg[fbKey].startsWith("✅")?C.olive:"#a04030",marginTop:4}}>{memberFbMsg[fbKey]}</p>}
+                                  <div style={{display:"flex",gap:6,marginTop:8}}>
+                                    <button onClick={()=>{setMemberFbOpen(p=>({...p,[fbKey]:false}));setMemberFbMsg(p=>({...p,[fbKey]:""}));}}
+                                      style={{flex:1,padding:"6px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
+                                    <button onClick={()=>postMemberFeedback(rawDate, s["種別"])}
+                                      style={{flex:2,padding:"6px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
