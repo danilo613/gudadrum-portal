@@ -363,16 +363,12 @@ function App() {
         const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
         const myName = schedCommentModal.name;
         const newEntry = dateStr + " " + myName + ": " + schedComment;
-        // GASから直接最新データを取得してから保存
+        // GASから最新を取得して末尾に追記するだけ
         const freshRes=await fetch("/api/gas?action=getschedule");
         const freshData=await freshRes.json();
         const freshSched=(freshData.schedules||[]).find(sc=>sc["名前"]===myName && sc["日付"]===schedCommentModal.date && sc["種別"]===schedCommentModal.type);
         const existing=freshSched?(freshSched["コメント"]||""):"";
-        const parts = existing.split(";").filter(l=>l.trim());
-        const myIdx = parts.findLastIndex(l=>l.trim().match(new RegExp("^\\d{4}\\/\\d+\\/\\d+\\s+"+myName+":")));
-        if (myIdx >= 0) { parts[myIdx] = newEntry; }
-        else { parts.push(newEntry); }
-        finalComment = parts.join(";");
+        finalComment = existing ? existing+";"+newEntry : newEntry;
       }
       const res = await fetch("/api/gas?" + new URLSearchParams({
         action: "addschedulecomment",
@@ -1670,15 +1666,12 @@ function App() {
                               const today=new Date();
                               const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
                               const newEntry=ds+" "+adminName+": "+text;
-                              // GASから直接最新データを取得してから保存
+                              // GASから最新を取得して末尾に追記するだけ
                               const freshRes=await fetch("/api/gas?action=getschedule");
                               const freshData=await freshRes.json();
                               const freshSched=(freshData.schedules||[]).find(sc=>sc["名前"]===m.name && sc["日付"]===rawDate && sc["種別"]===s["種別"]);
                               const latestExisting=freshSched?(freshSched["コメント"]||""):"";
-                              const latestParts=latestExisting.split(";").filter(l=>l.trim());
-                              const newParts=latestParts.filter(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return !(mm&&mm[1].trim()===adminName);});
-                              newParts.push(newEntry);
-                              const finalComment=newParts.join(";");
+                              const finalComment=latestExisting ? latestExisting+";"+newEntry : newEntry;
                               const res=await fetch("/api/gas?"+new URLSearchParams({action:"addschedulecomment",name:m.name,date:rawDate,comment:finalComment}));
                               const data=await res.json();
                               if(data.success){fetchSchedules();setPastSchedOpen(p=>({...p,[editKey]:false}));}
@@ -1727,9 +1720,9 @@ function App() {
                                     </div>
                                   </div>
                                 ) : (
-                                  <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,["admeditval_"+rawDate+s["種別"]]:myText}))}
+                                  <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,["admeditval_"+rawDate+s["種別"]]:""}))}
                                     style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600}}>
-                                    {myEntry?"✏️ コメントを編集":"💬 コメントを書く"}
+                                    💬 コメントを追加
                                   </button>
                                 )}
                               </div>
@@ -1771,20 +1764,7 @@ function App() {
                               const myEntry=parts.find(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return mm&&mm[1].trim()===myName;});
                               const myText=myEntry?myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,""):"";
                               const openModal=(txt)=>{setSchedCommentModal({name:myName,date:rawDate,type:s["種別"],isMember:true,existingFull:existing});setSchedComment(txt||"");setSchedCommentMsg("");};
-                              if(myEntry){
-                                const mm=myEntry.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                                return (
-                                  <div style={{marginTop:6,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 10px",borderLeft:"3px solid "+C.olive}}>
-                                    <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                      <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm?mm[2].trim():myName}</span>
-                                      <span style={{fontSize:10,color:C.label}}>{mm?mm[1]:""}</span>
-                                    </div>
-                                    <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:6}}>{myText}</p>
-                                    <button onClick={()=>openModal(myText)} style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600}}>✏️ 編集する</button>
-                                  </div>
-                                );
-                              }
-                              return <button onClick={()=>openModal("")} style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600,marginTop:4}}>💬 フィードバックを書く</button>;
+                              return <button onClick={()=>openModal("")} style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600,marginTop:4}}>💬 フィードバックを追加</button>;
                             })()}
                           </>
                         )}
