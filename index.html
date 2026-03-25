@@ -1972,7 +1972,7 @@ function App() {
               <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
               <div style={{maxHeight:"8em",overflowY:"auto",marginBottom:isFromAdmin?8:0}}>
                 {(()=>{
-                  const splitComment = (s) => String(s||"").trim() ? [String(s||"").trim()] : [];
+                  const splitComment = (s) => String(s||"").trim() ? String(s||"").split(";").map(x=>x.trim()).filter(Boolean) : [];
                   const all = [
                     ...splitComment(m.challenge),
                     ...splitComment(m.commentNoriko),
@@ -2021,10 +2021,17 @@ function App() {
                           <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
                             style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
                           <button onClick={async()=>{
+                            if(!editValChal.trim()) return;
                             const today=new Date();
                             const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                            const val=ds+" "+adminName+": "+editValChal;
-                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:targetCol,value:val,overwrite:"true"}));
+                            const newEntry=ds+" "+adminName+": "+editValChal.trim();
+                            // 既存に追記（新しいコメントを先頭に）
+                            const freshRes=await fetch("/api/gas?action=read&name="+encodeURIComponent(m.name));
+                            const freshData=await freshRes.json();
+                            const member=freshData&&freshData[0];
+                            const existingVal=member?(member[targetCol]||""):"";
+                            const finalVal=existingVal ? newEntry+";"+existingVal : newEntry;
+                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:targetCol,value:finalVal,overwrite:"true"}));
                             const data=await res.json();
                             if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
                           }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
