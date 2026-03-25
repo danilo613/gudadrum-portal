@@ -1350,15 +1350,17 @@ function App() {
                     const today = new Date(); today.setHours(0,0,0,0);
                     const upcoming = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])>=today)
                       .sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
-                    if (upcoming.length === 0) return null;
+                    const past = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])<today)
+                      .sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
+                    const fmtOpt = (s,i,key) => {
+                      const d=new Date(s["日付"]);
+                      const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
+                      const val = "__sched__"+s["日付"]+"__"+s["種別"];
+                      return <option key={key+i} value={val}>{fmtDate}　{s["種別"]}</option>;
+                    };
                     return [
-                      <option key="sep" disabled value="">── 今後の予定 ──</option>,
-                      ...upcoming.map((s,i)=>{
-                        const d=new Date(s["日付"]);
-                        const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
-                        const val = "__sched__"+s["日付"]+"__"+s["種別"];
-                        return <option key={i} value={val}>{fmtDate}　{s["種別"]}</option>;
-                      })
+                      ...(upcoming.length>0 ? [<option key="sep1" disabled value="">── 今後の予定 ──</option>, ...upcoming.map((s,i)=>fmtOpt(s,i,"u"))] : []),
+                      ...(past.length>0 ? [<option key="sep2" disabled value="">── 過去の予定 ──</option>, ...past.map((s,i)=>fmtOpt(s,i,"p"))] : []),
                     ];
                   })()}
                 </select>
@@ -1574,7 +1576,41 @@ function App() {
                         <p style={{fontSize:10,color:C.label,marginTop:2}}>ID: 748 425 9893　パスコード: 77793</p>
                       </div>
                     )}
-                    {s["コメント"] && (
+                    {isPastItem && (
+                      <div style={{marginTop:8}}>
+                        {s["コメント"] && (
+                          <>
+                            <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
+                              style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:isOpen?6:0}}>
+                              <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
+                              <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
+                            </div>
+                            {isOpen && (
+                              <div style={{marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
+                                {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
+                                  const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                                  if (m) return (
+                                    <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
+                                      <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                        <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
+                                        <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
+                                      </div>
+                                      <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m[3].trim()}</p>
+                                    </div>
+                                  );
+                                  return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p> : null;
+                                })}
+                              </div>
+                            )}
+                          </>
+                        )}
+                        <button onClick={()=>{setSchedCommentModal({name:currentMember.name,date:rawDate,type:s["種別"]});setSchedComment(s["コメント"]||"");setSchedCommentMsg("");}}
+                          style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.olive,borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
+                          ✏️ {s["コメント"]?"コメントを編集":"コメントを書く"}
+                        </button>
+                      </div>
+                    )}
+                    {!isPastItem && s["コメント"] && (
                       <div style={{marginTop:8}}>
                         <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
                           style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>
