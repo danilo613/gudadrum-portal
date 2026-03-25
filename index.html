@@ -1545,18 +1545,18 @@ function App() {
                         </div>
                         {isOpen && (
                           <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                            {[s["コメント"]].map((line,j)=>{
+                            {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
                               const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                               if (m) return (
-                                <div key={j} style={{marginBottom:j<s["コメント"].split(";").length-1?8:0}}>
+                                <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
                                   <div style={{display:"flex",gap:8,marginBottom:2}}>
                                     <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
                                     <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
                                   </div>
-                                  <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{m[3].trim()}</p>
+                                  <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m[3].trim()}</p>
                                 </div>
                               );
-                              return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{line.trim()}</p> : null;
+                              return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p> : null;
                             })}
                           </div>
                         )}
