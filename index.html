@@ -1270,8 +1270,23 @@ function App() {
             <div style={{display:"flex",gap:8,marginBottom:18}}>
               <button onClick={()=>{setLessonTab("text");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="text"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="text"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📝 コメント記録</button>
               {!isInstructor && (<button onClick={()=>{setLessonTab("diagnosis");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="diagnosis"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="diagnosis"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎯 演奏診断スコア</button>)}
+              {!isInstructor && (<button onClick={()=>{setLessonTab("level");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="level"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="level"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎋 段階</button>)}
             </div>
-            {(lessonTab === "text" || isInstructor) ? (
+            {lessonTab === "level" ? (
+              <div>
+                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>段階を選択</label>
+                <select value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
+                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
+                  <option value="">-- 選択してください --</option>
+                  {["種","蕾","若幹","主幹","若柱","主柱","大黒柱"].map(l=><option key={l} value={l}>{l}</option>)}
+                </select>
+                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
+                  <button onClick={()=>{ setLessonColumn("段階"); postLesson(true); }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
+                </div>
+              </div>
+            ) : (lessonTab === "text" || isInstructor) ? (
               <>
                 {isInstructor && (
                   <div style={{marginBottom:14}}>
@@ -1291,16 +1306,8 @@ function App() {
                   {isInstructor && instructorName==="Yamashita Noriko" && <option value="Yamashita Noriko強み">あなたの強み（Noriko）</option>}
                   {isInstructor && instructorName==="hiroko" && <option value="hiroko強み">あなたの強み（hiroko）</option>}
                   {isInstructor && instructorName==="灯音(to•o•n)" && <option value="灯音強み">あなたの強み（灯音）</option>}
-                  {!isInstructor && <option value="段階">段階</option>}
-                  {!isInstructor && <option value="目標">目標</option>}
-                  {!isInstructor && <option value="マイ音階">マイ音階</option>}
-                  {!isInstructor && <option value="持っている楽譜">持っている楽譜</option>}
-                  {!isInstructor && <option value="演奏できる楽曲">演奏できる楽曲</option>}
-                  {!isInstructor && <option value="段階">段階</option>}
-                  {!isInstructor && <option value="目標">目標</option>}
-                  {!isInstructor && <option value="マイ音階">マイ音階</option>}
-                  {!isInstructor && <option value="持っている楽譜">持っている楽譜</option>}
-                  {!isInstructor && <option value="演奏できる楽曲">演奏できる楽曲</option>}
+
+
                   {(()=>{
                     const today = new Date(); today.setHours(0,0,0,0);
                     const upcoming = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])>=today)
