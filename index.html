@@ -356,15 +356,30 @@ function App() {
     if (!schedComment.trim()) { setSchedCommentMsg("コメントを入力してください"); return; }
     setSchedCommentMsg("送信中...");
     try {
+      let finalComment = schedComment;
+      // メンバーが書く場合：既存コメントにメンバー分だけ差し替えて追記
+      if (schedCommentModal.isMember) {
+        const today = new Date();
+        const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
+        const myName = schedCommentModal.name;
+        const newEntry = dateStr + " " + myName + ": " + schedComment;
+        const existing = schedCommentModal.existingFull || "";
+        // 既存の自分のコメントを差し替え、なければ追記
+        const parts = existing.split(";").filter(l=>l.trim());
+        const myIdx = parts.findLastIndex(l=>l.trim().match(new RegExp("^\\d{4}\\/\\d+\\/\\d+\\s+"+myName+":")));
+        if (myIdx >= 0) { parts[myIdx] = newEntry; }
+        else { parts.push(newEntry); }
+        finalComment = parts.join(";");
+      }
       const res = await fetch("/api/gas?" + new URLSearchParams({
         action: "addschedulecomment",
         name: schedCommentModal.name,
         date: schedCommentModal.date,
-        comment: schedComment,
+        comment: finalComment,
       }));
       const data = await res.json();
       if (data.success) {
-        setSchedCommentMsg("✅ 追加しました！");
+        setSchedCommentMsg("✅ 保存しました！");
         fetchSchedules();
         setTimeout(()=>{setSchedCommentModal(null);setSchedCommentMsg("");setSchedComment("");}, 1500);
       } else {
@@ -1199,7 +1214,7 @@ function App() {
       {schedCommentModal && (
         <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:101,padding:20}}>
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>💬 コメント編集</h3>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>{schedCommentModal.isMember ? "✏️ レッスンの感想" : "💬 コメント編集"}</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{schedCommentModal.name}</strong></p>
             <p style={{fontSize:11,color:C.moss,marginBottom:16}}>{schedCommentModal.date}　{schedCommentModal.type}</p>
             <textarea value={schedComment} onChange={e=>setSchedComment(e.target.value)}
@@ -1581,12 +1596,12 @@ function App() {
                         {s["コメント"] && (
                           <>
                             <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                              style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:isOpen?6:0}}>
+                              style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:4}}>
                               <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
                               <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
                             </div>
                             {isOpen && (
-                              <div style={{marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
+                              <div style={{marginTop:4,marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
                                 {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
                                   const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                                   if (m) return (
@@ -1604,9 +1619,20 @@ function App() {
                             )}
                           </>
                         )}
-                        <button onClick={()=>{setSchedCommentModal({name:currentMember.name,date:rawDate,type:s["種別"]});setSchedComment(s["コメント"]||"");setSchedCommentMsg("");}}
+                        <button onClick={()=>{
+                          const today = new Date();
+                          const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
+                          const myName = currentMember.name;
+                          const existing = s["コメント"]||"";
+                          const myComments = existing.split(";").filter(l=>l.trim().includes(myName+":"));
+                          const myLatest = myComments.length>0 ? myComments[myComments.length-1].trim() : "";
+                          const myText = myLatest ? myLatest.replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,"") : "";
+                          setSchedCommentModal({name:myName, date:rawDate, type:s["種別"], isMember:true, existingFull:existing, myText});
+                          setSchedComment(myText);
+                          setSchedCommentMsg("");
+                        }}
                           style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.olive,borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
-                          ✏️ {s["コメント"]?"コメントを編集":"コメントを書く"}
+                          ✏️ {s["コメント"]&&s["コメント"].includes(currentMember.name+":")?"自分のコメントを編集":"コメントを書く"}
                         </button>
                       </div>
                     )}
