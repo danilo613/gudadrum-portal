@@ -981,9 +981,8 @@ function App() {
                             {(()=>{
                               const logs = loginData.filter(l=>l.name===m.name);
                               if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                              const rawDate = logs[logs.length-1].date.slice(0,10);
-                              const dp = rawDate.split("-");
-                              const last = dp.length===3 ? dp[0]+"/"+dp[1]+"/"+dp[2] : rawDate;
+                              const ld = new Date(logs[logs.length-1].date);
+                              const last = !isNaN(ld) ? ld.getFullYear()+"/"+(("0"+(ld.getMonth()+1)).slice(-2))+"/"+("0"+ld.getDate()).slice(-2) : logs[logs.length-1].date.slice(0,10);
                               return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
                             })()}
                           </div>
@@ -1016,9 +1015,8 @@ function App() {
                     {(()=>{
                       const logs = loginData.filter(l=>l.name===m.name);
                       if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                      const rawDate = logs[logs.length-1].date.slice(0,10);
-                      const dp = rawDate.split("-");
-                      const last = dp.length===3 ? dp[0]+"/"+dp[1]+"/"+dp[2] : rawDate;
+                      const ld = new Date(logs[logs.length-1].date);
+                      const last = !isNaN(ld) ? ld.getFullYear()+"/"+(("0"+(ld.getMonth()+1)).slice(-2))+"/"+("0"+ld.getDate()).slice(-2) : logs[logs.length-1].date.slice(0,10);
                       return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
                     })()}
                   </div>
