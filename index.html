@@ -562,6 +562,7 @@ function App() {
     const m = members.find(m => norm(m.name) === norm(selectedName));
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
     if (m.password && toHalf(String(m.password)) !== normalizedPass) { setLoginErr("パスワードが違います"); return; }
+    fetch("/api/gas?" + new URLSearchParams({action:"addlogin", name:m.name}));
     setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false);
   }
 
@@ -1666,7 +1667,11 @@ function App() {
                               const today=new Date();
                               const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
                               const newEntry=ds+" "+adminName+": "+text;
-                              const newParts=parts.filter(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return !(mm&&mm[1].trim()===adminName);});
+                              // 最新のスケジュールデータから現在のコメントを取得
+                              const latestSched = memberSchedules.find(sc=>sc["名前"]===m.name && sc["日付"]===rawDate && sc["種別"]===s["種別"]);
+                              const latestExisting = latestSched ? (latestSched["コメント"]||"") : "";
+                              const latestParts = latestExisting.split(";").filter(l=>l.trim());
+                              const newParts=latestParts.filter(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return !(mm&&mm[1].trim()===adminName);});
                               newParts.push(newEntry);
                               const finalComment=newParts.join(";");
                               const res=await fetch("/api/gas?"+new URLSearchParams({action:"addschedulecomment",name:m.name,date:rawDate,comment:finalComment}));
