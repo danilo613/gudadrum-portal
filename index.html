@@ -1855,8 +1855,7 @@ function App() {
                       <div style={{marginTop:8}}>
                         <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
                           style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>
-                          <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
-                          <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
+                          <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 {isOpen?"フィードバックを閉じる":"フィードバックを見る"}</span>
                         </div>
                         {isOpen && (
                           <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
@@ -1951,10 +1950,18 @@ function App() {
           </button>
           {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
-              {icon:"💪", label:"DANiLOから見るあなたの強み", items:splitItems(m.strengths), isStrengths:true, col:"強み", owner:"DANiLO"},
-              {icon:"💪", label:"Yamashita Norikoから見るあなたの強み", items:splitItems(m.strengthsNoriko), isStrengths:true, col:"Yamashita Noriko強み", owner:"Yamashita Noriko"},
-              {icon:"💪", label:"hirokoから見るあなたの強み", items:splitItems(m.strengthsHiroko), isStrengths:true, col:"hiroko強み", owner:"hiroko"},
-              {icon:"💪", label:"灯音から見るあなたの強み", items:splitItems(m.strengthsToon), isStrengths:true, col:"灯音強み", owner:"灯音(to•o•n)"},
+              // 強みは1行にまとめる（isFromAdminの時は各講師の編集UIを表示するため個別に残す）
+              ...(!isFromAdmin ? [{icon:"💪", label:"あなたの強み", items:[
+                ...splitItems(m.strengths),
+                ...splitItems(m.strengthsNoriko),
+                ...splitItems(m.strengthsHiroko),
+                ...splitItems(m.strengthsToon),
+              ], isStrengths:true, col:null, owner:null}] : [
+                {icon:"💪", label:"DANiLOから見るあなたの強み", items:splitItems(m.strengths), isStrengths:true, col:"強み", owner:"DANiLO"},
+                {icon:"💪", label:"Yamashita Norikoから見るあなたの強み", items:splitItems(m.strengthsNoriko), isStrengths:true, col:"Yamashita Noriko強み", owner:"Yamashita Noriko"},
+                {icon:"💪", label:"hirokoから見るあなたの強み", items:splitItems(m.strengthsHiroko), isStrengths:true, col:"hiroko強み", owner:"hiroko"},
+                {icon:"💪", label:"灯音から見るあなたの強み", items:splitItems(m.strengthsToon), isStrengths:true, col:"灯音強み", owner:"灯音(to•o•n)"},
+              ]),
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
