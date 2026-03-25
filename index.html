@@ -981,7 +981,9 @@ function App() {
                             {(()=>{
                               const logs = loginData.filter(l=>l.name===m.name);
                               if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                              const last = logs[logs.length-1].date.slice(0,10);
+                              const rawDate = logs[logs.length-1].date.slice(0,10);
+                              const dp = rawDate.split("-");
+                              const last = dp.length===3 ? dp[0]+"/"+dp[1]+"/"+dp[2] : rawDate;
                               return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
                             })()}
                           </div>
@@ -1014,7 +1016,9 @@ function App() {
                     {(()=>{
                       const logs = loginData.filter(l=>l.name===m.name);
                       if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                      const last = logs[logs.length-1].date.slice(0,10);
+                      const rawDate = logs[logs.length-1].date.slice(0,10);
+                      const dp = rawDate.split("-");
+                      const last = dp.length===3 ? dp[0]+"/"+dp[1]+"/"+dp[2] : rawDate;
                       return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
                     })()}
                   </div>
@@ -1752,7 +1756,7 @@ function App() {
                               const myEntry=parts.find(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return mm&&mm[1].trim()===myName;});
                               const myText=myEntry?myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,""):"";
                               const openModal=(txt)=>{setSchedCommentModal({name:myName,date:rawDate,type:s["種別"],isMember:true,existingFull:existing});setSchedComment(txt||"");setSchedCommentMsg("");};
-                              return <button onClick={()=>openModal("")} style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600,marginTop:4}}>💬 フィードバックを追加</button>;
+                              return <button onClick={()=>openModal("")} style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:11,color:"#fff",background:"linear-gradient(135deg,#e8924a,#c8622a)",border:"none",borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600,marginTop:4}}>💬 フィードバックを追加</button>;
                             })()}
                           </>
                         )}
@@ -1858,10 +1862,10 @@ function App() {
           </button>
           {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
-              {icon:"💪", label:"DANiLOより", items:splitItems(m.strengths), isStrengths:true, col:"強み", owner:"DANiLO"},
-              {icon:"💪", label:"Yamashita Norikoより", items:splitItems(m.strengthsNoriko), isStrengths:true, col:"Yamashita Noriko強み", owner:"Yamashita Noriko"},
-              {icon:"💪", label:"hirokoより", items:splitItems(m.strengthsHiroko), isStrengths:true, col:"hiroko強み", owner:"hiroko"},
-              {icon:"💪", label:"灯音より", items:splitItems(m.strengthsToon), isStrengths:true, col:"灯音強み", owner:"灯音(to•o•n)"},
+              {icon:"💪", label:"DANiLOから見るあなたの強み", items:splitItems(m.strengths), isStrengths:true, col:"強み", owner:"DANiLO"},
+              {icon:"💪", label:"Yamashita Norikoから見るあなたの強み", items:splitItems(m.strengthsNoriko), isStrengths:true, col:"Yamashita Noriko強み", owner:"Yamashita Noriko"},
+              {icon:"💪", label:"hirokoから見るあなたの強み", items:splitItems(m.strengthsHiroko), isStrengths:true, col:"hiroko強み", owner:"hiroko"},
+              {icon:"💪", label:"灯音から見るあなたの強み", items:splitItems(m.strengthsToon), isStrengths:true, col:"灯音強み", owner:"灯音(to•o•n)"},
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
