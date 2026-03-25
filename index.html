@@ -532,16 +532,18 @@ function App() {
   function handleLogin() {
     setLoginErr("");
     if (!selectedName) { setLoginErr("名前を選択してください"); return; }
+    const toHalf = s => String(s).replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).trim();
+    const normalizedPass = toHalf(password);
     if (selectedName === "__admin__") {
-      if (password === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setLessonTab("text"); setPassword(""); }
-      else if (password === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setLessonTab("text"); setPassword(""); }
+      if (normalizedPass === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setLessonTab("text"); setPassword(""); }
+      else if (normalizedPass === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setLessonTab("text"); setPassword(""); }
       else setLoginErr("パスワードが違います");
       return;
     }
     const norm = s => s.replace(/\s/g,"");
     const m = members.find(m => norm(m.name) === norm(selectedName));
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
-    if (m.password && m.password !== password) { setLoginErr("パスワードが違います"); return; }
+    if (m.password && toHalf(String(m.password)) !== normalizedPass) { setLoginErr("パスワードが違います"); return; }
     setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false);
   }
 
