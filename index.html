@@ -1608,6 +1608,97 @@ function App() {
           )}
         </div>
 
+        {/* DANiLOコメント */}
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+          <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,color:C.label,fontWeight:700}}>💬 DANiLO・講師陣からのコメント</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {commentOpen && (
+            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
+              {/* コメント表示 */}
+              <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
+              <div style={{maxHeight:"8em",overflowY:"auto",marginBottom:isFromAdmin?8:0}}>
+                {(()=>{
+                  const splitComment = (s) => String(s||"").trim() ? String(s||"").split(";").map(x=>x.trim()).filter(Boolean) : [];
+                  const all = [
+                    ...splitComment(m.challenge),
+                    ...splitComment(m.commentNoriko),
+                    ...splitComment(m.commentHiroko),
+                    ...splitComment(m.commentToon),
+                  ].filter(Boolean);
+                  all.sort((a,b)=>{
+                    const da = a.match(/^(\d{4}\/\d+\/\d+)/);
+                    const db = b.match(/^(\d{4}\/\d+\/\d+)/);
+                    if (!da && !db) return 0;
+                    if (!da) return 1;
+                    if (!db) return -1;
+                    return new Date(db[1]) - new Date(da[1]);
+                  });
+                  return all.length > 0
+                    ? all.map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.6,marginBottom:4,whiteSpace:"pre-wrap"}}>{line}</p>)
+                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>−</p>;
+                })()}
+              </div>
+              {/* 管理者用：コメント入力・編集 */}
+              {isFromAdmin && (()=>{
+                const adminName = isInstructor ? (instructorName||"") : "DANiLO";
+                const targetCol = isInstructor
+                  ? (adminName==="Yamashita Noriko"?"Yamashita Norikoコメント":adminName==="hiroko"?"hirokoコメント":adminName==="灯音(to•o•n)"?"灯音コメント":"課題")
+                  : "課題";
+                const currentVal = isInstructor
+                  ? (adminName==="Yamashita Noriko"?m.commentNoriko:adminName==="hiroko"?m.commentHiroko:adminName==="灯音(to•o•n)"?m.commentToon:"")
+                  : m.challenge;
+                const editKey = "challenge_edit";
+                const isEditingChal = pastSchedOpen[editKey]||false;
+                const editValChal = pastSchedOpen["challengeval"]||"";
+                return (
+                  <div style={{borderTop:"1px solid rgba(112,130,56,0.1)",paddingTop:8}}>
+                    {isInstructor && (
+                      <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
+                        style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"5px 8px",fontSize:12,color:C.choco,cursor:"pointer",marginBottom:8}}>
+                        <option value="">-- 講師を選択 --</option>
+                        {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
+                      </select>
+                    )}
+                    {isEditingChal ? (
+                      <div>
+                        <textarea value={editValChal} onChange={e=>setPastSchedOpen(p=>({...p,challengeval:e.target.value}))}
+                          style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}/>
+                        <div style={{display:"flex",gap:6}}>
+                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
+                            style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
+                          <button onClick={async()=>{
+                            if(!editValChal.trim()) return;
+                            const today=new Date();
+                            const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
+                            const newEntry=ds+" "+adminName+": "+editValChal.trim();
+                            // 既存に追記（新しいコメントを先頭に）
+                            const freshRes=await fetch("/api/gas?action=read&name="+encodeURIComponent(m.name));
+                            const freshData=await freshRes.json();
+                            const member=freshData&&freshData[0];
+                            const existingVal=member?(member[targetCol]||""):"";
+                            const finalVal=existingVal ? newEntry+";"+existingVal : newEntry;
+                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:targetCol,value:finalVal,overwrite:"true"}));
+                            const data=await res.json();
+                            if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
+                          }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,challengeval:currentVal||""}))}
+                        style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
+                        {currentVal?"✏️ コメントを編集":"💬 コメントを書く"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+
+
         {/* マイスケジュール */}
         {(()=>{
           const myScheds = memberSchedules.filter(s=>s["名前"]===m.name);
@@ -1958,96 +2049,6 @@ function App() {
               </div>
             </div>
           </div>}
-        </div>
-
-        {/* DANiLOコメント */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,color:C.label,fontWeight:700}}>💬 DANiLO・講師陣からのコメント</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {commentOpen && (
-            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
-              {/* コメント表示 */}
-              <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
-              <div style={{maxHeight:"8em",overflowY:"auto",marginBottom:isFromAdmin?8:0}}>
-                {(()=>{
-                  const splitComment = (s) => String(s||"").trim() ? String(s||"").split(";").map(x=>x.trim()).filter(Boolean) : [];
-                  const all = [
-                    ...splitComment(m.challenge),
-                    ...splitComment(m.commentNoriko),
-                    ...splitComment(m.commentHiroko),
-                    ...splitComment(m.commentToon),
-                  ].filter(Boolean);
-                  all.sort((a,b)=>{
-                    const da = a.match(/^(\d{4}\/\d+\/\d+)/);
-                    const db = b.match(/^(\d{4}\/\d+\/\d+)/);
-                    if (!da && !db) return 0;
-                    if (!da) return 1;
-                    if (!db) return -1;
-                    return new Date(db[1]) - new Date(da[1]);
-                  });
-                  return all.length > 0
-                    ? all.map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.6,marginBottom:4,whiteSpace:"pre-wrap"}}>{line}</p>)
-                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>−</p>;
-                })()}
-              </div>
-              {/* 管理者用：コメント入力・編集 */}
-              {isFromAdmin && (()=>{
-                const adminName = isInstructor ? (instructorName||"") : "DANiLO";
-                const targetCol = isInstructor
-                  ? (adminName==="Yamashita Noriko"?"Yamashita Norikoコメント":adminName==="hiroko"?"hirokoコメント":adminName==="灯音(to•o•n)"?"灯音コメント":"課題")
-                  : "課題";
-                const currentVal = isInstructor
-                  ? (adminName==="Yamashita Noriko"?m.commentNoriko:adminName==="hiroko"?m.commentHiroko:adminName==="灯音(to•o•n)"?m.commentToon:"")
-                  : m.challenge;
-                const editKey = "challenge_edit";
-                const isEditingChal = pastSchedOpen[editKey]||false;
-                const editValChal = pastSchedOpen["challengeval"]||"";
-                return (
-                  <div style={{borderTop:"1px solid rgba(112,130,56,0.1)",paddingTop:8}}>
-                    {isInstructor && (
-                      <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
-                        style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"5px 8px",fontSize:12,color:C.choco,cursor:"pointer",marginBottom:8}}>
-                        <option value="">-- 講師を選択 --</option>
-                        {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
-                      </select>
-                    )}
-                    {isEditingChal ? (
-                      <div>
-                        <textarea value={editValChal} onChange={e=>setPastSchedOpen(p=>({...p,challengeval:e.target.value}))}
-                          style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}/>
-                        <div style={{display:"flex",gap:6}}>
-                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
-                            style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
-                          <button onClick={async()=>{
-                            if(!editValChal.trim()) return;
-                            const today=new Date();
-                            const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                            const newEntry=ds+" "+adminName+": "+editValChal.trim();
-                            // 既存に追記（新しいコメントを先頭に）
-                            const freshRes=await fetch("/api/gas?action=read&name="+encodeURIComponent(m.name));
-                            const freshData=await freshRes.json();
-                            const member=freshData&&freshData[0];
-                            const existingVal=member?(member[targetCol]||""):"";
-                            const finalVal=existingVal ? newEntry+";"+existingVal : newEntry;
-                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:targetCol,value:finalVal,overwrite:"true"}));
-                            const data=await res.json();
-                            if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
-                          }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,challengeval:currentVal||""}))}
-                        style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
-                        {currentVal?"✏️ コメントを編集":"💬 コメントを書く"}
-                      </button>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          )}
         </div>
 
         {/* メインカリキュラム */}
