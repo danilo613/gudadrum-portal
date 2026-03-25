@@ -513,10 +513,13 @@ function App() {
         return;
       }
 
-      const autoOverwrite = ["強み","目標","段階","受講済み段階","Yamashita Noriko強み","hiroko強み","灯音強み"].includes(lessonColumn);
+      // lessonColumnが意図しない列になっていたら課題にフォールバック
+      const allowedColumns = ["課題","強み","目標","段階","受講済み段階","Yamashita Noriko強み","hiroko強み","灯音強み"];
+      const safeColumn = allowedColumns.includes(lessonColumn) ? lessonColumn : "課題";
+      const autoOverwrite = ["強み","目標","段階","受講済み段階","Yamashita Noriko強み","hiroko強み","灯音強み"].includes(safeColumn);
       const formattedValue = overwrite ? lessonValue : dateStr + " " + sender + ": " + lessonValue;
-      let targetColumn = lessonColumn;
-      if (isInstructor && lessonColumn === "課題") {
+      let targetColumn = safeColumn;
+      if (isInstructor && safeColumn === "課題") {
         const colMap = {"Yamashita Noriko":"Yamashita Norikoコメント", "hiroko":"hirokoコメント", "灯音(to•o•n)":"灯音コメント"};
         targetColumn = colMap[instructorName] || "課題";
       }
@@ -992,8 +995,7 @@ function App() {
                         <MiniRadar m={m} size={44}/>
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
-                        <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
-                        <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(m.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
+
                         <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
                         <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
                         {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
@@ -1026,8 +1028,7 @@ function App() {
                 <MiniRadar m={m} size={44}/>
               </div>
               <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
-                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
-                <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(m.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
+
                 <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
                 <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
                 {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
@@ -1631,71 +1632,136 @@ function App() {
                     )}
                     {isPastItem && (
                       <div style={{marginTop:8}}>
-                        {s["コメント"] && (
-                          <>
-                            <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                              style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:4}}>
-                              <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
-                              <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
-                            </div>
-                            {isOpen && (
-                              <div style={{marginTop:4,marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                                {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
-                                  const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                                  if (m) return (
-                                    <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
-                                      <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                        <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
-                                        <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
-                                      </div>
-                                      <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m[3].trim()}</p>
-                                    </div>
-                                  );
-                                  return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p> : null;
-                                })}
-                              </div>
-                            )}
-                          </>
-                        )}
-                        {(()=>{
-                          const myName = currentMember.name;
-                          const existing = s["コメント"]||"";
-                          const parts = existing.split(";").filter(l=>l.trim());
-                          const myEntry = parts.find(l=>{
-                            const mm = l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);
-                            return mm && mm[1].trim()===myName;
-                          });
-                          const myText = myEntry ? myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,"") : "";
-                          const openModal = (txt)=>{
-                            setSchedCommentModal({name:myName, date:rawDate, type:s["種別"], isMember:true, existingFull:existing});
-                            setSchedComment(txt||"");
-                            setSchedCommentMsg("");
-                          };
-                          if (myEntry) {
-                            // 自分のコメントがある → フィードバックボックスの下に編集ボタン
-                            const mm = myEntry.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                        {isFromAdmin ? (
+                          // 管理者・講師用：全コメント表示＋自分のコメントをインライン編集
+                          (()=>{
+                            const adminName = isInstructor ? (instructorName||"講師") : "DANiLO";
+                            const existing = s["コメント"]||"";
+                            const parts = existing.split(";").filter(l=>l.trim());
+                            const myEntry = parts.find(l=>{
+                              const mm = l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);
+                              return mm && mm[1].trim()===adminName;
+                            });
+                            const myText = myEntry ? myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,"") : "";
+                            const editKey = "admedit_"+rawDate+s["種別"];
+                            const isEditing = pastSchedOpen[editKey]||false;
+                            const editVal = pastSchedOpen["admeditval_"+rawDate+s["種別"]]||"";
+                            const saveComment = async(text)=>{
+                              const today=new Date();
+                              const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
+                              const newEntry=ds+" "+adminName+": "+text;
+                              const newParts=parts.filter(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return !(mm&&mm[1].trim()===adminName);});
+                              newParts.push(newEntry);
+                              const finalComment=newParts.join(";");
+                              const res=await fetch("/api/gas?"+new URLSearchParams({action:"addschedulecomment",name:m.name,date:rawDate,comment:finalComment}));
+                              const data=await res.json();
+                              if(data.success){fetchSchedules();setPastSchedOpen(p=>({...p,[editKey]:false}));}
+                            };
                             return (
-                              <div style={{marginTop:6,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 10px",borderLeft:"3px solid "+C.olive}}>
-                                <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                  <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm?mm[2].trim():myName}</span>
-                                  <span style={{fontSize:10,color:C.label}}>{mm?mm[1]:""}</span>
-                                </div>
-                                <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:6}}>{myText}</p>
-                                <button onClick={()=>openModal(myText)}
-                                  style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600}}>
-                                  ✏️ 編集する
-                                </button>
+                              <div>
+                                {/* 講師選択（講師の場合のみ） */}
+                                {isInstructor && (
+                                  <div style={{marginBottom:8}}>
+                                    <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
+                                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"5px 8px",fontSize:12,color:C.choco,cursor:"pointer"}}>
+                                      <option value="">-- 講師を選択 --</option>
+                                      {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
+                                    </select>
+                                  </div>
+                                )}
+                                {/* 既存コメント表示 */}
+                                {parts.length>0 && (
+                                  <div style={{marginBottom:8,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 10px",borderLeft:"3px solid "+C.olive}}>
+                                    {parts.map((line,j)=>{
+                                      const mm=line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                                      if(!mm) return null;
+                                      return (
+                                        <div key={j} style={{marginBottom:j<parts.length-1?8:0}}>
+                                          <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                            <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm[2].trim()}</span>
+                                            <span style={{fontSize:10,color:C.label}}>{mm[1]}</span>
+                                          </div>
+                                          <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{mm[3].trim()}</p>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                                {/* 自分のコメント入力・編集 */}
+                                {isEditing ? (
+                                  <div>
+                                    <textarea value={editVal} onChange={e=>setPastSchedOpen(p=>({...p,["admeditval_"+rawDate+s["種別"]]:e.target.value}))}
+                                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}
+                                      placeholder="コメントを入力..."/>
+                                    <div style={{display:"flex",gap:6}}>
+                                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
+                                        style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
+                                      <button onClick={()=>saveComment(editVal)}
+                                        style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,["admeditval_"+rawDate+s["種別"]]:myText}))}
+                                    style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600}}>
+                                    {myEntry?"✏️ コメントを編集":"💬 コメントを書く"}
+                                  </button>
+                                )}
                               </div>
                             );
-                          }
-                          // 自分のコメントがない → フィードバックを書くボタン
-                          return (
-                            <button onClick={()=>openModal("")}
-                              style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600,marginTop:4}}>
-                              💬 フィードバックを書く
-                            </button>
-                          );
-                        })()}
+                          })()
+                        ) : (
+                          // メンバー用：フィードバック閲覧＋自分のフィードバック入力・編集
+                          <>
+                            {s["コメント"] && (
+                              <>
+                                <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
+                                  style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:4}}>
+                                  <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
+                                  <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
+                                </div>
+                                {isOpen && (
+                                  <div style={{marginTop:4,marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
+                                    {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
+                                      const mm=line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                                      if(mm) return (
+                                        <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
+                                          <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                            <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm[2].trim()}</span>
+                                            <span style={{fontSize:10,color:C.label}}>{mm[1]}</span>
+                                          </div>
+                                          <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{mm[3].trim()}</p>
+                                        </div>
+                                      );
+                                      return line.trim()?<p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p>:null;
+                                    })}
+                                  </div>
+                                )}
+                              </>
+                            )}
+                            {(()=>{
+                              const myName=currentMember.name;
+                              const existing=s["コメント"]||"";
+                              const parts=existing.split(";").filter(l=>l.trim());
+                              const myEntry=parts.find(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return mm&&mm[1].trim()===myName;});
+                              const myText=myEntry?myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,""):"";
+                              const openModal=(txt)=>{setSchedCommentModal({name:myName,date:rawDate,type:s["種別"],isMember:true,existingFull:existing});setSchedComment(txt||"");setSchedCommentMsg("");};
+                              if(myEntry){
+                                const mm=myEntry.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                                return (
+                                  <div style={{marginTop:6,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 10px",borderLeft:"3px solid "+C.olive}}>
+                                    <div style={{display:"flex",gap:8,marginBottom:2}}>
+                                      <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm?mm[2].trim():myName}</span>
+                                      <span style={{fontSize:10,color:C.label}}>{mm?mm[1]:""}</span>
+                                    </div>
+                                    <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:6}}>{myText}</p>
+                                    <button onClick={()=>openModal(myText)} style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600}}>✏️ 編集する</button>
+                                  </div>
+                                );
+                              }
+                              return <button onClick={()=>openModal("")} style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600,marginTop:4}}>💬 フィードバックを書く</button>;
+                            })()}
+                          </>
+                        )}
                       </div>
                     )}
                     {!isPastItem && s["コメント"] && (
@@ -1798,2005 +1864,67 @@ function App() {
           </button>
           {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
-              {icon:"💪", label:"DANiLOより", items:splitItems(m.strengths), isStrengths:true},
-              ...(m.strengthsNoriko ? [{icon:"💪", label:"Yamashita Norikoより", items:splitItems(m.strengthsNoriko), isStrengths:true}] : []),
-              ...(m.strengthsHiroko ? [{icon:"💪", label:"hirokoより", items:splitItems(m.strengthsHiroko), isStrengths:true}] : []),
-              ...(m.strengthsToon ? [{icon:"💪", label:"灯音より", items:splitItems(m.strengthsToon), isStrengths:true}] : []),
+              {icon:"💪", label:"DANiLOより", items:splitItems(m.strengths), isStrengths:true, col:"強み", owner:"DANiLO"},
+              {icon:"💪", label:"Yamashita Norikoより", items:splitItems(m.strengthsNoriko), isStrengths:true, col:"Yamashita Noriko強み", owner:"Yamashita Noriko"},
+              {icon:"💪", label:"hirokoより", items:splitItems(m.strengthsHiroko), isStrengths:true, col:"hiroko強み", owner:"hiroko"},
+              {icon:"💪", label:"灯音より", items:splitItems(m.strengthsToon), isStrengths:true, col:"灯音強み", owner:"灯音(to•o•n)"},
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
-            ].map(({icon,label,items,isStrengths},i)=>(
-              <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                <span style={{fontSize:15,flexShrink:0,marginTop:1}}>{icon}</span>
-                <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,marginBottom:3,fontWeight:500}}>{label}</p>
-                  {items.length > 0
-                    ? items.map((v,j) => {
-                        if (isStrengths) {
-                          const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                          if (match) return (
-                            <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
-                              <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{match[3].trim()}</p>
-                              <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
-                            </div>
-                          );
-                        }
-                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>;
-                      })
-                    : <p style={{fontSize:13,color:C.label}}>−</p>
-                  }
-                </div>
-              </div>
-            ))}
-            {/* これまでに参加したイベント */}
-            {m.history && m.history.length > 0 && (
-              <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                <span style={{fontSize:15,flexShrink:0,marginTop:1}}>🗓</span>
-                <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,marginBottom:3,fontWeight:500}}>これまでに参加したイベント</p>
-                  {m.history.map((h,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{h}</p>)}
-                </div>
-              </div>
-            )}
-            {/* マイメモ */}
-            <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0"}}>
-              <span style={{fontSize:15,flexShrink:0,marginTop:1}}>📝</span>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:6}}>
-                  <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,fontWeight:500}}>マイメモ</p>
-                  <p style={{fontSize:9,color:C.moss}}>※ この端末のみ保存されます</p>
-                </div>
-                <textarea value={myMemo} onChange={e=>{setMyMemo(e.target.value);localStorage.setItem("memo_"+m.name,e.target.value);}}
-                  placeholder="レッスンや練習会の記録や疑問点を入力できます"
-                  style={{width:"100%",background:"rgba(240,235,226,0.6)",border:"1px solid "+C.border,borderRadius:8,padding:8,fontSize:13,color:C.choco,resize:"none",height:70,boxSizing:"border-box"}}/>
-              </div>
-            </div>
-          </div>}
-        </div>
-
-        {/* DANiLOコメント */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,color:C.label,fontWeight:700}}>💬 DANiLO・講師陣からのコメント</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {commentOpen && (
-            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
-              <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
-              <div style={{maxHeight:"8em",overflowY:"auto"}}>
-                {(()=>{
-                  const splitComment = (s) => String(s||"").trim() ? [String(s||"").trim()] : [];
-                  const all = [
-                    ...splitComment(m.challenge),
-                    ...splitComment(m.commentNoriko),
-                    ...splitComment(m.commentHiroko),
-                    ...splitComment(m.commentToon),
-                  ].filter(Boolean);
-                  // 日付で始まる行（例：2026/3/22）でソート
-                  all.sort((a,b)=>{
-                    const da = a.match(/^(\d{4}\/\d+\/\d+)/);
-                    const db = b.match(/^(\d{4}\/\d+\/\d+)/);
-                    if (!da && !db) return 0;
-                    if (!da) return 1;
-                    if (!db) return -1;
-                    return new Date(db[1]) - new Date(da[1]);
-                  });
-                  return all.length > 0
-                    ? all.map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.6,marginBottom:4,whiteSpace:"pre-wrap"}}>{line}</p>)
-                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>−</p>;
-                })()}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* メインカリキュラム */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setCurriculumOpen(!curriculumOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,color:C.label,fontWeight:700}}>📚 メインカリキュラム進捗</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:curriculumOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {curriculumOpen && <div style={{borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
-          <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:14}}>
-            {CURRICULUM.map((item,i)=>{
-              const done = i < m.completedLevels;
+            ].map(({icon,label,items,isStrengths,col,owner},i)=>{
+              const adminName = isInstructor ? (instructorName||"") : "DANiLO";
+              const canEdit = isFromAdmin && col && ((!isInstructor && owner==="DANiLO") || (isInstructor && owner===adminName));
+              const editKey = "strength_"+col;
+              const isEditingStr = pastSchedOpen[editKey]||false;
+              const editValStr = pastSchedOpen["strengthval_"+col]||"";
               return (
-                <div key={i} style={{background:done?"rgba(112,130,56,0.1)":"rgba(0,0,0,0.03)",borderRadius:10,padding:"10px 14px"}}>
-                  <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
-                    <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{done?"✅":"🔒"}</span>
-                    <span style={{fontSize:13,color:done?C.choco:C.label,fontWeight:done?500:400,wordBreak:"keep-all",lineHeight:1.5}}>{item.title}</span>
+                <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
+                  <span style={{fontSize:15,flexShrink:0,marginTop:1}}>{icon}</span>
+                  <div style={{flex:1,minWidth:0}}>
+                    <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,marginBottom:3,fontWeight:500}}>{label}</p>
+                    {!isEditingStr && (items.length > 0
+                      ? items.map((v,j) => {
+                          if (isStrengths) {
+                            const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                            if (match) return (
+                              <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
+                                <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{match[3].trim()}</p>
+                                <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
+                              </div>
+                            );
+                          }
+                          return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>;
+                        })
+                      : <p style={{fontSize:13,color:C.label}}>−</p>
+                    )}
+                    {isEditingStr && (
+                      <div>
+                        <textarea value={editValStr} onChange={e=>setPastSchedOpen(p=>({...p,["strengthval_"+col]:e.target.value}))}
+                          style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}/>
+                        <div style={{display:"flex",gap:6}}>
+                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
+                            style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
+                          <button onClick={async()=>{
+                            const today=new Date();
+                            const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
+                            const val=ds+" "+adminName+": "+editValStr;
+                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:col,value:val,overwrite:"true"}));
+                            const data=await res.json();
+                            if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
+                          }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
+                        </div>
+                      </div>
+                    )}
+                    {canEdit && !isEditingStr && (
+                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,["strengthval_"+col]:items.join("\n")}))}
+                        style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600,marginTop:4}}>
+                        ✏️ 編集する
+                      </button>
+                    )}
                   </div>
-                  {done && item.url && (
-                    <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8,marginLeft:24}}>
-                      <a href={item.url} target="_blank" rel="noreferrer"
-                        style={{padding:"4px 10px",borderRadius:8,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>
-                        ▶ 動画のまとめ
-                      </a>
-                      {item.password && (
-                        <span style={{fontSize:11,color:C.label,background:"rgba(112,130,56,0.1)",padding:"4px 8px",borderRadius:6}}>
-                          🔑 {item.password}
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
               );
             })}
-          </div>
-          <a href="https://www.gudadrumjapan.com/tchng" target="_blank" rel="noreferrer" style={BTN_STYLE}>
-            メインカリキュラムを受講する
-          </a>
-          </div>}
-        </div>
-
-        {/* フィードバックボタン */}
-        <div style={{marginTop:16,marginBottom:8}}>
-          <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
-            style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid "+C.border,background:"rgba(255,255,255,0.6)",color:C.label,fontSize:13,fontWeight:600,cursor:"pointer",textAlign:"center"}}>
-            💬 アプリへのフィードバックを送る
-          </button>
-          {feedbackOpen && (
-            <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:16,marginTop:8}}>
-              <p style={{fontSize:12,color:C.label,marginBottom:12,lineHeight:1.6}}>
-                アプリの使い心地や改善のご要望などをDANiLOに直接お届けします。お気軽にどうぞ！
-              </p>
-              <input value={feedbackName} onChange={e=>setFeedbackName(e.target.value)}
-                placeholder="お名前（任意）"
-                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,marginBottom:8}}/>
-              <textarea value={feedbackMsg} onChange={e=>setFeedbackMsg(e.target.value)}
-                placeholder="フィードバック内容をご記入ください"
-                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:100,marginBottom:8}}/>
-              {feedbackStatus && <p style={{fontSize:12,color:feedbackStatus.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{feedbackStatus}</p>}
-              <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>{setFeedbackOpen(false);setFeedbackStatus("");}}
-                  style={{flex:1,padding:"8px",borderRadius:8,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
-                <button onClick={sendFeedback}
-                  style={{flex:2,padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
-              </div>
-            </div>
-          )}
-        </div>
-
-
-
-      </div>
-    </div>
-  );
-}
-
-    ReactDOM.render(React.createElement(App), document.getElementById('root'));
-  </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
-  <title>GUDADRUM ORCHESTRA - MEMBER PORTAL</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Noto Sans JP', sans-serif; }</style>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
-
-const STORAGE_KEY = "guda_config_v3";
-const ADMIN_PASS = "1919";
-const INSTRUCTOR_PASS = "2525";
-const INSTRUCTORS = ["Yamashita Noriko", "hiroko", "灯音(to•o•n)"];
-const SONGS = ["蒼〜aoi〜","iridescence","艶麗〜enrei〜","NoStAlGiE","heart beat of L**E","dreamy EYES","春ノ舞","秋霖〜shuhrin〜","water lily〜水面〜","めぐみの空","holy child","water lily","Re:Grace","添音〜embrace〜","祈音〜Inorion〜","fare well"];
-const CSV_URL = "/api/gas";
-
-const BADGE_IMAGES = {
-  "種": "/badge_種.png",
-  "蕾": "/badge_蕾.png",
-  "若幹": "/badge_若幹.png",
-  "主幹": "/badge_主幹.png",
-  "若柱": "/badge_若柱.png",
-  "主柱": "/badge_主柱.png",
-  "大黒柱": "/badge_大黒柱.png",
-  "幹": "/badge_幹.png",
-  "柱": "/badge_柱.png",
-};
-
-const LEVEL_COLOR = "#f0e0a0";
-const LEVEL_ORDER = ["大黒柱","主柱","若柱","主幹","若幹","蕾","種","柱","幹"];
-
-const CURRICULUM = [
-  { title:"グーダドラムの基礎「響かせる」", url:"https://www.gudadrumjapan.com/kyzkmtm", password:"gdrmtd26" },
-  { title:"リズムの基礎⑴「リズムを知る」", url:"https://www.gudadrumjapan.com/kyzrhmtm", password:"rhtmgdrm#mtm26" },
-  { title:"リズムの基礎⑵「リズムを感じる」", url:"", password:"" },
-  { title:"楽曲の基礎⑴「フレーズを覚える」", url:"", password:"" },
-  { title:"楽曲の基礎⑵「フレーズを繋げる」", url:"", password:"" },
-  { title:"楽曲の応用⑴「リズムを整える」", url:"", password:"" },
-  { title:"楽曲の応用⑵「楽曲をブラッシュアップ」", url:"", password:"" },
-];
-
-const C = {
-  olive:"#708238", sand:"#E2C5A0", choco:"#4B3621", moss:"#8A9A5B",
-  label:"#6b4c30", bg:"#f0ebe0", bgLight:"#faf7f2", border:"rgba(112,130,56,0.2)",
-};
-
-const BTN_STYLE = {
-  display:"block", textAlign:"center", padding:"13px", borderRadius:12,
-  background:"linear-gradient(135deg,#b8c86a,#8a9a3a)", color:"#fff",
-  fontSize:13, fontWeight:700, textDecoration:"none", letterSpacing:"0.05em",
-  boxShadow:"0 4px 12px rgba(112,130,56,0.4)",
-};
-
-function splitItems(str) {
-  return String(str || "").split(/[|｜;；,，]/).map(s => s.trim()).filter(Boolean);
-}
-
-function parseCsvLine(line) {
-  const result = [];
-  let cur = "", inQuote = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"') {
-      if (inQuote && line[i+1] === '"') { cur += '"'; i++; }
-      else { inQuote = !inQuote; }
-    } else if (ch === ',' && !inQuote) {
-      result.push(cur.trim()); cur = "";
-    } else { cur += ch; }
-  }
-  result.push(cur.trim());
-  return result;
-}
-
-function parseCsv(text) {
-  const lines = text.trim().split("\n");
-  const headers = parseCsvLine(lines[0]);
-  return lines.slice(1).map(line => {
-    const values = parseCsvLine(line);
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = values[i] || ""; });
-    return obj;
-  });
-}
-
-function rowToMember(r) {
-  return {
-    name: String(r["名前"] || r["name"] || ""),
-    password: String(r["パスワード"] || r["password"] || ""),
-    level: String(r["段階"] || r["レベル"] || r["level"] || ""),
-    strengths: String(r["強み"] || r["strengths"] || ""),
-    strengthsNoriko: String(r["Yamashita Noriko強み"] || ""),
-    strengthsHiroko: String(r["hiroko強み"] || ""),
-    strengthsToon: String(r["灯音強み"] || ""),
-    challenge: String(r["課題"] || r["challenge"] || ""),
-    goal: String(r["目標"] || r["goal"] || ""),
-    history: splitItems(r["履歴"] || r["history"] || ""),
-    scales: String(r["マイ音階"] || ""),
-    sheets: String(r["持っている楽譜"] || ""),
-    songs: String(r["演奏できる楽曲"] || ""),
-    completedLevels: parseInt(r["受講済み段階"] || "0"),
-    openness: parseInt(r["音の開放度"] || "0"),
-    quality: parseInt(r["音質調整"] || "0"),
-    tempo: parseInt(r["テンポキープ"] || "0"),
-    ghost: parseInt(r["ゴースト"] || r["ゴーストクオリティ"] || "0"),
-    groove: parseInt(r["グルーヴ"] || "0"),
-    diagnosisDate: String(r["診断日"] || "").split("T")[0],
-    diagnosisResult: String(r["診断結果"] || ""),
-    diagnosisSong: String(r["診断楽曲"] || ""),
-    commentNoriko: String(r["Yamashita Norikoコメント"] || ""),
-    commentHiroko: String(r["hirokoコメント"] || ""),
-    commentToon: String(r["灯音コメント"] || ""),
-    region: String(r["居住地域"] || ""),
-    points: parseInt(r["ポイント"] || "0"),
-  };
-}
-
-const DEMO_MEMBERS = [
-  { name:"田中花子", password:"1234", level:"主柱", strengths:"リズム感|安定したビート", challenge:"表現の幅を広げる", history:["2024春合宿","定期演奏会"], scales:"Cマイナー", sheets:"楽譜A|楽譜B", songs:"曲1|曲2", completedLevels:5, openness:4, quality:3, tempo:5, ghost:3, groove:4, diagnosisDate:"2024-10-01", diagnosisResult:"リズムが非常に安定しています", points:320 },
-  { name:"鈴木太郎", password:"5678", level:"若幹", strengths:"音の粒立ち|集中力", challenge:"テンポキープ", history:["2024夏練習会"], scales:"Gメジャー", sheets:"楽譜C", songs:"曲3", completedLevels:3, openness:3, quality:4, tempo:2, ghost:2, groove:3, diagnosisDate:"2024-09-15", diagnosisResult:"音質が繊細で素晴らしい", points:180 },
-  { name:"山田梅子", password:"0000", level:"種", strengths:"情熱|向上心", challenge:"基礎リズム", history:[], scales:"", sheets:"", songs:"", completedLevels:0, openness:1, quality:1, tempo:1, ghost:1, groove:1, diagnosisDate:"", diagnosisResult:"", points:50 },
-];
-
-function loadSavedMembers() {
-  try {
-    const cfg = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (cfg && cfg.jsonData) {
-      const rows = JSON.parse(cfg.jsonData);
-      const parsed = rows.map(rowToMember).filter(m => m.name);
-      if (parsed.length > 0) return parsed;
-    }
-  } catch(e) {}
-  return null;
-}
-
-function BadgeImage({ level, size = 56 }) {
-  const src = BADGE_IMAGES[level];
-  if (!src) return <div style={{width:size,height:size,borderRadius:"50%",background:"rgba(112,130,56,0.15)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:size*0.4,color:C.olive}}>?</div>;
-  return <img src={src} alt={level} style={{width:size,height:size,objectFit:"contain",filter:"drop-shadow(0 2px 6px rgba(0,0,0,0.3))"}}/>;
-}
-
-function RadarChart({ m }) {
-  const labels = ["音の開放度","音質調整","テンポキープ","ゴースト","グルーヴ"];
-  const values = [m.openness, m.quality, m.tempo, m.ghost, m.groove];
-  const n=5, W=240, H=210, cx=W/2, cy=H/2, r=60, ao=-Math.PI/2;
-  const angle = i => ao+(2*Math.PI*i)/n;
-  const pt = (i,v) => [cx+r*(v/5)*Math.cos(angle(i)), cy+r*(v/5)*Math.sin(angle(i))];
-  const tip = i => [cx+r*Math.cos(angle(i)), cy+r*Math.sin(angle(i))];
-  const grid = lv => Array.from({length:n},(_,i)=>pt(i,lv).join(",")).join(" ");
-  const poly = values.map((v,i)=>pt(i,v).join(",")).join(" ");
-  const li = [{i:0,dx:0,dy:-14,a:"middle"},{i:1,dx:14,dy:4,a:"start"},{i:2,dx:14,dy:-4,a:"start"},{i:3,dx:-14,dy:-4,a:"end"},{i:4,dx:-14,dy:4,a:"end"}];
-  return (
-    <svg width={W} height={H} viewBox={"0 0 "+W+" "+H}>
-      {[1,2,3,4,5].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>)}
-      {Array.from({length:n},(_,i)=>{ const [x,y]=tip(i); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(112,130,56,0.3)" strokeWidth="0.5"/>; })}
-      <polygon points={poly} fill="rgba(112,130,56,0.2)" stroke="#708238" strokeWidth="1.5"/>
-      {values.map((v,i)=>{ const [x,y]=pt(i,v); return <circle key={i} cx={x} cy={y} r="2.5" fill="#708238"/>; })}
-      {li.map(({i,dx,dy,a})=>{ const [tx,ty]=tip(i); return <text key={i} x={tx+dx} y={ty+dy} textAnchor={a} fontSize="9" fill="#6b4c30">{labels[i]}</text>; })}
-      {values.map((v,i)=>{ const [x,y]=pt(i,v); return <text key={i} x={x} y={y-6} textAnchor="middle" fontSize="9" fontWeight="700" fill="#4B3621">{v}</text>; })}
-    </svg>
-  );
-}
-
-function MiniRadar({ m, size=48 }) {
-  const values = [m.openness,m.quality,m.tempo,m.ghost,m.groove];
-  const n=5, cx=size/2, cy=size/2, r=size*0.38, ao=-Math.PI/2;
-  const pt = (i,v) => { const a=ao+(2*Math.PI*i)/n; return [cx+r*(v/5)*Math.cos(a),cy+r*(v/5)*Math.sin(a)]; };
-  const tip = i => { const a=ao+(2*Math.PI*i)/n; return [cx+r*Math.cos(a),cy+r*Math.sin(a)]; };
-  const grid = lv => Array.from({length:n},(_,i)=>pt(i,lv).join(",")).join(" ");
-  const poly = values.map((v,i)=>pt(i,v).join(",")).join(" ");
-  return (
-    <svg width={size} height={size} viewBox={"0 0 "+size+" "+size}>
-      {[1,2,3,4,5].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.3)" strokeWidth="0.5"/>)}
-      {Array.from({length:n},(_,i)=>{ const [x,y]=tip(i); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>; })}
-      {m.diagnosisDate
-        ? <polygon points={poly} fill="rgba(112,130,56,0.25)" stroke="#708238" strokeWidth="1.5"/>
-        : <text x={cx} y={cy} textAnchor="middle" dominantBaseline="middle" fontSize={size*0.22} fill="#a09080">未</text>
-      }
-    </svg>
-  );
-}
-
-function App() {
-  const [members, setMembers] = useState([]);
-  const [isDemo, setIsDemo] = useState(true);
-  const [isInstructor, setIsInstructor] = useState(false);
-  const [page, setPage] = useState("login");
-  const [selectedName, setSelectedName] = useState("");
-  const [password, setPassword] = useState("");
-  const [loginErr, setLoginErr] = useState("");
-  const [currentMember, setCurrentMember] = useState(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [fetchMsg, setFetchMsg] = useState("");
-  const [notionItems, setNotionItems] = useState([]);
-  const [workshopData, setWorkshopData] = useState([]);
-  const [workshopHeaders, setWorkshopHeaders] = useState([]);
-  const [showWorkshop, setShowWorkshop] = useState(false);
-  const [workshopLoaded, setWorkshopLoaded] = useState(false);
-  const [loginData, setLoginData] = useState([]);
-  const [showAllPoints, setShowAllPoints] = useState(false);
-  const [allPointHistory, setAllPointHistory] = useState([]);
-  const [workshopFilter, setWorkshopFilter] = useState("all");
-  const [memberSchedules, setMemberSchedules] = useState([]);
-  const [schedModal, setSchedModal] = useState(null);
-  const [schedDate, setSchedDate] = useState("");
-  const [schedTime, setSchedTime] = useState("");
-  const [schedType, setSchedType] = useState("個人レッスン:対面");
-  const [schedNote, setSchedNote] = useState("");
-  const [schedMsg, setSchedMsg] = useState("");
-  const [schedCommentModal, setSchedCommentModal] = useState(null);
-  const [schedComment, setSchedComment] = useState("");
-  const [schedCommentMsg, setSchedCommentMsg] = useState("");
-  const [lessonHistoryOpen, setLessonHistoryOpen] = useState(false);
-  const [schedHistoryModal, setSchedHistoryModal] = useState(null);
-  const [pastSchedOpen, setPastSchedOpen] = useState({});
-  const [surveyResults, setSurveyResults] = useState([]);
-  const [surveyLoaded, setSurveyLoaded] = useState(false);
-  const [applyingMember, setApplyingMember] = useState(null);
-  const [applyMsg, setApplyMsg] = useState({});
-  const [showSurvey, setShowSurvey] = useState(false);
-  const [sortKey, setSortKey] = useState("level");
-  const [filterSongs, setFilterSongs] = useState([]);
-  const [showSongFilter, setShowSongFilter] = useState(false);
-  const [surveyModal, setSurveyModal] = useState(null);
-  const [isFromAdmin, setIsFromAdmin] = useState(false);
-  const [myMemo, setMyMemo] = useState("");
-  const [myGoal, setMyGoal] = useState("");
-  const [goalOpen, setGoalOpen] = useState(false);
-  const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [mySchedOpen, setMySchedOpen] = useState(true);
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [pointHistory, setPointHistory] = useState([]);
-  const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
-  const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
-  const [pointNote, setPointNote] = useState("");
-  const [feedbackName, setFeedbackName] = useState("");
-  const [feedbackMsg, setFeedbackMsg] = useState("");
-  const [feedbackStatus, setFeedbackStatus] = useState("");
-  const [myDataOpen, setMyDataOpen] = useState(false);
-  const [commentOpen, setCommentOpen] = useState(false);
-  const [curriculumOpen, setCurriculumOpen] = useState(false);
-  const [lessonModal, setLessonModal] = useState(null);
-  const [lessonColumn, setLessonColumn] = useState("課題");
-  const [lessonValue, setLessonValue] = useState("");
-  const [lessonSending, setLessonSending] = useState(false);
-  const [lessonMsg, setLessonMsg] = useState("");
-  const [lessonTab, setLessonTab] = useState("text");
-  const [instructorName, setInstructorName] = useState("");
-  const [pointModal, setPointModal] = useState(null);
-  const [pointValue, setPointValue] = useState("");
-  const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
-  const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:"",diagSong:""});
-
-  useEffect(() => {
-    autoFetch();
-    fetchNotion();
-    fetchSchedules();
-    fetchLogins();
-  }, []);
-  useEffect(() => {
-    if (currentMember) {
-      setMyMemo(localStorage.getItem("memo_"+currentMember.name) || "");
-      setMyGoal(localStorage.getItem("goal_"+currentMember.name) || "");
-      fetchPointHistory(currentMember.name);
-    }
-  }, [currentMember]);
-
-  function autoFetch() {
-    return new Promise((resolve) => {
-      const cbName = "gasCb_" + Date.now();
-      window[cbName] = function(data) {
-        try {
-          const all = data.map(rowToMember).filter(m => m.name);
-          if (all.length > 0) { setMembers([...all]); setIsDemo(false); setFetchMsg(""); }
-        } catch(e) { setFetchMsg("✗ " + e.message); }
-        delete window[cbName];
-        const el = document.getElementById(cbName);
-        if (el) el.remove();
-        resolve();
-      };
-      const script = document.createElement("script");
-      script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbx6mV8U_GaEk9DhnETESgy7ExgSbtBvp-eZSX6iOhF1HEAhOghfV7kx3Z8QjysDQ1QsIQ/exec?callback=" + cbName;
-      script.onerror = function() {
-        setFetchMsg("✗ データ取得失敗");
-        delete window[cbName];
-        resolve();
-      };
-      document.body.appendChild(script);
-    });
-  }
-
-  function fetchNotion() {
-    return new Promise((resolve) => {
-      const cbName = "notionCb_" + Date.now();
-      window[cbName] = function(data) {
-        if (data.items) setNotionItems(data.items);
-        delete window[cbName];
-        const el = document.getElementById(cbName);
-        if (el) el.remove();
-        resolve();
-      };
-      const script = document.createElement("script");
-      script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbx6mV8U_GaEk9DhnETESgy7ExgSbtBvp-eZSX6iOhF1HEAhOghfV7kx3Z8QjysDQ1QsIQ/exec?action=notion&callback=" + cbName;
-      script.onerror = function() {
-        delete window[cbName];
-        resolve();
-      };
-      document.body.appendChild(script);
-    });
-  }
-
-  async function fetchPointHistory(name) {
-    try {
-      const res = await fetch("/api/gas?" + new URLSearchParams({action:"getpoints", name:name}));
-      const data = await res.json();
-      if (data.history) setPointHistory(data.history);
-    } catch(e) {}
-  }
-
-  async function sendFeedback() {
-    if (!feedbackMsg.trim()) { setFeedbackStatus("内容を入力してください"); return; }
-    setFeedbackStatus("送信中...");
-    try {
-      const res = await fetch("/api/gas?" + new URLSearchParams({action:"feedback", name:feedbackName||"匿名", message:feedbackMsg}));
-      const data = await res.json();
-      if (data.success) {
-        setFeedbackStatus("✅ 送信しました！ありがとうございます🌿");
-        setFeedbackMsg("");
-        setTimeout(()=>{setFeedbackOpen(false);setFeedbackStatus("");}, 2000);
-      } else {
-        setFeedbackStatus("❌ " + (data.error||"エラーが発生しました"));
-      }
-    } catch(e) { setFeedbackStatus("❌ " + e.message); }
-  }
-
-  async function fetchSchedules() {
-    try {
-      const res = await fetch("/api/gas?action=getschedule");
-      const data = await res.json();
-      if (data.schedules) setMemberSchedules(data.schedules);
-    } catch(e) {}
-  }
-
-  async function addScheduleComment() {
-    if (!schedComment.trim()) { setSchedCommentMsg("コメントを入力してください"); return; }
-    setSchedCommentMsg("送信中...");
-    try {
-      let finalComment = schedComment;
-      // メンバーが書く場合：既存コメントにメンバー分だけ差し替えて追記
-      if (schedCommentModal.isMember) {
-        const today = new Date();
-        const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-        const myName = schedCommentModal.name;
-        const newEntry = dateStr + " " + myName + ": " + schedComment;
-        const existing = schedCommentModal.existingFull || "";
-        // 既存の自分のコメントを差し替え、なければ追記
-        const parts = existing.split(";").filter(l=>l.trim());
-        const myIdx = parts.findLastIndex(l=>l.trim().match(new RegExp("^\\d{4}\\/\\d+\\/\\d+\\s+"+myName+":")));
-        if (myIdx >= 0) { parts[myIdx] = newEntry; }
-        else { parts.push(newEntry); }
-        finalComment = parts.join(";");
-      }
-      const res = await fetch("/api/gas?" + new URLSearchParams({
-        action: "addschedulecomment",
-        name: schedCommentModal.name,
-        date: schedCommentModal.date,
-        comment: finalComment,
-      }));
-      const data = await res.json();
-      if (data.success) {
-        setSchedCommentMsg("✅ 保存しました！");
-        fetchSchedules();
-        setTimeout(()=>{setSchedCommentModal(null);setSchedCommentMsg("");setSchedComment("");}, 1500);
-      } else {
-        setSchedCommentMsg("❌ " + (data.error||"エラー"));
-      }
-    } catch(e) { setSchedCommentMsg("❌ " + e.message); }
-  }
-
-  async function addSchedule() {
-    if (!schedDate) { setSchedMsg("日付を入力してください"); return; }
-    setSchedMsg("送信中...");
-    try {
-      const recorder = isInstructor ? (instructorName || "講師") : "DANiLO";
-      const data = await gasWrite({action:"addschedule", name:schedModal, date:schedDate, time:schedTime, type:schedType, note:schedNote, recorder:recorder});
-      if (data.error) throw new Error(data.error);
-      setSchedMsg("✅ 追加しました！");
-      setSchedDate(""); setSchedTime(""); setSchedNote("");
-      fetchSchedules();
-      setTimeout(()=>{setSchedModal(null);setSchedMsg("");}, 1500);
-    } catch(e) { setSchedMsg("❌ "+e.message); }
-  }
-
-
-
-  async function fetchAllPoints() {
-    try {
-      const res = await fetch("/api/gas?action=getpoints");
-      const data = await res.json();
-      if (data.history) setAllPointHistory(data.history);
-    } catch(e) {}
-  }
-
-  async function fetchLogins() {
-    try {
-      const res = await fetch("/api/gas?action=getlogins");
-      const data = await res.json();
-      if (data.logins) setLoginData(data.logins);
-    } catch(e) {}
-  }
-
-  async function recordLogin(name) {
-    try {
-      await fetch("/api/gas?" + new URLSearchParams({action:"addlogin", name:name}));
-    } catch(e) {}
-  }
-
-  async function fetchWorkshop() {
-    try {
-      const res = await fetch("/api/gas?action=getworkshop");
-      const data = await res.json();
-      if (data.rows) { setWorkshopData(data.rows); setWorkshopHeaders(data.headers||[]); setWorkshopLoaded(true); }
-    } catch(e) {}
-  }
-
-  async function fetchSurvey() {
-    try {
-      const res = await fetch("/api/gas?action=survey");
-      const data = await res.json();
-      if (data.results) {
-        setSurveyResults(data.results);
-        setSurveyLoaded(true);
-        // 全メンバーを自動でスプシに反映
-        for (const member of data.results) {
-          const params = new URLSearchParams({
-            action: "applysurvey",
-            name: member.name,
-            scales: member.scales,
-            sheets: member.sheets,
-            songs: member.songs,
-            history: member.history,
-            password: member.password,
-            region: member.region || "",
-          });
-          await fetch("/api/gas?" + params.toString());
-        }
-        autoFetch();
-      }
-    } catch(e) {}
-  }
-
-  async function applySurvey(member) {
-    setApplyingMember(member.name);
-    try {
-      const params = new URLSearchParams({
-        action: "applysurvey",
-        name: member.name,
-        scales: member.scales,
-        sheets: member.sheets,
-        songs: member.songs,
-        history: member.history,
-        password: member.password,
-      });
-      const res = await fetch("/api/gas?" + params.toString());
-      const data = await res.json();
-      if (data.success) {
-        setApplyMsg(p => ({...p, [member.name]: "✅ " + data.date + " 反映完了！"}));
-        setTimeout(() => autoFetch(), 1500);
-      } else {
-        setApplyMsg(p => ({...p, [member.name]: "❌ " + (data.error||"エラー")}));
-      }
-    } catch(e) {
-      setApplyMsg(p => ({...p, [member.name]: "❌ " + e.message}));
-    }
-    setApplyingMember(null);
-  }
-
-  async function gasWrite(params) {
-    const url = "/api/gas?" + new URLSearchParams(params).toString();
-    const res = await fetch(url);
-    return await res.json();
-  }
-
-  async function postLesson(overwrite) {
-    if (!lessonValue.trim()) { setLessonMsg("内容を入力してください"); return; }
-    setLessonMsg("送信中...");
-    try {
-      const today = new Date();
-      const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
-      const sender = isInstructor ? (instructorName || "講師") : "DANiLO";
-
-      // スケジュールコメントの場合
-      if (lessonColumn.startsWith("__sched__")) {
-        const parts = lessonColumn.replace("__sched__","").split("__");
-        const schedDate = parts[0];
-        const commentText = dateStr + " " + sender + ": " + lessonValue;
-        const data = await gasWrite({action:"addschedulecomment", name:lessonModal, date:schedDate, comment:commentText});
-        if (data.error) throw new Error(data.error);
-        setLessonMsg("✅ 送信完了！");
-        setLessonValue("");
-        setTimeout(() => { setLessonModal(null); setLessonMsg(""); fetchSchedules(); }, 1500);
-        return;
-      }
-
-      const autoOverwrite = ["強み","目標","段階","受講済み段階","Yamashita Noriko強み","hiroko強み","灯音強み"].includes(lessonColumn);
-      const formattedValue = overwrite ? lessonValue : dateStr + " " + sender + ": " + lessonValue;
-      let targetColumn = lessonColumn;
-      if (isInstructor && lessonColumn === "課題") {
-        const colMap = {"Yamashita Noriko":"Yamashita Norikoコメント", "hiroko":"hirokoコメント", "灯音(to•o•n)":"灯音コメント"};
-        targetColumn = colMap[instructorName] || "課題";
-      }
-      const data = await gasWrite({action:"write", name:lessonModal, column:targetColumn, value:formattedValue, overwrite:(overwrite||autoOverwrite)?"true":"false"});
-      if (data.error) throw new Error(data.error);
-      setLessonMsg("✅ 送信完了！");
-      setLessonValue("");
-      setTimeout(() => { setLessonModal(null); setLessonMsg(""); autoFetch(); }, 1500);
-    } catch(e) { setLessonMsg("❌ エラー: " + e.message); }
-  }
-
-  async function postDiagnosis() {
-    const date = diagScores.date || new Date().toISOString().split("T")[0];
-    const cols = ["音の開放度","音質調整","テンポキープ","ゴースト","グルーヴ","診断日"];
-    const vals = [diagScores.openness, diagScores.quality, diagScores.tempo, diagScores.ghost, diagScores.groove, date];
-    if (diagScores.daniloMsg && diagScores.daniloMsg.trim()) { cols.push("診断結果"); vals.push(diagScores.daniloMsg.trim()); }
-    if (diagScores.diagSong && diagScores.diagSong.trim()) { cols.push("診断楽曲"); vals.push(diagScores.diagSong.trim()); }
-    setLessonMsg("送信中...");
-    try {
-      const data = await gasWrite({action:"writeMulti", name:lessonModal, columns:cols.join(","), values:vals.join(",")});
-      if (data.error) throw new Error(data.error);
-      setLessonMsg("✅ 送信完了！");
-      setTimeout(() => { setLessonModal(null); setLessonMsg(""); autoFetch(); }, 1500);
-    } catch(e) { setLessonMsg("❌ エラー: " + e.message); }
-  }
-
-
-  function handleLogin() {
-    setLoginErr("");
-    if (!selectedName) { setLoginErr("名前を選択してください"); return; }
-    const toHalf = s => String(s).replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).trim();
-    const normalizedPass = toHalf(password);
-    if (selectedName === "__admin__") {
-      if (normalizedPass === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setLessonTab("text"); setPassword(""); }
-      else if (normalizedPass === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setLessonTab("text"); setPassword(""); }
-      else setLoginErr("パスワードが違います");
-      return;
-    }
-    const norm = s => s.replace(/\s/g,"");
-    const m = members.find(m => norm(m.name) === norm(selectedName));
-    if (!m) { setLoginErr("メンバーが見つかりません"); return; }
-    if (m.password && toHalf(String(m.password)) !== normalizedPass) { setLoginErr("パスワードが違います"); return; }
-    setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false);
-  }
-
-  const SettingsModal = () => {
-    const [localJson, setLocalJson] = useState(() => {
-      try { const c = JSON.parse(localStorage.getItem(STORAGE_KEY)); return c && c.jsonData ? c.jsonData : ""; } catch(e) { return ""; }
-    });
-    const [err, setErr] = useState("");
-    const [ok, setOk] = useState("");
-    function handleSave() {
-      setErr(""); setOk("");
-      if (!localJson.trim()) { setErr("JSONを貼り付けてください"); return; }
-      try {
-        const rows = JSON.parse(localJson);
-        const parsed = rows.map(rowToMember).filter(m => m.name);
-        if (!parsed.length) { setErr("名前のあるデータが見つかりません"); return; }
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ jsonData: localJson }));
-        setMembers(parsed); setIsDemo(false);
-        setOk("✅ "+parsed.length+"名のデータを読み込みました！");
-        setTimeout(() => setShowSettings(false), 1200);
-      } catch(e) { setErr("JSONの形式が正しくありません: "+e.message); }
-    }
-    return (
-      <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
-        <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
-          <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
-          <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbx6mV8U_GaEk9DhnETESgy7ExgSbtBvp-eZSX6iOhF1HEAhOghfV7kx3Z8QjysDQ1QsIQ/exec" target="_blank" rel="noreferrer"
-            style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
-            🔗 GASを開く（新しいタブ）
-          </a>
-          <textarea value={localJson} onChange={e=>setLocalJson(e.target.value)} placeholder="JSONをここに貼り付け"
-            style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:10,fontSize:12,height:160,resize:"vertical",boxSizing:"border-box"}}/>
-          {err && <p style={{fontSize:13,color:"#a04030",marginTop:8}}>{err}</p>}
-          {ok && <p style={{fontSize:13,color:C.olive,marginTop:8}}>{ok}</p>}
-          <div style={{display:"flex",gap:10,marginTop:16}}>
-            <button onClick={()=>setShowSettings(false)} style={{flex:1,padding:11,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-            <button onClick={handleSave} style={{flex:1,padding:11,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const topbar = (title, actions) => (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 20px",background:"rgba(255,255,255,0.9)",borderBottom:"1px solid "+C.border,position:"sticky",top:0,zIndex:10}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:16}}>🌿</span>
-        <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.olive}}>{title}</span>
-      </div>
-      <div style={{display:"flex",gap:8}}>{actions}</div>
-    </div>
-  );
-
-  const iconBtn = (label, onClick) => (
-    <button onClick={onClick} style={{background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,borderRadius:8,padding:"6px 12px",fontSize:12,color:C.olive,cursor:"pointer",fontWeight:600}}>{label}</button>
-  );
-
-  const filteredMembers = filterSongs.length > 0
-    ? members.filter(m => filterSongs.every(s => (m.songs||"").includes(s)))
-    : members;
-
-  const sortedMembers = sortKey === "region"
-    ? [...filteredMembers].sort((a,b) => (a.region||"").localeCompare(b.region||"", "ja"))
-    : sortKey === "login"
-    ? [...filteredMembers].sort((a,b) => {
-        const al = loginData.filter(l=>l.name===a.name).length;
-        const bl = loginData.filter(l=>l.name===b.name).length;
-        return bl - al;
-      })
-    : [...filteredMembers].sort((a,b) => {
-        const ai=LEVEL_ORDER.indexOf(a.level), bi=LEVEL_ORDER.indexOf(b.level);
-        return (ai===-1?99:ai)-(bi===-1?99:bi);
-      });
-
-  if (page === "login") return (
-    <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#e8e2d4,#d4ccb8)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Noto Sans JP',sans-serif",padding:20}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
-      <div style={{fontSize:40,marginBottom:8}}>🌿</div>
-      <div style={{fontSize:22,fontWeight:700,letterSpacing:"0.12em",color:C.choco,marginBottom:6}}>GUDADRUM ORCHESTRA</div>
-      <div style={{fontSize:12,color:C.moss,letterSpacing:"0.18em",marginBottom:32}}>MEMBER PORTAL</div>
-      <div style={{width:"100%",maxWidth:380,background:"rgba(255,255,255,0.75)",border:"1px solid "+C.border,borderRadius:20,padding:28}}>
-        <label style={{fontSize:11,letterSpacing:"0.15em",color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>NAME</label>
-        <select value={selectedName} onChange={e=>{setSelectedName(e.target.value);setLoginErr("");}}
-          style={{width:"100%",background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"11px 14px",fontSize:14,color:C.choco,marginBottom:16,cursor:"pointer",boxSizing:"border-box"}}>
-          <option value="">-- 名前を選択 --</option>
-          {members.map(m=><option key={m.name} value={m.name}>{m.name}</option>)}
-          <option value="__admin__">🔑 管理者・講師</option>
-        </select>
-        <label style={{fontSize:11,letterSpacing:"0.15em",color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>PASSWORD</label>
-        <input type="password" placeholder="パスワードを入力" value={password}
-          onChange={e=>{setPassword(e.target.value);setLoginErr("");}}
-          onKeyDown={e=>e.key==="Enter"&&handleLogin()}
-          style={{width:"100%",background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"11px 14px",fontSize:14,color:C.choco,marginBottom:16,boxSizing:"border-box"}}/>
-        <button onClick={handleLogin}
-          style={{width:"100%",padding:14,borderRadius:12,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",letterSpacing:"0.08em"}}>
-          ログイン →
-        </button>
-        {loginErr && <p style={{fontSize:13,color:"#a04030",textAlign:"center",marginTop:12}}>{loginErr}</p>}
-        {fetchMsg && <p style={{fontSize:12,color:"#a04030",textAlign:"center",marginTop:8,lineHeight:1.6}}>{fetchMsg}</p>}
-      </div>
-      {showSettings && <SettingsModal/>}
-    </div>
-  );
-
-  if (page === "admin") return (
-    <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
-      {topbar("管理者ダッシュボード",[
-        iconBtn("🔄 データ更新",()=>setShowSettings(true)),
-        iconBtn("ログアウト",()=>setPage("login")),
-      ])}
-      <div style={{padding:"24px",maxWidth:720,margin:"0 auto"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <p style={{fontSize:11,color:C.label}}>{isDemo?"📋 デモデータで表示中":"✅ スプレッドシートデータ"}</p>
-          <div style={{display:"flex",gap:6}}>
-            <select value={sortKey} onChange={e=>setSortKey(e.target.value)}
-              style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
-              <option value="level">段階順</option>
-              <option value="region">地域順</option>
-              <option value="login">ログイン回数順</option>
-            </select>
-            <div style={{position:"relative"}}>
-              <button onClick={()=>setShowSongFilter(!showSongFilter)}
-                style={{fontSize:11,color:"#3a7a8a",background:filterSongs.length>0?"rgba(58,122,138,0.2)":"rgba(58,122,138,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer",whiteSpace:"nowrap"}}>
-                🎵 {filterSongs.length>0?filterSongs.length+"曲選択中":"楽曲で絞込"} {showSongFilter?"▲":"▼"}
-              </button>
-              {filterSongs.length>0 && (
-                <button onClick={()=>{setFilterSongs([]);setShowSongFilter(false);}}
-                  style={{fontSize:10,color:"#3a7a8a",background:"transparent",border:"none",cursor:"pointer",marginLeft:2}}>✕</button>
-              )}
-              {showSongFilter && (
-                <div style={{position:"absolute",top:"100%",right:0,zIndex:50,background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"8px",minWidth:220,maxHeight:300,overflowY:"auto",boxShadow:"0 4px 12px rgba(0,0,0,0.15)"}}>
-                  {SONGS.map(s=>(
-                    <label key={s} style={{display:"flex",alignItems:"center",gap:6,padding:"4px 8px",cursor:"pointer",borderRadius:6,background:filterSongs.includes(s)?"rgba(58,122,138,0.1)":"transparent"}}>
-                      <input type="checkbox" checked={filterSongs.includes(s)} onChange={()=>{
-                        setFilterSongs(prev => prev.includes(s) ? prev.filter(x=>x!==s) : [...prev, s]);
-                      }} style={{accentColor:"#3a7a8a"}}/>
-                      <span style={{fontSize:11,color:C.choco}}>{s}</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-        {!isInstructor && (
-          <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointHistory.length) fetchAllPoints();}}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#d4a840,#b8860b)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
-            🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
-          </button>
-        )}
-        {!isInstructor && showAllPoints && (
-          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:12,maxHeight:300,overflowY:"auto"}}>
-            <p style={{fontSize:12,fontWeight:700,color:C.choco,marginBottom:10}}>🎁 全メンバーのポイント履歴</p>
-            {allPointHistory.length === 0 ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center"}}>履歴がありません</p>
-            ) : allPointHistory.slice().reverse().map((h,i)=>(
-              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                <div>
-                  <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
-                  <p style={{fontSize:10,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
-                </div>
-                <p style={{fontSize:13,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#5a8a3a":"#a04030"}}>
-                  {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
-        {(
-          <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+C.olive,background:showSurvey?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:showSurvey?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
-            📊 アンケート結果 {showSurvey?"▲":"▼"}
-          </button>
-        )}
-        <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
-          🧪 練習会データ {showWorkshop?"▲":"▼"}
-        </button>
-        {showWorkshop && (
-          <div style={{marginBottom:16}}>
-            {!workshopLoaded ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
-            ) : (()=>{
-              const parseNum = v => { const n=parseFloat(String(v).replace(/[^\d.]/g,"")); return isNaN(n)?null:n; };
-              const parseScore = v => { const m=String(v).match(/^[１-５1-5]/); if(!m)return null; const map={"１":1,"1":1,"２":2,"2":2,"３":3,"3":3,"４":4,"4":4,"５":5,"5":5}; return map[m[0]]||null; };
-              const METRICS = [
-                {key:"心拍数（30秒間）",label:"心拍数",parse:parseNum,lowerIsBetter:true},
-                {key:"30秒の呼吸数（吸気＆呼吸のセットで1カウント）",label:"呼吸数",parse:parseNum,lowerIsBetter:true},
-              ];
-              const calcAvg = (rows, timing) => {
-                const f = rows.filter(r=>r["回答のタイミング"]===timing);
-                const res={};
-                METRICS.forEach(m=>{ const vals=f.map(r=>m.parse(r[m.key])).filter(v=>v!==null); res[m.key]=vals.length>0?vals.reduce((a,b)=>a+b,0)/vals.length:null; });
-                return res;
-              };
-              const pct = (b,a,low) => { if(b===null||a===null||b===0)return null; const c=(a-b)/b*100; return low?-c:c; };
-              const names = [...new Set(workshopData.map(r=>r["お名前"]))].filter(Boolean).sort();
-              const bAvg = calcAvg(workshopData, "練習前");
-              const aAvg = calcAvg(workshopData, "練習後");
-              const label = `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）`;
-              // 累計計算
-              const totalSessions = new Set(workshopData.map(r=>r["練習会参加日"])).size;
-              const totalParticipants = workshopData.filter(r=>r["回答のタイミング"]==="練習前").length;
-              return (
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  <div style={{display:"flex",gap:8,marginBottom:4}}>
-                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
-                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>練習会 累計開催数</p>
-                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalSessions}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>回</span></p>
-                    </div>
-                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
-                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>累計参加人数</p>
-                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalParticipants}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>人</span></p>
-                    </div>
-                  </div>
-
-                  <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-                    <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>{label}</p>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,marginBottom:4}}>
-                      <p style={{fontSize:10,color:C.label,fontWeight:600}}>項目</p>
-                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>前</p>
-                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>後</p>
-                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>変化</p>
-                    </div>
-                    {METRICS.map(m=>{
-                      const b=bAvg[m.key], a=aAvg[m.key], p=pct(b,a,m.lowerIsBetter);
-                      return (
-                        <div key={m.key} style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,padding:"5px 0",borderTop:"1px solid rgba(112,130,56,0.08)"}}>
-                          <p style={{fontSize:12,color:C.choco}}>{m.label}</p>
-                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{b!==null?b.toFixed(1):"−"}</p>
-                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{a!==null?a.toFixed(1):"−"}</p>
-                          <p style={{fontSize:12,fontWeight:700,textAlign:"center",color:p===null?"#aaa":p>0?"#5a8a3a":"#a04030"}}>
-                            {p===null?"−":(p>0?"+":"")+p.toFixed(0)+"%"}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* スコア系円グラフ */}
-                  {(()=>{
-                    const SCORE_METRICS = [
-                      {key:"身体の状態、感覚", label:"身体の状態・感覚", options:["強く緊張","やや緊張","ニュートラル","やや緩む","とても緩む"]},
-                      {key:"場や人との一体感", label:"場や人との一体感", options:["分離感","少し距離","普通","つながり","深い一体感"]},
-                      {key:"時間の感覚（時の流れ） ", label:"時間の感覚", options:["気になった","時々意識","変化なし","時間忘れた","時空が広がる"]},
-                      {key:"この場に身を置いているときの安心感 ", label:"安心感", options:["強い不安","少し不安","普通","安心","深く安心"]},
-                    ];
-                    const targetRows = workshopData;
-                    const COLORS = ["#e07070","#e0a070","#d4c86a","#7aba8a","#5a8a6a"];
-                    const calcDist = (timing) => {
-                      const rows = targetRows.filter(r=>r["回答のタイミング"]===timing);
-                      return (key) => {
-                        const counts = [0,0,0,0,0];
-                        rows.forEach(r=>{
-                          const m = String(r[key]).match(/^[１-５1-5]/);
-                          if(m){ const map={"１":0,"1":0,"２":1,"2":1,"３":2,"3":2,"４":3,"4":3,"５":4,"5":4}; const idx=map[m[0]]; if(idx!==undefined) counts[idx]++; }
-                        });
-                        const total = counts.reduce((a,b)=>a+b,0);
-                        return counts.map(c=>total>0?Math.round(c/total*100):0);
-                      };
-                    };
-                    const beforeDist = calcDist("練習前");
-                    const afterDist = calcDist("練習後");
-                    const PieChart = ({dist, size=80}) => {
-                      let startAngle = -90;
-                      const cx=size/2, cy=size/2, r=size/2-4;
-                      const segments = dist.map((pct,i)=>{
-                        if(pct===0) return null;
-                        const angle = pct/100*360;
-                        const end = startAngle+angle;
-                        const x1=cx+r*Math.cos(startAngle*Math.PI/180), y1=cy+r*Math.sin(startAngle*Math.PI/180);
-                        const x2=cx+r*Math.cos(end*Math.PI/180), y2=cy+r*Math.sin(end*Math.PI/180);
-                        const large=angle>180?1:0;
-                        const d=`M${cx},${cy} L${x1},${y1} A${r},${r},0,${large},1,${x2},${y2} Z`;
-                        const seg = <path key={i} d={d} fill={COLORS[i]} stroke="#fff" strokeWidth="1"/>;
-                        startAngle = end;
-                        return seg;
-                      });
-                      return <svg width={size} height={size}>{segments}</svg>;
-                    };
-                    return (
-                      <div style={{marginTop:12}}>
-                        <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>📊 選択肢の分布（円グラフ）</p>
-                        {/* 最高スコアの前後比較バー */}
-                        <div style={{marginBottom:16,background:"rgba(90,138,106,0.06)",borderRadius:10,padding:"10px 12px"}}>
-                          <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:10}}>⭐️ 最高状態（５）の前後比較</p>
-                          {[
-                            {key:"身体の状態、感覚", label:"身体の状態", best:"とても緩んでいる"},
-                            {key:"場や人との一体感", label:"一体感", best:"深い一体感・溶け合う感覚"},
-                            {key:"時間の感覚（時の流れ） ", label:"時間の感覚", best:"時空が広がる感じ"},
-                            {key:"この場に身を置いているときの安心感 ", label:"安心感", best:"深く安心し、身を委ねられている"},
-                          ].map(({key,label,best})=>{
-                            const tgt = workshopData;
-                            const count = (timing) => {
-                              const rows = tgt.filter(r=>r["回答のタイミング"]===timing);
-                              if (rows.length===0) return 0;
-                              const top = rows.filter(r=>String(r[key]).match(/^[５5]/)).length;
-                              return Math.round(top/rows.length*100);
-                            };
-                            const bPct = count("練習前");
-                            const aPct = count("練習後");
-                            return (
-                              <div key={key} style={{marginBottom:10}}>
-                                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                                  <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{label}　<span style={{fontSize:10,color:C.label,fontWeight:400}}>「{best}」</span></p>
-                                </div>
-                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
-                                  <p style={{fontSize:10,color:C.label,width:40,textAlign:"right",flexShrink:0}}>練習前</p>
-                                  <div style={{flex:1,background:"rgba(0,0,0,0.06)",borderRadius:4,height:14,overflow:"hidden"}}>
-                                    <div style={{width:bPct+"%",background:"#d4c86a",height:"100%",borderRadius:4,transition:"width 0.5s"}}/>
-                                  </div>
-                                  <p style={{fontSize:11,fontWeight:700,color:"#a08a30",width:34,flexShrink:0}}>{bPct}%</p>
-                                </div>
-                                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                  <p style={{fontSize:10,color:C.label,width:40,textAlign:"right",flexShrink:0}}>練習後</p>
-                                  <div style={{flex:1,background:"rgba(0,0,0,0.06)",borderRadius:4,height:14,overflow:"hidden"}}>
-                                    <div style={{width:aPct+"%",background:"#5a8a6a",height:"100%",borderRadius:4,transition:"width 0.5s"}}/>
-                                  </div>
-                                  <p style={{fontSize:11,fontWeight:700,color:"#5a8a6a",width:34,flexShrink:0}}>{aPct}%</p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {SCORE_METRICS.map(sm=>{
-                          const bd=beforeDist(sm.key), ad=afterDist(sm.key);
-                          return (
-                            <div key={sm.key} style={{marginBottom:14}}>
-                              <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:6}}>{sm.label}</p>
-                              <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
-                                <div style={{textAlign:"center"}}>
-                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習前</p>
-                                  <PieChart dist={bd}/>
-                                </div>
-                                <div style={{textAlign:"center"}}>
-                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習後</p>
-                                  <PieChart dist={ad}/>
-                                </div>
-                                <div style={{flex:1}}>
-                                  {sm.options.map((opt,i)=>(
-                                    <div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
-                                      <div style={{width:8,height:8,borderRadius:2,background:COLORS[i],flexShrink:0}}/>
-                                      <p style={{fontSize:10,color:C.choco}}>{opt}</p>
-
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            })()}
-          </div>
-        )}
-        {showSurvey && (
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-            {!surveyLoaded ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
-            ) : surveyResults.length === 0 ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>回答データがありません</p>
-            ) : surveyResults.map(r => (
-              <div key={r.name} style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                  <div>
-                    <p style={{fontSize:13,fontWeight:700,color:C.choco}}>{r.name}</p>
-                    <p style={{fontSize:10,color:C.moss}}>回答日：{r.timestamp}</p>
-                  </div>
-
-                </div>
-                <div style={{display:"flex",gap:8,marginBottom:8}}>
-                  {[
-                    {label:"A", count:r.aCount, total:r.aTotal, color:"#8a9a3a"},
-                    {label:"B", count:r.bCount, total:r.bTotal, color:"#3a7a8a"},
-                    {label:"C", count:r.cCount, total:r.cTotal, color:"#8a5a3a"},
-                  ].map(({label,count,total,color})=>(
-                    <div key={label} style={{flex:1,background:"rgba(0,0,0,0.04)",borderRadius:8,padding:"8px",textAlign:"center"}}>
-                      <p style={{fontSize:11,fontWeight:700,color:color,marginBottom:4}}>{label}</p>
-                      <p style={{fontSize:16,fontWeight:700,color:C.choco}}>{count}<span style={{fontSize:10,color:C.label}}>/{total}</span></p>
-                      <div style={{height:4,background:"rgba(0,0,0,0.1)",borderRadius:2,marginTop:4}}>
-                        <div style={{height:"100%",width:(total>0?count/total*100:0)+"%",background:color,borderRadius:2}}/>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {r.checkedItems.length > 0 && (
-                  <details style={{fontSize:11,color:C.label}}>
-                    <summary style={{cursor:"pointer",marginBottom:4}}>選択項目を見る（{r.checkedItems.length}項目）</summary>
-                    <div style={{marginTop:4,lineHeight:1.8}}>
-                      {r.checkedItems.map((item,i)=><span key={i} style={{display:"inline-block",background:"rgba(112,130,56,0.1)",borderRadius:4,padding:"1px 6px",margin:"2px",fontSize:10}}>{item}</span>)}
-                    </div>
-                  </details>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          {sortKey === "region" ? (
-            Object.entries(
-              sortedMembers.reduce((acc,m)=>{ const r=m.region||"未設定"; if(!acc[r])acc[r]=[]; acc[r].push(m); return acc; },{})
-            ).map(([region,ms])=>(
-              <div key={region} style={{marginBottom:8}}>
-                <p style={{fontSize:11,fontWeight:700,color:C.olive,padding:"6px 4px",borderBottom:"1px solid "+C.border,marginBottom:8}}>📍 {region}（{ms.length}名）</p>
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {ms.map(m=>(
-                    <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);setScheduleOpen(false);setMyDataOpen(false);setCommentOpen(false);setCurriculumOpen(false);}}
-                      style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
-                      onMouseEnter={e=>e.currentTarget.style.border="1px solid "+C.olive}
-                      onMouseLeave={e=>e.currentTarget.style.border="1px solid "+C.border}>
-                      <div style={{display:"flex",alignItems:"center",gap:10}}>
-                        <BadgeImage level={m.level} size={48}/>
-                        <div style={{flex:1,minWidth:0}}>
-                          <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
-                          <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-                            <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{m.level||"−"}</p>
-                            {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
-                            {(()=>{
-                              const logs = loginData.filter(l=>l.name===m.name);
-                              if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                              const last = logs[logs.length-1].date.slice(0,10);
-                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
-                            })()}
-                          </div>
-                        </div>
-                        <MiniRadar m={m} size={44}/>
-                      </div>
-                      <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
-                        <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
-                        <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(m.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
-                        <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
-                        <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
-                        {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))
-          ) : sortedMembers.map(m=>(
-            <div key={m.name} onClick={()=>{setIsFromAdmin(true);setCurrentMember(m);setPage("member");setGoalOpen(false);setScheduleOpen(false);setMyDataOpen(false);setCommentOpen(false);setCurriculumOpen(false);}}
-              style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 18px",cursor:"pointer"}}
-              onMouseEnter={e=>e.currentTarget.style.border="1px solid "+C.olive}
-              onMouseLeave={e=>e.currentTarget.style.border="1px solid "+C.border}>
-              <div style={{display:"flex",alignItems:"center",gap:10}}>
-                <BadgeImage level={m.level} size={48}/>
-                <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{m.name}</p>
-                  <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}> 
-                    <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{m.level||"−"}</p>
-                    {m.region && <p style={{fontSize:10,color:C.label}}>{m.region}</p>}
-                    {(()=>{
-                      const logs = loginData.filter(l=>l.name===m.name);
-                      if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                      const last = logs[logs.length-1].date.slice(0,10);
-                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
-                    })()}
-                  </div>
-                </div>
-                <MiniRadar m={m} size={44}/>
-              </div>
-              <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
-                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
-                <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(m.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
-                <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
-                <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
-                {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {showSettings && <SettingsModal/>}
-      {surveyModal && (
-        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
-          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"85vh",overflowY:"auto"}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>📊 アンケート結果</h3>
-            <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{surveyModal.name}</strong></p>
-            <p style={{fontSize:10,color:C.moss,marginBottom:16}}>回答日：{surveyModal.timestamp}</p>
-            <div style={{display:"flex",gap:8,marginBottom:16}}>
-              {[
-                {label:"A", count:surveyModal.aCount, total:surveyModal.aTotal, color:"#8a9a3a", desc:"体験・直感タイプ"},
-                {label:"B", count:surveyModal.bCount, total:surveyModal.bTotal, color:"#3a7a8a", desc:"成長志向タイプ"},
-                {label:"C", count:surveyModal.cCount, total:surveyModal.cTotal, color:"#8a5a3a", desc:"精神性・深化タイプ"},
-              ].map(({label,count,total,color,desc})=>(
-                <div key={label} style={{flex:1,background:"rgba(0,0,0,0.04)",borderRadius:10,padding:"12px 8px",textAlign:"center"}}>
-                  <p style={{fontSize:12,fontWeight:700,color:color,marginBottom:2}}>{label}</p>
-                  <p style={{fontSize:9,color:C.label,marginBottom:6}}>{desc}</p>
-                  <p style={{fontSize:20,fontWeight:700,color:C.choco}}>{count}<span style={{fontSize:11,color:C.label}}>/{total}</span></p>
-                  <div style={{height:6,background:"rgba(0,0,0,0.1)",borderRadius:3,marginTop:6}}>
-                    <div style={{height:"100%",width:(total>0?count/total*100:0)+"%",background:color,borderRadius:3}}/>
-                  </div>
-                </div>
-              ))}
-            </div>
-            {surveyModal.checkedItems.length > 0 && (
-              <div style={{marginBottom:16}}>
-                <p style={{fontSize:11,fontWeight:600,color:C.label,marginBottom:8}}>選択した項目（{surveyModal.checkedItems.length}項目）</p>
-                <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                  {surveyModal.checkedItems.map((item,i)=>(
-                    <span key={i} style={{background:item.match(/^A-/)?"rgba(138,154,58,0.15)":item.match(/^B-/)?"rgba(58,122,138,0.15)":"rgba(138,90,58,0.15)",color:item.match(/^A-/)?"#8a9a3a":item.match(/^B-/)?"#3a7a8a":"#8a5a3a",borderRadius:6,padding:"3px 8px",fontSize:11,fontWeight:500}}>{item}</span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <button onClick={()=>setSurveyModal(null)} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>閉じる</button>
-          </div>
-        </div>
-      )}
-      {pointModal && (
-        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
-          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:400}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>{isInstructor?"🎁 ポイント付与":"🎁 ポイント管理"}</h3>
-            <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{pointModal.name}</strong></p>
-            <p style={{fontSize:13,color:C.olive,fontWeight:700,marginBottom:16}}>現在のポイント：{pointModal.points} P</p>
-            {isInstructor && (
-              <div style={{marginBottom:14}}>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>講師名</label>
-                <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,cursor:"pointer"}}>
-                  <option value="">-- 選択してください --</option>
-                  {INSTRUCTORS.map(n=><option key={n} value={n}>{n}</option>)}
-                </select>
-              </div>
-            )}
-            <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>付与・減算するポイント数</label>
-            <input type="number" value={pointValue} onChange={e=>setPointValue(e.target.value)}
-              min={isInstructor?"0":undefined}
-              placeholder={isInstructor?"例: 100":"例: 100 または -50"}
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:14,color:C.choco,marginBottom:8}}/>
-            {!isInstructor && <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 追加は正の数、減算はマイナス（例：-50）で入力</p>}
-            <input value={pointNote} onChange={e=>setPointNote(e.target.value)}
-              placeholder="備考（必須）例：練習会参加"
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.choco,marginBottom:12}}/>
-            {pointMsg && <p style={{fontSize:13,color:pointMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{pointMsg}</p>}
-            <div style={{display:"flex",gap:8,marginBottom:8}}>
-              <button onClick={()=>{setPointModal(null);setPointMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-              <button onClick={()=>{
-                if(!pointValue){setPointMsg("ポイント数を入力してください");return;}
-                if (!pointNote.trim()) { setPointMsg("❌ 備考を入力してください"); return; }
-                const diff = parseInt(pointValue);
-                const newP = pointModal.points + diff;
-                const type = diff >= 0 ? "付与" : "使用";
-                const recorder = isInstructor ? (instructorName || "講師") : "DANiLO";
-                gasWrite({action:"addpoints", name:pointModal.name, points:String(diff), type:type, note:pointNote, recorder:recorder}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setPointNote("");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
-              }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>{isInstructor?"付与する":"付与・減算する"}</button>
-            </div>
-            {!isInstructor && (
-              <button onClick={()=>{
-                const curP = pointModal.points;
-                gasWrite({action:"addpoints", name:pointModal.name, points:String(-curP), type:"リセット", note:"ポイントリセット"}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ リセット完了！");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
-              }} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid #a04030",background:"transparent",color:"#a04030",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>🔄 ポイントをリセット（0にする）</button>
-            )}
-            <button onClick={()=>{fetchPointHistory(pointModal.name);setPointHistoryOpen(!pointHistoryOpen);}}
-              style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,fontWeight:600,cursor:"pointer"}}>
-              📋 ポイント履歴を見る {pointHistoryOpen ? "▲" : "▼"}
-            </button>
-            {pointHistoryOpen && (
-              <div style={{marginTop:8,maxHeight:200,overflowY:"auto"}}>
-                {pointHistory.length === 0 ? (
-                  <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴がありません</p>
-                ) : pointHistory.slice().reverse().map((h,i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 4px",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
-                    <div>
-                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
-                      <p style={{fontSize:11,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
-                    </div>
-                    <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030"}}>
-                      {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-      {schedHistoryModal && (
-        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
-          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"85vh",overflowY:"auto"}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>📋 レッスン履歴</h3>
-            <p style={{fontSize:13,color:C.label,marginBottom:16}}>対象：<strong>{schedHistoryModal}</strong></p>
-            {(()=>{
-              const scheds = memberSchedules.filter(s=>s["名前"]===schedHistoryModal && new Date(s["日付"]) < new Date())
-                .sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
-              if (scheds.length === 0) return <p style={{fontSize:13,color:C.label,textAlign:"center"}}>過去の予定はありません</p>;
-              return (
-                <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                  {scheds.map((s,i)=>{
-                    const d=new Date(s["日付"]);
-                    const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
-                    const isOpen = pastSchedOpen["hist_"+s["日付"]+s["種別"]] || false;
-                    // コメントから記録者を抽出（"2026/3/23 DANiLO: 内容" の形式）
-                    const parseComment = (c) => {
-                      if (!c) return [];
-                      return c.split(";").map(line=>{
-                        const trimmed = line.trim();
-                        if (!trimmed) return null;
-                        const m = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                        if (m) return {date:m[1], author:m[2].trim(), text:m[3].trim(), raw:trimmed};
-                        return {date:"", author:"", text:trimmed, raw:trimmed};
-                      }).filter(x=>x&&x.text);
-                    };
-                    const comments = parseComment(s["コメント"]);
-                    const myName = isInstructor ? (instructorName||"") : "DANiLO";
-                    return (
-                      <div key={i} style={{background:"rgba(0,0,0,0.04)",borderRadius:10,overflow:"hidden"}}>
-                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",cursor:"pointer"}}
-                          onClick={()=>setPastSchedOpen(p=>({...p,["hist_"+s["日付"]+s["種別"]]:!isOpen}))}>
-                          <div>
-                            <p style={{fontSize:12,fontWeight:700,color:C.choco}}>{fmtDate}</p>
-                            <p style={{fontSize:11,color:C.label}}>{s["種別"]}{s["備考"]?" · "+s["備考"]:""}{s["入力者"]?" (" + s["入力者"] + ")":""}</p>
-                          </div>
-                          <div style={{display:"flex",alignItems:"center",gap:8}}>
-                            {comments.length>0 && <span style={{fontSize:10,color:C.olive,fontWeight:600}}>💬 {comments.length}件</span>}
-                            <span style={{fontSize:11,color:C.olive}}>{isOpen?"▲":"▼"}</span>
-                          </div>
-                        </div>
-                        {isOpen && (
-                          <div style={{borderTop:"1px solid rgba(112,130,56,0.15)",padding:"10px 12px"}}>
-                            {comments.length > 0 ? (
-                              <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
-                                {comments.map((c,j)=>{
-                                  const isMyComment = c.author === myName;
-                                  const editKey = "edit_"+s["日付"]+s["種別"]+j;
-                                  const isEditing = pastSchedOpen[editKey] || false;
-                                  const editValKey = "editval_"+s["日付"]+s["種別"]+j;
-                                  return (
-                                    <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isMyComment?C.olive:"rgba(112,130,56,0.3)")}}>
-                                      <div style={{display:"flex",gap:8,marginBottom:2,alignItems:"center"}}>
-                                        <p style={{fontSize:10,color:C.olive,fontWeight:700}}>{c.author}</p>
-                                        {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
-                                        {isMyComment && !isEditing && (
-                                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,[editValKey]:c.text}))}
-                                            style={{fontSize:10,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:4,padding:"1px 6px",cursor:"pointer",marginLeft:"auto"}}>
-                                            編集
-                                          </button>
-                                        )}
-                                      </div>
-                                      {isEditing ? (
-                                        <div>
-                                          <textarea value={pastSchedOpen[editValKey]||""} onChange={e=>setPastSchedOpen(p=>({...p,[editValKey]:e.target.value}))}
-                                            style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"6px 8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:60,marginBottom:4}}/>
-                                          <div style={{display:"flex",gap:6}}>
-                                            <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
-                                              style={{flex:1,padding:"4px 8px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
-                                            <button onClick={async()=>{
-                                              const newText = pastSchedOpen[editValKey]||"";
-                                              if (!newText.trim()) return;
-                                              const today = new Date();
-                                              const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                                              const newEntry = dateStr+" "+myName+": "+newText;
-                                              const allComments = parseComment(s["コメント"]);
-                                              allComments[j] = {raw:newEntry};
-                                              const finalComment = allComments.map(x=>x.raw).join(";");
-                                              const res = await fetch("/api/gas?"+new URLSearchParams({action:"addschedulecomment",name:s["名前"],date:s["日付"],comment:finalComment}));
-                                              const data = await res.json();
-                                              if(data.success){fetchSchedules();setPastSchedOpen(p=>({...p,[editKey]:false}));}
-                                            }}
-                                              style={{flex:2,padding:"4px 8px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存</button>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
-                                      )}
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            ) : (
-                              <p style={{fontSize:12,color:C.label,marginBottom:10}}>コメントなし</p>
-                            )}
-
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()}
-            <button onClick={()=>setSchedHistoryModal(null)} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer",marginTop:16}}>閉じる</button>
-          </div>
-        </div>
-      )}
-      {schedCommentModal && (
-        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:101,padding:20}}>
-          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>{schedCommentModal.isMember ? "✏️ レッスンの感想" : "💬 コメント編集"}</h3>
-            <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{schedCommentModal.name}</strong></p>
-            <p style={{fontSize:11,color:C.moss,marginBottom:16}}>{schedCommentModal.date}　{schedCommentModal.type}</p>
-            <textarea value={schedComment} onChange={e=>setSchedComment(e.target.value)}
-              placeholder="レッスン後のコメントを入力..."
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:100,marginBottom:8}}/>
-            {schedCommentMsg && <p style={{fontSize:12,color:schedCommentMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{schedCommentMsg}</p>}
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{setSchedCommentModal(null);setSchedComment("");setSchedCommentMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-              <button onClick={addScheduleComment} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#7aba8a,#5a8a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>上書き保存</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {schedModal && (
-        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
-          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440,maxHeight:"90vh",overflowY:"auto"}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>📅 スケジュール管理</h3>
-            <p style={{fontSize:13,color:C.label,marginBottom:12}}>対象：<strong>{schedModal}</strong></p>
-            <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>➕ 新しい予定を追加</p>
-
-            <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>日付</label>
-                <input type="date" value={schedDate} onChange={e=>setSchedDate(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
-              </div>
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>時間</label>
-                <input type="time" value={schedTime} onChange={e=>setSchedTime(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
-              </div>
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>種別</label>
-                <select value={schedType} onChange={e=>setSchedType(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,cursor:"pointer"}}>
-                  <option value="個人レッスン:対面">個人レッスン:対面</option>
-                  <option value="個人レッスン:zoom">個人レッスン:zoom</option>
-                  {!isInstructor && <option value="講師定期レッスン:対面">講師定期レッスン:対面</option>}
-                  {!isInstructor && <option value="講師定期レッスン:zoom">講師定期レッスン:zoom</option>}
-                  {!isInstructor && <option value="講師個別相談:zoom">講師個別相談:zoom</option>}
-                  {!isInstructor && <option value="作曲レッスン:対面">作曲レッスン:対面</option>}
-                  {!isInstructor && <option value="作曲レッスン:zoom">作曲レッスン:zoom</option>}
-                  {!isInstructor && <option value="即興レッスン:対面">即興レッスン:対面</option>}
-                  {!isInstructor && <option value="即興レッスン:zoom">即興レッスン:zoom</option>}
-                  <option value="練習会">練習会</option>
-                  <option value="イベント">イベント</option>
-                  <option value="その他">その他</option>
-                </select>
-              </div>
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>備考</label>
-                <textarea value={schedNote} onChange={e=>setSchedNote(e.target.value)}
-                  placeholder="備考・メモなど"
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:70}}/>
-              </div>
-            </div>
-            {schedMsg && <p style={{fontSize:13,color:schedMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{schedMsg}</p>}
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{setSchedModal(null);setSchedMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-              <button onClick={addSchedule} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#7aba8a,#5a8a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>追加する</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {lessonModal && (
-        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
-          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto"}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>✏️ 記録を送る</h3>
-            <p style={{fontSize:13,color:C.label,marginBottom:14}}>対象：<strong>{lessonModal}</strong></p>
-            <div style={{display:"flex",gap:8,marginBottom:18}}>
-              <button onClick={()=>{setLessonTab("text");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="text"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="text"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📝 コメント記録</button>
-              {!isInstructor && (<button onClick={()=>{setLessonTab("diagnosis");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="diagnosis"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="diagnosis"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎯 演奏診断スコア</button>)}
-              {!isInstructor && (<button onClick={()=>{setLessonTab("level");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="level"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="level"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎋 段階</button>)}
-              {!isInstructor && (<button onClick={()=>{setLessonTab("curriculum");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="curriculum"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="curriculum"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📚 カリキュラム</button>)}
-            </div>
-            {lessonTab === "level" ? (
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>段階を選択</label>
-                <select value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
-                  <option value="">-- 選択してください --</option>
-                  {["種","蕾","若幹","主幹","若柱","主柱","大黒柱"].map(l=><option key={l} value={l}>{l}</option>)}
-                </select>
-                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                  <button onClick={async ()=>{
-                    if (!lessonValue) { setLessonMsg("段階を選択してください"); return; }
-                    setLessonMsg("送信中...");
-                    const data = await gasWrite({action:"write", name:lessonModal, column:"段階", value:lessonValue, overwrite:"true"});
-                    if (data.error) { setLessonMsg("❌ エラー: "+data.error); return; }
-                    setLessonMsg("✅ 送信完了！");
-                    setTimeout(()=>{ setLessonModal(null); setLessonMsg(""); autoFetch(); }, 1500);
-                  }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                </div>
-              </div>
-            ) : lessonTab === "curriculum" ? (
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>完了した教材（複数選択可）</label>
-                <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:14}}>
-                  {(()=>{
-                    const targetMember = members.find(m=>m.name===lessonModal);
-                    const baseDone = parseInt(lessonValue !== "" ? lessonValue : String(targetMember?.completedLevels||0));
-                    return CURRICULUM.map((item,i)=>{
-                      const checked = i < baseDone;
-                      return (
-                        <label key={i} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"6px 8px",borderRadius:8,background:checked?"rgba(112,130,56,0.12)":"rgba(0,0,0,0.03)"}}>
-                          <input type="checkbox" checked={checked} onChange={()=>{
-                            const newVal = checked ? String(i) : String(i+1);
-                            setLessonValue(newVal);
-                            setLessonColumn("受講済み段階");
-                          }} style={{width:16,height:16,cursor:"pointer"}}/>
-                          <span style={{fontSize:12,color:checked?C.choco:C.label}}>{item.title}</span>
-                        </label>
-                      );
-                    });
-                  })()}
-                </div>
-                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                  <button onClick={()=>postLesson(true)} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                </div>
-              </div>
-            ) : (lessonTab === "text" || isInstructor) ? (
-              <>
-                {isInstructor && (
-                  <div style={{marginBottom:14}}>
-                    <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>講師名</label>
-                    <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
-                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,cursor:"pointer"}}>
-                      <option value="">-- 選択してください --</option>
-                      {INSTRUCTORS.map(n=><option key={n} value={n}>{n}</option>)}
-                    </select>
-                  </div>
-                )}
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>書き込む項目</label>
-                <select value={lessonColumn} onChange={e=>setLessonColumn(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
-                  <option value="課題">DANiLO・講師陣からのコメント</option>
-                  {!isInstructor && <option value="強み">あなたの強み（DANiLO）</option>}
-                  {isInstructor && instructorName==="Yamashita Noriko" && <option value="Yamashita Noriko強み">あなたの強み（Noriko）</option>}
-                  {isInstructor && instructorName==="hiroko" && <option value="hiroko強み">あなたの強み（hiroko）</option>}
-                  {isInstructor && instructorName==="灯音(to•o•n)" && <option value="灯音強み">あなたの強み（灯音）</option>}
-
-
-                  {(()=>{
-                    const today = new Date(); today.setHours(0,0,0,0);
-                    const upcoming = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])>=today)
-                      .sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
-                    const past = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])<today)
-                      .sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
-                    const fmtOpt = (s,i,key) => {
-                      const d=new Date(s["日付"]);
-                      const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
-                      const val = "__sched__"+s["日付"]+"__"+s["種別"];
-                      return <option key={key+i} value={val}>{fmtDate}　{s["種別"]}</option>;
-                    };
-                    return [
-                      ...(upcoming.length>0 ? [<option key="sep1" disabled value="">── 今後の予定 ──</option>, ...upcoming.map((s,i)=>fmtOpt(s,i,"u"))] : []),
-                      ...(past.length>0 ? [<option key="sep2" disabled value="">── 過去の予定 ──</option>, ...past.map((s,i)=>fmtOpt(s,i,"p"))] : []),
-                    ];
-                  })()}
-                </select>
-                <textarea value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
-                  placeholder="内容を入力..."
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:10,fontSize:13,color:C.choco,height:100,resize:"vertical",marginBottom:8}}/>
-                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                  <button onClick={()=>postLesson(false)} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>送信する</button>
-                </div>
-
-              </>
-            ) : (
-              <>
-                <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
-                  {[{key:"openness",label:"音の開放度"},{key:"quality",label:"音質調整"},{key:"tempo",label:"テンポキープ"},{key:"ghost",label:"ゴースト"},{key:"groove",label:"グルーヴ"}].map(({key,label})=>(
-                    <div key={key}>
-                      <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
-                        <span style={{fontSize:13,color:C.choco,fontWeight:500}}>{label}</span>
-                        <span style={{fontSize:14,fontWeight:700,color:C.olive}}>{diagScores[key]}</span>
-                      </div>
-                      <input type="range" min="0" max="5" step="1" value={diagScores[key]} onChange={e=>setDiagScores(p=>({...p,[key]:parseInt(e.target.value)}))} style={{width:"100%",accentColor:C.olive}}/>
-                      <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.label}}><span>0</span><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
-                    </div>
-                  ))}
-                  <div>
-                    <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>診断日</label>
-                    <input type="date" value={diagScores.date} onChange={e=>setDiagScores(p=>({...p,date:e.target.value}))} style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
-                  </div>
-                  <div>
-                    <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>診断楽曲</label>
-                    <select value={diagScores.diagSong} onChange={e=>setDiagScores(p=>({...p,diagSong:e.target.value}))}
-                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,cursor:"pointer"}}>
-                      <option value="">-- 楽曲を選択 --</option>
-                      {[...SONGS,"即興"].map(s=><option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>DANiLOメッセージ（任意）</label>
-                    <textarea value={diagScores.daniloMsg} onChange={e=>setDiagScores(p=>({...p,daniloMsg:e.target.value}))} placeholder="診断の結果メッセージを入力..." style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80}}/>
-                  </div>
-                </div>
-                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                  <button onClick={postDiagnosis} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>スプシに反映する</button>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const m = currentMember;
-  return (
-    <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
-      {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
-        iconBtn("← 管理者に戻る",()=>setPage("admin")),
-        iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
-      ] : [
-        iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
-      ])}
-      <div style={{padding:"24px",maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}}>
-
-        {/* Hero */}
-        <div style={{background:"linear-gradient(135deg,"+C.olive+","+C.choco+")",borderRadius:20,padding:"20px"}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
-            <div style={{display:"flex",alignItems:"center",gap:16,flex:1,minWidth:0}}>
-              <BadgeImage level={m.level} size={60}/>
-              <div style={{flex:1,minWidth:0}}>
-                <p style={{fontSize:10,letterSpacing:"0.1em",color:"rgba(255,255,255,0.7)",marginBottom:4}}>MEMBER</p>
-                <p style={{fontSize:16,fontWeight:700,color:LEVEL_COLOR,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{m.name}</p>
-                <p style={{fontSize:14,fontWeight:700,color:C.sand}}>{m.level||"−"}</p>
-              </div>
-            </div>
-            <div style={{textAlign:"right",flexShrink:0}}>
-              <p style={{fontSize:9,color:"#d4e8a0",marginBottom:2}}>保有ポイント</p>
-              <p style={{fontSize:22,fontWeight:700,color:"#fff",lineHeight:1,marginBottom:8}}>
-                {(m.points||0).toLocaleString()}
-                <span style={{fontSize:11,color:"#d4e8a0",marginLeft:2}}>P</span>
-              </p>
-              <a href="https://docs.google.com/forms/d/e/1FAIpQLSfFsbisxGmhg_nEHXNwTeEnOZbztEF_VFlvH725Sn078mm07Q/viewform?usp=dialog" target="_blank" rel="noreferrer"
-                style={{display:"inline-block",padding:"5px 12px",borderRadius:8,background:"rgba(255,255,255,0.2)",color:"#fff",fontSize:11,fontWeight:600,textDecoration:"none",marginBottom:6}}>
-                ポイントを利用する
-              </a>
-              <p onClick={()=>setMyPointHistoryOpen(!myPointHistoryOpen)}
-                style={{fontSize:11,color:"rgba(255,255,255,0.8)",cursor:"pointer",marginTop:4}}>
-                📋 ポイント履歴 {myPointHistoryOpen ? "▲" : "▼"}
-              </p>
-            </div>
-          </div>
-          {myPointHistoryOpen && (
-            <div style={{marginTop:8,padding:"0 4px"}}>
-              {pointHistory.filter(h=>h["名前"]===m.name).length === 0 ? (
-                <p style={{fontSize:12,color:"rgba(255,255,255,0.7)",textAlign:"center"}}>履歴がありません</p>
-              ) : pointHistory.filter(h=>h["名前"]===m.name).slice().reverse().map((h,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
-                  <div>
-                    <p style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
-                    <p style={{fontSize:12,color:"#fff",fontWeight:500}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
-                  </div>
-                  <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#d4e8a0":"#ffaaaa"}}>
-                    {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* 演奏診断 */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
-            <p style={{fontSize:13,letterSpacing:"0.1em",color:C.label,marginBottom:14,fontWeight:500}}>
-              🔍 演奏診断結果　<span style={{fontSize:10,fontWeight:400}}>診断日：{m.diagnosisDate}</span>
-              {m.diagnosisSong && <span style={{fontSize:10,fontWeight:600,color:C.olive,marginLeft:8}}>🎵 {m.diagnosisSong}</span>}
-            </p>
-            <div style={{display:"flex",gap:20,flexWrap:"wrap",marginBottom:14}}>
-              <RadarChart m={m}/>
-              <div style={{flex:1,minWidth:160,display:"flex",flexDirection:"column",gap:10}}>
-                {[
-                  {l:"音の開放度", a:"精神性・タイミング・脱力", desc:"音がどれだけ自由に、解放されて、\n美しく響いているか。\n　＝ 脱力ができているか。\n　＝ 心と身体がどれだけ音に対して開いているか。"},
-                  {l:"音質調整", a:"身体の使い方の調整／自己価値感", desc:"自分の身体・自分の存在を、\nどれだけ繊細に扱えているか。\n　＝ 音の質を意図的に変化させられるか。"},
-                  {l:"テンポキープ", a:"技術向上・精神的安定・宇宙との同期", desc:"自分軸の安定性。テンポを一定に保ち続ける力。\n　＝ 自分の内側にリズムの軸があるか。"},
-                  {l:"ゴースト", a:"強弱・洗練されたリズム", desc:"総合的に細かなニュアンスをどれだけ美しく、\n意図を持って扱えているか。\n音楽の波、うねりが表現できているか。\n　＝ 繊細さ・間・安定感・余白の感覚"},
-                  {l:"グルーヴ", a:"音楽的なうねり・一体感", desc:"音楽全体の流れに乗り、\n身体でリズムを感じて表現する力。\n　＝ 聴く人を引き込む推進力。"},
-                ].map((x,i)=>(
-                  <div key={i}>
-                    <p style={{fontSize:12,color:C.choco,fontWeight:600,marginBottom:2}}>
-                      ✅ {x.l}<span style={{fontSize:10,fontWeight:400,color:C.label}}> 👉 {x.a}</span>
-                    </p>
-                    {x.desc.split("\n").map((line,j)=>(
-                      <p key={j} style={{fontSize:11,color:C.label,lineHeight:1.7}}>{line}</p>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{borderTop:"1px solid "+C.border,paddingTop:12}}>
-              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:500}}>診断の結果 ～DANiLOよりメッセージ～</p>
-              {m.diagnosisResult
-                ? splitItems(m.diagnosisResult).map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.8,marginBottom:4}}>{line}</p>)
-                : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>未診断</p>
-              }
-            </div>
-          {(m.openness+m.quality+m.tempo+m.ghost+m.groove === 0) && (
-            <div style={{borderTop:"1px solid "+C.border,paddingTop:14,marginTop:4,textAlign:"center"}}>
-              <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:6}}>🎵 演奏診断 未受講の方へ</p>
-              <p style={{fontSize:13,color:C.label,lineHeight:1.8}}>
-                演奏診断では、あなたの演奏の特徴を5つの項目で分析します。<br/>
-                ぜひ下のボタンからお申し込みください！
-              </p>
-            </div>
-          )}
-        </div>
-
-        {/* 診断受付ボタン */}
-        <a href="https://docs.google.com/forms/d/13ZUqQCbra869TVQPwc0qZMLy5kelvGRVWX_6LmteHuM/edit" target="_blank" rel="noreferrer" style={BTN_STYLE}>
-          グーダドラム5つ項目診断受付
-        </a>
-
-        {/* 次回の目標（収納式・横長） */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setGoalOpen(!goalOpen)}
-            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,fontWeight:600,color:C.label}}>🎯 次回の目標</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:goalOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {goalOpen && (
-            <div style={{padding:"0 16px 14px"}}>
-              <p style={{fontSize:9,color:C.moss,marginBottom:6}}>※ この端末のみ保存されます</p>
-              <textarea value={myGoal} onChange={e=>{setMyGoal(e.target.value);localStorage.setItem("goal_"+m.name,e.target.value);}}
-                placeholder="次回の目標を入力..."
-                style={{width:"100%",background:"rgba(240,235,226,0.6)",border:"1px solid "+C.border,borderRadius:8,padding:8,fontSize:13,color:C.choco,resize:"none",height:72,boxSizing:"border-box"}}/>
-            </div>
-          )}
-        </div>
-
-        {/* マイスケジュール */}
-        {(()=>{
-          const myScheds = memberSchedules.filter(s=>s["名前"]===m.name);
-          if (myScheds.length === 0) return null;
-          const today = new Date(); today.setHours(0,0,0,0);
-          const toDate = s => { const d=new Date(s["日付"]); return isNaN(d.getTime())||d.getFullYear()<=1900 ? new Date("9999-12-31") : d; };
-          const upcoming = myScheds.filter(s=>toDate(s)>=today).sort((a,b)=>toDate(b)-toDate(a));
-          const past = myScheds.filter(s=>toDate(s)<today).sort((a,b)=>toDate(b)-toDate(a));
-
-          const renderSched = (s, i, isPastItem, total) => {
-            const rawDate = s["日付"];
-            const d = new Date(rawDate);
-            const isValidDate = !isNaN(d.getTime()) && d.getFullYear() > 1900;
-            const fmtDate = isValidDate ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : String(rawDate);
-            const t = s["時間"]; const td = new Date(t);
-            const fmtTime = (!isNaN(td.getTime())&&td.getFullYear()<=1900) ? (td.getHours()+":"+String(td.getMinutes()).padStart(2,"0")) : String(t||"");
-            const isOpen = pastSchedOpen[rawDate+s["種別"]] || false;
-            return (
-              <div key={i} style={{padding:"10px 0",borderBottom:i<total-1?"1px solid rgba(112,130,56,0.1)":"none"}}>
-                <div style={{display:"flex",gap:10}}>
-                  <div style={{minWidth:90}}>
-                    <p style={{fontSize:12,fontWeight:600,color:isPastItem?C.label:C.choco}}>{fmtDate}</p>
-                    {fmtTime && <p style={{fontSize:11,color:C.label}}>{fmtTime}</p>}
-                  </div>
-                  <div style={{flex:1}}>
-                    <span style={{fontSize:11,fontWeight:700,color:"#fff",background:s["種別"].includes("対面")?"#708238":s["種別"].includes("zoom")?"#3a7a8a":s["種別"]==="練習会"?"#5a6a8a":"#8a6a3a",borderRadius:4,padding:"2px 6px"}}>{s["種別"]}</span>
-                    {s["備考"] && <p style={{fontSize:12,color:C.label,marginTop:4}}>{s["備考"]}</p>}
-                    {!isPastItem && s["種別"].includes("zoom") && (
-                      <div style={{marginTop:6,background:"rgba(58,122,138,0.08)",borderRadius:6,padding:"6px 8px"}}>
-                        <a href="https://us06web.zoom.us/j/7484259893?pwd=97rxQJ8xoSZyKiDRLCgD5ITIq9a0KT.1" target="_blank" rel="noreferrer"
-                          style={{fontSize:11,color:"#3a7a8a",fontWeight:600,textDecoration:"none"}}>🎥 Zoomに参加する</a>
-                        <p style={{fontSize:10,color:C.label,marginTop:2}}>ID: 748 425 9893　パスコード: 77793</p>
-                      </div>
-                    )}
-                    {isPastItem && (
-                      <div style={{marginTop:8}}>
-                        {s["コメント"] && (
-                          <>
-                            <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                              style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:4}}>
-                              <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
-                              <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
-                            </div>
-                            {isOpen && (
-                              <div style={{marginTop:4,marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                                {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
-                                  const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                                  if (m) return (
-                                    <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
-                                      <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                        <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
-                                        <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
-                                      </div>
-                                      <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m[3].trim()}</p>
-                                    </div>
-                                  );
-                                  return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p> : null;
-                                })}
-                              </div>
-                            )}
-                          </>
-                        )}
-                        {(()=>{
-                          const myName = currentMember.name;
-                          const existing = s["コメント"]||"";
-                          const parts = existing.split(";").filter(l=>l.trim());
-                          const myEntry = parts.find(l=>{
-                            const mm = l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);
-                            return mm && mm[1].trim()===myName;
-                          });
-                          const myText = myEntry ? myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,"") : "";
-                          const openModal = (txt)=>{
-                            setSchedCommentModal({name:myName, date:rawDate, type:s["種別"], isMember:true, existingFull:existing});
-                            setSchedComment(txt||"");
-                            setSchedCommentMsg("");
-                          };
-                          if (myEntry) {
-                            // 自分のコメントがある → フィードバックボックスの下に編集ボタン
-                            const mm = myEntry.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                            return (
-                              <div style={{marginTop:6,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 10px",borderLeft:"3px solid "+C.olive}}>
-                                <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                  <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm?mm[2].trim():myName}</span>
-                                  <span style={{fontSize:10,color:C.label}}>{mm?mm[1]:""}</span>
-                                </div>
-                                <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap",marginBottom:6}}>{myText}</p>
-                                <button onClick={()=>openModal(myText)}
-                                  style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600}}>
-                                  ✏️ 編集する
-                                </button>
-                              </div>
-                            );
-                          }
-                          // 自分のコメントがない → フィードバックを書くボタン
-                          return (
-                            <button onClick={()=>openModal("")}
-                              style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600,marginTop:4}}>
-                              💬 フィードバックを書く
-                            </button>
-                          );
-                        })()}
-                      </div>
-                    )}
-                    {!isPastItem && s["コメント"] && (
-                      <div style={{marginTop:8}}>
-                        <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                          style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>
-                          <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
-                          <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
-                        </div>
-                        {isOpen && (
-                          <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                            {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
-                              const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                              if (m) return (
-                                <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
-                                  <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                    <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
-                                    <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
-                                  </div>
-                                  <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m[3].trim()}</p>
-                                </div>
-                              );
-                              return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p> : null;
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          };
-
-          return (
-            <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-              <button onClick={()=>setMySchedOpen(!mySchedOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-                <span style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>🗓 マイスケジュール</span>
-                <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:mySchedOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-              </button>
-              {mySchedOpen && (
-                <div style={{borderTop:"1px solid "+C.border,padding:"10px 16px 14px"}}>
-                  {upcoming.length > 0 && upcoming.map((s,i)=>renderSched(s, i, false, upcoming.length))}
-                  {upcoming.length === 0 && past.length === 0 && <p style={{fontSize:12,color:C.label,textAlign:"center"}}>予定はありません</p>}
-                  {past.length > 0 && (
-                    <div style={{marginTop:upcoming.length>0?12:0}}>
-                      <p style={{fontSize:10,color:C.label,marginBottom:6,letterSpacing:"0.05em"}}>── 過去の予定 ──</p>
-                      {past.map((s,i)=>renderSched(s, i, true, past.length))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          );
-        })()}
-
-        {/* 全体スケジュール */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setScheduleOpen(!scheduleOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>📅 全体スケジュール</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:scheduleOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {scheduleOpen && (
-            <>
-              <div style={{borderTop:"1px solid "+C.border,display:"flex",justifyContent:"flex-end",padding:"6px 16px"}}>
-                <a href="https://able-chemistry-1ee.notion.site/schedule-2fb2b1d0bdf9802bb6c6d2bdd79fbdb5?pvs=74" target="_blank" rel="noreferrer"
-                  style={{fontSize:11,color:C.olive,fontWeight:600,textDecoration:"none"}}>すべて見る →</a>
-              </div>
-              <div style={{maxHeight:"7.2em",overflowY:"auto",padding:"0 16px 12px"}}>
-                {notionItems.length > 0 ? (
-                  notionItems.map((item,i) => {
-                    if (item.links && item.links.length > 0) {
-                      // リンクを含む行はパーツに分けて表示
-                      let remaining = item.text;
-                      const parts = [];
-                      item.links.forEach((link,j) => {
-                        const idx = remaining.indexOf(link.text);
-                        if (idx > 0) parts.push(<span key={"t"+j}>{remaining.slice(0,idx)}</span>);
-                        parts.push(<a key={"l"+j} href={link.url} target="_blank" rel="noreferrer" style={{color:C.olive,fontWeight:600,textDecoration:"underline"}}>{link.text}</a>);
-                        remaining = remaining.slice(idx + link.text.length);
-                      });
-                      if (remaining) parts.push(<span key="last">{remaining}</span>);
-                      return <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.8,paddingLeft:item.text.startsWith("　")?"8px":"0"}}>{parts}</p>;
-                    }
-                    return <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.8,paddingLeft:item.text.startsWith("　")?"8px":"0"}}>{item.text}</p>;
-                  })
-                ) : (
-                  <p style={{fontSize:13,color:C.label}}>読み込み中...</p>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* マイデータ */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setMyDataOpen(!myDataOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>📋 マイデータ</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:myDataOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
-            {[
-              {icon:"💪", label:"DANiLOより", items:splitItems(m.strengths), isStrengths:true},
-              ...(m.strengthsNoriko ? [{icon:"💪", label:"Yamashita Norikoより", items:splitItems(m.strengthsNoriko), isStrengths:true}] : []),
-              ...(m.strengthsHiroko ? [{icon:"💪", label:"hirokoより", items:splitItems(m.strengthsHiroko), isStrengths:true}] : []),
-              ...(m.strengthsToon ? [{icon:"💪", label:"灯音より", items:splitItems(m.strengthsToon), isStrengths:true}] : []),
-              {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
-              {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
-              {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
-            ].map(({icon,label,items,isStrengths},i)=>(
-              <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                <span style={{fontSize:15,flexShrink:0,marginTop:1}}>{icon}</span>
-                <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,marginBottom:3,fontWeight:500}}>{label}</p>
-                  {items.length > 0
-                    ? items.map((v,j) => {
-                        if (isStrengths) {
-                          const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                          if (match) return (
-                            <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
-                              <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{match[3].trim()}</p>
-                              <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
-                            </div>
-                          );
-                        }
-                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>;
-                      })
-                    : <p style={{fontSize:13,color:C.label}}>−</p>
-                  }
-                </div>
-              </div>
-            ))}
             {/* これまでに参加したイベント */}
             {m.history && m.history.length > 0 && (
               <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
@@ -3831,8 +1959,9 @@ function App() {
           </button>
           {commentOpen && (
             <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
+              {/* コメント表示 */}
               <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
-              <div style={{maxHeight:"8em",overflowY:"auto"}}>
+              <div style={{maxHeight:"8em",overflowY:"auto",marginBottom:isFromAdmin?8:0}}>
                 {(()=>{
                   const splitComment = (s) => String(s||"").trim() ? [String(s||"").trim()] : [];
                   const all = [
@@ -3841,7 +1970,6 @@ function App() {
                     ...splitComment(m.commentHiroko),
                     ...splitComment(m.commentToon),
                   ].filter(Boolean);
-                  // 日付で始まる行（例：2026/3/22）でソート
                   all.sort((a,b)=>{
                     const da = a.match(/^(\d{4}\/\d+\/\d+)/);
                     const db = b.match(/^(\d{4}\/\d+\/\d+)/);
@@ -3855,6 +1983,53 @@ function App() {
                     : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>−</p>;
                 })()}
               </div>
+              {/* 管理者用：コメント入力・編集 */}
+              {isFromAdmin && (()=>{
+                const adminName = isInstructor ? (instructorName||"") : "DANiLO";
+                const targetCol = isInstructor
+                  ? (adminName==="Yamashita Noriko"?"Yamashita Norikoコメント":adminName==="hiroko"?"hirokoコメント":adminName==="灯音(to•o•n)"?"灯音コメント":"課題")
+                  : "課題";
+                const currentVal = isInstructor
+                  ? (adminName==="Yamashita Noriko"?m.commentNoriko:adminName==="hiroko"?m.commentHiroko:adminName==="灯音(to•o•n)"?m.commentToon:"")
+                  : m.challenge;
+                const editKey = "challenge_edit";
+                const isEditingChal = pastSchedOpen[editKey]||false;
+                const editValChal = pastSchedOpen["challengeval"]||"";
+                return (
+                  <div style={{borderTop:"1px solid rgba(112,130,56,0.1)",paddingTop:8}}>
+                    {isInstructor && (
+                      <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
+                        style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"5px 8px",fontSize:12,color:C.choco,cursor:"pointer",marginBottom:8}}>
+                        <option value="">-- 講師を選択 --</option>
+                        {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
+                      </select>
+                    )}
+                    {isEditingChal ? (
+                      <div>
+                        <textarea value={editValChal} onChange={e=>setPastSchedOpen(p=>({...p,challengeval:e.target.value}))}
+                          style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}/>
+                        <div style={{display:"flex",gap:6}}>
+                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
+                            style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
+                          <button onClick={async()=>{
+                            const today=new Date();
+                            const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
+                            const val=ds+" "+adminName+": "+editValChal;
+                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:targetCol,value:val,overwrite:"true"}));
+                            const data=await res.json();
+                            if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
+                          }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,challengeval:currentVal||""}))}
+                        style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
+                        {currentVal?"✏️ コメントを編集":"💬 コメントを書く"}
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </div>
