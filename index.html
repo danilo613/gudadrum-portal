@@ -1902,9 +1902,12 @@ function App() {
                           <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
                             style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
                           <button onClick={async()=>{
+                            if(!editValStr.trim()) return;
                             const today=new Date();
                             const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                            const val=ds+" "+adminName+": "+editValStr;
+                            // editValStrに日付+名前が含まれている場合はそのまま、なければ追加
+                            const hasFormat = editValStr.trim().match(/^\d{4}\/\d+\/\d+\s+[^:]+:/);
+                            const val = hasFormat ? editValStr.trim() : ds+" "+adminName+": "+editValStr.trim();
                             const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:col,value:val,overwrite:"true"}));
                             const data=await res.json();
                             if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
