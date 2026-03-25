@@ -1475,6 +1475,22 @@ function App() {
   return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      {schedCommentModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
+          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440}}>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>{schedCommentModal.isMember ? "✏️ レッスンの感想" : "💬 コメント編集"}</h3>
+            <p style={{fontSize:11,color:C.moss,marginBottom:16}}>{schedCommentModal.date}　{schedCommentModal.type}</p>
+            <textarea value={schedComment} onChange={e=>setSchedComment(e.target.value)}
+              placeholder="レッスン後の感想を入力..."
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:120,marginBottom:8}}/>
+            {schedCommentMsg && <p style={{fontSize:12,color:schedCommentMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{schedCommentMsg}</p>}
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>{setSchedCommentModal(null);setSchedComment("");setSchedCommentMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
+              <button onClick={addScheduleComment} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#7aba8a,#5a8a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
+            </div>
+          </div>
+        </div>
+      )}
       {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
         iconBtn("← 管理者に戻る",()=>setPage("admin")),
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
@@ -1873,7 +1889,10 @@ function App() {
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
             ].map(({icon,label,items,isStrengths,col,owner},i)=>{
               const adminName = isInstructor ? (instructorName||"") : "DANiLO";
-              const canEdit = isFromAdmin && col && ((!isInstructor && owner==="DANiLO") || (isInstructor && owner===adminName));
+              const canEdit = isFromAdmin && col && (
+                (!isInstructor && owner==="DANiLO") ||
+                (isInstructor && adminName && owner===adminName)
+              );
               const editKey = "strength_"+col;
               const isEditingStr = pastSchedOpen[editKey]||false;
               const editValStr = pastSchedOpen["strengthval_"+col]||"";
@@ -1914,6 +1933,13 @@ function App() {
                           }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
                         </div>
                       </div>
+                    )}
+                    {isFromAdmin && isInstructor && col && col!=="強み" && !isEditingStr && (
+                      <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
+                        style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",fontSize:11,color:C.choco,cursor:"pointer",marginTop:4,display:"block"}}>
+                        <option value="">-- 講師を選択して編集 --</option>
+                        {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
+                      </select>
                     )}
                     {canEdit && !isEditingStr && (
                       <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,["strengthval_"+col]:items.join("\n")}))}
