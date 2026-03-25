@@ -1816,8 +1816,7 @@ function App() {
                               <>
                                 <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
                                   style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:4}}>
-                                  <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック</span>
-                                  <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
+                                  <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 {isOpen?"フィードバックを閉じる":"フィードバックを見る"}</span>
                                 </div>
                                 {isOpen && (
                                   <div style={{marginTop:4,marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
