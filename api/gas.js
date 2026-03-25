@@ -1,6 +1,6 @@
 export const config = { runtime: "edge" };
 export default async function handler(req) {
-  const GAS = "https://script.google.com/macros/s/AKfycbx6mV8U_GaEk9DhnETESgy7ExgSbtBvp-eZSX6iOhF1HEAhOghfV7kx3Z8QjysDQ1QsIQ/exec";
+  const GAS = "https://script.google.com/macros/s/AKfycbxneosXfnX5zssdn65mcFPVWNWzik4HB3hwtB_MZxFTsXbvMib0CvdH2MiOtY_fJ46d/exec";
   const { searchParams } = new URL(req.url);
   const query = searchParams.toString();
   const url = query ? `${GAS}?${query}` : GAS;
