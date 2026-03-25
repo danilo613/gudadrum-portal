@@ -363,9 +363,11 @@ function App() {
         const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
         const myName = schedCommentModal.name;
         const newEntry = dateStr + " " + myName + ": " + schedComment;
-        // 最新のスケジュールデータから取得（古いexistingFullを使わない）
-        const latestSched = memberSchedules.find(sc=>sc["名前"]===myName && sc["日付"]===schedCommentModal.date && sc["種別"]===schedCommentModal.type);
-        const existing = latestSched ? (latestSched["コメント"]||"") : "";
+        // GASから直接最新データを取得してから保存
+        const freshRes=await fetch("/api/gas?action=getschedule");
+        const freshData=await freshRes.json();
+        const freshSched=(freshData.schedules||[]).find(sc=>sc["名前"]===myName && sc["日付"]===schedCommentModal.date && sc["種別"]===schedCommentModal.type);
+        const existing=freshSched?(freshSched["コメント"]||""):"";
         const parts = existing.split(";").filter(l=>l.trim());
         const myIdx = parts.findLastIndex(l=>l.trim().match(new RegExp("^\\d{4}\\/\\d+\\/\\d+\\s+"+myName+":")));
         if (myIdx >= 0) { parts[myIdx] = newEntry; }
@@ -1668,10 +1670,12 @@ function App() {
                               const today=new Date();
                               const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
                               const newEntry=ds+" "+adminName+": "+text;
-                              // 最新のスケジュールデータから現在のコメントを取得
-                              const latestSched = memberSchedules.find(sc=>sc["名前"]===m.name && sc["日付"]===rawDate && sc["種別"]===s["種別"]);
-                              const latestExisting = latestSched ? (latestSched["コメント"]||"") : "";
-                              const latestParts = latestExisting.split(";").filter(l=>l.trim());
+                              // GASから直接最新データを取得してから保存
+                              const freshRes=await fetch("/api/gas?action=getschedule");
+                              const freshData=await freshRes.json();
+                              const freshSched=(freshData.schedules||[]).find(sc=>sc["名前"]===m.name && sc["日付"]===rawDate && sc["種別"]===s["種別"]);
+                              const latestExisting=freshSched?(freshSched["コメント"]||""):"";
+                              const latestParts=latestExisting.split(";").filter(l=>l.trim());
                               const newParts=latestParts.filter(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return !(mm&&mm[1].trim()===adminName);});
                               newParts.push(newEntry);
                               const finalComment=newParts.join(";");
