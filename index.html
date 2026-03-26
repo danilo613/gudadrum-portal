@@ -434,6 +434,19 @@ function App() {
       if (data.results) {
         setSurveyResults(data.results);
         setSurveyLoaded(true);
+        // 各メンバーのデータをポータルスプシに書き込む
+        for (const member of data.results) {
+          await fetch("/api/gas?" + new URLSearchParams({
+            action: "applysurvey",
+            name: member.name,
+            scales: member.scales || "",
+            sheets: member.sheets || "",
+            songs: member.songs || "",
+            history: member.history || "",
+            password: member.password || "",
+            region: member.region || "",
+          }).toString());
+        }
         autoFetch();
       }
     } catch(e) {}
