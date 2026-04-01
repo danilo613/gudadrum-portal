@@ -37,7 +37,7 @@ const BADGE_IMAGES = {
 };
 
 const LEVEL_COLOR = "#f0e0a0";
-const LEVEL_ORDER = ["大黒柱","主柱","若柱","主幹","若幹","蕾","種","柱","幹"];
+const LEVEL_ORDER = ["大黒柱","主柱","若柱","主幹","若幹","蕾","種"];
 
 const CURRICULUM = [
   { title:"グーダドラムの基礎「響かせる」", url:"https://www.gudadrumjapan.com/kyzkmtm", password:"gdrmtd26" },
@@ -98,9 +98,6 @@ function rowToMember(r) {
     password: String(r["パスワード"] || r["password"] || ""),
     level: String(r["段階"] || r["レベル"] || r["level"] || ""),
     strengths: String(r["強み"] || r["strengths"] || ""),
-    strengthsNoriko: String(r["Yamashita Noriko強み"] || ""),
-    strengthsHiroko: String(r["hiroko強み"] || ""),
-    strengthsToon: String(r["灯音強み"] || ""),
     challenge: String(r["課題"] || r["challenge"] || ""),
     goal: String(r["目標"] || r["goal"] || ""),
     history: splitItems(r["履歴"] || r["history"] || ""),
@@ -206,8 +203,6 @@ function App() {
   const [showWorkshop, setShowWorkshop] = useState(false);
   const [workshopLoaded, setWorkshopLoaded] = useState(false);
   const [loginData, setLoginData] = useState([]);
-  const [showAllPoints, setShowAllPoints] = useState(false);
-  const [allPointHistory, setAllPointHistory] = useState([]);
   const [workshopFilter, setWorkshopFilter] = useState("all");
   const [memberSchedules, setMemberSchedules] = useState([]);
   const [schedModal, setSchedModal] = useState(null);
@@ -259,6 +254,9 @@ function App() {
   const [pointValue, setPointValue] = useState("");
   const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
   const [diagScores, setDiagScores] = useState({openness:3,quality:3,tempo:3,ghost:3,groove:3,date:"",daniloMsg:"",diagSong:""});
+  const [memberFbOpen, setMemberFbOpen] = useState({});
+  const [memberFbValue, setMemberFbValue] = useState({});
+  const [memberFbMsg, setMemberFbMsg] = useState({});
 
   useEffect(() => {
     autoFetch();
@@ -289,7 +287,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbxtaT5EY4L-ujWzUz1Gx-o1zdakyKZ9TyOIVBelqADYi2mrUitHjI8VnnlEW6glGGQMjQ/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycby3SMjqCIff2SQp0Hv9igjUwDvfkDZRzv6UfxlorZwjGah_jlbeLzKLD-kxiJqRNOZmYw/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -311,7 +309,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbxtaT5EY4L-ujWzUz1Gx-o1zdakyKZ9TyOIVBelqADYi2mrUitHjI8VnnlEW6glGGQMjQ/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycby3SMjqCIff2SQp0Hv9igjUwDvfkDZRzv6UfxlorZwjGah_jlbeLzKLD-kxiJqRNOZmYw/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -356,23 +354,15 @@ function App() {
     if (!schedComment.trim()) { setSchedCommentMsg("コメントを入力してください"); return; }
     setSchedCommentMsg("送信中...");
     try {
-      let finalComment = schedComment;
-      // メンバーが書く場合：既存コメントにメンバー分だけ差し替えて追記
-      if (schedCommentModal.isMember) {
-        const today = new Date();
-        const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-        const myName = schedCommentModal.name;
-        finalComment = dateStr + " " + myName + ": " + schedComment;
-      }
       const res = await fetch("/api/gas?" + new URLSearchParams({
         action: "addschedulecomment",
         name: schedCommentModal.name,
         date: schedCommentModal.date,
-        comment: finalComment,
+        comment: schedComment,
       }));
       const data = await res.json();
       if (data.success) {
-        setSchedCommentMsg("✅ 保存しました！");
+        setSchedCommentMsg("✅ 追加しました！");
         fetchSchedules();
         setTimeout(()=>{setSchedCommentModal(null);setSchedCommentMsg("");setSchedComment("");}, 1500);
       } else {
@@ -396,14 +386,6 @@ function App() {
   }
 
 
-
-  async function fetchAllPoints() {
-    try {
-      const res = await fetch("/api/gas?action=getpoints");
-      const data = await res.json();
-      if (data.history) setAllPointHistory(data.history);
-    } catch(e) {}
-  }
 
   async function fetchLogins() {
     try {
@@ -434,18 +416,19 @@ function App() {
       if (data.results) {
         setSurveyResults(data.results);
         setSurveyLoaded(true);
-        // 各メンバーのデータをポータルスプシに書き込む
+        // 全メンバーを自動でスプシに反映
         for (const member of data.results) {
-          await fetch("/api/gas?" + new URLSearchParams({
+          const params = new URLSearchParams({
             action: "applysurvey",
             name: member.name,
-            scales: member.scales || "",
-            sheets: member.sheets || "",
-            songs: member.songs || "",
-            history: member.history || "",
-            password: member.password || "",
+            scales: member.scales,
+            sheets: member.sheets,
+            songs: member.songs,
+            history: member.history,
+            password: member.password,
             region: member.region || "",
-          }).toString());
+          });
+          await fetch("/api/gas?" + params.toString());
         }
         autoFetch();
       }
@@ -478,6 +461,44 @@ function App() {
     setApplyingMember(null);
   }
 
+  async function postMemberFeedback(rawDate, type) {
+    const key = rawDate + type;
+    const value = (memberFbValue[key] || "").trim();
+    if (!value) { setMemberFbMsg(p=>({...p,[key]:"内容を入力してください"})); return; }
+    setMemberFbMsg(p=>({...p,[key]:"送信中..."}));
+    try {
+      const today = new Date();
+      const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
+      const commentText = dateStr + " " + currentMember.name + ": " + value;
+      const data = await gasWrite({action:"addschedulecomment", name:currentMember.name, date:rawDate, comment:commentText});
+      if (data.error) throw new Error(data.error);
+      setMemberFbMsg(p=>({...p,[key]:"✅ 送信しました！"}));
+      setMemberFbValue(p=>({...p,[key]:""}));
+      fetchSchedules();
+      setTimeout(()=>{ setMemberFbMsg(p=>({...p,[key]:""})); setMemberFbOpen(p=>({...p,[key]:false})); }, 1800);
+    } catch(e) { setMemberFbMsg(p=>({...p,[key]:"❌ "+e.message})); }
+  }
+
+  async function postCurriculumLevel(lv) {
+    setLessonMsg("送信中...");
+    try {
+      const data = await gasWrite({action:"write", name:lessonModal, column:"段階", value:lv, overwrite:"true"});
+      if (data.error) throw new Error(data.error);
+      setLessonMsg("✅ 段階を「"+lv+"」に設定しました！");
+      setTimeout(()=>{ autoFetch(); setLessonMsg(""); }, 1500);
+    } catch(e) { setLessonMsg("❌ "+e.message); }
+  }
+
+  async function postCurriculumCompleted(newVal) {
+    setLessonMsg("送信中...");
+    try {
+      const data = await gasWrite({action:"write", name:lessonModal, column:"受講済み段階", value:String(newVal), overwrite:"true"});
+      if (data.error) throw new Error(data.error);
+      setLessonMsg("✅ 更新しました！");
+      setTimeout(()=>{ autoFetch(); setLessonMsg(""); }, 1500);
+    } catch(e) { setLessonMsg("❌ "+e.message); }
+  }
+
   async function gasWrite(params) {
     const url = "/api/gas?" + new URLSearchParams(params).toString();
     const res = await fetch(url);
@@ -505,13 +526,10 @@ function App() {
         return;
       }
 
-      // lessonColumnが意図しない列になっていたら課題にフォールバック
-      const allowedColumns = ["課題","強み","目標","段階","受講済み段階","Yamashita Noriko強み","hiroko強み","灯音強み"];
-      const safeColumn = allowedColumns.includes(lessonColumn) ? lessonColumn : "課題";
-      const autoOverwrite = ["強み","目標","段階","受講済み段階","Yamashita Noriko強み","hiroko強み","灯音強み"].includes(safeColumn);
+      const autoOverwrite = ["強み","目標"].includes(lessonColumn);
       const formattedValue = overwrite ? lessonValue : dateStr + " " + sender + ": " + lessonValue;
-      let targetColumn = safeColumn;
-      if (isInstructor && safeColumn === "課題") {
+      let targetColumn = lessonColumn;
+      if (isInstructor && lessonColumn === "課題") {
         const colMap = {"Yamashita Noriko":"Yamashita Norikoコメント", "hiroko":"hirokoコメント", "灯音(to•o•n)":"灯音コメント"};
         targetColumn = colMap[instructorName] || "課題";
       }
@@ -542,20 +560,18 @@ function App() {
   function handleLogin() {
     setLoginErr("");
     if (!selectedName) { setLoginErr("名前を選択してください"); return; }
-    const toHalf = s => String(s).replace(/[Ａ-Ｚａ-ｚ０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)).trim();
-    const normalizedPass = toHalf(password);
     if (selectedName === "__admin__") {
-      if (normalizedPass === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setLessonTab("text"); setPassword(""); }
-      else if (normalizedPass === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setLessonTab("text"); setPassword(""); }
+      if (password === ADMIN_PASS) { setPage("admin"); setIsInstructor(false); setLessonTab("text"); setPassword(""); }
+      else if (password === INSTRUCTOR_PASS) { setPage("admin"); setIsInstructor(true); setLessonTab("text"); setPassword(""); }
       else setLoginErr("パスワードが違います");
       return;
     }
     const norm = s => s.replace(/\s/g,"");
     const m = members.find(m => norm(m.name) === norm(selectedName));
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
-    if (m.password && toHalf(String(m.password)) !== normalizedPass) { setLoginErr("パスワードが違います"); return; }
-    fetch("/api/gas?" + new URLSearchParams({action:"addlogin", name:m.name}));
+    if (m.password && m.password !== password) { setLoginErr("パスワードが違います"); return; }
     setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false);
+    recordLogin(m.name);
   }
 
   const SettingsModal = () => {
@@ -582,7 +598,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbxtaT5EY4L-ujWzUz1Gx-o1zdakyKZ9TyOIVBelqADYi2mrUitHjI8VnnlEW6glGGQMjQ/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycby3SMjqCIff2SQp0Hv9igjUwDvfkDZRzv6UfxlorZwjGah_jlbeLzKLD-kxiJqRNOZmYw/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -619,12 +635,6 @@ function App() {
 
   const sortedMembers = sortKey === "region"
     ? [...filteredMembers].sort((a,b) => (a.region||"").localeCompare(b.region||"", "ja"))
-    : sortKey === "login"
-    ? [...filteredMembers].sort((a,b) => {
-        const al = loginData.filter(l=>l.name===a.name).length;
-        const bl = loginData.filter(l=>l.name===b.name).length;
-        return bl - al;
-      })
     : [...filteredMembers].sort((a,b) => {
         const ai=LEVEL_ORDER.indexOf(a.level), bi=LEVEL_ORDER.indexOf(b.level);
         return (ai===-1?99:ai)-(bi===-1?99:bi);
@@ -675,7 +685,6 @@ function App() {
               style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
               <option value="level">段階順</option>
               <option value="region">地域順</option>
-              <option value="login">ログイン回数順</option>
             </select>
             <div style={{position:"relative"}}>
               <button onClick={()=>setShowSongFilter(!showSongFilter)}
@@ -701,30 +710,6 @@ function App() {
             </div>
           </div>
         </div>
-        {!isInstructor && (
-          <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointHistory.length) fetchAllPoints();}}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#d4a840,#b8860b)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
-            🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
-          </button>
-        )}
-        {!isInstructor && showAllPoints && (
-          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:12,maxHeight:300,overflowY:"auto"}}>
-            <p style={{fontSize:12,fontWeight:700,color:C.choco,marginBottom:10}}>🎁 全メンバーのポイント履歴</p>
-            {allPointHistory.length === 0 ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center"}}>履歴がありません</p>
-            ) : allPointHistory.slice().reverse().map((h,i)=>(
-              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"5px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                <div>
-                  <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
-                  <p style={{fontSize:10,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
-                </div>
-                <p style={{fontSize:13,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#5a8a3a":"#a04030"}}>
-                  {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
         {(
           <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
             style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+C.olive,background:showSurvey?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:showSurvey?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
@@ -980,16 +965,18 @@ function App() {
                             {(()=>{
                               const logs = loginData.filter(l=>l.name===m.name);
                               if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                              const ld = new Date(logs[logs.length-1].date);
-                              const last = !isNaN(ld) ? ld.getFullYear()+"/"+(("0"+(ld.getMonth()+1)).slice(-2))+"/"+("0"+ld.getDate()).slice(-2) : logs[logs.length-1].date.slice(0,10);
-                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
+                              const raw = logs[logs.length-1].date;
+                              const d = new Date(raw.replace(/\//g,"-"));
+                              const fmtLast = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : raw.slice(0,10);
+                              return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{fmtLast}</p>;
                             })()}
                           </div>
                         </div>
                         <MiniRadar m={m} size={44}/>
                       </div>
                       <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
-
+                        <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
+                        <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(m.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
                         <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
                         <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
                         {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
@@ -1014,16 +1001,18 @@ function App() {
                     {(()=>{
                       const logs = loginData.filter(l=>l.name===m.name);
                       if(logs.length===0) return <p style={{fontSize:10,color:"#bbb"}}>未ログイン</p>;
-                      const ld = new Date(logs[logs.length-1].date);
-                      const last = !isNaN(ld) ? ld.getFullYear()+"/"+(("0"+(ld.getMonth()+1)).slice(-2))+"/"+("0"+ld.getDate()).slice(-2) : logs[logs.length-1].date.slice(0,10);
-                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{last}</p>;
+                      const raw = logs[logs.length-1].date;
+                      const d = new Date(raw.replace(/\//g,"-"));
+                      const fmtLast = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : raw.slice(0,10);
+                      return <p style={{fontSize:10,color:C.moss}}>🔑 {logs.length}回　{fmtLast}</p>;
                     })()}
                   </div>
                 </div>
                 <MiniRadar m={m} size={44}/>
               </div>
               <div style={{display:"flex",gap:6,marginTop:8,flexWrap:"wrap"}} onClick={e=>e.stopPropagation()}>
-
+                <button onClick={e=>{e.stopPropagation();setLessonModal(m.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
+                <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(m.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
                 <button onClick={e=>{e.stopPropagation();setSchedModal(m.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
                 <button onClick={e=>{e.stopPropagation();setPointModal({name:m.name,points:m.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
                 {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===m.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
@@ -1152,19 +1141,18 @@ function App() {
                     const d=new Date(s["日付"]);
                     const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
                     const isOpen = pastSchedOpen["hist_"+s["日付"]+s["種別"]] || false;
-                    // コメントから記録者を抽出（"2026/3/23 DANiLO: 内容" の形式）
                     const parseComment = (c) => {
                       if (!c) return [];
-                      return c.split(";").map(line=>{
+                      return c.split(/\s*;\s*/).map(line=>{
                         const trimmed = line.trim();
                         if (!trimmed) return null;
-                        const m = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                        if (m) return {date:m[1], author:m[2].trim(), text:m[3].trim(), raw:trimmed};
-                        return {date:"", author:"", text:trimmed, raw:trimmed};
+                        const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                        if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
+                        return {date:"", author:"", text:trimmed};
                       }).filter(x=>x&&x.text);
                     };
                     const comments = parseComment(s["コメント"]);
-                    const myName = isInstructor ? (instructorName||"") : "DANiLO";
+                    const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
                     return (
                       <div key={i} style={{background:"rgba(0,0,0,0.04)",borderRadius:10,overflow:"hidden"}}>
                         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",cursor:"pointer"}}
@@ -1183,48 +1171,15 @@ function App() {
                             {comments.length > 0 ? (
                               <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:10}}>
                                 {comments.map((c,j)=>{
-                                  const isMyComment = c.author === myName;
-                                  const editKey = "edit_"+s["日付"]+s["種別"]+j;
-                                  const isEditing = pastSchedOpen[editKey] || false;
-                                  const editValKey = "editval_"+s["日付"]+s["種別"]+j;
+                                  const isStaff = INSTRUCTORS_LIST.includes(c.author);
                                   return (
-                                    <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isMyComment?C.olive:"rgba(112,130,56,0.3)")}}>
+                                    <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isStaff?C.olive:"#c8a870")}}>
                                       <div style={{display:"flex",gap:8,marginBottom:2,alignItems:"center"}}>
-                                        <p style={{fontSize:10,color:C.olive,fontWeight:700}}>{c.author}</p>
+                                        <p style={{fontSize:10,color:isStaff?C.olive:"#8a6a3a",fontWeight:700}}>{c.author}</p>
                                         {c.date && <p style={{fontSize:10,color:C.label}}>{c.date}</p>}
-                                        {isMyComment && !isEditing && (
-                                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,[editValKey]:c.text}))}
-                                            style={{fontSize:10,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:4,padding:"1px 6px",cursor:"pointer",marginLeft:"auto"}}>
-                                            編集
-                                          </button>
-                                        )}
+                                        {!isStaff && <span style={{fontSize:9,color:"#8a6a3a",background:"rgba(184,134,11,0.12)",borderRadius:4,padding:"1px 5px"}}>メンバー</span>}
                                       </div>
-                                      {isEditing ? (
-                                        <div>
-                                          <textarea value={pastSchedOpen[editValKey]||""} onChange={e=>setPastSchedOpen(p=>({...p,[editValKey]:e.target.value}))}
-                                            style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"6px 8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:60,marginBottom:4}}/>
-                                          <div style={{display:"flex",gap:6}}>
-                                            <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
-                                              style={{flex:1,padding:"4px 8px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
-                                            <button onClick={async()=>{
-                                              const newText = pastSchedOpen[editValKey]||"";
-                                              if (!newText.trim()) return;
-                                              const today = new Date();
-                                              const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                                              const newEntry = dateStr+" "+myName+": "+newText;
-                                              const allComments = parseComment(s["コメント"]);
-                                              allComments[j] = {raw:newEntry};
-                                              const finalComment = allComments.map(x=>x.raw).join(";");
-                                              const res = await fetch("/api/gas?"+new URLSearchParams({action:"addschedulecomment",name:s["名前"],date:s["日付"],comment:finalComment}));
-                                              const data = await res.json();
-                                              if(data.success){fetchSchedules();setPastSchedOpen(p=>({...p,[editKey]:false}));}
-                                            }}
-                                              style={{flex:2,padding:"4px 8px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存</button>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
-                                      )}
+                                      <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{c.text}</p>
                                     </div>
                                   );
                                 })}
@@ -1248,7 +1203,7 @@ function App() {
       {schedCommentModal && (
         <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:101,padding:20}}>
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>{schedCommentModal.isMember ? "✏️ レッスンの感想" : "💬 コメント編集"}</h3>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>💬 コメント編集</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:4}}>対象：<strong>{schedCommentModal.name}</strong></p>
             <p style={{fontSize:11,color:C.moss,marginBottom:16}}>{schedCommentModal.date}　{schedCommentModal.type}</p>
             <textarea value={schedComment} onChange={e=>setSchedComment(e.target.value)}
@@ -1318,62 +1273,12 @@ function App() {
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"90vh",overflowY:"auto"}}>
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>✏️ 記録を送る</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:14}}>対象：<strong>{lessonModal}</strong></p>
-            <div style={{display:"flex",gap:8,marginBottom:18}}>
+            <div style={{display:"flex",gap:8,marginBottom:18,flexWrap:"wrap"}}>
               <button onClick={()=>{setLessonTab("text");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="text"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="text"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📝 コメント記録</button>
               {!isInstructor && (<button onClick={()=>{setLessonTab("diagnosis");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="diagnosis"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="diagnosis"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎯 演奏診断スコア</button>)}
-              {!isInstructor && (<button onClick={()=>{setLessonTab("level");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="level"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="level"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>🎋 段階</button>)}
-              {!isInstructor && (<button onClick={()=>{setLessonTab("curriculum");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="curriculum"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="curriculum"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📚 カリキュラム</button>)}
+              {!isInstructor && (<button onClick={()=>{setLessonTab("curriculum");setLessonMsg("");}} style={{flex:1,padding:"8px",borderRadius:8,border:"none",background:lessonTab==="curriculum"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:lessonTab==="curriculum"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>📚 進捗・段階</button>)}
             </div>
-            {lessonTab === "level" ? (
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>段階を選択</label>
-                <select value={lessonValue} onChange={e=>setLessonValue(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
-                  <option value="">-- 選択してください --</option>
-                  {["種","蕾","若幹","主幹","若柱","主柱","大黒柱"].map(l=><option key={l} value={l}>{l}</option>)}
-                </select>
-                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                  <button onClick={async ()=>{
-                    if (!lessonValue) { setLessonMsg("段階を選択してください"); return; }
-                    setLessonMsg("送信中...");
-                    const data = await gasWrite({action:"write", name:lessonModal, column:"段階", value:lessonValue, overwrite:"true"});
-                    if (data.error) { setLessonMsg("❌ エラー: "+data.error); return; }
-                    setLessonMsg("✅ 送信完了！");
-                    setTimeout(()=>{ setLessonModal(null); setLessonMsg(""); autoFetch(); }, 1500);
-                  }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                </div>
-              </div>
-            ) : lessonTab === "curriculum" ? (
-              <div>
-                <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>完了した教材（複数選択可）</label>
-                <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:14}}>
-                  {(()=>{
-                    const targetMember = members.find(m=>m.name===lessonModal);
-                    const baseDone = parseInt(lessonValue !== "" ? lessonValue : String(targetMember?.completedLevels||0));
-                    return CURRICULUM.map((item,i)=>{
-                      const checked = i < baseDone;
-                      return (
-                        <label key={i} style={{display:"flex",alignItems:"center",gap:8,cursor:"pointer",padding:"6px 8px",borderRadius:8,background:checked?"rgba(112,130,56,0.12)":"rgba(0,0,0,0.03)"}}>
-                          <input type="checkbox" checked={checked} onChange={()=>{
-                            const newVal = checked ? String(i) : String(i+1);
-                            setLessonValue(newVal);
-                            setLessonColumn("受講済み段階");
-                          }} style={{width:16,height:16,cursor:"pointer"}}/>
-                          <span style={{fontSize:12,color:checked?C.choco:C.label}}>{item.title}</span>
-                        </label>
-                      );
-                    });
-                  })()}
-                </div>
-                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{lessonMsg}</p>}
-                <div style={{display:"flex",gap:8}}>
-                  <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-                  <button onClick={()=>postLesson(true)} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                </div>
-              </div>
-            ) : (lessonTab === "text" || isInstructor) ? (
+            {(lessonTab === "text" || isInstructor) && (
               <>
                 {isInstructor && (
                   <div style={{marginBottom:14}}>
@@ -1389,27 +1294,20 @@ function App() {
                 <select value={lessonColumn} onChange={e=>setLessonColumn(e.target.value)}
                   style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:14,cursor:"pointer"}}>
                   <option value="課題">DANiLO・講師陣からのコメント</option>
-                  {!isInstructor && <option value="強み">あなたの強み（DANiLO）</option>}
-                  {isInstructor && instructorName==="Yamashita Noriko" && <option value="Yamashita Noriko強み">あなたの強み（Noriko）</option>}
-                  {isInstructor && instructorName==="hiroko" && <option value="hiroko強み">あなたの強み（hiroko）</option>}
-                  {isInstructor && instructorName==="灯音(to•o•n)" && <option value="灯音強み">あなたの強み（灯音）</option>}
-
-
+                  <option value="強み">あなたの強み</option>
                   {(()=>{
                     const today = new Date(); today.setHours(0,0,0,0);
                     const upcoming = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])>=today)
                       .sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
-                    const past = memberSchedules.filter(s=>s["名前"]===lessonModal && new Date(s["日付"])<today)
-                      .sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
-                    const fmtOpt = (s,i,key) => {
-                      const d=new Date(s["日付"]);
-                      const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
-                      const val = "__sched__"+s["日付"]+"__"+s["種別"];
-                      return <option key={key+i} value={val}>{fmtDate}　{s["種別"]}</option>;
-                    };
+                    if (upcoming.length === 0) return null;
                     return [
-                      ...(upcoming.length>0 ? [<option key="sep1" disabled value="">── 今後の予定 ──</option>, ...upcoming.map((s,i)=>fmtOpt(s,i,"u"))] : []),
-                      ...(past.length>0 ? [<option key="sep2" disabled value="">── 過去の予定 ──</option>, ...past.map((s,i)=>fmtOpt(s,i,"p"))] : []),
+                      <option key="sep" disabled value="">── 今後の予定 ──</option>,
+                      ...upcoming.map((s,i)=>{
+                        const d=new Date(s["日付"]);
+                        const fmtDate = !isNaN(d.getTime())&&d.getFullYear()>1900 ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
+                        const val = "__sched__"+s["日付"]+"__"+s["種別"];
+                        return <option key={i} value={val}>{fmtDate}　{s["種別"]}</option>;
+                      })
                     ];
                   })()}
                 </select>
@@ -1423,7 +1321,8 @@ function App() {
                 </div>
 
               </>
-            ) : (
+            )}
+            {(!isInstructor && lessonTab === "diagnosis") && (
               <>
                 <div style={{display:"flex",flexDirection:"column",gap:12,marginBottom:16}}>
                   {[{key:"openness",label:"音の開放度"},{key:"quality",label:"音質調整"},{key:"tempo",label:"テンポキープ"},{key:"ghost",label:"ゴースト"},{key:"groove",label:"グルーヴ"}].map(({key,label})=>(
@@ -1460,6 +1359,48 @@ function App() {
                 </div>
               </>
             )}
+            {(!isInstructor && lessonTab === "curriculum") && (
+              <div>
+                <div style={{marginBottom:18}}>
+                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>🏅 段階を設定</label>
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                    {LEVEL_ORDER.map(lv=>{
+                      const cur = members.find(mb=>mb.name===lessonModal);
+                      const isCurrent = cur && cur.level === lv;
+                      return (
+                        <button key={lv} onClick={()=>postCurriculumLevel(lv)}
+                          style={{padding:"6px 14px",borderRadius:8,border:"2px solid "+(isCurrent?C.olive:C.border),background:isCurrent?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(255,255,255,0.8)",color:isCurrent?"#fff":C.choco,fontSize:13,fontWeight:isCurrent?700:400,cursor:"pointer"}}>
+                          {lv}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{marginBottom:12}}>
+                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>📚 カリキュラム進捗（受講済みにチェック）</label>
+                  <p style={{fontSize:10,color:C.moss,marginBottom:10}}>※ チェックした数が「受講済み段階」に反映されます</p>
+                  {(()=>{
+                    const cur = members.find(mb=>mb.name===lessonModal);
+                    const currentCompleted = cur ? (cur.completedLevels||0) : 0;
+                    return (
+                      <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                        {CURRICULUM.map((item,i)=>{
+                          const done = i < currentCompleted;
+                          return (
+                            <label key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 12px",borderRadius:10,background:done?"rgba(112,130,56,0.1)":"rgba(0,0,0,0.03)",cursor:"pointer"}}>
+                              <input type="checkbox" checked={done} onChange={()=>postCurriculumCompleted(done ? i : i+1)} style={{marginTop:2,accentColor:C.olive,flexShrink:0}}/>
+                              <p style={{fontSize:12,color:done?C.choco:C.label,fontWeight:done?600:400,lineHeight:1.5}}>{item.title}</p>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+                {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginTop:12}}>{lessonMsg}</p>}
+                <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer",marginTop:16}}>閉じる</button>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1470,22 +1411,6 @@ function App() {
   return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
-      {schedCommentModal && (
-        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20}}>
-          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:440}}>
-            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>{schedCommentModal.isMember ? "✏️ レッスンの感想" : "💬 コメント編集"}</h3>
-            <p style={{fontSize:11,color:C.moss,marginBottom:16}}>{schedCommentModal.date}　{schedCommentModal.type}</p>
-            <textarea value={schedComment} onChange={e=>setSchedComment(e.target.value)}
-              placeholder="レッスン後の感想を入力..."
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:120,marginBottom:8}}/>
-            {schedCommentMsg && <p style={{fontSize:12,color:schedCommentMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{schedCommentMsg}</p>}
-            <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>{setSchedCommentModal(null);setSchedComment("");setSchedCommentMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
-              <button onClick={addScheduleComment} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#7aba8a,#5a8a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>保存する</button>
-            </div>
-          </div>
-        </div>
-      )}
       {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
         iconBtn("← 管理者に戻る",()=>setPage("admin")),
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
@@ -1599,104 +1524,13 @@ function App() {
           </button>
           {goalOpen && (
             <div style={{padding:"0 16px 14px"}}>
-              <p style={{fontSize:9,color:C.moss,marginBottom:6}}>※ この端末のみ保存されます</p>
+              <p style={{fontSize:9,color:C.moss,marginBottom:6}}>※ 入力するだけで自動保存されます。ただしこの端末のブラウザのみ有効です</p>
               <textarea value={myGoal} onChange={e=>{setMyGoal(e.target.value);localStorage.setItem("goal_"+m.name,e.target.value);}}
                 placeholder="次回の目標を入力..."
                 style={{width:"100%",background:"rgba(240,235,226,0.6)",border:"1px solid "+C.border,borderRadius:8,padding:8,fontSize:13,color:C.choco,resize:"none",height:72,boxSizing:"border-box"}}/>
             </div>
           )}
         </div>
-
-        {/* DANiLOコメント */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,color:C.label,fontWeight:700}}>💬 DANiLO・講師陣からのコメント</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {commentOpen && (
-            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
-              {/* コメント表示 */}
-              <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
-              <div style={{maxHeight:"8em",overflowY:"auto",marginBottom:isFromAdmin?8:0}}>
-                {(()=>{
-                  const splitComment = (s) => String(s||"").trim() ? String(s||"").split(";").map(x=>x.trim()).filter(Boolean) : [];
-                  const all = [
-                    ...splitComment(m.challenge),
-                    ...splitComment(m.commentNoriko),
-                    ...splitComment(m.commentHiroko),
-                    ...splitComment(m.commentToon),
-                  ].filter(Boolean);
-                  all.sort((a,b)=>{
-                    const da = a.match(/^(\d{4}\/\d+\/\d+)/);
-                    const db = b.match(/^(\d{4}\/\d+\/\d+)/);
-                    if (!da && !db) return 0;
-                    if (!da) return 1;
-                    if (!db) return -1;
-                    return new Date(db[1]) - new Date(da[1]);
-                  });
-                  return all.length > 0
-                    ? all.map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.6,marginBottom:4,whiteSpace:"pre-wrap"}}>{line}</p>)
-                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>−</p>;
-                })()}
-              </div>
-              {/* 管理者用：コメント入力・編集 */}
-              {isFromAdmin && (()=>{
-                const adminName = isInstructor ? (instructorName||"") : "DANiLO";
-                const targetCol = isInstructor
-                  ? (adminName==="Yamashita Noriko"?"Yamashita Norikoコメント":adminName==="hiroko"?"hirokoコメント":adminName==="灯音(to•o•n)"?"灯音コメント":"課題")
-                  : "課題";
-                const currentVal = isInstructor
-                  ? (adminName==="Yamashita Noriko"?m.commentNoriko:adminName==="hiroko"?m.commentHiroko:adminName==="灯音(to•o•n)"?m.commentToon:"")
-                  : m.challenge;
-                const editKey = "challenge_edit";
-                const isEditingChal = pastSchedOpen[editKey]||false;
-                const editValChal = pastSchedOpen["challengeval"]||"";
-                return (
-                  <div style={{borderTop:"1px solid rgba(112,130,56,0.1)",paddingTop:8}}>
-                    {isInstructor && (
-                      <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
-                        style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"5px 8px",fontSize:12,color:C.choco,cursor:"pointer",marginBottom:8}}>
-                        <option value="">-- 講師を選択 --</option>
-                        {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
-                      </select>
-                    )}
-                    {isEditingChal ? (
-                      <div>
-                        <textarea value={editValChal} onChange={e=>setPastSchedOpen(p=>({...p,challengeval:e.target.value}))}
-                          style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}/>
-                        <div style={{display:"flex",gap:6}}>
-                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
-                            style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
-                          <button onClick={async()=>{
-                            if(!editValChal.trim()) return;
-                            const today=new Date();
-                            const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                            const newEntry=ds+" "+adminName+": "+editValChal.trim();
-                            // 既存に追記（新しいコメントを先頭に）
-                            const freshRes=await fetch("/api/gas?action=read&name="+encodeURIComponent(m.name));
-                            const freshData=await freshRes.json();
-                            const member=freshData&&freshData[0];
-                            const existingVal=member?(member[targetCol]||""):"";
-                            const finalVal=existingVal ? newEntry+";"+existingVal : newEntry;
-                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:targetCol,value:finalVal,overwrite:"true"}));
-                            const data=await res.json();
-                            if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
-                          }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                        </div>
-                      </div>
-                    ) : (
-                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,challengeval:currentVal||""}))}
-                        style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
-                        {currentVal?"✏️ コメントを編集":"💬 コメントを書く"}
-                      </button>
-                    )}
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-
 
         {/* マイスケジュール */}
         {(()=>{
@@ -1732,148 +1566,75 @@ function App() {
                         <p style={{fontSize:10,color:C.label,marginTop:2}}>ID: 748 425 9893　パスコード: 77793</p>
                       </div>
                     )}
-                    {isPastItem && (
-                      <div style={{marginTop:8}}>
-                        {isFromAdmin ? (
-                          // 管理者・講師用：全コメント表示＋自分のコメントをインライン編集
-                          (()=>{
-                            const adminName = isInstructor ? (instructorName||"講師") : "DANiLO";
-                            const existing = s["コメント"]||"";
-                            const parts = existing.split(";").filter(l=>l.trim());
-                            const myEntry = parts.find(l=>{
-                              const mm = l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);
-                              return mm && mm[1].trim()===adminName;
-                            });
-                            const myText = myEntry ? myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,"") : "";
-                            const editKey = "admedit_"+rawDate+s["種別"];
-                            const isEditing = pastSchedOpen[editKey]||false;
-                            const editVal = pastSchedOpen["admeditval_"+rawDate+s["種別"]]||"";
-                            const saveComment = async(text)=>{
-                              const today=new Date();
-                              const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                              const newEntry=ds+" "+adminName+": "+text;
-                              const res=await fetch("/api/gas?"+new URLSearchParams({action:"addschedulecomment",name:m.name,date:rawDate,comment:newEntry}));
-                              const data=await res.json();
-                              if(data.success){fetchSchedules();setPastSchedOpen(p=>({...p,[editKey]:false}));}
-                            };
-                            return (
-                              <div>
-                                {/* 講師選択（講師の場合のみ） */}
-                                {isInstructor && (
-                                  <div style={{marginBottom:8}}>
-                                    <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
-                                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"5px 8px",fontSize:12,color:C.choco,cursor:"pointer"}}>
-                                      <option value="">-- 講師を選択 --</option>
-                                      {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
-                                    </select>
-                                  </div>
-                                )}
-                                {/* 既存コメント表示 */}
-                                {parts.length>0 && (
-                                  <div style={{marginBottom:8,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 10px",borderLeft:"3px solid "+C.olive}}>
-                                    {parts.map((line,j)=>{
-                                      const mm=line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                                      if(!mm) return null;
-                                      return (
-                                        <div key={j} style={{marginBottom:j<parts.length-1?8:0}}>
-                                          <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                            <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm[2].trim()}</span>
-                                            <span style={{fontSize:10,color:C.label}}>{mm[1]}</span>
-                                          </div>
-                                          <p style={{fontSize:12,color:C.choco,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{mm[3].trim()}</p>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                                {/* 自分のコメント入力・編集 */}
-                                {isEditing ? (
-                                  <div>
-                                    <textarea value={editVal} onChange={e=>setPastSchedOpen(p=>({...p,["admeditval_"+rawDate+s["種別"]]:e.target.value}))}
-                                      style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}
-                                      placeholder="コメントを入力..."/>
-                                    <div style={{display:"flex",gap:6}}>
-                                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
-                                        style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
-                                      <button onClick={()=>saveComment(editVal)}
-                                        style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,["admeditval_"+rawDate+s["種別"]]:""}))}
-                                    style={{fontSize:11,color:"#fff",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",border:"none",borderRadius:6,padding:"4px 12px",cursor:"pointer",fontWeight:600}}>
-                                    💬 コメントを追加
-                                  </button>
-                                )}
+                    {(()=>{
+                      const fbKey = rawDate + s["種別"];
+                      const isFbOpen = memberFbOpen[fbKey] || false;
+                      const parseComments = (raw) => {
+                        if (!raw) return [];
+                        return raw.split(/\s*;\s*/).map(line=>{
+                          const trimmed = line.trim();
+                          if (!trimmed) return null;
+                          const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                          if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
+                          return {date:"", author:"", text:trimmed};
+                        }).filter(Boolean);
+                      };
+                      const comments = parseComments(s["コメント"]);
+                      const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
+                      return (
+                        <div style={{marginTop:8}}>
+                          {comments.length > 0 && (
+                            <div>
+                              <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
+                                style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:isOpen?6:0}}>
+                                <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 フィードバック {comments.length}件</span>
+                                <span style={{fontSize:10,color:"rgba(255,255,255,0.8)"}}>{isOpen?"▲":"▼"}</span>
                               </div>
-                            );
-                          })()
-                        ) : (
-                          // メンバー用：フィードバック閲覧＋自分のフィードバック入力・編集
-                          <>
-                            {s["コメント"] && (
-                              <>
-                                <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                                  style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer",marginBottom:4}}>
-                                  <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 {isOpen?"フィードバックを閉じる":"フィードバックを見る"}</span>
-                                </div>
-                                {isOpen && (
-                                  <div style={{marginTop:4,marginBottom:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                                    {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
-                                      const mm=line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                                      if(mm) return (
-                                        <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
-                                          <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                            <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{mm[2].trim()}</span>
-                                            <span style={{fontSize:10,color:C.label}}>{mm[1]}</span>
-                                          </div>
-                                          <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{mm[3].trim()}</p>
+                              {isOpen && (
+                                <div style={{background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"10px 12px"}}>
+                                  {comments.map((c,j)=>{
+                                    const isStaff = INSTRUCTORS_LIST.includes(c.author);
+                                    return (
+                                      <div key={j} style={{paddingLeft:8,borderLeft:"2px solid "+(isStaff?C.olive:"#c8a870"),marginBottom:j<comments.length-1?10:0}}>
+                                        <div style={{display:"flex",gap:8,marginBottom:2,alignItems:"center"}}>
+                                          <span style={{fontSize:10,fontWeight:700,color:isStaff?C.olive:"#8a6a3a"}}>{c.author}</span>
+                                          {c.date && <span style={{fontSize:10,color:C.label}}>{c.date}</span>}
                                         </div>
-                                      );
-                                      return line.trim()?<p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p>:null;
-                                    })}
-                                  </div>
-                                )}
-                              </>
-                            )}
-                            {(()=>{
-                              const myName=currentMember.name;
-                              const existing=s["コメント"]||"";
-                              const parts=existing.split(";").filter(l=>l.trim());
-                              const myEntry=parts.find(l=>{const mm=l.trim().match(/^\d{4}\/\d+\/\d+\s+([^:]+):/);return mm&&mm[1].trim()===myName;});
-                              const myText=myEntry?myEntry.trim().replace(/^\d{4}\/\d+\/\d+\s+[^:]+:\s*/,""):"";
-                              const openModal=(txt)=>{setSchedCommentModal({name:myName,date:rawDate,type:s["種別"],isMember:true,existingFull:existing});setSchedComment(txt||"");setSchedCommentMsg("");};
-                              return <button onClick={()=>openModal("")} style={{display:"inline-flex",alignItems:"center",gap:6,fontSize:11,color:"#fff",background:"linear-gradient(135deg,#e8924a,#c8622a)",border:"none",borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600,marginTop:4}}>💬 フィードバックを追加</button>;
-                            })()}
-                          </>
-                        )}
-                      </div>
-                    )}
-                    {!isPastItem && s["コメント"] && (
-                      <div style={{marginTop:8}}>
-                        <div onClick={()=>setPastSchedOpen(p=>({...p,[rawDate+s["種別"]]:!isOpen}))}
-                          style={{display:"inline-flex",alignItems:"center",gap:6,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>
-                          <span style={{fontSize:11,color:"#fff",fontWeight:700}}>💬 {isOpen?"フィードバックを閉じる":"フィードバックを見る"}</span>
-                        </div>
-                        {isOpen && (
-                          <div style={{marginTop:8,background:"rgba(112,130,56,0.08)",borderRadius:8,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
-                            {s["コメント"].split(";").filter(l=>l.trim()).map((line,j,arr)=>{
-                              const m = line.trim().match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                              if (m) return (
-                                <div key={j} style={{marginBottom:j<arr.length-1?8:0}}>
-                                  <div style={{display:"flex",gap:8,marginBottom:2}}>
-                                    <span style={{fontSize:10,fontWeight:700,color:C.olive}}>{m[2].trim()}</span>
-                                    <span style={{fontSize:10,color:C.label}}>{m[1]}</span>
-                                  </div>
-                                  <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{m[3].trim()}</p>
+                                        <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{c.text}</p>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              );
-                              return line.trim() ? <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{line.trim()}</p> : null;
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                              )}
+                            </div>
+                          )}
+                          {!comments.some(c=>c.author.replace(/\s/g,"")===currentMember.name.replace(/\s/g,"")) && (
+                            <div style={{marginTop:6}}>
+                              {!isFbOpen ? (
+                                <button onClick={()=>setMemberFbOpen(p=>({...p,[fbKey]:true}))}
+                                  style={{fontSize:11,color:"#8a6a3a",background:"rgba(184,134,11,0.1)",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
+                                  ✏️ フィードバックを書く
+                                </button>
+                              ) : (
+                                <div style={{background:"rgba(240,225,190,0.4)",borderRadius:8,padding:"10px 12px",border:"1px solid rgba(184,134,11,0.2)"}}>
+                                  <p style={{fontSize:10,color:"#8a6a3a",marginBottom:6,fontWeight:600}}>📝 あなたのフィードバック</p>
+                                  <textarea value={memberFbValue[fbKey]||""} onChange={e=>setMemberFbValue(p=>({...p,[fbKey]:e.target.value}))}
+                                    placeholder="レッスンの感想・気づき・質問など..."
+                                    style={{width:"100%",background:"#fff",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80,boxSizing:"border-box"}}/>
+                                  {memberFbMsg[fbKey] && <p style={{fontSize:12,color:memberFbMsg[fbKey].startsWith("✅")?C.olive:"#a04030",marginTop:4}}>{memberFbMsg[fbKey]}</p>}
+                                  <div style={{display:"flex",gap:6,marginTop:8}}>
+                                    <button onClick={()=>{setMemberFbOpen(p=>({...p,[fbKey]:false}));setMemberFbMsg(p=>({...p,[fbKey]:""}));}}
+                                      style={{flex:1,padding:"6px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
+                                    <button onClick={()=>postMemberFeedback(rawDate, s["種別"])}
+                                      style={{flex:2,padding:"6px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -1948,88 +1709,33 @@ function App() {
           </button>
           {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
-              // 強みは1行にまとめる（isFromAdminの時は各講師の編集UIを表示するため個別に残す）
-              ...(!isFromAdmin ? [{icon:"💪", label:"あなたの強み", items:[
-                ...splitItems(m.strengths),
-                ...splitItems(m.strengthsNoriko),
-                ...splitItems(m.strengthsHiroko),
-                ...splitItems(m.strengthsToon),
-              ], isStrengths:true, col:null, owner:null}] : [
-                {icon:"💪", label:"DANiLOから見るあなたの強み", items:splitItems(m.strengths), isStrengths:true, col:"強み", owner:"DANiLO"},
-                {icon:"💪", label:"Yamashita Norikoから見るあなたの強み", items:splitItems(m.strengthsNoriko), isStrengths:true, col:"Yamashita Noriko強み", owner:"Yamashita Noriko"},
-                {icon:"💪", label:"hirokoから見るあなたの強み", items:splitItems(m.strengthsHiroko), isStrengths:true, col:"hiroko強み", owner:"hiroko"},
-                {icon:"💪", label:"灯音から見るあなたの強み", items:splitItems(m.strengthsToon), isStrengths:true, col:"灯音強み", owner:"灯音(to•o•n)"},
-              ]),
+              {icon:"💪", label:"あなたの強み", items:splitItems(m.strengths), isStrengths:true},
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
-            ].map(({icon,label,items,isStrengths,col,owner},i)=>{
-              const adminName = isInstructor ? (instructorName||"") : "DANiLO";
-              const canEdit = isFromAdmin && col && (
-                (!isInstructor && owner==="DANiLO") ||
-                (isInstructor && adminName && owner===adminName)
-              );
-              const editKey = "strength_"+col;
-              const isEditingStr = pastSchedOpen[editKey]||false;
-              const editValStr = pastSchedOpen["strengthval_"+col]||"";
-              return (
-                <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                  <span style={{fontSize:15,flexShrink:0,marginTop:1}}>{icon}</span>
-                  <div style={{flex:1,minWidth:0}}>
-                    <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,marginBottom:3,fontWeight:500}}>{label}</p>
-                    {!isEditingStr && (items.length > 0
-                      ? items.map((v,j) => {
-                          if (isStrengths) {
-                            const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
-                            if (match) return (
-                              <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
-                                <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{match[3].trim()}</p>
-                                <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
-                              </div>
-                            );
-                          }
-                          return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>;
-                        })
-                      : <p style={{fontSize:13,color:C.label}}>−</p>
-                    )}
-                    {isEditingStr && (
-                      <div>
-                        <textarea value={editValStr} onChange={e=>setPastSchedOpen(p=>({...p,["strengthval_"+col]:e.target.value}))}
-                          style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px",fontSize:12,color:C.choco,resize:"vertical",minHeight:80,marginBottom:6}}/>
-                        <div style={{display:"flex",gap:6}}>
-                          <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:false}))}
-                            style={{flex:1,padding:"5px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:11,cursor:"pointer"}}>キャンセル</button>
-                          <button onClick={async()=>{
-                            if(!editValStr.trim()) return;
-                            const today=new Date();
-                            const ds=today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-                            // editValStrに日付+名前が含まれている場合はそのまま、なければ追加
-                            const hasFormat = editValStr.trim().match(/^\d{4}\/\d+\/\d+\s+[^:]+:/);
-                            const val = hasFormat ? editValStr.trim() : ds+" "+adminName+": "+editValStr.trim();
-                            const res=await fetch("/api/gas?"+new URLSearchParams({action:"write",name:m.name,column:col,value:val,overwrite:"true"}));
-                            const data=await res.json();
-                            if(!data.error){autoFetch();setPastSchedOpen(p=>({...p,[editKey]:false}));}
-                          }} style={{flex:2,padding:"5px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer"}}>保存する</button>
-                        </div>
-                      </div>
-                    )}
-                    {isFromAdmin && isInstructor && col && col!=="強み" && !isEditingStr && (
-                      <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
-                        style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",fontSize:11,color:C.choco,cursor:"pointer",marginTop:4,display:"block"}}>
-                        <option value="">-- 講師を選択して編集 --</option>
-                        {["Yamashita Noriko","hiroko","灯音(to•o•n)"].map(n=><option key={n} value={n}>{n}</option>)}
-                      </select>
-                    )}
-                    {canEdit && !isEditingStr && (
-                      <button onClick={()=>setPastSchedOpen(p=>({...p,[editKey]:true,["strengthval_"+col]:items.join("\n")}))}
-                        style={{fontSize:11,color:C.olive,background:"transparent",border:"1px solid "+C.olive,borderRadius:6,padding:"2px 8px",cursor:"pointer",fontWeight:600,marginTop:4}}>
-                        ✏️ 編集する
-                      </button>
-                    )}
-                  </div>
+            ].map(({icon,label,items,isStrengths},i)=>(
+              <div key={i} style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
+                <span style={{fontSize:15,flexShrink:0,marginTop:1}}>{icon}</span>
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,marginBottom:3,fontWeight:500}}>{label}</p>
+                  {items.length > 0
+                    ? items.map((v,j) => {
+                        if (isStrengths) {
+                          const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                          if (match) return (
+                            <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
+                              <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{match[3].trim()}</p>
+                              <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
+                            </div>
+                          );
+                        }
+                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>;
+                      })
+                    : <p style={{fontSize:13,color:C.label}}>−</p>
+                  }
                 </div>
-              );
-            })}
+              </div>
+            ))}
             {/* これまでに参加したイベント */}
             {m.history && m.history.length > 0 && (
               <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
@@ -2046,7 +1752,7 @@ function App() {
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:6}}>
                   <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,fontWeight:500}}>マイメモ</p>
-                  <p style={{fontSize:9,color:C.moss}}>※ この端末のみ保存されます</p>
+                  <p style={{fontSize:9,color:C.moss}}>※ 入力するだけで自動保存されます。ただしこの端末のブラウザのみ有効です</p>
                 </div>
                 <textarea value={myMemo} onChange={e=>{setMyMemo(e.target.value);localStorage.setItem("memo_"+m.name,e.target.value);}}
                   placeholder="レッスンや練習会の記録や疑問点を入力できます"
@@ -2054,6 +1760,42 @@ function App() {
               </div>
             </div>
           </div>}
+        </div>
+
+        {/* DANiLOコメント */}
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+          <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,color:C.label,fontWeight:700}}>💬 DANiLO・講師陣からのコメント</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {commentOpen && (
+            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
+              <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
+              <div style={{maxHeight:"8em",overflowY:"auto"}}>
+                {(()=>{
+                  const splitComment = (s) => String(s||"").trim() ? [String(s||"").trim()] : [];
+                  const all = [
+                    ...splitComment(m.challenge),
+                    ...splitComment(m.commentNoriko),
+                    ...splitComment(m.commentHiroko),
+                    ...splitComment(m.commentToon),
+                  ].filter(Boolean);
+                  // 日付で始まる行（例：2026/3/22）でソート
+                  all.sort((a,b)=>{
+                    const da = a.match(/^(\d{4}\/\d+\/\d+)/);
+                    const db = b.match(/^(\d{4}\/\d+\/\d+)/);
+                    if (!da && !db) return 0;
+                    if (!da) return 1;
+                    if (!db) return -1;
+                    return new Date(db[1]) - new Date(da[1]);
+                  });
+                  return all.length > 0
+                    ? all.map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.6,marginBottom:4,whiteSpace:"pre-wrap"}}>{line}</p>)
+                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>−</p>;
+                })()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* メインカリキュラム */}
