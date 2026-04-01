@@ -116,6 +116,9 @@ function rowToMember(r) {
     commentNoriko: String(r["Yamashita Norikoコメント"] || ""),
     commentHiroko: String(r["hirokoコメント"] || ""),
     commentToon: String(r["灯音コメント"] || ""),
+    strengthNoriko: String(r["Yamashita Noriko強み"] || ""),
+    strengthHiroko: String(r["hiroko強み"] || ""),
+    strengthToon: String(r["灯音強み"] || ""),
     region: String(r["居住地域"] || ""),
     points: parseInt(r["ポイント"] || "0"),
   };
@@ -235,6 +238,9 @@ function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
+  const [showAllPoints, setShowAllPoints] = useState(false);
+  const [allPointHistory, setAllPointHistory] = useState([]);
+  const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
   const [pointNote, setPointNote] = useState("");
   const [feedbackName, setFeedbackName] = useState("");
@@ -323,6 +329,14 @@ function App() {
       const res = await fetch("/api/gas?" + new URLSearchParams({action:"getpoints", name:name}));
       const data = await res.json();
       if (data.history) setPointHistory(data.history);
+    } catch(e) {}
+  }
+
+  async function fetchAllPointHistory() {
+    try {
+      const res = await fetch("/api/gas?action=getpoints");
+      const data = await res.json();
+      if (data.history) { setAllPointHistory(data.history); setAllPointsLoaded(true); }
     } catch(e) {}
   }
 
@@ -526,12 +540,16 @@ function App() {
         return;
       }
 
-      const autoOverwrite = ["強み","目標"].includes(lessonColumn);
+      const autoOverwrite = ["目標"].includes(lessonColumn);
       const formattedValue = overwrite ? lessonValue : dateStr + " " + sender + ": " + lessonValue;
       let targetColumn = lessonColumn;
       if (isInstructor && lessonColumn === "課題") {
         const colMap = {"Yamashita Noriko":"Yamashita Norikoコメント", "hiroko":"hirokoコメント", "灯音(to•o•n)":"灯音コメント"};
         targetColumn = colMap[instructorName] || "課題";
+      }
+      if (isInstructor && lessonColumn === "強み") {
+        const colMap = {"Yamashita Noriko":"Yamashita Noriko強み", "hiroko":"hiroko強み", "灯音(to•o•n)":"灯音強み"};
+        targetColumn = colMap[instructorName] || "強み";
       }
       const data = await gasWrite({action:"write", name:lessonModal, column:targetColumn, value:formattedValue, overwrite:(overwrite||autoOverwrite)?"true":"false"});
       if (data.error) throw new Error(data.error);
@@ -717,9 +735,36 @@ function App() {
           </button>
         )}
         <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🧪 練習会データ {showWorkshop?"▲":"▼"}
         </button>
+        <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory();}}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
+        </button>
+        {showAllPoints && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            {!allPointsLoaded ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
+            ) : allPointHistory.length === 0 ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>履歴がありません</p>
+            ) : (
+              <div style={{maxHeight:400,overflowY:"auto"}}>
+                {allPointHistory.slice().reverse().map((h,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 4px",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
+                    <div>
+                      <p style={{fontSize:12,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
+                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                    </div>
+                    <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030",flexShrink:0,marginLeft:8}}>
+                      {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {showWorkshop && (
           <div style={{marginBottom:16}}>
             {!workshopLoaded ? (
@@ -1709,7 +1754,14 @@ function App() {
           </button>
           {myDataOpen && <div style={{borderTop:"1px solid "+C.border,padding:"0 16px"}}>
             {[
-              {icon:"💪", label:"あなたの強み", items:splitItems(m.strengths), isStrengths:true},
+              {icon:"💪", label:"あなたの強み", items:(()=>{
+                const all = [];
+                if (m.strengths) splitItems(m.strengths).forEach(v=>all.push({text:v, by:""}));
+                if (m.strengthNoriko) all.push({text:m.strengthNoriko, by:"Yamashita Noriko"});
+                if (m.strengthHiroko) all.push({text:m.strengthHiroko, by:"hiroko"});
+                if (m.strengthToon) all.push({text:m.strengthToon, by:"灯音"});
+                return all;
+              })(), isStrengths:true},
               {icon:"🎵", label:"マイ音階", items:splitItems(m.scales)},
               {icon:"🎶", label:"演奏できる楽曲", items:splitItems(m.songs)},
               {icon:"📄", label:"持っている楽譜", items:splitItems(m.sheets)},
@@ -1721,15 +1773,23 @@ function App() {
                   {items.length > 0
                     ? items.map((v,j) => {
                         if (isStrengths) {
-                          const match = v.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+                          const text = typeof v === "object" ? v.text : v;
+                          const by = typeof v === "object" ? v.by : "";
+                          const match = text.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                           if (match) return (
                             <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
                               <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{match[3].trim()}</p>
                               <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {match[2].trim()}　<span style={{color:C.label,fontWeight:400}}>{match[1]}</span></p>
                             </div>
                           );
+                          return (
+                            <div key={j} style={{marginBottom:j<items.length-1?12:0}}>
+                              <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{text}</p>
+                              {by && <p style={{fontSize:11,color:C.olive,marginTop:2,fontWeight:600}}>by {by}</p>}
+                            </div>
+                          );
                         }
-                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{v}</p>;
+                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{typeof v === "object" ? v.text : v}</p>;
                       })
                     : <p style={{fontSize:13,color:C.label}}>−</p>
                   }
