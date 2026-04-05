@@ -653,6 +653,12 @@ function App() {
 
   const sortedMembers = sortKey === "region"
     ? [...filteredMembers].sort((a,b) => (a.region||"").localeCompare(b.region||"", "ja"))
+    : sortKey === "login"
+    ? [...filteredMembers].sort((a,b) => {
+        const al = loginData.filter(l=>l.name===a.name).length;
+        const bl = loginData.filter(l=>l.name===b.name).length;
+        return bl - al;
+      })
     : [...filteredMembers].sort((a,b) => {
         const ai=LEVEL_ORDER.indexOf(a.level), bi=LEVEL_ORDER.indexOf(b.level);
         return (ai===-1?99:ai)-(bi===-1?99:bi);
@@ -703,6 +709,7 @@ function App() {
               style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
               <option value="level">段階順</option>
               <option value="region">地域順</option>
+              <option value="login">ログイン回数順</option>
             </select>
             <div style={{position:"relative"}}>
               <button onClick={()=>setShowSongFilter(!showSongFilter)}
