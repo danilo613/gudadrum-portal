@@ -933,12 +933,17 @@ function App() {
                                 </div>
                                 <div style={{flex:1}}>
                                   {sm.options.map((opt,i)=>(
-                                    <div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
+                                    <div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:4}}>
                                       <div style={{width:8,height:8,borderRadius:2,background:COLORS[i],flexShrink:0}}/>
-                                      <p style={{fontSize:10,color:C.choco}}>{opt}</p>
-
+                                      <p style={{fontSize:10,color:C.choco,flex:1}}>{opt}</p>
+                                      <p style={{fontSize:10,color:C.label,minWidth:28,textAlign:"right"}}>{bd[i]>0?bd[i]+"%":""}</p>
+                                      <p style={{fontSize:10,color:"#5a8a6a",fontWeight:700,minWidth:28,textAlign:"right"}}>{ad[i]>0?ad[i]+"%":""}</p>
                                     </div>
                                   ))}
+                                  <div style={{display:"flex",justifyContent:"flex-end",gap:4,marginTop:4}}>
+                                    <p style={{fontSize:9,color:C.label,minWidth:28,textAlign:"right"}}>前</p>
+                                    <p style={{fontSize:9,color:"#5a8a6a",minWidth:28,textAlign:"right"}}>後</p>
+                                  </div>
                                 </div>
                               </div>
                             </div>
