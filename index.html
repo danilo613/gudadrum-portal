@@ -263,6 +263,7 @@ function App() {
   const [memberFbOpen, setMemberFbOpen] = useState({});
   const [memberFbValue, setMemberFbValue] = useState({});
   const [memberFbMsg, setMemberFbMsg] = useState({});
+  const [memberFbInstructor, setMemberFbInstructor] = useState("");
 
   useEffect(() => {
     autoFetch();
@@ -479,12 +480,15 @@ function App() {
     const key = rawDate + type;
     const value = (memberFbValue[key] || "").trim();
     if (!value) { setMemberFbMsg(p=>({...p,[key]:"内容を入力してください"})); return; }
+    if (isInstructor && !memberFbInstructor) { setMemberFbMsg(p=>({...p,[key]:"講師名を選択してください"})); return; }
     setMemberFbMsg(p=>({...p,[key]:"送信中..."}));
     try {
       const today = new Date();
       const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
-      const commentText = dateStr + " " + currentMember.name + ": " + value;
-      const data = await gasWrite({action:"addschedulecomment", name:currentMember.name, date:rawDate, comment:commentText});
+      const senderName = isInstructor ? memberFbInstructor : currentMember.name;
+      const targetName = isInstructor ? currentMember.name : currentMember.name;
+      const commentText = dateStr + " " + senderName + ": " + value;
+      const data = await gasWrite({action:"addschedulecomment", name:targetName, date:rawDate, comment:commentText});
       if (data.error) throw new Error(data.error);
       setMemberFbMsg(p=>({...p,[key]:"✅ 送信しました！"}));
       setMemberFbValue(p=>({...p,[key]:""}));
@@ -1665,18 +1669,25 @@ function App() {
                               )}
                             </div>
                           )}
-                          {!comments.some(c=>c.author.replace(/\s/g,"")===currentMember.name.replace(/\s/g,"")) && (
+                          {(isInstructor || !comments.some(c=>c.author.replace(/\s/g,"")===currentMember.name.replace(/\s/g,""))) && (
                             <div style={{marginTop:6}}>
                               {!isFbOpen ? (
                                 <button onClick={()=>setMemberFbOpen(p=>({...p,[fbKey]:true}))}
                                   style={{fontSize:11,color:"#8a6a3a",background:"rgba(184,134,11,0.1)",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"3px 10px",cursor:"pointer",fontWeight:600}}>
-                                  ✏️ フィードバックを書く
+                                  {isInstructor ? "💬 コメントを書く" : "✏️ フィードバックを書く"}
                                 </button>
                               ) : (
                                 <div style={{background:"rgba(240,225,190,0.4)",borderRadius:8,padding:"10px 12px",border:"1px solid rgba(184,134,11,0.2)"}}>
-                                  <p style={{fontSize:10,color:"#8a6a3a",marginBottom:6,fontWeight:600}}>📝 あなたのフィードバック</p>
+                                  <p style={{fontSize:10,color:"#8a6a3a",marginBottom:6,fontWeight:600}}>{isInstructor ? "💬 講師コメント" : "📝 あなたのフィードバック"}</p>
+                                  {isInstructor && (
+                                    <select value={memberFbInstructor} onChange={e=>setMemberFbInstructor(e.target.value)}
+                                      style={{width:"100%",background:"#fff",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"6px 8px",fontSize:12,color:C.choco,marginBottom:8,cursor:"pointer"}}>
+                                      <option value="">-- 講師名を選択 --</option>
+                                      {INSTRUCTORS.map(n=><option key={n} value={n}>{n}</option>)}
+                                    </select>
+                                  )}
                                   <textarea value={memberFbValue[fbKey]||""} onChange={e=>setMemberFbValue(p=>({...p,[fbKey]:e.target.value}))}
-                                    placeholder="レッスンの感想・気づき・質問など..."
+                                    placeholder={isInstructor ? "レッスンのコメントを入力..." : "レッスンの感想・気づき・質問など..."}
                                     style={{width:"100%",background:"#fff",border:"1px solid rgba(184,134,11,0.3)",borderRadius:6,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:80,boxSizing:"border-box"}}/>
                                   {memberFbMsg[fbKey] && <p style={{fontSize:12,color:memberFbMsg[fbKey].startsWith("✅")?C.olive:"#a04030",marginTop:4}}>{memberFbMsg[fbKey]}</p>}
                                   <div style={{display:"flex",gap:6,marginTop:8}}>
