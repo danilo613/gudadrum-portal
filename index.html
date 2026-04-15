@@ -121,6 +121,8 @@ function rowToMember(r) {
     strengthToon: String(r["灯音強み"] || ""),
     region: String(r["居住地域"] || ""),
     points: parseInt(r["ポイント"] || "0"),
+    subscType: String(r["サブスク種別"] || ""),
+    subscNextDate: String(r["次回更新日"] || "").split("T")[0],
   };
 }
 
@@ -1459,6 +1461,28 @@ function App() {
                   })()}
                 </div>
                 {lessonMsg && <p style={{fontSize:13,color:lessonMsg.startsWith("✅")?C.olive:"#a04030",marginTop:12}}>{lessonMsg}</p>}
+                {/* サブスク種別・次回更新日 */}
+                <div style={{marginTop:18,borderTop:"1px solid "+C.border,paddingTop:14}}>
+                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>💳 サブスク種別</label>
+                  <select onChange={e=>{ if(!e.target.value) return; gasWrite({action:"write", name:lessonModal, column:"サブスク種別", value:e.target.value, overwrite:"true"}).then(d=>{ if(d.error){setLessonMsg("❌ "+d.error);}else{setLessonMsg("✅ サブスク種別を更新しました！");autoFetch();setTimeout(()=>setLessonMsg(""),2000);} }); }}
+                    defaultValue=""
+                    style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,cursor:"pointer",marginBottom:12}}>
+                    <option value="">-- 選択して更新 --</option>
+                    <option value="">（なし／無料）</option>
+                    <option value="蕾気軽サブスク">蕾気軽サブスク → LIGHT MEMBER</option>
+                    <option value="幹ノーマル">幹ノーマル → STANDARD MEMBER</option>
+                    <option value="幹スペシャル">幹スペシャル → SPECIAL MEMBER</option>
+                    <option value="柱">柱 → PILLAR MEMBER</option>
+                    <option value="講師">講師 → INSTRUCTOR</option>
+                  </select>
+                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>📅 次回更新日</label>
+                  <div style={{display:"flex",gap:8}}>
+                    <input type="date" id="subscDateInput"
+                      style={{flex:1,background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
+                    <button onClick={()=>{ const v=document.getElementById("subscDateInput").value; if(!v){setLessonMsg("❌ 日付を選択してください");return;} gasWrite({action:"write", name:lessonModal, column:"次回更新日", value:v, overwrite:"true"}).then(d=>{ if(d.error){setLessonMsg("❌ "+d.error);}else{setLessonMsg("✅ 次回更新日を設定しました！");autoFetch();setTimeout(()=>setLessonMsg(""),2000);} }); }}
+                      style={{padding:"8px 14px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>設定</button>
+                  </div>
+                </div>
                 <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer",marginTop:16}}>閉じる</button>
               </div>
             )}
@@ -1486,9 +1510,19 @@ function App() {
             <div style={{display:"flex",alignItems:"center",gap:16,flex:1,minWidth:0}}>
               <BadgeImage level={m.level} size={60}/>
               <div style={{flex:1,minWidth:0}}>
-                <p style={{fontSize:10,letterSpacing:"0.1em",color:"rgba(255,255,255,0.7)",marginBottom:4}}>MEMBER</p>
+                <p style={{fontSize:10,letterSpacing:"0.1em",color:"rgba(255,255,255,0.7)",marginBottom:4}}>{(()=>{
+                  const map = {
+                    "蕾気軽サブスク": "LIGHT MEMBER",
+                    "幹ノーマル": "STANDARD MEMBER",
+                    "幹スペシャル": "SPECIAL MEMBER",
+                    "柱": "PILLAR MEMBER",
+                    "講師": "INSTRUCTOR",
+                  };
+                  return map[m.subscType] || "MEMBER";
+                })()}</p>
                 <p style={{fontSize:16,fontWeight:700,color:LEVEL_COLOR,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{m.name}</p>
                 <p style={{fontSize:14,fontWeight:700,color:C.sand}}>{m.level||"−"}</p>
+                {m.subscNextDate && <p style={{fontSize:10,color:"rgba(255,255,255,0.6)",marginTop:2}}>次回更新日：{m.subscNextDate}</p>}
               </div>
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
