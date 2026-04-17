@@ -277,6 +277,13 @@ function App() {
     fetchSchedules();
     fetchLogins();
     fetchOrchestra();
+    // 5分おきに自動更新
+    const timer = setInterval(() => {
+      autoFetch();
+      fetchSchedules();
+      fetchOrchestra();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(timer);
   }, []);
   useEffect(() => {
     if (currentMember) {
