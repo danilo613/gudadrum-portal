@@ -1863,7 +1863,7 @@ function App() {
                         <div key={i} style={{background:"rgba(112,130,56,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
                             <p style={{fontSize:12,fontWeight:700,color:C.choco}}>{fmtDate}</p>
-                            {s["時間"] && <p style={{fontSize:11,color:C.label}}>{s["時間"]}</p>}
+                            {s["時間"] && <p style={{fontSize:11,color:C.label}}>{s["時間"]}{s["終了時間"] ? "〜"+s["終了時間"] : ""}</p>}
                             {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:C.olive,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
                           </div>
                           <p style={{fontSize:13,fontWeight:600,color:C.choco,marginBottom:4}}>{s["タイトル"]}</p>
