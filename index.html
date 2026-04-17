@@ -236,6 +236,10 @@ function App() {
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [orchSchedules, setOrchSchedules] = useState([]);
+  const [orchFilter, setOrchFilter] = useState("すべて");
+  const [orchView, setOrchView] = useState("timeline"); // "timeline" or "category"
+  const [orchOpen, setOrchOpen] = useState(false);
   const [mySchedOpen, setMySchedOpen] = useState(true);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [pointHistory, setPointHistory] = useState([]);
@@ -272,6 +276,7 @@ function App() {
     fetchNotion();
     fetchSchedules();
     fetchLogins();
+    fetchOrchestra();
   }, []);
   useEffect(() => {
     if (currentMember) {
@@ -364,6 +369,14 @@ function App() {
       const res = await fetch("/api/gas?action=getschedule");
       const data = await res.json();
       if (data.schedules) setMemberSchedules(data.schedules);
+    } catch(e) {}
+  }
+
+  async function fetchOrchestra() {
+    try {
+      const res = await fetch("/api/gas?action=getorchestra");
+      const data = await res.json();
+      if (data.schedules) setOrchSchedules(data.schedules);
     } catch(e) {}
   }
 
@@ -1781,7 +1794,6 @@ function App() {
                 {notionItems.length > 0 ? (
                   notionItems.map((item,i) => {
                     if (item.links && item.links.length > 0) {
-                      // リンクを含む行はパーツに分けて表示
                       let remaining = item.text;
                       const parts = [];
                       item.links.forEach((link,j) => {
@@ -1800,6 +1812,82 @@ function App() {
                 )}
               </div>
             </>
+          )}
+        </div>
+
+        {/* オーケストラスケジュール */}
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+          <button onClick={()=>setOrchOpen(!orchOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,fontWeight:700,color:C.label,letterSpacing:"0.08em"}}>🎼 オーケストラスケジュール</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:orchOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {orchOpen && (
+            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
+              {/* 表示切り替え */}
+              <div style={{display:"flex",gap:8,marginBottom:12}}>
+                <button onClick={()=>setOrchView("timeline")}
+                  style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:orchView==="timeline"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:orchView==="timeline"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                  🗓 タイムライン
+                </button>
+                <button onClick={()=>setOrchView("category")}
+                  style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:orchView==="category"?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:orchView==="category"?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                  🏷 種別で見る
+                </button>
+              </div>
+              {/* 種別フィルター */}
+              {orchView==="category" && (
+                <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+                  {["すべて",...[...new Set(orchSchedules.map(s=>s["種別"]).filter(Boolean))]].map(cat=>(
+                    <button key={cat} onClick={()=>setOrchFilter(cat)}
+                      style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+(orchFilter===cat?C.olive:C.border),background:orchFilter===cat?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(255,255,255,0.8)",color:orchFilter===cat?"#fff":C.choco,fontSize:11,fontWeight:orchFilter===cat?700:400,cursor:"pointer"}}>
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {/* スケジュール一覧 */}
+              {(()=>{
+                const today = new Date(); today.setHours(0,0,0,0);
+                const filtered = orchSchedules
+                  .filter(s=>orchView==="timeline" || orchFilter==="すべて" || s["種別"]===orchFilter)
+                  .filter(s=>{ const d=new Date(s["日付"]); return !isNaN(d.getTime()) && d>=today; })
+                  .sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
+                if (filtered.length===0) return <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>予定はありません</p>;
+                return (
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {filtered.map((s,i)=>{
+                      const d = new Date(s["日付"]);
+                      const fmtDate = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : s["日付"];
+                      return (
+                        <div key={i} style={{background:"rgba(112,130,56,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                            <p style={{fontSize:12,fontWeight:700,color:C.choco}}>{fmtDate}</p>
+                            {s["時間"] && <p style={{fontSize:11,color:C.label}}>{s["時間"]}</p>}
+                            {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:C.olive,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
+                          </div>
+                          <p style={{fontSize:13,fontWeight:600,color:C.choco,marginBottom:4}}>{s["タイトル"]}</p>
+                          {s["備考"] && <p style={{fontSize:12,color:C.label,marginBottom:6}}>{s["備考"]}</p>}
+                          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                            {s["ZoomURL"] && (
+                              <a href={s["ZoomURL"]} target="_blank" rel="noreferrer"
+                                style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#7a9aba,#5a7a8a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>
+                                🎥 Zoomに参加
+                              </a>
+                            )}
+                            {s["詳細URL"] && (
+                              <a href={s["詳細URL"]} target="_blank" rel="noreferrer"
+                                style={{padding:"4px 10px",borderRadius:6,background:"rgba(112,130,56,0.15)",color:C.olive,fontSize:11,fontWeight:700,textDecoration:"none",border:"1px solid "+C.border}}>
+                                📄 詳細を見る
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
+            </div>
           )}
         </div>
 
