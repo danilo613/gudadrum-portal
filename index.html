@@ -1844,12 +1844,15 @@ function App() {
               {/* 種別フィルター */}
               {orchView==="category" && (
                 <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
-                  {[...new Set(orchSchedules.map(s=>s["種別"]).filter(Boolean))].map(cat=>(
-                    <button key={cat} onClick={()=>setOrchFilter(cat)}
-                      style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+(orchFilter===cat?C.olive:C.border),background:orchFilter===cat?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(255,255,255,0.8)",color:orchFilter===cat?"#fff":C.choco,fontSize:11,fontWeight:orchFilter===cat?700:400,cursor:"pointer"}}>
-                      {cat}
-                    </button>
-                  ))}
+                  {[...new Set(orchSchedules.map(s=>s["種別"]).filter(Boolean))].map(cat=>{
+                    const catColor = (orchSchedules.find(s=>s["種別"]===cat)||{})["色"] || C.olive;
+                    return (
+                      <button key={cat} onClick={()=>setOrchFilter(cat)}
+                        style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+(orchFilter===cat?catColor:C.border),background:orchFilter===cat?catColor:"rgba(255,255,255,0.8)",color:orchFilter===cat?"#fff":C.choco,fontSize:11,fontWeight:orchFilter===cat?700:400,cursor:"pointer"}}>
+                        {cat}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
               {/* スケジュール一覧 */}
@@ -1866,12 +1869,13 @@ function App() {
                       const d = new Date(s["日付"]);
                       const WEEKDAYS = ["日","月","火","水","木","金","土"];
                       const fmtDate = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+WEEKDAYS[d.getDay()]+"）" : s["日付"];
+                      const typeColor = s["色"] || C.olive;
                       return (
-                        <div key={i} style={{background:"rgba(112,130,56,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+C.olive}}>
+                        <div key={i} style={{background:"rgba(112,130,56,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+typeColor}}>
                           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
                             <p style={{fontSize:12,fontWeight:700,color:C.choco}}>{fmtDate}</p>
                             {s["時間"] && <p style={{fontSize:11,color:C.label}}>{s["時間"]}{s["終了時間"] ? "〜"+s["終了時間"] : ""}</p>}
-                            {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:C.olive,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
+                            {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:typeColor,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
                           </div>
                           <p style={{fontSize:13,fontWeight:600,color:C.choco,marginBottom:4}}>{s["タイトル"]}</p>
                           {s["備考"] && <p style={{fontSize:12,color:C.label,marginBottom:6}}>{s["備考"]}</p>}
