@@ -1696,9 +1696,23 @@ function App() {
         </div>
 
         {/* 診断受付ボタン */}
-        <a href="https://docs.google.com/forms/d/13ZUqQCbra869TVQPwc0qZMLy5kelvGRVWX_6LmteHuM/edit" target="_blank" rel="noreferrer" style={BTN_STYLE}>
+        <a href="https://docs.google.com/forms/d/13ZUqQCbra869TVQPwc0qZMLy5kelvGRVWX_6LmteHuM/edit" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px"}}>
           グーダドラム5つ項目診断受付
         </a>
+
+        {/* 付属品・レッスン・教材ボタン */}
+        <div style={{display:"flex",gap:8}}>
+          {[
+            {label:"付属品＆CD", url:"https://www.gudadrumjapan.com/shop"},
+            {label:"各種レッスン", url:"https://www.gudadrumjapan.com/lssn"},
+            {label:"各種教材", url:"https://www.gudadrumjapan.com/tchng"},
+          ].map(({label,url})=>(
+            <a key={label} href={url} target="_blank" rel="noreferrer"
+              style={{...BTN_STYLE, flex:1, padding:"10px", fontSize:12}}>
+              {label}
+            </a>
+          ))}
+        </div>
 
         {/* 次回の目標（収納式・横長） */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
