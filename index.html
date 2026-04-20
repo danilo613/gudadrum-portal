@@ -522,7 +522,7 @@ function App() {
     try {
       const today = new Date();
       const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
-      const senderName = isInstructor ? memberFbInstructor : currentMember.name;
+      const senderName = isInstructor ? memberFbInstructor : (isFromAdmin ? "DANiLO" : currentMember.name);
       const targetName = isInstructor ? currentMember.name : currentMember.name;
       const commentText = dateStr + " " + senderName + ": " + value;
       const data = await gasWrite({action:"addschedulecomment", name:targetName, date:rawDate, comment:commentText});
