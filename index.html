@@ -155,14 +155,14 @@ function RadarChart({ m }) {
   const values = [m.openness, m.quality, m.tempo, m.ghost, m.groove];
   const n=5, W=240, H=210, cx=W/2, cy=H/2, r=60, ao=-Math.PI/2;
   const angle = i => ao+(2*Math.PI*i)/n;
-  const pt = (i,v) => [cx+r*(v/20)*Math.cos(angle(i)), cy+r*(v/20)*Math.sin(angle(i))];
+  const pt = (i,v) => [cx+r*(v/100)*Math.cos(angle(i)), cy+r*(v/100)*Math.sin(angle(i))];
   const tip = i => [cx+r*Math.cos(angle(i)), cy+r*Math.sin(angle(i))];
   const grid = lv => Array.from({length:n},(_,i)=>pt(i,lv).join(",")).join(" ");
   const poly = values.map((v,i)=>pt(i,v).join(",")).join(" ");
   const li = [{i:0,dx:0,dy:-14,a:"middle"},{i:1,dx:14,dy:4,a:"start"},{i:2,dx:14,dy:-4,a:"start"},{i:3,dx:-14,dy:-4,a:"end"},{i:4,dx:-14,dy:4,a:"end"}];
   return (
     <svg width={W} height={H} viewBox={"0 0 "+W+" "+H}>
-      {[4,8,12,16,20].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>)}
+      {[20,40,60,80,100].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>)}
       {Array.from({length:n},(_,i)=>{ const [x,y]=tip(i); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(112,130,56,0.3)" strokeWidth="0.5"/>; })}
       <polygon points={poly} fill="rgba(112,130,56,0.2)" stroke="#708238" strokeWidth="1.5"/>
       {values.map((v,i)=>{ const [x,y]=pt(i,v); return <circle key={i} cx={x} cy={y} r="2.5" fill="#708238"/>; })}
@@ -175,13 +175,13 @@ function RadarChart({ m }) {
 function MiniRadar({ m, size=48 }) {
   const values = [m.openness,m.quality,m.tempo,m.ghost,m.groove];
   const n=5, cx=size/2, cy=size/2, r=size*0.38, ao=-Math.PI/2;
-  const pt = (i,v) => { const a=ao+(2*Math.PI*i)/n; return [cx+r*(v/20)*Math.cos(a),cy+r*(v/20)*Math.sin(a)]; };
+  const pt = (i,v) => { const a=ao+(2*Math.PI*i)/n; return [cx+r*(v/100)*Math.cos(a),cy+r*(v/100)*Math.sin(a)]; };
   const tip = i => { const a=ao+(2*Math.PI*i)/n; return [cx+r*Math.cos(a),cy+r*Math.sin(a)]; };
   const grid = lv => Array.from({length:n},(_,i)=>pt(i,lv).join(",")).join(" ");
   const poly = values.map((v,i)=>pt(i,v).join(",")).join(" ");
   return (
     <svg width={size} height={size} viewBox={"0 0 "+size+" "+size}>
-      {[4,8,12,16,20].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.3)" strokeWidth="0.5"/>)}
+      {[20,40,60,80,100].map(l=><polygon key={l} points={grid(l)} fill="none" stroke="rgba(112,130,56,0.3)" strokeWidth="0.5"/>)}
       {Array.from({length:n},(_,i)=>{ const [x,y]=tip(i); return <line key={i} x1={cx} y1={cy} x2={x} y2={y} stroke="rgba(112,130,56,0.2)" strokeWidth="0.5"/>; })}
       {m.diagnosisDate
         ? <polygon points={poly} fill="rgba(112,130,56,0.25)" stroke="#708238" strokeWidth="1.5"/>
@@ -265,7 +265,7 @@ function App() {
   const [pointModal, setPointModal] = useState(null);
   const [pointValue, setPointValue] = useState("");
   const [pointMsg, setPointMsg] = useState(""); // "text" or "diagnosis"
-  const [diagScores, setDiagScores] = useState({openness:10,quality:10,tempo:10,ghost:10,groove:10,date:"",daniloMsg:"",diagSong:""});
+  const [diagScores, setDiagScores] = useState({openness:50,quality:50,tempo:50,ghost:50,groove:50,date:"",daniloMsg:"",diagSong:""});
   const [diagHistory, setDiagHistory] = useState([]);
   const [diagHistoryIndex, setDiagHistoryIndex] = useState(0);
   const [memberFbOpen, setMemberFbOpen] = useState({});
@@ -1441,9 +1441,9 @@ function App() {
                     <div key={key}>
                       <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
                         <span style={{fontSize:13,color:C.choco,fontWeight:500}}>{label}</span>
-                        <span style={{fontSize:14,fontWeight:700,color:C.olive}}>{diagScores[key]*5}<span style={{fontSize:10,color:C.label,fontWeight:400}}>/100</span></span>
+                        <span style={{fontSize:14,fontWeight:700,color:C.olive}}>{diagScores[key]}<span style={{fontSize:10,color:C.label,fontWeight:400}}>/100</span></span>
                       </div>
-                      <input type="range" min="0" max="20" step="1" value={diagScores[key]} onChange={e=>setDiagScores(p=>({...p,[key]:parseInt(e.target.value)}))} style={{width:"100%",accentColor:C.olive}}/>
+                      <input type="range" min="0" max="100" step="1" value={diagScores[key]} onChange={e=>setDiagScores(p=>({...p,[key]:parseInt(e.target.value)}))} style={{width:"100%",accentColor:C.olive}}/>
                       <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.label}}><span>0</span><span>20</span><span>40</span><span>60</span><span>80</span><span>100</span></div>
                     </div>
                   ))}
@@ -1670,8 +1670,8 @@ function App() {
                 {/* 合計・平均 */}
                 {total > 0 && (
                   <div style={{display:"flex",gap:12,marginBottom:12,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 12px"}}>
-                    <p style={{fontSize:12,color:C.choco}}>合計：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{total*5}</span><span style={{fontSize:10,color:C.label}}> / 100</span></p>
-                    <p style={{fontSize:12,color:C.choco}}>平均：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{(total*5/5).toFixed(1)}</span><span style={{fontSize:10,color:C.label}}> / 100</span></p>
+                    <p style={{fontSize:12,color:C.choco}}>合計：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{total}</span><span style={{fontSize:10,color:C.label}}> / 500</span></p>
+                    <p style={{fontSize:12,color:C.choco}}>平均：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{(total/5).toFixed(1)}</span><span style={{fontSize:10,color:C.label}}> / 100</span></p>
                   </div>
                 )}
                 <div style={{borderTop:"1px solid "+C.border,paddingTop:12}}>
