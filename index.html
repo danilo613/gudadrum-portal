@@ -1714,18 +1714,18 @@ function App() {
           ))}
         </div>
 
-        {/* 次回の目標（収納式・横長） */}
+        {/* マイメモ */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
           <button onClick={()=>setGoalOpen(!goalOpen)}
             style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,fontWeight:600,color:C.label}}>🎯 次回の目標</span>
+            <span style={{fontSize:13,fontWeight:600,color:C.label}}>📝 マイメモ</span>
             <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:goalOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
           </button>
           {goalOpen && (
             <div style={{padding:"0 16px 14px"}}>
               <p style={{fontSize:9,color:C.moss,marginBottom:6}}>※ 入力するだけで自動保存されます。ただしこの端末のブラウザのみ有効です</p>
               <textarea value={myGoal} onChange={e=>{setMyGoal(e.target.value);localStorage.setItem("goal_"+m.name,e.target.value);}}
-                placeholder="次回の目標を入力..."
+                placeholder="レッスンや練習会の記録・気づき・目標など..."
                 style={{width:"100%",background:"rgba(240,235,226,0.6)",border:"1px solid "+C.border,borderRadius:8,padding:8,fontSize:13,color:C.choco,resize:"none",height:72,boxSizing:"border-box"}}/>
             </div>
           )}
@@ -2053,19 +2053,6 @@ function App() {
                 </div>
               </div>
             )}
-            {/* マイメモ */}
-            <div style={{display:"flex",alignItems:"flex-start",gap:10,padding:"11px 0"}}>
-              <span style={{fontSize:15,flexShrink:0,marginTop:1}}>📝</span>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:6}}>
-                  <p style={{fontSize:10,letterSpacing:"0.12em",color:C.label,fontWeight:500}}>マイメモ</p>
-                  <p style={{fontSize:9,color:C.moss}}>※ 入力するだけで自動保存されます。ただしこの端末のブラウザのみ有効です</p>
-                </div>
-                <textarea value={myMemo} onChange={e=>{setMyMemo(e.target.value);localStorage.setItem("memo_"+m.name,e.target.value);}}
-                  placeholder="レッスンや練習会の記録や疑問点を入力できます"
-                  style={{width:"100%",background:"rgba(240,235,226,0.6)",border:"1px solid "+C.border,borderRadius:8,padding:8,fontSize:13,color:C.choco,resize:"none",height:70,boxSizing:"border-box"}}/>
-              </div>
-            </div>
           </div>}
         </div>
 
@@ -2147,7 +2134,7 @@ function App() {
         {/* フィードバックボタン */}
         <div style={{marginTop:16,marginBottom:8}}>
           <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
-            style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid "+C.border,background:"rgba(255,255,255,0.6)",color:C.label,fontSize:13,fontWeight:600,cursor:"pointer",textAlign:"center"}}>
+            style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid #d4824a",background:"rgba(212,130,74,0.1)",color:"#b8622a",fontSize:13,fontWeight:600,cursor:"pointer",textAlign:"center"}}>
             💬 アプリへのフィードバックを送る
           </button>
           {feedbackOpen && (
