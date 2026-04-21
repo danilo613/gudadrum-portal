@@ -1799,7 +1799,7 @@ function App() {
                                           <span style={{fontSize:10,fontWeight:700,color:isStaff?C.olive:"#8a6a3a"}}>{c.author}</span>
                                           {c.date && <span style={{fontSize:10,color:C.label}}>{c.date}</span>}
                                         </div>
-                                        <p style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{c.text}</p>
+                                        <p style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{c.text}</p>
                                       </div>
                                     );
                                   })}
@@ -2036,7 +2036,7 @@ function App() {
                             </div>
                           );
                         }
-                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7}}>{typeof v === "object" ? v.text : v}</p>;
+                        return <p key={j} style={{fontSize:13,color:C.choco,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{typeof v === "object" ? v.text : v}</p>;
                       })
                     : <p style={{fontSize:13,color:C.label}}>−</p>
                   }
