@@ -754,12 +754,12 @@ function App() {
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("管理者ダッシュボード",[
-        iconBtn("🔄 データ更新",()=>setShowSettings(true)),
+        iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); }),
         iconBtn("ログアウト",()=>setPage("login")),
       ])}
       <div style={{padding:"24px",maxWidth:720,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
-          <p style={{fontSize:11,color:C.label}}>{isDemo?"📋 デモデータで表示中":"✅ スプレッドシートデータ"}</p>
+          <p style={{fontSize:11,color:C.label}}>{isDemo?"📋 デモデータで表示中":"👥 登録メンバー："+members.length+"人"}</p>
           <div style={{display:"flex",gap:6}}>
             <select value={sortKey} onChange={e=>setSortKey(e.target.value)}
               style={{fontSize:11,color:C.olive,background:"rgba(112,130,56,0.1)",border:"1px solid "+C.border,borderRadius:8,padding:"4px 8px",cursor:"pointer"}}>
