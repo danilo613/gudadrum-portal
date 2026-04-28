@@ -1818,7 +1818,7 @@ function App() {
                               )}
                             </div>
                           )}
-                          {(isInstructor || !comments.some(c=>c.author.replace(/\s/g,"")===currentMember.name.replace(/\s/g,""))) && (
+                          {(isInstructor || isFromAdmin || !comments.some(c=>c.author.replace(/\s/g,"")===currentMember.name.replace(/\s/g,""))) && (
                             <div style={{marginTop:6}}>
                               {!isFbOpen ? (
                                 <button onClick={()=>setMemberFbOpen(p=>({...p,[fbKey]:true}))}
