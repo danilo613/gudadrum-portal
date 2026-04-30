@@ -242,6 +242,8 @@ function App() {
   const [orchOpen, setOrchOpen] = useState(false);
   const [mySchedOpen, setMySchedOpen] = useState(true);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [cancelSubsConfirm, setCancelSubsConfirm] = useState(false);
+  const [cancelSubsMsg, setCancelSubsMsg] = useState("");
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
   const [showAllPoints, setShowAllPoints] = useState(false);
@@ -1711,6 +1713,11 @@ function App() {
           グーダドラム5つ項目診断受付
         </a>
 
+        {/* サブスク申込みボタン */}
+        <a href="https://www.gudadrumjapan.com/sbs" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
+          各種サブスク申込み
+        </a>
+
         {/* 付属品・レッスン・教材ボタン */}
         <div style={{display:"flex",gap:8}}>
           {[
@@ -2169,6 +2176,35 @@ function App() {
             </div>
           )}
         </div>
+
+        {/* サブスク中止ボタン（サブスクメンバーのみ表示） */}
+        {m.subscType && m.subscType !== "" && (
+          <div style={{marginBottom:16}}>
+            {!cancelSubsConfirm ? (
+              <button onClick={()=>setCancelSubsConfirm(true)}
+                style={{width:"100%",padding:"10px",borderRadius:12,border:"1px solid #aaa",background:"rgba(180,180,180,0.1)",color:"#888",fontSize:12,fontWeight:600,cursor:"pointer",textAlign:"center"}}>
+                サブスクを中止する
+              </button>
+            ) : (
+              <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #ccc",borderRadius:12,padding:16}}>
+                <p style={{fontSize:13,color:C.choco,fontWeight:600,marginBottom:8,textAlign:"center"}}>本当に中止しますか？</p>
+                <p style={{fontSize:11,color:C.label,marginBottom:12,textAlign:"center",lineHeight:1.6}}>中止のリクエストがDANiLOに送信されます。</p>
+                {cancelSubsMsg && <p style={{fontSize:12,color:cancelSubsMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8,textAlign:"center"}}>{cancelSubsMsg}</p>}
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>setCancelSubsConfirm(false)}
+                    style={{flex:1,padding:"8px",borderRadius:8,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
+                  <button onClick={()=>{
+                    gasWrite({action:"cancelsubs", name:m.name, subsType:m.subscType}).then(()=>{
+                      setCancelSubsMsg("✅ DANiLOに送信しました。");
+                      setTimeout(()=>{setCancelSubsConfirm(false);setCancelSubsMsg("");},2000);
+                    }).catch(()=>setCancelSubsMsg("❌ 送信に失敗しました"));
+                  }}
+                    style={{flex:1,padding:"8px",borderRadius:8,border:"1px solid #aaa",background:"rgba(150,150,150,0.2)",color:"#666",fontSize:12,fontWeight:700,cursor:"pointer"}}>はい</button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
 
 
