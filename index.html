@@ -249,6 +249,7 @@ function App() {
   const [inorionTab, setInorionTab] = useState(false);
   const [inorionForm, setInorionForm] = useState({name:"", song:"", status:"🎵楽曲思い出し中"});
   const [inorionMsg, setInorionMsg] = useState("");
+  const [inorionOpenMap, setInorionOpenMap] = useState({});
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
   const [showAllPoints, setShowAllPoints] = useState(false);
@@ -870,26 +871,40 @@ function App() {
               <p style={{fontSize:12,color:C.label,textAlign:"center"}}>まだ登録がありません</p>
             ) : (
               <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                {inorionData.map((r,i)=>(
-                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:"rgba(138,74,106,0.05)",borderRadius:8,border:"1px solid rgba(138,74,106,0.15)"}}>
-                    <div style={{flex:1}}>
-                      <p style={{fontSize:13,fontWeight:600,color:C.choco}}>{r.name}</p>
-                      <p style={{fontSize:11,color:C.label}}>🎵 {r.song}</p>
+                {[...new Set(inorionData.map(r=>r.name))].map(name=>{
+                  const rows = inorionData.filter(r=>r.name===name);
+                  const isExpanded = (inorionOpenMap||{})[name] || false;
+                  return (
+                    <div key={name} style={{borderRadius:8,border:"1px solid rgba(138,74,106,0.2)",overflow:"hidden"}}>
+                      <button onClick={()=>setInorionOpenMap(p=>({...p,[name]:!isExpanded}))}
+                        style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:"rgba(138,74,106,0.06)",border:"none",cursor:"pointer"}}>
+                        <p style={{fontSize:13,fontWeight:600,color:"#6a2a4a"}}>{name}</p>
+                        <span style={{fontSize:11,color:"#8a4a6a"}}>{rows.length}曲 {isExpanded?"▲":"▼"}</span>
+                      </button>
+                      {isExpanded && (
+                        <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
+                          {rows.map((r,i)=>(
+                            <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"rgba(138,74,106,0.04)",borderRadius:6}}>
+                              <p style={{fontSize:12,color:C.label,flex:1}}>🎵 {r.song}</p>
+                              <select value={r.status} onChange={e=>{
+                                gasWrite({action:"updateinorion",rowIndex:r.rowIndex,status:e.target.value}).then(()=>fetchInorion());
+                              }} style={{fontSize:11,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 6px",cursor:"pointer",color:C.choco}}>
+                                <option value="🎵楽曲思い出し中">🎵 楽曲思い出し中</option>
+                                <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
+                                <option value="🔥基準クリアしてブラッシュアップ中">🔥 基準クリアしてブラッシュアップ中</option>
+                              </select>
+                              <button onClick={()=>{
+                                if(window.confirm(r.name+"（"+r.song+"）を削除しますか？")){
+                                  gasWrite({action:"deleteinorion",rowIndex:r.rowIndex}).then(()=>fetchInorion());
+                                }
+                              }} style={{padding:"4px 8px",borderRadius:6,border:"1px solid #ddd",background:"transparent",color:"#aaa",fontSize:11,cursor:"pointer"}}>🗑️</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <select value={r.status} onChange={e=>{
-                      gasWrite({action:"updateinorion",rowIndex:r.rowIndex,status:e.target.value}).then(()=>fetchInorion());
-                    }} style={{fontSize:11,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 6px",cursor:"pointer",color:C.choco}}>
-                      <option value="🎵楽曲思い出し中">🎵 楽曲思い出し中</option>
-                      <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
-                      <option value="🔥基準クリアしてブラッシュアップ中">🔥 基準クリアしてブラッシュアップ中</option>
-                    </select>
-                    <button onClick={()=>{
-                      if(window.confirm(r.name+"（"+r.song+"）を削除しますか？")){
-                        gasWrite({action:"deleteinorion",rowIndex:r.rowIndex}).then(()=>fetchInorion());
-                      }
-                    }} style={{padding:"4px 8px",borderRadius:6,border:"1px solid #ddd",background:"transparent",color:"#aaa",fontSize:11,cursor:"pointer"}}>🗑️</button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
