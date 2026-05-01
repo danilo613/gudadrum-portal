@@ -1847,11 +1847,11 @@ function App() {
 
         {/* 壱祈音専用ページボタン（出演者のみ） */}
         {inorionData.some(r=>r.name===m.name) && (
-          <button onClick={()=>setInorionPage(true)}
-            style={{...BTN_STYLE, padding:"12px", background:"linear-gradient(135deg,#c87aaa,#8a4a6a)", boxShadow:"0 4px 12px rgba(138,74,106,0.4)", width:"100%", marginBottom:0}}>
-            🎭 壱祈音〜Inorion〜 出演メンバー専用ページ
-          </button>
-        )}
+  <button onClick={()=>setInorionPage(true)}
+    style={{...BTN_STYLE, padding:"12px", background:"linear-gradient(135deg,#c87aaa,#8a4a6a)", boxShadow:"0 4px 12px rgba(138,74,106,0.4)", border:"none", width:"100%", marginBottom:0}}>
+    🎭 壱祈音〜Inorion〜 出演メンバー専用ページ
+  </button>
+)}
         <a href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ3O5AWtl79MG7to8w6ClA_bMlY_DnD15p7n1VP6DrEKbQNnR9f0bZmqU3G1lwA5B8T6R7oPoybr?gv=true" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px"}}>
           📈 グーダドラム5つ項目診断受付
         </a>
