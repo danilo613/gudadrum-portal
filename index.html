@@ -1709,7 +1709,7 @@ function App() {
         </div>
 
         {/* 診断受付ボタン */}
-        <a href="https://docs.google.com/forms/d/13ZUqQCbra869TVQPwc0qZMLy5kelvGRVWX_6LmteHuM/edit" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px"}}>
+        <a href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ3O5AWtl79MG7to8w6ClA_bMlY_DnD15p7n1VP6DrEKbQNnR9f0bZmqU3G1lwA5B8T6R7oPoybr?gv=true" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px"}}>
           📈 グーダドラム5つ項目診断受付
         </a>
 
@@ -1718,11 +1718,10 @@ function App() {
           🌝 各種サブスク申込み
         </a>
 
-        {/* 付属品・レッスン・教材ボタン */}
+        {/* 付属品・教材ボタン */}
         <div style={{display:"flex",gap:8}}>
           {[
             {label:"💿 付属品＆CD", url:"https://www.gudadrumjapan.com/shop"},
-            {label:"👨‍🏫 各種レッスン", url:"https://www.gudadrumjapan.com/lssn"},
             {label:"📝 各種教材", url:"https://www.gudadrumjapan.com/tchng"},
           ].map(({label,url})=>(
             <a key={label} href={url} target="_blank" rel="noreferrer"
@@ -1731,6 +1730,32 @@ function App() {
             </a>
           ))}
         </div>
+
+        {/* 個人レッスン予約ボタン */}
+        <div style={{display:"flex",gap:8}}>
+          <a href="https://calendar.app.google/X8gnSZq8oy9RwG3Q8" target="_blank" rel="noreferrer"
+            style={{...BTN_STYLE, flex:1, padding:"10px", fontSize:11, background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
+            🎥 個人レッスン zoom（45分）
+          </a>
+          <a href="https://calendar.app.google/uaNUP47JcGCy6GZs8" target="_blank" rel="noreferrer"
+            style={{...BTN_STYLE, flex:1, padding:"10px", fontSize:11, background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
+            🏠 個人レッスン 対面（60分）
+          </a>
+        </div>
+
+        {/* 個別相談ボタン（サブスク種別によって表示） */}
+        {m.subscType === "幹ノーマル" && (
+          <a href="https://calendar.app.google/ZzCWEo9KbXL29s2t9" target="_blank" rel="noreferrer"
+            style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#9a7aba,#6a4a8a)", boxShadow:"0 4px 12px rgba(106,74,138,0.4)"}}>
+            💬 個別相談（15分）申込み
+          </a>
+        )}
+        {(m.subscType === "幹スペシャル" || m.subscType === "柱") && (
+          <a href="https://calendar.app.google/LXdCQ4Zg4hAgnPyF7" target="_blank" rel="noreferrer"
+            style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#9a7aba,#6a4a8a)", boxShadow:"0 4px 12px rgba(106,74,138,0.4)"}}>
+            💬 個別相談（30分）申込み
+          </a>
+        )}
 
         {/* マイメモ */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
