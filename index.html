@@ -58,7 +58,7 @@ const BTN_STYLE = {
   display:"block", textAlign:"center", padding:"13px", borderRadius:12,
   background:"linear-gradient(135deg,#b8c86a,#8a9a3a)", color:"#fff",
   fontSize:13, fontWeight:700, textDecoration:"none", letterSpacing:"0.05em",
-  boxShadow:"0 4px 12px rgba(112,130,56,0.4)",
+  boxShadow:"0 4px 12px rgba(112,130,56,0.4)", cursor:"pointer",
 };
 
 function splitItems(str) {
@@ -247,7 +247,7 @@ function App() {
   const [inorionData, setInorionData] = useState([]);
   const [inorionPage, setInorionPage] = useState(false);
   const [inorionTab, setInorionTab] = useState(false);
-  const [inorionForm, setInorionForm] = useState({name:"", song:"", status:"🌱フレーズ覚え中"});
+  const [inorionForm, setInorionForm] = useState({name:"", song:"", status:"🎵楽曲思い出し中"});
   const [inorionMsg, setInorionMsg] = useState("");
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
@@ -849,7 +849,6 @@ function App() {
             </select>
             <select value={inorionForm.status} onChange={e=>setInorionForm(p=>({...p,status:e.target.value}))}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:8,cursor:"pointer"}}>
-              <option value="🙋演奏表明済み">🙋 演奏表明済み</option>
               <option value="🎵楽曲思い出し中">🎵 楽曲思い出し中</option>
               <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
               <option value="🔥基準クリアしてブラッシュアップ中">🔥 基準クリアしてブラッシュアップ中</option>
@@ -880,7 +879,6 @@ function App() {
                     <select value={r.status} onChange={e=>{
                       gasWrite({action:"updateinorion",rowIndex:r.rowIndex,status:e.target.value}).then(()=>fetchInorion());
                     }} style={{fontSize:11,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 6px",cursor:"pointer",color:C.choco}}>
-                      <option value="🙋演奏表明済み">🙋 演奏表明済み</option>
                       <option value="🎵楽曲思い出し中">🎵 楽曲思い出し中</option>
                       <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
                       <option value="🔥基準クリアしてブラッシュアップ中">🔥 基準クリアしてブラッシュアップ中</option>
