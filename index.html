@@ -246,6 +246,9 @@ function App() {
   const [cancelSubsMsg, setCancelSubsMsg] = useState("");
   const [inorionData, setInorionData] = useState([]);
   const [inorionPage, setInorionPage] = useState(false);
+  const [inorionMyOpen, setInorionMyOpen] = useState(true);
+  const [inorionListOpen, setInorionListOpen] = useState(true);
+  const [inorionSchedOpen, setInorionSchedOpen] = useState(false);
   const [inorionTab, setInorionTab] = useState(false);
   const [inorionForm, setInorionForm] = useState({name:"", song:"", scale:"", status:"🎵楽曲思い出し中"});
   const [inorionMsg, setInorionMsg] = useState("");
@@ -1672,6 +1675,20 @@ function App() {
   if (inorionPage) {
     const SONGS = ["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"];
     const myEntries = inorionData.filter(r=>r.name===m.name);
+    const INORION_SCHED_TYPES = ["幹向け〜zoom交流＆相談会〜（サブスクメンバー向け）","全体練習会（12月20日演奏会出演者向け）","対面 練習会（自由参加）"];
+    const today2 = new Date(); today2.setHours(0,0,0,0);
+    const inorionScheds = orchSchedules
+      .filter(s=>INORION_SCHED_TYPES.includes(s["種別"]))
+      .filter(s=>{ const d=new Date(s["日付"]); return !isNaN(d.getTime()) && d>=today2; })
+      .sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
+    const WEEKDAYS2 = ["日","月","火","水","木","金","土"];
+    const boxStyle = {background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,overflow:"hidden",marginBottom:12};
+    const headerBtn = (label, isOpen, toggle) => (
+      <button onClick={toggle} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+        <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a",letterSpacing:"0.05em"}}>{label}</span>
+        <span style={{fontSize:12,color:"#8a4a6a",display:"inline-block",transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+      </button>
+    );
     return (
       <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#f0e8f0,#e0d0e8)",fontFamily:"'Noto Sans JP',sans-serif"}}>
         <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
@@ -1686,8 +1703,7 @@ function App() {
             <a href="https://lapis-hall.jp/facilities/" target="_blank" rel="noreferrer"
               style={{fontSize:12,color:"#8a4a6a",textDecoration:"underline",cursor:"pointer"}}>神戸ラピスホール</a>
             {(()=>{
-              const today = new Date();
-              today.setHours(0,0,0,0);
+              const today = new Date(); today.setHours(0,0,0,0);
               const live = new Date("2026-10-17");
               const diff = Math.ceil((live - today) / (1000*60*60*24));
               return diff > 0
@@ -1700,37 +1716,88 @@ function App() {
 
           {/* あなたの演目 */}
           {myEntries.length > 0 && (
-            <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,padding:"14px 16px",marginBottom:16}}>
-              <p style={{fontSize:11,color:"#8a4a6a",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>🎵 あなたの演目</p>
-              {myEntries.map((r,i)=>(
-                <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:i<myEntries.length-1?"1px solid rgba(138,74,106,0.1)":"none"}}>
-                  <p style={{fontSize:13,fontWeight:600,color:"#6a2a4a"}}>{r.song}</p>
-                  <span style={{fontSize:12,color:"#8a4a6a",fontWeight:600}}>{r.status}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* 全出演メンバー一覧 */}
-          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,padding:"14px 16px"}}>
-            <p style={{fontSize:11,color:"#8a4a6a",fontWeight:600,marginBottom:12,letterSpacing:"0.08em"}}>🎭 出演メンバー一覧</p>
-            {SONGS.map(song=>{
-              const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（"));
-              if (entries.length===0) return null;
-              return (
-                <div key={song} style={{marginBottom:14}}>
-                  <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:6,borderBottom:"1px solid rgba(138,74,106,0.15)",paddingBottom:4}}>🎵 {song}</p>
-                  {entries.map((r,i)=>(
-                    <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 8px",borderRadius:6,background:r.name===m.name?"rgba(138,74,106,0.1)":"transparent"}}>
-                      <p style={{fontSize:13,color:r.name===m.name?"#6a2a4a":C.choco,fontWeight:r.name===m.name?700:400}}>
-                        {r.name===m.name?"👤 ":""}{r.name}
-                      </p>
-                      <span style={{fontSize:11,color:"#8a4a6a"}}>{r.status}</span>
+            <div style={boxStyle}>
+              {headerBtn("🎵 あなたの演目", inorionMyOpen, ()=>setInorionMyOpen(!inorionMyOpen))}
+              {inorionMyOpen && (
+                <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px 16px"}}>
+                  {myEntries.map((r,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:i<myEntries.length-1?"1px solid rgba(138,74,106,0.1)":"none"}}>
+                      <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a"}}>{r.song}</p>
+                      <span style={{fontSize:12,color:"#8a4a6a",fontWeight:600}}>{r.status}</span>
                     </div>
                   ))}
                 </div>
-              );
-            })}
+              )}
+            </div>
+          )}
+
+          {/* 出演メンバー一覧 */}
+          <div style={boxStyle}>
+            {headerBtn("🎭 出演メンバー一覧", inorionListOpen, ()=>setInorionListOpen(!inorionListOpen))}
+            {inorionListOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px 16px"}}>
+                {SONGS.map(song=>{
+                  const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（"));
+                  if (entries.length===0) return null;
+                  return (
+                    <div key={song} style={{marginBottom:14,background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(138,74,106,0.12)"}}>
+                      <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a",marginBottom:8}}>🎵 {song}</p>
+                      {entries.map((r,i)=>{
+                        const scaleMatch = r.song.match(/（(.+?)）/);
+                        const scale = scaleMatch ? scaleMatch[1] : "";
+                        return (
+                          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 8px",borderRadius:6}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <p style={{fontSize:13,color:"#6a2a4a",fontWeight:r.name===m.name?700:400}}>
+                                {r.name===m.name?"👤 ":""}{r.name}
+                              </p>
+                              {scale && <span style={{fontSize:10,color:"#fff",background:"#8a4a6a",borderRadius:4,padding:"1px 6px",fontWeight:600}}>{scale}</span>}
+                            </div>
+                            <span style={{fontSize:11,color:"#8a4a6a"}}>{r.status}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 壱祈音スケジュール */}
+          <div style={boxStyle}>
+            {headerBtn("📅 壱祈音スケジュール", inorionSchedOpen, ()=>setInorionSchedOpen(!inorionSchedOpen))}
+            {inorionSchedOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px 16px"}}>
+                {inorionScheds.length === 0 ? (
+                  <p style={{fontSize:13,color:"#8a6a7a",textAlign:"center",padding:8}}>予定はありません</p>
+                ) : (
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {inorionScheds.map((s,i)=>{
+                      const d = new Date(s["日付"]);
+                      const fmtDate = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+WEEKDAYS2[d.getDay()]+"）" : s["日付"];
+                      const typeColor = s["色"] || "#8a4a6a";
+                      return (
+                        <div key={i} style={{background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+typeColor}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                            <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a"}}>{fmtDate}</p>
+                            {s["時間"] && <p style={{fontSize:11,color:"#8a6a7a"}}>{s["時間"]}{s["終了時間"]?"〜"+s["終了時間"]:""}</p>}
+                            {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:typeColor,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
+                          </div>
+                          <p style={{fontSize:13,fontWeight:600,color:"#6a2a4a",marginBottom:4}}>{s["タイトル"]}</p>
+                          {s["備考"] && <p style={{fontSize:12,color:"#8a6a7a",marginBottom:6}}>{s["備考"]}</p>}
+                          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                            {s["ZoomURL"] && <a href={s["ZoomURL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#7a9aba,#5a7a8a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>🎥 Zoomに参加</a>}
+                            {s["詳細URL"] && <a href={s["詳細URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"rgba(138,74,106,0.15)",color:"#8a4a6a",fontSize:11,fontWeight:700,textDecoration:"none",border:"1px solid rgba(138,74,106,0.3)"}}>📄 詳細を見る</a>}
+                            {s["申込URL"] && <a href={s["申込URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>✍️ 申込む</a>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
