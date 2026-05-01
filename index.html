@@ -247,7 +247,7 @@ function App() {
   const [inorionData, setInorionData] = useState([]);
   const [inorionPage, setInorionPage] = useState(false);
   const [inorionTab, setInorionTab] = useState(false);
-  const [inorionForm, setInorionForm] = useState({name:"", song:"", status:"🎵楽曲思い出し中"});
+  const [inorionForm, setInorionForm] = useState({name:"", song:"", scale:"", status:"🎵楽曲思い出し中"});
   const [inorionMsg, setInorionMsg] = useState("");
   const [inorionOpenMap, setInorionOpenMap] = useState({});
   const [pointHistory, setPointHistory] = useState([]);
@@ -843,11 +843,25 @@ function App() {
               <option value="">-- メンバーを選択 --</option>
               {members.map(m=><option key={m.name} value={m.name}>{m.name}</option>)}
             </select>
-            <select value={inorionForm.song} onChange={e=>setInorionForm(p=>({...p,song:e.target.value}))}
+            <select value={inorionForm.song} onChange={e=>setInorionForm(p=>({...p,song:e.target.value,scale:""}))}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
               <option value="">-- 演目を選択 --</option>
               {["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(s=><option key={s} value={s}>{s}</option>)}
             </select>
+            {inorionForm.song === "春ノ舞" && (
+              <select value={inorionForm.scale} onChange={e=>setInorionForm(p=>({...p,scale:e.target.value}))}
+                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+                <option value="">-- 音階を選択 --</option>
+                {["響ノ音","光ノ音","秘ノ音","和ノ音","風ノ音"].map(s=><option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
+            {inorionForm.song === "秋霖〜shuhrin〜" && (
+              <select value={inorionForm.scale} onChange={e=>setInorionForm(p=>({...p,scale:e.target.value}))}
+                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+                <option value="">-- 音階を選択 --</option>
+                {["響ノ音","秘ノ音","風ノ音","和ノ音＋"].map(s=><option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
             <select value={inorionForm.status} onChange={e=>setInorionForm(p=>({...p,status:e.target.value}))}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:8,cursor:"pointer"}}>
               <option value="🎵楽曲思い出し中">🎵 楽曲思い出し中</option>
@@ -857,9 +871,13 @@ function App() {
             {inorionMsg && <p style={{fontSize:12,color:inorionMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:6}}>{inorionMsg}</p>}
             <button onClick={()=>{
               if (!inorionForm.name||!inorionForm.song){setInorionMsg("❌ 名前と演目を選択してください");return;}
-              gasWrite({action:"addinorion",name:inorionForm.name,song:inorionForm.song,status:inorionForm.status}).then(()=>{
+              const needsScale = ["春ノ舞","秋霖〜shuhrin〜"].includes(inorionForm.song);
+              if (needsScale && !inorionForm.scale){setInorionMsg("❌ 音階を選択してください");return;}
+              const songWithScale = inorionForm.scale ? inorionForm.song+"（"+inorionForm.scale+"）" : inorionForm.song;
+              gasWrite({action:"addinorion",name:inorionForm.name,song:songWithScale,status:inorionForm.status}).then(()=>{
                 setInorionMsg("✅ 追加しました！");
                 fetchInorion();
+                setInorionForm({name:"",song:"",scale:"",status:"🎵楽曲思い出し中"});
                 setTimeout(()=>setInorionMsg(""),2000);
               });
             }} style={{width:"100%",padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:14}}>
