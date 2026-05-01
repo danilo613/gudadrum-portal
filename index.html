@@ -244,6 +244,11 @@ function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [cancelSubsConfirm, setCancelSubsConfirm] = useState(false);
   const [cancelSubsMsg, setCancelSubsMsg] = useState("");
+  const [inorionData, setInorionData] = useState([]);
+  const [inorionPage, setInorionPage] = useState(false);
+  const [inorionTab, setInorionTab] = useState(false);
+  const [inorionForm, setInorionForm] = useState({name:"", song:"", status:"🌱フレーズ覚え中"});
+  const [inorionMsg, setInorionMsg] = useState("");
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
   const [showAllPoints, setShowAllPoints] = useState(false);
@@ -281,11 +286,12 @@ function App() {
     fetchSchedules();
     fetchLogins();
     fetchOrchestra();
-    // 5分おきに自動更新
+    fetchInorion();
     const timer = setInterval(() => {
       autoFetch();
       fetchSchedules();
       fetchOrchestra();
+      fetchInorion();
     }, 5 * 60 * 1000);
     return () => clearInterval(timer);
   }, []);
@@ -401,6 +407,14 @@ function App() {
         setDiagHistory(sorted);
         setDiagHistoryIndex(0);
       }
+    } catch(e) {}
+  }
+
+  async function fetchInorion() {
+    try {
+      const res = await fetch("/api/gas?action=getinorion");
+      const data = await res.json();
+      if (data.rows) setInorionData(data.rows);
     } catch(e) {}
   }
 
@@ -812,9 +826,74 @@ function App() {
           🧪 練習会データ {showWorkshop?"▲":"▼"}
         </button>
         <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
+        <button onClick={()=>setInorionTab(!inorionTab)}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a4a6a",background:inorionTab?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionTab?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
+        </button>
+        {inorionTab && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:12,padding:"14px"}}>
+            {/* 追加フォーム */}
+            <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",marginBottom:10}}>出演者を追加</p>
+            <select value={inorionForm.name} onChange={e=>setInorionForm(p=>({...p,name:e.target.value}))}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+              <option value="">-- メンバーを選択 --</option>
+              {members.map(m=><option key={m.name} value={m.name}>{m.name}</option>)}
+            </select>
+            <select value={inorionForm.song} onChange={e=>setInorionForm(p=>({...p,song:e.target.value}))}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+              <option value="">-- 演目を選択 --</option>
+              {["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+            <select value={inorionForm.status} onChange={e=>setInorionForm(p=>({...p,status:e.target.value}))}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:8,cursor:"pointer"}}>
+              <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
+              <option value="💮基準クリア">💮 基準クリア</option>
+              <option value="🔥ブラッシュアップ中">🔥 ブラッシュアップ中</option>
+            </select>
+            {inorionMsg && <p style={{fontSize:12,color:inorionMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:6}}>{inorionMsg}</p>}
+            <button onClick={()=>{
+              if (!inorionForm.name||!inorionForm.song){setInorionMsg("❌ 名前と演目を選択してください");return;}
+              gasWrite({action:"addinorion",name:inorionForm.name,song:inorionForm.song,status:inorionForm.status}).then(()=>{
+                setInorionMsg("✅ 追加しました！");
+                fetchInorion();
+                setTimeout(()=>setInorionMsg(""),2000);
+              });
+            }} style={{width:"100%",padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:14}}>
+              追加する
+            </button>
+            {/* 出演者一覧 */}
+            <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",marginBottom:8}}>出演者一覧</p>
+            {inorionData.length === 0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center"}}>まだ登録がありません</p>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {inorionData.map((r,i)=>(
+                  <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"8px 10px",background:"rgba(138,74,106,0.05)",borderRadius:8,border:"1px solid rgba(138,74,106,0.15)"}}>
+                    <div style={{flex:1}}>
+                      <p style={{fontSize:13,fontWeight:600,color:C.choco}}>{r.name}</p>
+                      <p style={{fontSize:11,color:C.label}}>🎵 {r.song}</p>
+                    </div>
+                    <select value={r.status} onChange={e=>{
+                      gasWrite({action:"updateinorion",rowIndex:r.rowIndex,status:e.target.value}).then(()=>fetchInorion());
+                    }} style={{fontSize:11,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 6px",cursor:"pointer",color:C.choco}}>
+                      <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
+                      <option value="💮基準クリア">💮 基準クリア</option>
+                      <option value="🔥ブラッシュアップ中">🔥 ブラッシュアップ中</option>
+                    </select>
+                    <button onClick={()=>{
+                      if(window.confirm(r.name+"（"+r.song+"）を削除しますか？")){
+                        gasWrite({action:"deleteinorion",rowIndex:r.rowIndex}).then(()=>fetchInorion());
+                      }
+                    }} style={{padding:"4px 8px",borderRadius:6,border:"1px solid #ddd",background:"transparent",color:"#aaa",fontSize:11,cursor:"pointer"}}>🗑️</button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {showAllPoints && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             {!allPointsLoaded ? (
@@ -1555,6 +1634,64 @@ function App() {
   );
 
   const m = currentMember;
+
+  // 壱祈音専用ページ
+  if (inorionPage) {
+    const SONGS = ["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"];
+    const myEntries = inorionData.filter(r=>r.name===m.name);
+    return (
+      <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#f0e8f0,#e0d0e8)",fontFamily:"'Noto Sans JP',sans-serif"}}>
+        <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+        {topbar("壱祈音〜Inorion〜", [
+          iconBtn("← メンバーページへ",()=>setInorionPage(false)),
+        ])}
+        <div style={{padding:"24px 20px",maxWidth:680,margin:"0 auto"}}>
+          {/* ヘッダー */}
+          <div style={{textAlign:"center",marginBottom:24}}>
+            <p style={{fontSize:11,color:"#8a4a6a",letterSpacing:"0.15em",marginBottom:4}}>2026年10月17日（土）</p>
+            <h2 style={{fontSize:20,fontWeight:700,color:"#6a2a4a",marginBottom:4}}>壱祈音〜Inorion〜</h2>
+            <p style={{fontSize:12,color:"#8a6a7a"}}>神戸ラピスホール</p>
+          </div>
+
+          {/* あなたの演目 */}
+          {myEntries.length > 0 && (
+            <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,padding:"14px 16px",marginBottom:16}}>
+              <p style={{fontSize:11,color:"#8a4a6a",fontWeight:600,marginBottom:8,letterSpacing:"0.08em"}}>🎵 あなたの演目</p>
+              {myEntries.map((r,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:i<myEntries.length-1?"1px solid rgba(138,74,106,0.1)":"none"}}>
+                  <p style={{fontSize:13,fontWeight:600,color:"#6a2a4a"}}>{r.song}</p>
+                  <span style={{fontSize:12,color:"#8a4a6a",fontWeight:600}}>{r.status}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 全出演メンバー一覧 */}
+          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,padding:"14px 16px"}}>
+            <p style={{fontSize:11,color:"#8a4a6a",fontWeight:600,marginBottom:12,letterSpacing:"0.08em"}}>🎭 出演メンバー一覧</p>
+            {SONGS.map(song=>{
+              const entries = inorionData.filter(r=>r.song===song);
+              if (entries.length===0) return null;
+              return (
+                <div key={song} style={{marginBottom:14}}>
+                  <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:6,borderBottom:"1px solid rgba(138,74,106,0.15)",paddingBottom:4}}>🎵 {song}</p>
+                  {entries.map((r,i)=>(
+                    <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 8px",borderRadius:6,background:r.name===m.name?"rgba(138,74,106,0.1)":"transparent"}}>
+                      <p style={{fontSize:13,color:r.name===m.name?"#6a2a4a":C.choco,fontWeight:r.name===m.name?700:400}}>
+                        {r.name===m.name?"👤 ":""}{r.name}
+                      </p>
+                      <span style={{fontSize:11,color:"#8a4a6a"}}>{r.status}</span>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
@@ -1708,7 +1845,13 @@ function App() {
           })()}
         </div>
 
-        {/* 診断受付ボタン */}
+        {/* 壱祈音専用ページボタン（出演者のみ） */}
+        {inorionData.some(r=>r.name===m.name) && (
+          <button onClick={()=>setInorionPage(true)}
+            style={{...BTN_STYLE, padding:"12px", background:"linear-gradient(135deg,#c87aaa,#8a4a6a)", boxShadow:"0 4px 12px rgba(138,74,106,0.4)", width:"100%", marginBottom:0}}>
+            🎭 壱祈音〜Inorion〜 出演メンバー専用ページ
+          </button>
+        )}
         <a href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ3O5AWtl79MG7to8w6ClA_bMlY_DnD15p7n1VP6DrEKbQNnR9f0bZmqU3G1lwA5B8T6R7oPoybr?gv=true" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px"}}>
           📈 グーダドラム5つ項目診断受付
         </a>
