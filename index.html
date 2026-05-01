@@ -1683,7 +1683,19 @@ function App() {
           <div style={{textAlign:"center",marginBottom:24}}>
             <p style={{fontSize:11,color:"#8a4a6a",letterSpacing:"0.15em",marginBottom:4}}>2026年10月17日（土）</p>
             <h2 style={{fontSize:20,fontWeight:700,color:"#6a2a4a",marginBottom:4}}>壱祈音〜Inorion〜</h2>
-            <p style={{fontSize:12,color:"#8a6a7a"}}>神戸ラピスホール</p>
+            <a href="https://lapis-hall.jp/facilities/" target="_blank" rel="noreferrer"
+              style={{fontSize:12,color:"#8a4a6a",textDecoration:"underline",cursor:"pointer"}}>神戸ラピスホール</a>
+            {(()=>{
+              const today = new Date();
+              today.setHours(0,0,0,0);
+              const live = new Date("2026-10-17");
+              const diff = Math.ceil((live - today) / (1000*60*60*24));
+              return diff > 0
+                ? <p style={{fontSize:13,fontWeight:700,color:"#8a4a6a",marginTop:8}}>🗓 開催まであと <span style={{fontSize:20,color:"#6a2a4a"}}>{diff}</span> 日</p>
+                : diff === 0
+                ? <p style={{fontSize:13,fontWeight:700,color:"#c87aaa",marginTop:8}}>🎉 本日開催！</p>
+                : <p style={{fontSize:13,color:"#8a6a7a",marginTop:8}}>終了しました</p>;
+            })()}
           </div>
 
           {/* あなたの演目 */}
@@ -1703,7 +1715,7 @@ function App() {
           <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,padding:"14px 16px"}}>
             <p style={{fontSize:11,color:"#8a4a6a",fontWeight:600,marginBottom:12,letterSpacing:"0.08em"}}>🎭 出演メンバー一覧</p>
             {SONGS.map(song=>{
-              const entries = inorionData.filter(r=>r.song===song);
+              const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（"));
               if (entries.length===0) return null;
               return (
                 <div key={song} style={{marginBottom:14}}>
