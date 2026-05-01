@@ -829,10 +829,10 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
-        <button onClick={()=>setInorionTab(!inorionTab)}
+        {!isInstructor && <button onClick={()=>setInorionTab(!inorionTab)}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a4a6a",background:inorionTab?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionTab?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
           🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
-        </button>
+        </button>}
         {inorionTab && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:12,padding:"14px"}}>
             {/* 追加フォーム */}
