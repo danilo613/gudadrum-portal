@@ -830,7 +830,7 @@ function App() {
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
         {!isInstructor && <button onClick={()=>setInorionTab(!inorionTab)}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:inorionTab?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionTab?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a4a6a",background:inorionTab?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionTab?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
           🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
         </button>}
         {inorionTab && (
