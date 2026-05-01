@@ -928,6 +928,34 @@ function App() {
                 })}
               </div>
             )}
+            {/* 出演メンバー一覧（専用ページと同じ表示） */}
+            {inorionData.length > 0 && (
+              <div style={{marginTop:16,borderTop:"1px solid rgba(138,74,106,0.2)",paddingTop:14}}>
+                <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",marginBottom:10}}>🎭 出演メンバー一覧</p>
+                {["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(song=>{
+                  const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（"));
+                  if (entries.length===0) return null;
+                  return (
+                    <div key={song} style={{marginBottom:10,background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(138,74,106,0.12)"}}>
+                      <p style={{fontSize:13,fontWeight:700,color:"#6a2a4a",marginBottom:6}}>🎵 {song}</p>
+                      {entries.map((r,i)=>{
+                        const scaleMatch = r.song.match(/（(.+?)）/);
+                        const scale = scaleMatch ? scaleMatch[1] : "";
+                        return (
+                          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 6px"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <p style={{fontSize:12,color:"#6a2a4a"}}>{r.name}</p>
+                              {scale && <span style={{fontSize:10,color:"#fff",background:"#8a4a6a",borderRadius:4,padding:"1px 6px",fontWeight:600}}>{scale}</span>}
+                            </div>
+                            <span style={{fontSize:11,color:"#8a4a6a"}}>{r.status}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
         {showAllPoints && (
