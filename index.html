@@ -1705,7 +1705,7 @@ function App() {
   if (inorionPage) {
     const SONGS = ["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"];
     const myEntries = inorionData.filter(r=>r.name===m.name);
-    const INORION_SCHED_TYPES = ["幹向け〜zoom交流＆相談会〜（サブスクメンバー向け）","全体練習会（12月20日演奏会出演者向け）","対面 練習会（自由参加）"];
+    const INORION_SCHED_TYPES = ["幹向け〜zoom交流＆相談会〜（サブスクメンバー向け）","全体練習会（10月17日演奏会出演者向け）","対面 練習会（自由参加）"];
     const today2 = new Date(); today2.setHours(0,0,0,0);
     const inorionScheds = orchSchedules
       .filter(s=>INORION_SCHED_TYPES.includes(s["種別"]))
