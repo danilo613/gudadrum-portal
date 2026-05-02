@@ -737,6 +737,8 @@ function App() {
         const bl = loginData.filter(l=>l.name===b.name).length;
         return bl - al;
       })
+    : sortKey === "inorion"
+    ? filteredMembers.filter(m=>inorionData.some(r=>r.name===m.name))
     : [...filteredMembers].sort((a,b) => {
         const ai=LEVEL_ORDER.indexOf(a.level), bi=LEVEL_ORDER.indexOf(b.level);
         return (ai===-1?99:ai)-(bi===-1?99:bi);
@@ -796,6 +798,7 @@ function App() {
               <option value="level">段階順</option>
               <option value="region">地域順</option>
               <option value="login">ログイン回数順</option>
+              <option value="inorion">壱祈音出演者</option>
             </select>
             <div style={{position:"relative"}}>
               <button onClick={()=>setShowSongFilter(!showSongFilter)}
@@ -2491,6 +2494,12 @@ function App() {
           </a>
           </div>}
         </div>
+
+        {/* 開発支援ボタン */}
+        <a href="https://www.gudadrumjapan.com/product-page/shien" target="_blank" rel="noreferrer"
+          style={{...BTN_STYLE, padding:"12px", background:"linear-gradient(135deg,#e8a84a,#c87020)", boxShadow:"0 4px 12px rgba(200,112,32,0.4)", border:"none", width:"100%", display:"block", textAlign:"center"}}>
+          🌈 ポータルサイト開発支援 🌈
+        </a>
 
         {/* フィードバックボタン */}
         <div style={{marginTop:16,marginBottom:8}}>
