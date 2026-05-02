@@ -1704,6 +1704,14 @@ function App() {
   // 壱祈音専用ページ
   if (inorionPage) {
     const SONGS = ["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"];
+    const SONG_BPM = {
+      "蒼〜aoi〜": "140 BPM",
+      "iridescence": "100 BPM",
+      "Heartbeat of L**E": "115 BPM",
+      "water lily〜水面〜": "97 BPM",
+      "春ノ舞": "94 BPM",
+      "秋霖〜shuhrin〜": "112 BPM",
+    };
     const myEntries = inorionData.filter(r=>r.name===m.name);
     const INORION_SCHED_TYPES = ["幹向け〜zoom交流＆相談会〜（サブスクメンバー向け）","全体練習会（10月17日演奏会出演者向け）","対面 練習会（自由参加）"];
     const today2 = new Date(); today2.setHours(0,0,0,0);
@@ -1771,7 +1779,7 @@ function App() {
                   if (entries.length===0) return null;
                   return (
                     <div key={song} style={{marginBottom:14,background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(138,74,106,0.12)"}}>
-                      <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a",marginBottom:8}}>🎵 {song}</p>
+                      <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a",marginBottom:8}}>🎵 {song}{SONG_BPM[song] ? <span style={{fontSize:11,fontWeight:400,color:"#8a6a7a",marginLeft:6}}>{SONG_BPM[song]}</span> : ""}</p>
                       {entries.map((r,i)=>{
                         const scaleMatch = r.song.match(/（(.+?)）/);
                         const scale = scaleMatch ? scaleMatch[1] : "";
