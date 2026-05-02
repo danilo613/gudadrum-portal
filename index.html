@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
   <title>GUDADRUM ORCHESTRA - MEMBER PORTAL</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -1899,7 +1899,7 @@ function App() {
                 })()}</p>
                 <p style={{fontSize:16,fontWeight:700,color:LEVEL_COLOR,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{m.name}</p>
                 <p style={{fontSize:14,fontWeight:700,color:C.sand}}>{m.level||"−"}</p>
-                {m.subscNextDate && <p style={{fontSize:10,color:"rgba(255,255,255,0.6)",marginTop:2}}>次回更新日：{m.subscNextDate}</p>}
+                {m.subscNextDate && <p style={{fontSize:10,color:"rgba(255,255,255,0.6)",marginTop:2,whiteSpace:"nowrap"}}>次回更新日：{m.subscNextDate.replace(/-/g,"/")}</p>}
               </div>
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
