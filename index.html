@@ -249,6 +249,8 @@ function App() {
   const [inorionMyOpen, setInorionMyOpen] = useState(true);
   const [inorionListOpen, setInorionListOpen] = useState(true);
   const [inorionSchedOpen, setInorionSchedOpen] = useState(false);
+  const [inorionSchedView, setInorionSchedView] = useState("timeline");
+  const [inorionSchedFilter, setInorionSchedFilter] = useState("すべて");
   const [inorionTab, setInorionTab] = useState(false);
   const [inorionForm, setInorionForm] = useState({name:"", song:"", scale:"", status:"🎵楽曲思い出し中"});
   const [inorionMsg, setInorionMsg] = useState("");
@@ -1797,33 +1799,58 @@ function App() {
             {headerBtn("📅 壱祈音スケジュール", inorionSchedOpen, ()=>setInorionSchedOpen(!inorionSchedOpen))}
             {inorionSchedOpen && (
               <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px 16px"}}>
-                {inorionScheds.length === 0 ? (
-                  <p style={{fontSize:13,color:"#8a6a7a",textAlign:"center",padding:8}}>予定はありません</p>
-                ) : (
-                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                    {inorionScheds.map((s,i)=>{
-                      const d = new Date(s["日付"]);
-                      const fmtDate = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+WEEKDAYS2[d.getDay()]+"）" : s["日付"];
-                      const typeColor = s["色"] || "#8a4a6a";
-                      return (
-                        <div key={i} style={{background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+typeColor}}>
-                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
-                            <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a"}}>{fmtDate}</p>
-                            {s["時間"] && <p style={{fontSize:11,color:"#8a6a7a"}}>{s["時間"]}{s["終了時間"]?"〜"+s["終了時間"]:""}</p>}
-                            {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:typeColor,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
-                          </div>
-                          <p style={{fontSize:13,fontWeight:600,color:"#6a2a4a",marginBottom:4}}>{s["タイトル"]}</p>
-                          {s["備考"] && <p style={{fontSize:12,color:"#8a6a7a",marginBottom:6}}>{s["備考"]}</p>}
-                          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                            {s["ZoomURL"] && <a href={s["ZoomURL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#7a9aba,#5a7a8a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>🎥 Zoomに参加</a>}
-                            {s["詳細URL"] && <a href={s["詳細URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"rgba(138,74,106,0.15)",color:"#8a4a6a",fontSize:11,fontWeight:700,textDecoration:"none",border:"1px solid rgba(138,74,106,0.3)"}}>📄 詳細を見る</a>}
-                            {s["申込URL"] && <a href={s["申込URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>✍️ 申込む</a>}
-                          </div>
-                        </div>
-                      );
-                    })}
+                {/* 表示切り替え */}
+                <div style={{display:"flex",gap:8,marginBottom:12}}>
+                  <button onClick={()=>setInorionSchedView("timeline")}
+                    style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:inorionSchedView==="timeline"?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionSchedView==="timeline"?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                    🗓 タイムライン
+                  </button>
+                  <button onClick={()=>setInorionSchedView("category")}
+                    style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:inorionSchedView==="category"?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionSchedView==="category"?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                    🏷 種別で見る
+                  </button>
+                </div>
+                {/* 種別フィルター */}
+                {inorionSchedView==="category" && (
+                  <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
+                    {["すべて",...[...new Set(inorionScheds.map(s=>s["種別"]).filter(Boolean))]].map(cat=>(
+                      <button key={cat} onClick={()=>setInorionSchedFilter(cat)}
+                        style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+(inorionSchedFilter===cat?"#8a4a6a":"rgba(138,74,106,0.2)"),background:inorionSchedFilter===cat?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(255,255,255,0.8)",color:inorionSchedFilter===cat?"#fff":"#6a2a4a",fontSize:11,fontWeight:inorionSchedFilter===cat?700:400,cursor:"pointer"}}>
+                        {cat}
+                      </button>
+                    ))}
                   </div>
                 )}
+                {/* スケジュール一覧 */}
+                {(()=>{
+                  const filtered = inorionScheds.filter(s=>inorionSchedView==="timeline" || inorionSchedFilter==="すべて" || s["種別"]===inorionSchedFilter);
+                  if (filtered.length===0) return <p style={{fontSize:13,color:"#8a6a7a",textAlign:"center",padding:8}}>予定はありません</p>;
+                  return (
+                    <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                      {filtered.map((s,i)=>{
+                        const d = new Date(s["日付"]);
+                        const fmtDate = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+WEEKDAYS2[d.getDay()]+"）" : s["日付"];
+                        const typeColor = s["色"] || "#8a4a6a";
+                        return (
+                          <div key={i} style={{background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+typeColor}}>
+                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                              <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a"}}>{fmtDate}</p>
+                              {s["時間"] && <p style={{fontSize:11,color:"#8a6a7a"}}>{s["時間"]}{s["終了時間"]?"〜"+s["終了時間"]:""}</p>}
+                              {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:typeColor,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
+                            </div>
+                            <p style={{fontSize:13,fontWeight:600,color:"#6a2a4a",marginBottom:4}}>{s["タイトル"]}</p>
+                            {s["備考"] && <p style={{fontSize:12,color:"#8a6a7a",marginBottom:6}}>{s["備考"]}</p>}
+                            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                              {s["ZoomURL"] && <a href={s["ZoomURL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#7a9aba,#5a7a8a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>🎥 Zoomに参加</a>}
+                              {s["詳細URL"] && <a href={s["詳細URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"rgba(138,74,106,0.15)",color:"#8a4a6a",fontSize:11,fontWeight:700,textDecoration:"none",border:"1px solid rgba(138,74,106,0.3)"}}>📄 詳細を見る</a>}
+                              {s["申込URL"] && <a href={s["申込URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>✍️ 申込む</a>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
