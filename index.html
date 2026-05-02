@@ -2497,14 +2497,14 @@ function App() {
 
         {/* 開発支援ボタン */}
         <a href="https://www.gudadrumjapan.com/product-page/shien" target="_blank" rel="noreferrer"
-          style={{...BTN_STYLE, padding:"12px", background:"linear-gradient(135deg,#e8a84a,#c87020)", boxShadow:"0 4px 12px rgba(200,112,32,0.4)", border:"none", width:"100%", display:"block", textAlign:"center"}}>
+          style={{display:"block",textAlign:"center",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#e8a84a,#c87020)",color:"#fff",fontSize:14,fontWeight:700,textDecoration:"none",letterSpacing:"0.05em",boxShadow:"0 4px 12px rgba(200,112,32,0.4)",cursor:"pointer"}}>
           🌈 ポータルサイト開発支援 🌈
         </a>
 
         {/* フィードバックボタン */}
         <div style={{marginTop:16,marginBottom:8}}>
           <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
-            style={{width:"100%",padding:"12px",borderRadius:12,border:"1px solid #d4824a",background:"rgba(212,130,74,0.1)",color:"#b8622a",fontSize:13,fontWeight:600,cursor:"pointer",textAlign:"center"}}>
+            style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#7aaa3a,#4a7a1a)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(74,122,26,0.4)"}}>
             💬 アプリへのフィードバックを送る
           </button>
           {feedbackOpen && (
@@ -2534,7 +2534,7 @@ function App() {
           <div style={{marginBottom:16}}>
             {!cancelSubsConfirm ? (
               <button onClick={()=>setCancelSubsConfirm(true)}
-                style={{width:"100%",padding:"10px",borderRadius:12,border:"1px solid #aaa",background:"rgba(180,180,180,0.1)",color:"#888",fontSize:12,fontWeight:600,cursor:"pointer",textAlign:"center"}}>
+                style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#888,#555)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(80,80,80,0.4)"}}>
                 サブスクを中止する
               </button>
             ) : (
