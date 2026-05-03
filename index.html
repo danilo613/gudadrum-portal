@@ -255,7 +255,7 @@ function App() {
   const [inorionTab, setInorionTab] = useState(false);
   const [inorionForm, setInorionForm] = useState({name:"", song:"", scale:"", status:"🎵楽曲思い出し中"});
   const [inorionMsg, setInorionMsg] = useState("");
-  const [inorionOpenMap, setInorionOpenMap] = useState({});
+  const [refreshMsg, setRefreshMsg] = useState("");
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
   const [showAllPoints, setShowAllPoints] = useState(false);
@@ -784,7 +784,7 @@ function App() {
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("管理者ダッシュボード",[
-        iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); }),
+        iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
         iconBtn("ログアウト",()=>setPage("login")),
       ])}
       <div style={{padding:"24px",maxWidth:720,margin:"0 auto"}}>
@@ -792,6 +792,7 @@ function App() {
           <p style={{fontSize:11,color:C.label}}>
             {isDemo?"📋 デモデータで表示中":"👥 登録メンバー："+members.length+"人"}
             {filterSongs.length > 0 && <span style={{color:"#3a7a8a",fontWeight:700,marginLeft:8}}>／ 絞込結果：{filteredMembers.length}人</span>}
+            {refreshMsg && <span style={{color:C.olive,fontWeight:700,marginLeft:8}}>{refreshMsg}</span>}
           </p>
           <div style={{display:"flex",gap:6}}>
             <select value={sortKey} onChange={e=>setSortKey(e.target.value)}
@@ -2126,6 +2127,12 @@ function App() {
           <a href="https://calendar.app.google/LXdCQ4Zg4hAgnPyF7" target="_blank" rel="noreferrer"
             style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
             💬 個別相談（30分）申込み
+          </a>
+        )}
+        {m.subscType === "講師" && (
+          <a href="https://calendar.app.google/LXdCQ4Zg4hAgnPyF7" target="_blank" rel="noreferrer"
+            style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
+            💬 個別相談（60分）申込み
           </a>
         )}
 
