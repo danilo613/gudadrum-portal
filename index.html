@@ -249,6 +249,7 @@ function App() {
   const [inorionMyOpen, setInorionMyOpen] = useState(true);
   const [inorionListOpen, setInorionListOpen] = useState(true);
   const [inorionSchedOpen, setInorionSchedOpen] = useState(false);
+  const [inorionGuestOpen, setInorionGuestOpen] = useState(false);
   const [inorionSchedView, setInorionSchedView] = useState("timeline");
   const [inorionSchedFilter, setInorionSchedFilter] = useState("すべて");
   const [inorionTab, setInorionTab] = useState(false);
@@ -1753,6 +1754,56 @@ function App() {
                 ? <p style={{fontSize:13,fontWeight:700,color:"#c87aaa",marginTop:8}}>🎉 本日開催！</p>
                 : <p style={{fontSize:13,color:"#8a6a7a",marginTop:8}}>終了しました</p>;
             })()}
+          </div>
+
+          {/* ゲストミュージシャン情報 */}
+          <div style={boxStyle}>
+            {headerBtn("🎶 壱祈音〜Inorion〜ゲストミュージシャン情報", inorionGuestOpen, ()=>setInorionGuestOpen(!inorionGuestOpen))}
+            {inorionGuestOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
+                {/* スペシャルゲスト */}
+                <p style={{fontSize:11,fontWeight:700,color:"#fff",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",borderRadius:6,padding:"4px 10px",display:"inline-block",marginBottom:12,letterSpacing:"0.08em"}}>⭐️ スペシャルゲスト</p>
+
+                {/* 佐藤和哉 */}
+                <div style={{marginBottom:16,padding:"12px",background:"rgba(138,74,106,0.05)",borderRadius:10,border:"1px solid rgba(138,74,106,0.15)"}}>
+                  <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                    <p style={{fontSize:12,color:"#8a4a6a",fontWeight:600}}>篠笛</p>
+                    <a href="https://www.kazuyasato.com/" target="_blank" rel="noreferrer"
+                      style={{fontSize:15,fontWeight:700,color:"#6a2a4a",textDecoration:"underline"}}>佐藤和哉</a>
+                  </div>
+                  <p style={{fontSize:11,color:"#8a6a7a",marginBottom:8}}>参加予定演目：「藍と光の踊り」「water lily〜水面〜」「宙〜solar〜」</p>
+                  <p style={{fontSize:13,color:"#4a2a3a",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{"言わずと知れた、DANiLOの親友、佐藤和哉。Re:Graceでは「暁〜akatsuki〜」に参加。※「暁〜akatsuki〜」は編成が複雑すぎて生での再現が困難💦笑\n皆様が奏でる「water lily〜水面〜」で上物を奏でてくれるので、ベースをしっかりと奏でて、篠笛が流れるように、気持ちよく演奏できる様にしましょう！"}</p>
+                </div>
+
+                <div style={{borderTop:"1px dashed rgba(138,74,106,0.2)",margin:"12px 0"}}/>
+
+                {/* 柿原千春 */}
+                <div style={{marginBottom:16,padding:"12px",background:"rgba(138,74,106,0.05)",borderRadius:10,border:"1px solid rgba(138,74,106,0.15)"}}>
+                  <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                    <p style={{fontSize:12,color:"#8a4a6a",fontWeight:600}}>フルート</p>
+                    <a href="https://www.instagram.com/lotusmoon8181/" target="_blank" rel="noreferrer"
+                      style={{fontSize:15,fontWeight:700,color:"#6a2a4a",textDecoration:"underline"}}>柿原千春</a>
+                  </div>
+                  <p style={{fontSize:11,color:"#8a6a7a",marginBottom:8}}>参加予定演目：「宙〜solar〜」「Heartbeat of L**E」「Re:Grace」「春ノ舞」</p>
+                  <p style={{fontSize:13,color:"#4a2a3a",lineHeight:1.8,marginBottom:8}}>「Neo EARTH」にも出演してくれた、華に満ちた千春ちゃん。今回も各楽曲に華を添えてくれます✨<br/>皆様が奏でる「春ノ舞」で舞うようなフルートを奏でてくれます。</p>
+                  <a href="https://www.youtube.com/watch?v=sZsWpHeB7QY" target="_blank" rel="noreferrer"
+                    style={{display:"inline-block",padding:"5px 12px",borderRadius:6,background:"#ff4444",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>
+                    ▶️ 過去の映像を見る
+                  </a>
+                </div>
+
+                {/* 師弟出演 */}
+                <p style={{fontSize:11,fontWeight:700,color:"#fff",background:"linear-gradient(135deg,#7a9aba,#4a6a8a)",borderRadius:6,padding:"4px 10px",display:"inline-block",marginBottom:12,letterSpacing:"0.08em",marginTop:4}}>🥁 師弟出演</p>
+
+                <div style={{padding:"12px",background:"rgba(74,106,138,0.05)",borderRadius:10,border:"1px solid rgba(74,106,138,0.15)"}}>
+                  <div style={{display:"flex",alignItems:"baseline",gap:8,marginBottom:4,flexWrap:"wrap"}}>
+                    <p style={{fontSize:12,color:"#4a6a8a",fontWeight:600}}>GUDAdrum・パーカッション</p>
+                    <p style={{fontSize:15,fontWeight:700,color:"#2a3a5a"}}>Yuhta</p>
+                  </div>
+                  <p style={{fontSize:13,color:"#2a3a4a",lineHeight:1.8,whiteSpace:"pre-wrap"}}>{"かつてDANiLOに弟子入りして、CDをリリース。独立後、初めての再演となります。\nグーダドラムパートでは「Heartbeat of L**E」「iridescence」「蒼〜aoi〜」での参加。\nまた、「water lily〜水面〜」ではUDU（壺の楽器）を奏でる予定です。"}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* あなたの演目 */}
