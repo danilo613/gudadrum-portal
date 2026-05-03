@@ -780,6 +780,8 @@ function App() {
     </div>
   );
 
+  const m = currentMember;
+
   if (page === "admin") return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
@@ -1703,8 +1705,6 @@ function App() {
       )}
     </div>
   );
-
-  const m = currentMember;
 
   // 壱祈音専用ページ
   if (inorionPage) {
