@@ -255,7 +255,7 @@ function App() {
   const [inorionSchedView, setInorionSchedView] = useState("timeline");
   const [inorionSchedFilter, setInorionSchedFilter] = useState("すべて");
   const [inorionTab, setInorionTab] = useState(false);
-  const [inorionForm, setInorionForm] = useState({name:"", song:"", scale:"", status:"🎵楽曲思い出し中"});
+  const [inorionForm, setInorionForm] = useState({name:"", song:"", scale:"", status:"🌱第一段階：フレーズ覚え中"});
   const [inorionMsg, setInorionMsg] = useState("");
   const [inorionOpenMap, setInorionOpenMap] = useState({});
   const [refreshMsg, setRefreshMsg] = useState("");
@@ -879,9 +879,11 @@ function App() {
             )}
             <select value={inorionForm.status} onChange={e=>setInorionForm(p=>({...p,status:e.target.value}))}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:8,cursor:"pointer"}}>
-              <option value="🎵楽曲思い出し中">🎵 楽曲思い出し中</option>
-              <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
-              <option value="🔥基準クリアしてブラッシュアップ中">🔥 基準クリアしてブラッシュアップ中</option>
+              <option value="🌱第一段階：フレーズ覚え中">🌱 第一段階：フレーズ覚え中</option>
+              <option value="🎵第二段階：楽曲思い出し中">🎵 第二段階：楽曲思い出し中</option>
+              <option value="🔥第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）">🔥 第三段階：第一基準クリア（若幹レベル）</option>
+              <option value="⭐️第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）">⭐️ 第四段階：第二基準クリア（主幹レベル）</option>
+              <option value="💮第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）">💮 第五段階：第三基準クリア（若柱レベル）</option>
             </select>
             {inorionMsg && <p style={{fontSize:12,color:inorionMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:6}}>{inorionMsg}</p>}
             <button onClick={()=>{
@@ -892,7 +894,7 @@ function App() {
               gasWrite({action:"addinorion",name:inorionForm.name,song:songWithScale,status:inorionForm.status}).then(()=>{
                 setInorionMsg("✅ 追加しました！");
                 fetchInorion();
-                setInorionForm({name:"",song:"",scale:"",status:"🎵楽曲思い出し中"});
+                setInorionForm({name:"",song:"",scale:"",status:"🌱第一段階：フレーズ覚え中"});
                 setTimeout(()=>setInorionMsg(""),2000);
               });
             }} style={{width:"100%",padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:14}}>
@@ -922,9 +924,11 @@ function App() {
                               <select value={r.status} onChange={e=>{
                                 gasWrite({action:"updateinorion",rowIndex:r.rowIndex,status:e.target.value}).then(()=>fetchInorion());
                               }} style={{fontSize:11,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 6px",cursor:"pointer",color:C.choco}}>
-                                <option value="🎵楽曲思い出し中">🎵 楽曲思い出し中</option>
-                                <option value="🌱フレーズ覚え中">🌱 フレーズ覚え中</option>
-                                <option value="🔥基準クリアしてブラッシュアップ中">🔥 基準クリアしてブラッシュアップ中</option>
+                                <option value="🌱第一段階：フレーズ覚え中">🌱 第一段階：フレーズ覚え中</option>
+                                <option value="🎵第二段階：楽曲思い出し中">🎵 第二段階：楽曲思い出し中</option>
+                                <option value="🔥第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）">🔥 第三段階：第一基準クリア（若幹レベル）</option>
+                                <option value="⭐️第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）">⭐️ 第四段階：第二基準クリア（主幹レベル）</option>
+                                <option value="💮第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）">💮 第五段階：第三基準クリア（若柱レベル）</option>
                               </select>
                               <button onClick={()=>{
                                 gasWrite({action:"deleteinorion",rowIndex:r.rowIndex}).then(()=>fetchInorion());
