@@ -2677,7 +2677,7 @@ function App() {
               <div style={{display:"flex",gap:8}}>
                 <button onClick={()=>{setFeedbackOpen(false);setFeedbackStatus("");}}
                   style={{flex:1,padding:"8px",borderRadius:8,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
-                <button onClick={sendFeedback}
+                <button onClick={()=>sendFeedback()}
                   style={{flex:2,padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
               </div>
             </div>
