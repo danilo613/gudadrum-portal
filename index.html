@@ -389,7 +389,7 @@ function App() {
       } else {
         setFeedbackStatus("❌ " + (data.error||"エラーが発生しました"));
       }
-    } catch(e) { setFeedbackStatus("❌ " + e.message); }
+    } catch(e) { setFeedbackStatus("❌ エラー: " + e.message); }
   }
 
   async function fetchSchedules() {
@@ -539,8 +539,8 @@ function App() {
     setApplyingMember(null);
   }
 
-  async function postMemberFeedback(rawDate, type) {
-    const key = rawDate + type;
+  async function postMemberFeedback(rawDate, type, idx) {
+    const key = rawDate + type + (idx !== undefined ? idx : "");
     const value = (memberFbValue[key] || "").trim();
     if (!value) { setMemberFbMsg(p=>({...p,[key]:"内容を入力してください"})); return; }
     if (isInstructor && !memberFbInstructor) { setMemberFbMsg(p=>({...p,[key]:"講師名を選択してください"})); return; }
@@ -549,7 +549,7 @@ function App() {
       const today = new Date();
       const dateStr = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
       const senderName = isInstructor ? memberFbInstructor : (isFromAdmin ? "DANiLO" : currentMember.name);
-      const targetName = isInstructor ? currentMember.name : currentMember.name;
+      const targetName = currentMember.name;
       const commentText = dateStr + " " + senderName + ": " + value;
       const data = await gasWrite({action:"addschedulecomment", name:targetName, date:rawDate, type:type, comment:commentText});
       if (data.error) throw new Error(data.error);
@@ -2350,7 +2350,7 @@ function App() {
                                   <div style={{display:"flex",gap:6,marginTop:8}}>
                                     <button onClick={()=>{setMemberFbOpen(p=>({...p,[fbKey]:false}));setMemberFbMsg(p=>({...p,[fbKey]:""}));}}
                                       style={{flex:1,padding:"6px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
-                                    <button onClick={()=>postMemberFeedback(rawDate, s["種別"])}
+                                    <button onClick={()=>postMemberFeedback(rawDate, s["種別"], i)}
                                       style={{flex:2,padding:"6px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
                                   </div>
                                 </div>
@@ -2657,28 +2657,35 @@ function App() {
         </a>
 
         {/* フィードバックボタン */}
-        <div>
+        <div style={{marginBottom:8}}>
           <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
-            style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#7aaa3a,#4a7a1a)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(74,122,26,0.4)"}}>
+            style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#7aaa3a,#4a7a1a)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(74,122,26,0.4)",display:"block"}}>
             💬 アプリへのフィードバックを送る
           </button>
           {feedbackOpen && (
-            <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:16,marginTop:8}}>
-              <p style={{fontSize:12,color:C.label,marginBottom:12,lineHeight:1.6}}>
-                アプリの使い心地や改善のご要望などをDANiLOに直接お届けします。お気軽にどうぞ！
-              </p>
+            <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:16,marginTop:8,position:"relative",zIndex:10}}>
+              <p style={{fontSize:12,color:C.label,marginBottom:12,lineHeight:1.6}}>アプリの使い心地や改善のご要望などをDANiLOに直接お届けします。お気軽にどうぞ！</p>
               <input value={feedbackName} onChange={e=>setFeedbackName(e.target.value)}
                 placeholder="お名前（任意）"
-                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,marginBottom:8}}/>
+                style={{width:"100%",boxSizing:"border-box",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,marginBottom:8,display:"block"}}/>
               <textarea value={feedbackMsg} onChange={e=>setFeedbackMsg(e.target.value)}
                 placeholder="フィードバック内容をご記入ください"
-                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:100,marginBottom:8}}/>
+                style={{width:"100%",boxSizing:"border-box",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco,resize:"none",height:100,marginBottom:8,display:"block"}}/>
               {feedbackStatus && <p style={{fontSize:12,color:feedbackStatus.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{feedbackStatus}</p>}
               <div style={{display:"flex",gap:8}}>
-                <button onClick={()=>{setFeedbackOpen(false);setFeedbackStatus("");}}
-                  style={{flex:1,padding:"8px",borderRadius:8,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
-                <button onClick={()=>sendFeedback()}
-                  style={{flex:2,padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
+                <button onClick={()=>{setFeedbackOpen(false);setFeedbackStatus(""); setFeedbackMsg(""); setFeedbackName("");}}
+                  style={{flex:1,padding:"10px",borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:13,cursor:"pointer",fontWeight:600}}>キャンセル</button>
+                <button onClick={()=>{
+                  if (!feedbackMsg.trim()) { setFeedbackStatus("内容を入力してください"); return; }
+                  setFeedbackStatus("送信中...");
+                  gasWrite({action:"feedback", name:feedbackName||"匿名", message:feedbackMsg})
+                    .then(d=>{
+                      if (d.success) { setFeedbackStatus("✅ 送信しました！"); setFeedbackMsg(""); setTimeout(()=>{setFeedbackOpen(false);setFeedbackStatus("");},2000); }
+                      else { setFeedbackStatus("❌ "+(d.error||"エラー")); }
+                    })
+                    .catch(e=>setFeedbackStatus("❌ "+e.message));
+                }}
+                  style={{flex:2,padding:"10px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>送信する</button>
               </div>
             </div>
           )}
