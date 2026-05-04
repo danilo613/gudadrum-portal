@@ -1425,7 +1425,7 @@ function App() {
                         const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                         if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
                         return {date:"", author:"", text:trimmed};
-                      }).filter(x=>x&&x.text);
+                      }).filter(x=>x&&x.text).reverse();
                     };
                     const comments = parseComment(s["コメント"]);
                     const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
@@ -2275,7 +2275,7 @@ function App() {
                           const match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
                           if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
                           return {date:"", author:"", text:trimmed};
-                        }).filter(Boolean);
+                        }).filter(Boolean).reverse();
                       };
                       const comments = parseComments(s["コメント"]);
                       const INSTRUCTORS_LIST = ["Yamashita Noriko","hiroko","灯音(to•o•n)","DANiLO"];
