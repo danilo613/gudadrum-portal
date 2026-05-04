@@ -251,6 +251,7 @@ function App() {
   const [inorionListOpen, setInorionListOpen] = useState(true);
   const [inorionSchedOpen, setInorionSchedOpen] = useState(false);
   const [inorionGuestOpen, setInorionGuestOpen] = useState(false);
+  const [inorionRehaOpen, setInorionRehaOpen] = useState(false);
   const [inorionSchedView, setInorionSchedView] = useState("timeline");
   const [inorionSchedFilter, setInorionSchedFilter] = useState("すべて");
   const [inorionTab, setInorionTab] = useState(false);
@@ -1755,6 +1756,82 @@ function App() {
                 ? <p style={{fontSize:13,fontWeight:700,color:"#c87aaa",marginTop:8}}>🎉 本日開催！</p>
                 : <p style={{fontSize:13,color:"#8a6a7a",marginTop:8}}>終了しました</p>;
             })()}
+          </div>
+
+          {/* 前日&当日リハ予定 */}
+          <div style={boxStyle}>
+            {headerBtn("📋 前日＆当日リハ予定（2026年5月4日現在）", inorionRehaOpen, ()=>setInorionRehaOpen(!inorionRehaOpen))}
+            {inorionRehaOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
+
+                {/* 10月16日 */}
+                <div style={{marginBottom:20}}>
+                  <div style={{background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+                    <p style={{fontSize:13,fontWeight:700,color:"#fff"}}>10月16日（金）</p>
+                    <p style={{fontSize:12,color:"rgba(255,255,255,0.85)"}}>前夜祭「音浴と光の世界」</p>
+                  </div>
+
+                  {/* 前夜祭情報 */}
+                  <div style={{background:"rgba(138,74,106,0.06)",borderRadius:10,padding:"12px 14px",marginBottom:10,border:"1px solid rgba(138,74,106,0.15)"}}>
+                    <p style={{fontSize:13,fontWeight:700,color:"#6a2a4a",marginBottom:4}}>〝壱祈音〜Inorion〜〟前夜祭「音浴と光の世界」</p>
+                    <p style={{fontSize:12,color:"#4a2a3a",lineHeight:1.8,marginBottom:6}}>壱祈音〜Inorion〜を記念して、前夜祭を開催。DANiLOの即興演奏と、神秘的な光の世界で極上の音浴会を開催。</p>
+                    <p style={{fontSize:12,color:"#8a4a6a",fontWeight:600}}>💰 参加費 4,500円　20名まで</p>
+                    <p style={{fontSize:11,color:"#8a6a7a",marginTop:4}}>※参加予約をしたい方はDANiLOまで</p>
+                  </div>
+
+                  {/* タイムライン */}
+                  {[
+                    {time:"15:00", label:"DANiLO 会場入り"},
+                    {time:"16:00", label:"前夜祭「音浴と光の世界」スタート"},
+                    {time:"17:15", label:"演奏会終了"},
+                    {time:"17:30", label:"オーケストラメンバー 会場入り", highlight:true},
+                    {time:"18:00", label:"リハスタート（生音でお合わせ、流れの確認。位置のバミり）", highlight:true},
+                    {time:"21:00", label:"終了"},
+                  ].map((item,i)=>(
+                    <div key={i} style={{display:"flex",gap:12,padding:"7px 0",borderBottom:"1px dashed rgba(138,74,106,0.15)"}}>
+                      <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",minWidth:46,flexShrink:0}}>{item.time}</p>
+                      <p style={{fontSize:12,color:item.highlight?"#6a2a4a":"#4a2a3a",fontWeight:item.highlight?700:400,lineHeight:1.6}}>{item.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* 10月17日 */}
+                <div>
+                  <div style={{background:"linear-gradient(135deg,#7a9aba,#4a6a8a)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+                    <p style={{fontSize:13,fontWeight:700,color:"#fff"}}>10月17日（土）</p>
+                    <p style={{fontSize:12,color:"rgba(255,255,255,0.85)"}}>〝壱祈音〜Inorion〜〟本番</p>
+                  </div>
+
+                  {[
+                    {time:"9:45",  label:"オーケストラメンバー 入り", highlight:true},
+                    {time:"10:15", label:"リハ開始", highlight:true},
+                    {time:"11:00", label:"ゲストミュージシャン 入り"},
+                    {time:"12:00", label:"ゲスト交えてリハ開始", highlight:true},
+                    {time:"13:30", label:"休憩"},
+                    {time:"14:00", label:"通しリハ開始", highlight:true},
+                    {time:"17:00", label:"音止め"},
+                    {time:"17:30", label:"オープン"},
+                    {time:"18:00", label:"🎭 スタート", highlight:true},
+                    {time:"19:45", label:"終了 → 物販（スタッフ・演者 撤収開始）"},
+                    {time:"20:30", label:"客出し"},
+                    {time:"21:00", label:"完全終了"},
+                    {time:"21:20", label:"打ち上げ開始 🥂"},
+                  ].map((item,i)=>(
+                    <div key={i} style={{display:"flex",gap:12,padding:"7px 0",borderBottom:"1px dashed rgba(74,106,138,0.15)"}}>
+                      <p style={{fontSize:12,fontWeight:700,color:"#4a6a8a",minWidth:46,flexShrink:0}}>{item.time}</p>
+                      <p style={{fontSize:12,color:item.highlight?"#2a3a5a":"#4a2a3a",fontWeight:item.highlight?700:400,lineHeight:1.6}}>{item.label}</p>
+                    </div>
+                  ))}
+
+                  {/* 打ち上げ会場 */}
+                  <div style={{marginTop:12,background:"rgba(74,106,138,0.06)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(74,106,138,0.15)"}}>
+                    <p style={{fontSize:12,fontWeight:700,color:"#4a6a8a",marginBottom:4}}>🍻 打ち上げ会場</p>
+                    <a href="https://tabelog.com/hyogo/A2801/A280102/28070676/" target="_blank" rel="noreferrer"
+                      style={{fontSize:13,fontWeight:700,color:"#2a3a5a",textDecoration:"underline"}}>Kono-Hana Cafe（コノハナ カフェ）</a>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* ゲストミュージシャン情報 */}
