@@ -1894,6 +1894,14 @@ function App() {
               {headerBtn("🎵 あなたの演目", inorionMyOpen, ()=>setInorionMyOpen(!inorionMyOpen))}
               {inorionMyOpen && (
                 <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px 16px"}}>
+                  {/* 凡例 */}
+                  <div style={{background:"rgba(138,74,106,0.05)",borderRadius:8,padding:"10px 12px",marginBottom:12,fontSize:11,color:"#6a2a4a",lineHeight:2}}>
+                    <p>🌱 第一段階：フレーズ覚え中（初めて覚える人）</p>
+                    <p>🎵 第二段階：楽曲思い出し中（一度覚えた人が思い出す）</p>
+                    <p>🔥 第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）⬅️出演確定🔥</p>
+                    <p>⭐️ 第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）</p>
+                    <p>💮 第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）</p>
+                  </div>
                   {myEntries.map((r,i)=>(
                     <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 0",borderBottom:i<myEntries.length-1?"1px solid rgba(138,74,106,0.1)":"none"}}>
                       <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a"}}>{r.song}</p>
@@ -1910,6 +1918,14 @@ function App() {
             {headerBtn("🎭 出演メンバー一覧", inorionListOpen, ()=>setInorionListOpen(!inorionListOpen))}
             {inorionListOpen && (
               <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px 16px"}}>
+                {/* 凡例 */}
+                <div style={{background:"rgba(138,74,106,0.05)",borderRadius:8,padding:"10px 12px",marginBottom:12,fontSize:11,color:"#6a2a4a",lineHeight:2}}>
+                  <p>🌱 第一段階：フレーズ覚え中（初めて覚える人）</p>
+                  <p>🎵 第二段階：楽曲思い出し中（一度覚えた人が思い出す）</p>
+                  <p>🔥 第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）⬅️出演確定🔥</p>
+                  <p>⭐️ 第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）</p>
+                  <p>💮 第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）</p>
+                </div>
                 {SONGS.map(song=>{
                   const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（") || r.song.startsWith(song+" "));
                   if (entries.length===0) return null;
