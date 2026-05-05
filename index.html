@@ -1530,6 +1530,8 @@ function App() {
                   {!isInstructor && <option value="即興レッスン:zoom">即興レッスン:zoom</option>}
                   {!isInstructor && <option value="演奏診断:対面">演奏診断:対面</option>}
                   {!isInstructor && <option value="演奏診断:zoom">演奏診断:zoom</option>}
+                  {!isInstructor && <option value="個別相談15分">個別相談15分</option>}
+                  {!isInstructor && <option value="個別相談30分">個別相談30分</option>}
                   <option value="練習会">練習会</option>
                   <option value="イベント">イベント</option>
                   <option value="その他">その他</option>
@@ -2264,6 +2266,7 @@ function App() {
             const d = new Date(rawDate);
             const isValidDate = !isNaN(d.getTime()) && d.getFullYear() > 1900;
             const fmtDate = isValidDate ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日" : String(rawDate);
+            const gasDate = isValidDate ? d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0") : String(rawDate);
             const t = s["時間"]; const td = new Date(t);
             const fmtTime = (!isNaN(td.getTime())&&td.getFullYear()<=1900) ? (td.getHours()+":"+String(td.getMinutes()).padStart(2,"0")) : String(t||"");
             const isOpen = pastSchedOpen[rawDate+s["種別"]+i] || false;
@@ -2350,7 +2353,7 @@ function App() {
                                   <div style={{display:"flex",gap:6,marginTop:8}}>
                                     <button onClick={()=>{setMemberFbOpen(p=>({...p,[fbKey]:false}));setMemberFbMsg(p=>({...p,[fbKey]:""}));}}
                                       style={{flex:1,padding:"6px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:12,cursor:"pointer"}}>キャンセル</button>
-                                    <button onClick={()=>postMemberFeedback(rawDate, s["種別"], i)}
+                                    <button onClick={()=>postMemberFeedback(gasDate, s["種別"], i)}
                                       style={{flex:2,padding:"6px",borderRadius:6,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>送信する</button>
                                   </div>
                                 </div>
