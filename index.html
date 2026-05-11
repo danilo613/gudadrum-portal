@@ -272,6 +272,7 @@ function App() {
   const [myDataOpen, setMyDataOpen] = useState(false);
   const [commentOpen, setCommentOpen] = useState(false);
   const [curriculumOpen, setCurriculumOpen] = useState(false);
+  const [faqOpen, setFaqOpen] = useState(false);
   const [lessonModal, setLessonModal] = useState(null);
   const [lessonColumn, setLessonColumn] = useState("課題");
   const [lessonValue, setLessonValue] = useState("");
@@ -2651,6 +2652,22 @@ function App() {
             メインカリキュラムを受講する
           </a>
           </div>}
+        </div>
+
+        {/* よくある質問 */}
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+          <button onClick={()=>setFaqOpen(!faqOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,color:C.label,fontWeight:700}}>❓ よくある質問</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:faqOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {faqOpen && (
+            <div style={{borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
+              <a href="https://able-chemistry-1ee.notion.site/35d2b1d0bdf980fd9ad7c7de5dd64896?source=copy_link" target="_blank" rel="noreferrer"
+                style={{...BTN_STYLE, padding:"12px", display:"block"}}>
+                📖 よくある質問を見る
+              </a>
+            </div>
+          )}
         </div>
 
         {/* 開発支援ボタン */}
