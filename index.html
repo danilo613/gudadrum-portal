@@ -2001,7 +2001,7 @@ function App() {
                               {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:typeColor,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
                             </div>
                             <p style={{fontSize:13,fontWeight:600,color:"#6a2a4a",marginBottom:4}}>{s["タイトル"]}</p>
-                            {s["備考"] && <p style={{fontSize:12,color:"#8a6a7a",marginBottom:6}}>{s["備考"]}</p>}
+                            {s["備考"] && <p style={{fontSize:12,color:"#8a6a7a",marginBottom:6,whiteSpace:"pre-wrap"}}>{s["備考"]}</p>}
                             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                               {s["ZoomURL"] && <a href={s["ZoomURL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#7a9aba,#5a7a8a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>🎥 Zoomに参加</a>}
                               {s["詳細URL"] && <a href={s["詳細URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"rgba(138,74,106,0.15)",color:"#8a4a6a",fontSize:11,fontWeight:700,textDecoration:"none",border:"1px solid rgba(138,74,106,0.3)"}}>📄 詳細を見る</a>}
@@ -2279,7 +2279,7 @@ function App() {
                   </div>
                   <div style={{flex:1}}>
                     <span style={{fontSize:11,fontWeight:700,color:"#fff",background:s["種別"].includes("対面")?"#708238":(s["種別"].includes("zoom")||s["種別"].includes("個別相談"))?"#3a7a8a":s["種別"]==="練習会"?"#5a6a8a":"#8a6a3a",borderRadius:4,padding:"2px 6px"}}>{s["種別"]}</span>
-                    {s["備考"] && <p style={{fontSize:12,color:C.label,marginTop:4}}>{s["備考"]}</p>}
+                    {s["備考"] && <p style={{fontSize:12,color:C.label,marginTop:4,whiteSpace:"pre-wrap"}}>{s["備考"]}</p>}
                     {!isPastItem && (s["種別"].includes("zoom") || s["種別"].includes("個別相談")) && (
                       <div style={{marginTop:6,background:"rgba(58,122,138,0.08)",borderRadius:6,padding:"6px 8px"}}>
                         <a href="https://us06web.zoom.us/j/7484259893?pwd=97rxQJ8xoSZyKiDRLCgD5ITIq9a0KT.1" target="_blank" rel="noreferrer"
@@ -2484,7 +2484,7 @@ function App() {
                             {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:typeColor,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
                           </div>
                           <p style={{fontSize:13,fontWeight:600,color:C.choco,marginBottom:4}}>{s["タイトル"]}</p>
-                          {s["備考"] && <p style={{fontSize:12,color:C.label,marginBottom:6}}>{s["備考"]}</p>}
+                          {s["備考"] && <p style={{fontSize:12,color:C.label,marginBottom:6,whiteSpace:"pre-wrap"}}>{s["備考"]}</p>}
                           <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                             {s["ZoomURL"] && (
                               <a href={s["ZoomURL"]} target="_blank" rel="noreferrer"
