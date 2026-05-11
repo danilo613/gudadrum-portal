@@ -1,21 +1,4 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
-  <title>GUDADRUM ORCHESTRA - MEMBER PORTAL</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <style>* { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Noto Sans JP', sans-serif; }</style>
-</head>
-<body>
-  <div id="root"></div>
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
+import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "guda_config_v3";
 const ADMIN_PASS = "1919";
@@ -192,7 +175,7 @@ function MiniRadar({ m, size=48 }) {
   );
 }
 
-function App() {
+export default function App() {
   const [members, setMembers] = useState([]);
   const [isDemo, setIsDemo] = useState(true);
   const [isInstructor, setIsInstructor] = useState(false);
@@ -2662,10 +2645,9 @@ function App() {
           </button>
           {faqOpen && (
             <div style={{borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
-              <a href="https://able-chemistry-1ee.notion.site/35d2b1d0bdf980fd9ad7c7de5dd64896?source=copy_link" target="_blank" rel="noreferrer"
-                style={{...BTN_STYLE, padding:"12px", display:"block"}}>
-                📖 よくある質問を見る
-              </a>
+              <iframe src="https://able-chemistry-1ee.notion.site/ebd/35d2b1d0bdf980fd9ad7c7de5dd64896"
+                style={{width:"100%",height:3000,border:"none",borderRadius:8}}
+                title="よくある質問"/>
             </div>
           )}
         </div>
@@ -2746,8 +2728,3 @@ function App() {
     </div>
   );
 }
-
-    ReactDOM.render(React.createElement(App), document.getElementById('root'));
-  </script>
-</body>
-</html>
