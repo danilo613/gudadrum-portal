@@ -354,7 +354,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     const s=stepRef.current;
     const L=leftRef.current, R=rightRef.current;
     const s12=s%SPB;
-    const ms=Math.round((60/bpmRef.current/4)*1000);
+    const ms=Math.round((60/bpmRef.current/3)*1000);
     if(dimRef.current) clearTimeout(dimRef.current);
     dimRef.current=setTimeout(doDimAll,Math.round(ms*0.75));
     setStep(s);
@@ -374,7 +374,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function doStart() {
     if(iidRef.current) clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/4)*1000));
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/3)*1000));
   }
 
   function doStop() {
