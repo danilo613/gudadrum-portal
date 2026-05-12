@@ -305,6 +305,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var bpmRef=useRef(bpm); var metroOnRef=useRef(metroOn);
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
+  var subdivRef=useRef(subdiv);
 
   useEffect(function(){leftRef.current=left;},[left]);
   useEffect(function(){rightRef.current=right;},[right]);
@@ -314,6 +315,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){subdivRef.current=subdiv;if(playing){doStop();}},[subdiv]);
   useEffect(function(){subdivRef.current=subdiv;},[subdiv]);
 
   useEffect(function(){
