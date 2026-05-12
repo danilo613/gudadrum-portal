@@ -301,6 +301,18 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   useEffect(function(){return function(){doStop();};},[]);
 
+  // スペースキーで再生/停止
+  useEffect(function(){
+    function onKey(e){
+      if(e.code==="Space"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){
+        e.preventDefault();
+        handlePlay();
+      }
+    }
+    window.addEventListener("keydown",onKey);
+    return function(){window.removeEventListener("keydown",onKey);};
+  },[playing]);
+
   function initAudio(cb){
     if(actxRef.current){if(cb)cb();return;}
     var Ctx=window.AudioContext||window.webkitAudioContext;
@@ -410,9 +422,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   // 中央の拍目印カラム（左右の間）
-  // 各ステップに対応した細いセル
-  // 小節頭=濃いグレー帯、4分音符=薄いグレー帯、三連の細分=ドット
-  // クリックでその位置から再生開始
+  // 小節頭・4分音符の位置に横帯を表示、クリックで再生開始位置を設定
   function renderBeatCol(barIdx){
     var stepH = CELL+GAP;
     var rows = [];
@@ -420,31 +430,29 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       var s=barIdx*SPB+i;
       var ibs=i===0, ib=i%3===0&&i!==0;
       var cur=s===curStep;
-      var isStart=s===startStepRef.current&&!playing;
-      var bg, h, content=null;
+      var isStart=s===startStepRef.current;
+      // 帯の色とサイズ
+      var band=null;
       if(ibs){
-        bg="#a0a0a0"; h=stepH-GAP;
+        // 小節頭: 濃いグレーの太い横帯
+        band=<div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:isStart?"#E74C3C":cur?"#505050":"#909090",borderRadius:2}}/>;
       } else if(ib){
-        bg="#c8c8c8"; h=stepH-GAP;
-        content=<div style={{width:4,height:4,borderRadius:"50%",background:"#888",margin:"0 auto"}}/>;
+        // 4分音符: 薄いグレーの細い横帯（中央寄り）
+        band=<div style={{position:"absolute",top:"30%",left:0,right:0,height:"40%",background:isStart?"rgba(231,76,60,0.6)":cur?"#808080":"#bbbbbb",borderRadius:1}}/>;
       } else {
-        bg="transparent"; h=stepH-GAP;
-        content=<div style={{width:2,height:2,borderRadius:"50%",background:"#ccc",margin:"0 auto"}}/>;
+        // 三連の細分: 小さいドット
+        band=<div style={{position:"absolute",top:"50%",left:"50%",width:3,height:3,borderRadius:"50%",background:cur?"#888":"#d0d0d0",transform:"translate(-50%,-50%)"}}/>;
       }
-      if(cur) bg="#606060";
-      if(isStart) bg="#E74C3C";
       rows.push(
         <div key={i}
           onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
           style={{
-            width:12, height:h,
-            background:bg,
+            position:"relative",
+            width:12, height:stepH-GAP,
             marginBottom:GAP,
-            borderRadius:2,
             cursor:"pointer",
-            display:"flex",alignItems:"center",justifyContent:"center",
           }}>
-          {content}
+          {band}
         </div>
       );
     }
@@ -3372,7 +3380,7 @@ function App() {
                   sectionKey={scoreSection}
                   sectionLabel={{"intro":"イントロ　0:05〜","amelo":"Aメロ　0:44〜","bmelo":"Bメロ"}[scoreSection]||scoreSection}
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
-                  canEdit={isFromAdmin}
+                  canEdit={false}
                   onSave={saveScorePattern}
                 />
               </div>
