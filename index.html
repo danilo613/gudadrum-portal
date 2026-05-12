@@ -230,16 +230,16 @@ const SCORE_DOTS_FUNENONE = {
   pink:   {cx:70,    cy:83},
 };
 
-// dreamy EYES: 180度回転、ピンクなし（8音）
+// dreamy EYES: 画像の配置通り（ピンクなし、8音）
 const SCORE_DOTS_DREAMY = {
-  yellow: {cx:70.0,  cy:131.0},  // 下（旧上）
-  purple: {cx:36.1,  cy:116.9},  // 左下（旧右上）
-  cyan:   {cx:22.0,  cy:83.0},   // 左（旧右）
-  lime:   {cx:36.1,  cy:49.1},   // 左上（旧右下）
-  orange: {cx:103.9, cy:49.1},   // 右上（旧左下）
-  green:  {cx:118.0, cy:83.0},   // 右（旧左）
-  red:    {cx:103.9, cy:116.9},  // 右下（旧左上）
-  brown:  {cx:70,    cy:83},     // 中央（ピンクの代わり、表示なし）
+  orange: {cx:70.0,  cy:35.0},   // 上
+  lime:   {cx:103.9, cy:49.1},   // 右上
+  red:    {cx:118.0, cy:83.0},   // 右
+  pink:   {cx:103.9, cy:116.9},  // 右下
+  brown:  {cx:70.0,  cy:131.0},  // 下
+  cyan:   {cx:36.1,  cy:116.9},  // 左下
+  yellow: {cx:22.0,  cy:83.0},   // 左
+  green:  {cx:36.1,  cy:49.1},   // 左上
 };
 
 const SCORE_DOTS = SCORE_DOTS_FUNENONE;
@@ -762,7 +762,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               {(function(){
                 var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
                 return Object.keys(activeDots).filter(function(c){
-                  return !(scale==="dreamy"&&c==="brown");
+                  return true;
                 }).map(function(color){
                   var pos=activeDots[color];
                   return (
@@ -798,7 +798,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               {(function(){
                 var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
                 return Object.keys(activeDots).filter(function(c){
-                  return !(scale==="dreamy"&&c==="brown");
+                  return true;
                 }).map(function(color){
                   var pos=activeDots[color];
                   return (
