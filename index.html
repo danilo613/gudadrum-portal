@@ -593,7 +593,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
 
     return (
-      <div key={barIdx} style={{flexShrink:0,marginRight:6}}>
+      <div key={barIdx} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
         {/* 小節番号 */}
         <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
           <div onClick={function(b){return function(){startStepRef.current=b*SPB;setCurStep(-1);};}(barIdx)}
@@ -710,7 +710,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
       {canEdit ? (
         <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-          <div style={{flexShrink:0,width:140}}>
+          <div style={{flexShrink:0,width:140,paddingTop:"167px"}}>
             <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
               <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
