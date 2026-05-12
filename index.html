@@ -490,11 +490,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                     borderRadius:2,
                     background:on
                       ? SCORE_DOT_COLORS[color]
-                      : ibs
+                      : (ibs||ib)
                         ? SCORE_PALE_COLORS[color]
-                        : ib
-                          ? "rgba(0,0,0,0.04)"
-                          : "#ebebeb",
+                        : "#e8e8e8",
                     cursor:"pointer",
                     outline:cur?"2px solid #555":"none",
                     outlineOffset:"-1px",
@@ -1253,14 +1251,17 @@ function App() {
     setScoreLoading(true);
     try {
       const res = await gasRead({ action:"getscores" });
-      const rows = (res.rows || []).filter(r => r.score_id === scoreId);
+      console.log("getscores response:", res);
+      const rows = (res.rows || []).filter(function(r){ return r.score_id === scoreId; });
+      console.log("filtered rows:", rows.length);
       const patterns = {};
-      rows.forEach(r => {
+      rows.forEach(function(r) {
         if (!patterns[r.section]) patterns[r.section] = { left:{}, right:{} };
         try { patterns[r.section][r.hand][r.color] = JSON.parse(r.pattern); } catch(e) {}
       });
-      setScorePatterns(prev => ({...prev, [scoreId]: patterns}));
-    } catch(e) { console.warn(e); }
+      console.log("patterns:", JSON.stringify(Object.keys(patterns)));
+      setScorePatterns(function(prev){ return Object.assign({}, prev, {[scoreId]: patterns}); });
+    } catch(e) { console.warn("loadScorePatterns error:", e); }
     setScoreLoading(false);
   }
 
@@ -1539,7 +1540,7 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
-        {!isInstructor && <button onClick={()=>setScoreEditOpen(v=>!v)}
+        {!isInstructor && <button onClick={()=>{setScoreEditOpen(function(v){if(!v){loadScorePatterns(scoreEditId);}return !v;});}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:scoreEditOpen?"linear-gradient(135deg,#5a9aaa,#3a6a7a)":"rgba(58,106,122,0.1)",color:scoreEditOpen?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎼 譜面編集 {scoreEditOpen?"▲":"▼"}
         </button>}
