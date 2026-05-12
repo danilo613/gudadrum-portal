@@ -3417,7 +3417,7 @@ function App() {
         </div>
 
         {/* 譜面プレイヤー */}
-        {false && (
+        {(isFromAdmin || scoreList.length > 0) && (
           <div style={{marginBottom:8}}>
             <button onClick={()=>{
               if(!scorePage){ const id=isFromAdmin||isInstructor?"waterlily":scoreList[0]; setCurrentScoreId(id); loadScorePatterns(id); }
