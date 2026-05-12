@@ -363,10 +363,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
       if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
     }
+    // 現在のsubdivと同じなら不要な更新を避ける
     setSubdiv(nt);
     setSPB(spb);
     setLeft(lp);
     setRight(rp);
+    leftRef.current=lp;
+    rightRef.current=rp;
     setSecTime(startTime||(patternData.meta&&patternData.meta.startTime)||"");
   },[patternData,startTime]);
 
@@ -495,7 +498,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handleSave(){
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime,subdiv:subdiv});
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime,noteType:subdiv});
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -1487,7 +1490,7 @@ function App() {
       updated.left[color]=(left[color]||[]).slice();
       updated.right[color]=(right[color]||[]).slice();
     });
-    if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;updated.meta.noteType=meta.noteType;}
+    if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;updated.meta.noteType=meta.noteType;updated.meta.subdiv=meta.noteType;}
     setScorePatterns(function(prev){var n=Object.assign({},prev);n[scoreId]=Object.assign({},prev[scoreId]);n[scoreId][section]=updated;return n;});
   }
 
