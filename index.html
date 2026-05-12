@@ -261,7 +261,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var CELL = 18, GAP = 1;
 
   function emptyPat(total) {
-    var t = total || TOTAL;
+    var t = total || 128; // 常に最大サイズで確保
     var p = {};
     COLORS.forEach(function(c){ p[c] = new Array(t).fill(0); });
     return p;
@@ -341,23 +341,33 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   },[subdiv]);
 
   useEffect(function(){
-    var lp=emptyPat(),rp=emptyPat();
-    if(patternData){
-      COLORS.forEach(function(c){
-        if(patternData.left&&patternData.left[c]) lp[c]=patternData.left[c].slice();
-        if(patternData.right&&patternData.right[c]) rp[c]=patternData.right[c].slice();
-      });
-    }
-    // metaデータを読み込む
-    if(patternData && patternData.meta){
+    if(!patternData) return;
+    // まずnoteTypeを確定
+    var nt = (patternData.meta&&(patternData.meta.noteType||patternData.meta.subdiv))||"triplet";
+    var spb = nt==="16th"?16:12;
+    var total = spb*8;
+    // そのサイズでパターンを構築
+    var lp={}, rp={};
+    COLORS.forEach(function(c){
+      lp[c]=new Array(total).fill(0);
+      rp[c]=new Array(total).fill(0);
+      if(patternData.left&&patternData.left[c]){
+        for(var i=0;i<Math.min(patternData.left[c].length,total);i++) lp[c][i]=patternData.left[c][i]||0;
+      }
+      if(patternData.right&&patternData.right[c]){
+        for(var i=0;i<Math.min(patternData.right[c].length,total);i++) rp[c][i]=patternData.right[c][i]||0;
+      }
+    });
+    if(patternData.meta){
       if(patternData.meta.bars) setBars(String(patternData.meta.bars));
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
-      var nt = patternData.meta.noteType||patternData.meta.subdiv||"triplet";
-      var newSPB2 = nt==="16th"?16:12;
-      setSubdiv(nt);
-      setSPB(newSPB2);
+      if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
     }
-    setLeft(lp);setRight(rp);setSecTime(startTime||"");
+    setSubdiv(nt);
+    setSPB(spb);
+    setLeft(lp);
+    setRight(rp);
+    setSecTime(startTime||(patternData.meta&&patternData.meta.startTime)||"");
   },[patternData,startTime]);
 
   useEffect(function(){return function(){doStop();};},[]);
