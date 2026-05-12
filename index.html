@@ -660,6 +660,9 @@ function App() {
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
   const [currentScoreId, setCurrentScoreId] = useState("waterlily");
+  const [scoreEditOpen,  setScoreEditOpen]  = useState(false);
+  const [scoreEditSec,   setScoreEditSec]   = useState("intro");
+  const [scoreEditId,    setScoreEditId]    = useState("waterlily");
 
   useEffect(() => {
     autoFetch();
@@ -1281,6 +1284,52 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
+        {!isInstructor && <button onClick={()=>setScoreEditOpen(v=>!v)}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:scoreEditOpen?"linear-gradient(135deg,#5a9aaa,#3a6a7a)":"rgba(58,106,122,0.1)",color:scoreEditOpen?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          🎼 譜面編集 {scoreEditOpen?"▲":"▼"}
+        </button>}
+        {!isInstructor && scoreEditOpen && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px"}}>
+            <p style={{fontSize:13,fontWeight:700,color:"#3a6a7a",marginBottom:12}}>🎼 譜面データ編集</p>
+            {/* 曲選択 */}
+            <div style={{marginBottom:10}}>
+              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {[["waterlily","water lily〜水面〜"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
+                  <button key={id} onClick={()=>{setScoreEditId(id); loadScorePatterns(id);}}
+                    style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* セクション選択 */}
+            <div style={{marginBottom:12}}>
+              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>セクションを選択</p>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {[["intro","イントロ"],["amelo","Aメロ"],["bmelo","Bメロ"],["between","間"],["introPrime","イントロ'"]].map(([key,lbl])=>(
+                  <button key={key} onClick={()=>setScoreEditSec(key)}
+                    style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditSec===key?"#708238":"#fff",color:scoreEditSec===key?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
+            {/* ScorePlayer（編集モード） */}
+            <ScorePlayer
+              scoreId={scoreEditId}
+              sectionKey={scoreEditSec}
+              sectionLabel={{
+                intro:"イントロ",amelo:"Aメロ",bmelo:"Bメロ",between:"間",introPrime:"イントロ'"
+              }[scoreEditSec]||scoreEditSec}
+              patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
+              canEdit={true}
+              onSave={saveScorePattern}
+            />
+          </div>
+        )}
+
         {!isInstructor && <button onClick={()=>setInorionTab(!inorionTab)}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a4a6a",background:inorionTab?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionTab?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
           🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
@@ -3106,7 +3155,7 @@ function App() {
         </div>
 
         {/* 譜面プレイヤー */}
-        {(isFromAdmin || scoreList.length > 0) && (
+        {false && (
           <div style={{marginBottom:8}}>
             <button onClick={()=>{
               if(!scorePage){ const id=isFromAdmin||isInstructor?"waterlily":scoreList[0]; setCurrentScoreId(id); loadScorePatterns(id); }
