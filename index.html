@@ -210,6 +210,12 @@ const SCORE_SOUND_URLS = {
   pink:"/sounds/pink.mp3",
   lime:"/sounds/lime.mp3",
 };
+const SCORE_SECTIONS = {
+  waterlily: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
+  dreamy: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["ameloPrime","Aメロ'","16th"],["bmelo","Bメロ","16th"],["ameloPrime2","Aメロ'","16th"],["bmelo2","Bメロ","16th"],["cmelo","Cメロ","16th"],["cmeloPrime","Cメロ'","16th"],["sabi","サビ","16th"],["interlude1","間奏①","triplet"],["interlude1p","間奏①'","triplet"],["interlude2","間奏②","16th"]],
+  aoi: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
+};
+
 const SCORE_DOT_COLORS = {"yellow":"#F5E642","red":"#E83020","purple":"#8844CC","green":"#1A8A40","brown":"#C4A882","cyan":"#00BFEF","orange":"#F07020","pink":"#F020B0","lime":"#8CC830"};
 const SCORE_PALE_COLORS = {"yellow":"#FBF6B0","red":"#F8C0BC","purple":"#D4C0F4","green":"#A8E8C0","brown":"#ECD8C0","cyan":"#B0ECFC","orange":"#FAD8A8","pink":"#F4B0E0","lime":"#C4ECA8"};
 
@@ -814,8 +820,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       </div>
 
       {canEdit ? (
-        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-          <div style={{flexShrink:0,width:140,paddingTop:"167px"}}>
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          <div style={{display:"flex",justifyContent:"center"}}>
+          <div style={{width:140}}>
             <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
               <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
@@ -1740,7 +1747,7 @@ function App() {
             <div style={{marginBottom:12}}>
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>セクションを選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["intro","イントロ"],["amelo","Aメロ"],["bmelo","Bメロ"],["between","間"],["introPrime","イントロ'"]].map(([key,lbl])=>(
+                {(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
                   <button key={key} onClick={()=>setScoreEditSec(key)}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditSec===key?"#708238":"#fff",color:scoreEditSec===key?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
@@ -1760,7 +1767,7 @@ function App() {
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
               scale={scoreEditId==="dreamy"?"dreamy":"funenone"}
-              subdivProp={scoreEditId==="waterlily"?"triplet":scoreEditId==="dreamy"?"16th":scoreEditId==="aoi"?"triplet":"triplet"}
+              subdivProp={(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(([k])=>k===scoreEditSec)?.[2]||"triplet"}
               onSave={saveScorePattern}
             />
           </div>
@@ -3656,7 +3663,7 @@ function App() {
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
-                  subdivProp={currentScoreId==="waterlily"?"triplet":currentScoreId==="dreamy"?"16th":currentScoreId==="aoi"?"triplet":"triplet"}
+                  subdivProp={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(([k])=>k===scoreSection)?.[2]||"triplet"}
                   onSave={saveScorePattern}
                 />
               </div>
