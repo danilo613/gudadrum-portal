@@ -252,11 +252,9 @@ function makeEmptyPat() {
 
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-  var subdivS=useState(function(){
-    if(patternData&&patternData.meta&&patternData.meta.noteType==="16th") return "16th";
-    return subdivProp||"triplet";
-  }); var subdiv=subdivS[0]; var setSubdiv=subdivS[1];
-  var spbS=useState(subdiv==="16th"?16:12); var SPB=spbS[0]; var setSPB=spbS[1];
+  // noteTypeはpropから受け取る（楽曲ごとに固定）
+  var subdiv = subdivProp||"triplet";
+  var SPB = subdiv==="16th" ? 16 : 12;
   var TOTAL = SPB * 8;
   var CELL = 18, GAP = 1;
 
@@ -306,7 +304,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var bpmRef=useRef(bpm); var metroOnRef=useRef(metroOn);
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
-  var subdivRef=useRef(subdiv);
+  var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
 
   useEffect(function(){leftRef.current=left;},[left]);
   useEffect(function(){rightRef.current=right;},[right]);
@@ -320,7 +318,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     subdivRef.current=subdiv;
     var newTotal = subdiv==="16th" ? 128 : 96;
     var spb = subdiv==="16th" ? 16 : 12;
-    setSPB(spb);
     setLeft(function(prev){
       var p={};
       COLORS.forEach(function(c){
@@ -364,8 +361,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
     }
     // 現在のsubdivと同じなら不要な更新を避ける
-    setSubdiv(nt);
-    setSPB(spb);
     setLeft(lp);
     setRight(rp);
     leftRef.current=lp;
@@ -498,7 +493,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handleSave(){
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime,noteType:subdiv});
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -770,17 +765,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       {canEdit ? (
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap",
           padding:"6px 10px",background:"#f5f5f3",borderRadius:8,border:"0.5px solid #d0cec8"}}>
-          <span style={{fontSize:10,color:C.label,fontWeight:600}}>拍子</span>
-          <button onClick={function(){setSubdiv("triplet");setSPB(12);setMetroMode(4);}}
-            style={{padding:"3px 10px",borderRadius:6,border:"0.5px solid #d0cec8",
-              background:subdiv==="triplet"?"#708238":"#fff",
-              color:subdiv==="triplet"?"#fff":C.label,
-              fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>三連符</button>
-          <button onClick={function(){setSubdiv("16th");setSPB(16);setMetroMode(4);}}
-            style={{padding:"3px 10px",borderRadius:6,border:"0.5px solid #d0cec8",
-              background:subdiv==="sixteenth"?"#708238":"#fff",
-              color:subdiv==="sixteenth"?"#fff":C.label,
-              fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>16分音符</button>
+          <span style={{fontSize:10,color:C.label,fontWeight:600}}>{subdiv==="16th"?"16分音符":"三連符"}</span>
           <span style={{width:1,height:16,background:"#d0cec8",flexShrink:0}}/>
           <span style={{fontSize:10,color:C.label,fontWeight:600}}>構成</span>
           <input type="number" min="1" max="64" value={bars}
@@ -1801,6 +1786,7 @@ function App() {
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
               scale={scoreEditId==="dreamy"?"dreamy":"funenone"}
+              subdivProp={scoreEditId==="waterlily"?"triplet":scoreEditId==="dreamy"?"16th":scoreEditId==="aoi"?"triplet":"triplet"}
               onSave={saveScorePattern}
             />
           </div>
@@ -3695,6 +3681,7 @@ function App() {
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
+                  subdivProp={currentScoreId==="waterlily"?"triplet":currentScoreId==="dreamy"?"16th":currentScoreId==="aoi"?"triplet":"triplet"}
                   onSave={saveScorePattern}
                 />
               </div>
