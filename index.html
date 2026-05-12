@@ -237,396 +237,277 @@ function makeEmptyPat() {
 }
 
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave }) {
-  const initPat = (side) => {
-    const p = makeEmptyPat();
+  const COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+  const SPB = 12, BARS = 8, TOTAL = 96, CELL = 18;
+
+  function emptyPat() {
+    var p = {};
+    COLORS.forEach(function(c){ p[c] = new Array(TOTAL).fill(0); });
+    return p;
+  }
+  function initPat(side) {
+    var p = emptyPat();
     if (patternData && patternData[side]) {
-      Object.keys(patternData[side]).forEach(c => { if (p[c]) p[c] = [...patternData[side][c]]; });
+      COLORS.forEach(function(c){
+        if (patternData[side][c]) p[c] = patternData[side][c].slice();
+      });
     }
     return p;
-  };
+  }
 
-  const [left,  setLeft]  = useState(() => initPat("left"));
-  const [right, setRight] = useState(() => initPat("right"));
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [bpm,  setBpm]    = useState(80);
-  const [step, setStep]   = useState(0);
-  const [metroOn,   setMetroOn]   = useState(false);
-  const [metroMode, setMetroMode] = useState(4);
-  const [metroVol,  setMetroVol]  = useState(0.6);
-  const [lrOn,  setLrOn]  = useState(true);
-  const [metroAccent, setMetroAccent] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [saveMsg, setSaveMsg] = useState("");
-  const [dotFills,  setDotFills]  = useState(() => { const d={}; Object.keys(SCORE_DOTS).forEach(c=>{d[c]=SCORE_PALE_COLORS[c];}); return d; });
-  const [dotLabels, setDotLabels] = useState({});
+  var [left,  setLeft]  = useState(function(){ return initPat("left"); });
+  var [right, setRight] = useState(function(){ return initPat("right"); });
+  var [playing, setPlaying] = useState(false);
+  var [bpm, setBpm] = useState(80);
+  var [curStep, setCurStep] = useState(-1);
+  var [metroOn, setMetroOn] = useState(false);
+  var [metroMode, setMetroMode] = useState(4);
+  var [metroVol, setMetroVol] = useState(0.6);
+  var [metroAccent, setMetroAccent] = useState(true);
+  var [lrOn, setLrOn] = useState(true);
+  var [dotFills, setDotFills] = useState(function(){ var d={}; Object.keys(SCORE_DOTS).forEach(function(c){d[c]=SCORE_PALE_COLORS[c];}); return d; });
+  var [dotLabel, setDotLabel] = useState({});
+  var [saving, setSaving] = useState(false);
+  var [saveMsg, setSaveMsg] = useState("");
 
-  const actxRef  = useRef(null);
-  const bufsRef  = useRef({});
-  const iidRef   = useRef(null);
-  const stepRef  = useRef(0);
-  const dimRef   = useRef(null);
-  const ftRef    = useRef({});
-  const leftRef  = useRef(left);
-  const rightRef = useRef(right);
-  const bpmRef   = useRef(bpm);
-  const mOnRef   = useRef(metroOn);
-  const mModeRef = useRef(metroMode);
-  const mVolRef  = useRef(metroVol);
-  const lrRef    = useRef(lrOn);
-  const accentRef = useRef(true);
+  var iidRef = useRef(null);
+  var stepRef = useRef(0);
+  var dimRef = useRef(null);
+  var actxRef = useRef(null);
+  var bufsRef = useRef({});
+  var leftRef = useRef(left);
+  var rightRef = useRef(right);
+  var bpmRef = useRef(bpm);
+  var metroOnRef = useRef(metroOn);
+  var metroModeRef = useRef(metroMode);
+  var metroVolRef = useRef(metroVol);
+  var metroAccentRef = useRef(metroAccent);
+  var lrOnRef = useRef(lrOn);
 
-  useEffect(() => { leftRef.current  = left;  }, [left]);
-  useEffect(() => { rightRef.current = right; }, [right]);
-  useEffect(() => { bpmRef.current   = bpm;   }, [bpm]);
-  useEffect(() => { mOnRef.current   = metroOn;   }, [metroOn]);
-  useEffect(() => { mModeRef.current = metroMode; }, [metroMode]);
-  useEffect(() => { mVolRef.current  = metroVol;  }, [metroVol]);
-  useEffect(() => { lrRef.current    = lrOn;      }, [lrOn]);
-  useEffect(() => { accentRef.current = metroAccent; }, [metroAccent]);
+  useEffect(function(){ leftRef.current = left; }, [left]);
+  useEffect(function(){ rightRef.current = right; }, [right]);
+  useEffect(function(){ bpmRef.current = bpm; }, [bpm]);
+  useEffect(function(){ metroOnRef.current = metroOn; }, [metroOn]);
+  useEffect(function(){ metroModeRef.current = metroMode; }, [metroMode]);
+  useEffect(function(){ metroVolRef.current = metroVol; }, [metroVol]);
+  useEffect(function(){ metroAccentRef.current = metroAccent; }, [metroAccent]);
+  useEffect(function(){ lrOnRef.current = lrOn; }, [lrOn]);
 
-  useEffect(() => {
-    const lp = makeEmptyPat(), rp = makeEmptyPat();
+  useEffect(function(){
+    var lp = emptyPat(), rp = emptyPat();
     if (patternData) {
-      if (patternData.left)  Object.keys(patternData.left).forEach(c  => { if(lp[c]) lp[c]=[...patternData.left[c]];  });
-      if (patternData.right) Object.keys(patternData.right).forEach(c => { if(rp[c]) rp[c]=[...patternData.right[c]]; });
+      COLORS.forEach(function(c){
+        if (patternData.left && patternData.left[c]) lp[c] = patternData.left[c].slice();
+        if (patternData.right && patternData.right[c]) rp[c] = patternData.right[c].slice();
+      });
     }
     setLeft(lp); setRight(rp);
   }, [patternData]);
 
-  useEffect(() => { return () => { doStop(); }; }, []);
+  useEffect(function(){
+    return function(){ doStop(); };
+  }, []);
 
-  async function initAudio() {
-    if (actxRef.current) return;
-    const Ctx = window.AudioContext || window.webkitAudioContext;
+  function initAudio(cb) {
+    if (actxRef.current) { if(cb) cb(); return; }
+    var Ctx = window.AudioContext || window.webkitAudioContext;
     actxRef.current = new Ctx();
-    // GUDAdrum音源をURLから読み込む
-    await Promise.all(Object.entries(SCORE_SOUND_URLS).map(async ([k, url]) => {
-      try {
-        const res = await fetch(url);
-        const buf = await res.arrayBuffer();
-        bufsRef.current[k] = await actxRef.current.decodeAudioData(buf);
-      } catch(e) { console.warn(k, e); }
-    }));
-    // メトロノーム音源をbase64から読み込む
-    await Promise.all(Object.entries(METRO_SOUNDS_B64).map(async ([k, b64]) => {
-      try {
-        const bin = atob(b64);
-        const arr = new Uint8Array(bin.length);
-        for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-        bufsRef.current['metro_'+k] = await actxRef.current.decodeAudioData(arr.buffer);
-      } catch(e) { console.warn('metro_'+k, e); }
-    }));
-  }
-
-  function woodClick(accent) {
-    const actx=actxRef.current,bufs=bufsRef.current; if(!actx) return;
-    const vol=mVolRef.current;
-    // アクセント（小節頭）はチーン、通常はカチッ
-    const key = (accent && bufs['metro_accent']) ? 'metro_accent' : 'metro_click';
-    if(!bufs[key]) return;
-    const s=actx.createBufferSource(); s.buffer=bufs[key];
-    const g=actx.createGain(); g.gain.value=vol;
-    s.connect(g); g.connect(actx.destination); s.start(0);
+    var keys = Object.keys(METRO_SOUNDS_B64);
+    var done = 0;
+    keys.forEach(function(k){
+      var bin = atob(METRO_SOUNDS_B64[k]);
+      var arr = new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
+      actxRef.current.decodeAudioData(arr.buffer, function(buf){
+        bufsRef.current['metro_'+k] = buf;
+        done++;
+        if(done===keys.length) {
+          // GUDAdrumの音もURLから読む
+          var skeys = Object.keys(SCORE_SOUND_URLS);
+          var sdone = 0;
+          skeys.forEach(function(sk){
+            fetch(SCORE_SOUND_URLS[sk])
+              .then(function(r){return r.arrayBuffer();})
+              .then(function(buf){
+                return actxRef.current.decodeAudioData(buf);
+              })
+              .then(function(abuf){
+                bufsRef.current[sk] = abuf;
+                sdone++;
+                if(sdone===skeys.length && cb) cb();
+              })
+              .catch(function(){ sdone++; if(sdone===skeys.length && cb) cb(); });
+          });
+        }
+      }, function(){ done++; if(done===keys.length && cb) cb(); });
+    });
   }
 
   function playSound(color) {
-    const actx=actxRef.current,bufs=bufsRef.current;
-    if(!actx||!bufs[color]) return;
-    const s=actx.createBufferSource(); s.buffer=bufs[color];
-    const g=actx.createGain(); g.gain.value=0.6;
+    var actx = actxRef.current, bufs = bufsRef.current;
+    if (!actx || !bufs[color]) return;
+    var s = actx.createBufferSource();
+    s.buffer = bufs[color];
+    var g = actx.createGain(); g.gain.value = 0.6;
     s.connect(g); g.connect(actx.destination); s.start(0);
   }
 
-  function doDimAll() {
-    const fills={};
-    Object.keys(SCORE_DOTS).forEach(c=>{fills[c]=SCORE_PALE_COLORS[c];});
+  function woodClick(accent) {
+    var actx = actxRef.current, bufs = bufsRef.current;
+    if (!actx) return;
+    var vol = metroVolRef.current;
+    var key = (accent && bufsRef.current['metro_accent']) ? 'metro_accent' : 'metro_click';
+    if (!bufs[key]) return;
+    var s = actx.createBufferSource(); s.buffer = bufs[key];
+    var g = actx.createGain(); g.gain.value = vol;
+    s.connect(g); g.connect(actx.destination); s.start(0);
+  }
+
+  function dimAll() {
+    var fills = {};
+    Object.keys(SCORE_DOTS).forEach(function(c){ fills[c] = SCORE_PALE_COLORS[c]; });
     setDotFills(fills);
-    setDotLabels({});
+    setDotLabel({});
   }
 
-  function doFlash(color, hand) {
-    const pale=SCORE_PALE_COLORS[color];
-    const isLit = dotFillsRef.current[color] !== pale;
-    const light = () => {
-      setDotFills(p=>({...p,[color]:SCORE_DOT_COLORS[color]}));
-      if(lrRef.current) setDotLabels(p=>({...p,[color]:hand}));
-    };
-    if(isLit) {
-      setDotFills(p=>({...p,[color]:pale}));
-      setDotLabels(p=>({...p,[color]:null}));
-      if(ftRef.current[color]) clearTimeout(ftRef.current[color]);
-      ftRef.current[color]=setTimeout(light,40);
-    } else { light(); }
+  function flashDot(color, hand) {
+    setDotFills(function(prev){
+      var n = Object.assign({}, prev);
+      n[color] = SCORE_DOT_COLORS[color];
+      return n;
+    });
+    if (lrOnRef.current) {
+      setDotLabel(function(prev){
+        var n = Object.assign({}, prev);
+        n[color] = hand;
+        return n;
+      });
+    }
   }
-
-  const dotFillsRef = useRef(dotFills);
-  useEffect(()=>{ dotFillsRef.current=dotFills; },[dotFills]);
 
   function tick() {
-    const s=stepRef.current;
-    const L=leftRef.current, R=rightRef.current;
-    const s12=s%SPB;
-    const ms=Math.round((60/bpmRef.current/3)*1000);
-    if(dimRef.current) clearTimeout(dimRef.current);
-    dimRef.current=setTimeout(doDimAll,Math.round(ms*0.75));
-    setStep(s);
-    stepRef.current=(s+1)%TOTAL_STEPS;
-    const fired={};
-    SCORE_COLOR_ORDER.forEach(c=>{
-      if(L[c][s]){playSound(c);doFlash(c,"左");fired[c]=true;}
+    var s = stepRef.current;
+    var L = leftRef.current, R = rightRef.current;
+    var s12 = s % SPB;
+    var ms = Math.round((60 / bpmRef.current / 3) * 1000);
+    if (dimRef.current) clearTimeout(dimRef.current);
+    dimRef.current = setTimeout(dimAll, Math.round(ms * 0.75));
+    setCurStep(s);
+    stepRef.current = (s + 1) % TOTAL;
+    var fired = {};
+    COLORS.forEach(function(c){
+      if (L[c] && L[c][s]) { playSound(c); flashDot(c, "左"); fired[c] = true; }
     });
-    SCORE_COLOR_ORDER.forEach(c=>{
-      if(R[c][s]){playSound(c);doFlash(c,fired[c]?"両":"右");fired[c]=true;}
+    COLORS.forEach(function(c){
+      if (R[c] && R[c][s]) { playSound(c); flashDot(c, fired[c] ? "両" : "右"); fired[c] = true; }
     });
-    if(mOnRef.current){
-      const m=mModeRef.current;
-      if(m===4&&s12%3===0) woodClick(s12===0&&accentRef.current);
-      else if(m===3) woodClick(s12===0&&accentRef.current);
+    if (metroOnRef.current) {
+      var m = metroModeRef.current;
+      var doAccent = s12 === 0 && metroAccentRef.current;
+      if (m === 4 && s12 % 3 === 0) woodClick(doAccent);
+      else if (m === 3) woodClick(doAccent);
     }
   }
 
   function doStart() {
-    if(iidRef.current) clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/3)*1000));
+    if (iidRef.current) clearInterval(iidRef.current);
+    iidRef.current = setInterval(tick, Math.round((60 / bpmRef.current / 3) * 1000));
   }
 
   function doStop() {
-    if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
-    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    doDimAll();
-    stepRef.current=0; setStep(0); setIsPlaying(false);
+    if (iidRef.current) { clearInterval(iidRef.current); iidRef.current = null; }
+    if (dimRef.current) { clearTimeout(dimRef.current); dimRef.current = null; }
+    dimAll();
+    stepRef.current = 0;
+    setCurStep(-1);
+    setPlaying(false);
   }
 
-  async function handlePlay() {
-    await initAudio();
-    if(isPlaying){doStop();}
-    else{stepRef.current=0;setStep(0);setIsPlaying(true);doStart();}
+  function handlePlay() {
+    if (playing) { doStop(); return; }
+    initAudio(function(){
+      stepRef.current = 0;
+      setPlaying(true);
+      doStart();
+    });
   }
 
-  function handleBpm(v){
-    setBpm(v);bpmRef.current=v;if(isPlaying) doStart();
+  function handleBpm(v) {
+    setBpm(v); bpmRef.current = v;
+    if (playing) doStart();
   }
 
-  function toggleCell(hand,color,idx){
-    if(!canEdit) return;
-    const setter=hand==="left"?setLeft:setRight;
-    setter(prev=>{
-      const p={...prev,[color]:[...prev[color]]};
-      p[color][idx]^=1;
+  function toggleCell(side, color, idx) {
+    if (!canEdit) return;
+    var setter = side === "left" ? setLeft : setRight;
+    setter(function(prev){
+      var p = Object.assign({}, prev);
+      p[color] = prev[color].slice();
+      p[color][idx] ^= 1;
       return p;
     });
   }
 
-  async function handleSave(){
-    setSaving(true);setSaveMsg("");
-    try{
-      await onSave(scoreId,sectionKey,left,right);
-      setSaveMsg("✅ 保存しました");
-    }catch(e){setSaveMsg("❌ 保存に失敗しました");}
-    setSaving(false);
-    setTimeout(()=>setSaveMsg(""),3000);
+  function handleSave() {
+    setSaving(true); setSaveMsg("");
+    onSave(scoreId, sectionKey, left, right)
+      .then(function(){ setSaveMsg("✅ 保存しました"); setSaving(false); setTimeout(function(){ setSaveMsg(""); }, 3000); })
+      .catch(function(){ setSaveMsg("❌ 失敗しました"); setSaving(false); });
   }
 
-  const tb=(on)=>({padding:"3px 7px",borderRadius:6,border:"0.5px solid "+C.border,background:on?"#4B3621":"#fff",color:on?"#fff":C.label,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"});
-  const sw=(on)=>(
-    <div style={{position:"relative",width:28,height:16,background:on?"#27AE60":"#d0cec8",borderRadius:8,transition:"background .2s",flexShrink:0}}>
-      <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:on?"translateX(12px)":"none"}}/>
-    </div>
-  );
+  // スイッチUI
+  function Sw(on) {
+    return (
+      <div style={{position:"relative",width:28,height:16,background:on?"#27AE60":"#d0cec8",borderRadius:8,flexShrink:0,transition:"background .2s"}}>
+        <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:on?"translateX(12px)":"none"}}/>
+      </div>
+    );
+  }
 
-  // グリッド行生成
-  // レイアウト: 2小節×4列、上段(奇数小節)と下段(偶数小節)
-  // 8小節 = 4グループ × 2小節(上下)
-  // 各小節 = 12ステップ（三連符）
-  const CELL = 18;
-  const GAP = 2;
-
-  // グループ: [上小節index, 下小節index] × 4
-  // 小節0-7 → 上段: 0,2,4,6 / 下段: 1,3,5,7
-  const groups = [[0,1],[2,3],[4,5],[6,7]];
-
-  function renderBar(barIndex, side) {
-    const start = barIndex * SPB;
-    const cells = [];
-    for(let i=0;i<SPB;i++){
-      const s = start + i;
-      const ibs = i===0;
-      const ib = i%3===0;
-      const bi = Math.floor(i/3)+1;
-      const cur = s===step && isPlaying;
-      const pat = side==="left" ? left : right;
-      const color = SCORE_COLOR_ORDER.find(c => pat[c] && pat[c][s]);
-      const rowBg = cur?"#a8a5a0":ibs?"#c8c5c0":ib?"#dddbd6":"#fff";
+  // グリッド描画
+  function renderCol(barIdx, side) {
+    var pat = side === "left" ? left : right;
+    var cells = [];
+    for (var i = 0; i < SPB; i++) {
+      var s = barIdx * SPB + i;
+      var ibs = i === 0;
+      var ib = i % 3 === 0;
+      var cur = s === curStep;
+      var color = null;
+      for (var ci = 0; ci < COLORS.length; ci++) {
+        if (pat[COLORS[ci]] && pat[COLORS[ci]][s]) { color = COLORS[ci]; break; }
+      }
+      var bg = color ? SCORE_DOT_COLORS[color] : (cur ? "#a8a5a0" : ibs ? "#c8c5c0" : ib ? "#dddbd6" : "#fff");
       cells.push(
-        <div key={i} style={{
-          width:CELL, height:CELL, borderRadius:3, flexShrink:0,
-          background: color ? SCORE_DOT_COLORS[color] : rowBg,
-          border: color ? "none" : "0.5px solid #d0cec8",
-          cursor: canEdit ? "pointer" : "default",
-          outline: cur ? "1.5px solid #888" : "none",
-        }}
-        onClick={()=>{
-          if(!canEdit) return;
-          if(color){
-            // 色を消す
-            toggleCell(side, color, s);
-          } else {
-            // 色選択モーダルは後で、今は最後に使った色を使う
-          }
-        }}
+        <div key={i} onClick={function(ss, cc){ return function(){ if(canEdit && cc) toggleCell(side, cc, ss); }; }(s, color)}
+          style={{width:CELL,height:CELL,borderRadius:3,background:bg,border:color?"none":"0.5px solid #d0cec8",marginBottom:1,cursor:canEdit&&color?"pointer":"default",flexShrink:0}}
         />
       );
     }
     return cells;
   }
 
-  function renderBarNum(barIndex) {
+  function renderBar(barIdx) {
     return (
-      <div style={{
-        width:CELL, height:CELL, flexShrink:0,
-        display:"flex", alignItems:"center", justifyContent:"center",
-        background:"#c8c5c0",
-      }}>
-        <div style={{
-          width:16, height:16, borderRadius:"50%",
-          background:"#888", color:"#fff",
-          fontSize:9, fontWeight:700,
-          display:"flex", alignItems:"center", justifyContent:"center",
-        }}>
-          {barIndex+1}
+      <div key={barIdx} style={{flexShrink:0}}>
+        <div style={{width:CELL,height:CELL,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:1,background:"#c8c5c0",borderRadius:3}}>
+          <div style={{width:16,height:16,borderRadius:"50%",background:"#888",color:"#fff",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
+        </div>
+        <div style={{display:"flex",gap:2}}>
+          <div>{renderCol(barIdx,"left")}</div>
+          <div>{renderCol(barIdx,"right")}</div>
         </div>
       </div>
     );
   }
 
-  // グリッド全体
-  const gridContent = (
-    <div style={{display:"flex", gap:4, overflowX:"auto", WebkitOverflowScrolling:"touch"}}>
-      {groups.map(([topBar, botBar], gi) => (
-        <div key={gi} style={{flexShrink:0}}>
-          {/* 上段（奇数小節） */}
-          <div style={{marginBottom:2}}>
-            {/* ヘッダー行: 小節番号 */}
-            <div style={{display:"flex", gap:GAP, marginBottom:1}}>
-              {renderBarNum(topBar)}
-              <div style={{display:"flex", gap:1}}>
-                {renderBar(topBar, "left").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
-              </div>
-              <div style={{display:"flex", gap:1}}>
-                {renderBar(topBar, "right").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
-              </div>
-            </div>
-            {/* ステップ行 */}
-            {Array.from({length:SPB}, (_,i)=>{
-              const s = topBar*SPB + i;
-              const ibs = i===0;
-              const ib = i%3===0;
-              const bi = Math.floor(i/3)+1;
-              const cur = s===step && isPlaying;
-              const leftColor = SCORE_COLOR_ORDER.find(c => left[c] && left[c][s]);
-              const rightColor = SCORE_COLOR_ORDER.find(c => right[c] && right[c][s]);
-              const rowBg = cur?"#b8b5b0":ibs?"#c8c5c0":ib?"#dddbd6":"#fff";
-              return (
-                <div key={i} style={{display:"flex", gap:GAP, marginBottom:1, alignItems:"center"}}>
-                  {/* 拍番号 */}
-                  <div style={{
-                    width:CELL, height:CELL, flexShrink:0,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    background: cur?"#a8a5a0":ibs?"#c8c5c0":ib?"#dddbd6":"transparent",
-                  }}>
-                    {ib && !ibs && <span style={{fontSize:8,color:"#888",fontWeight:700}}>{bi}</span>}
-                    {!ib && <div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}
-                  </div>
-                  {/* 左手 */}
-                  <div style={{display:"flex", gap:1}}>
-                    <div style={{
-                      width:CELL, height:CELL, borderRadius:3,
-                      background: leftColor ? SCORE_DOT_COLORS[leftColor] : rowBg,
-                      border: leftColor ? "none" : "0.5px solid #d0cec8",
-                      cursor: canEdit?"pointer":"default",
-                    }}
-                    onClick={()=>{ if(canEdit && leftColor) toggleCell("left",leftColor,s); }}
-                    />
-                  </div>
-                  {/* 右手 */}
-                  <div style={{display:"flex", gap:1}}>
-                    <div style={{
-                      width:CELL, height:CELL, borderRadius:3,
-                      background: rightColor ? SCORE_DOT_COLORS[rightColor] : rowBg,
-                      border: rightColor ? "none" : "0.5px solid #d0cec8",
-                      cursor: canEdit?"pointer":"default",
-                    }}
-                    onClick={()=>{ if(canEdit && rightColor) toggleCell("right",rightColor,s); }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+  var topBars = [0,2,4,6];
+  var botBars = [1,3,5,7];
 
-          {/* 下段（偶数小節） */}
-          <div>
-            <div style={{display:"flex", gap:GAP, marginBottom:1}}>
-              {renderBarNum(botBar)}
-              <div style={{display:"flex", gap:1}}>
-                {renderBar(botBar, "left").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
-              </div>
-              <div style={{display:"flex", gap:1}}>
-                {renderBar(botBar, "right").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
-              </div>
-            </div>
-            {Array.from({length:SPB}, (_,i)=>{
-              const s = botBar*SPB + i;
-              const ibs = i===0;
-              const ib = i%3===0;
-              const bi = Math.floor(i/3)+1;
-              const cur = s===step && isPlaying;
-              const leftColor = SCORE_COLOR_ORDER.find(c => left[c] && left[c][s]);
-              const rightColor = SCORE_COLOR_ORDER.find(c => right[c] && right[c][s]);
-              const rowBg = cur?"#b8b5b0":ibs?"#c8c5c0":ib?"#dddbd6":"#fff";
-              return (
-                <div key={i} style={{display:"flex", gap:GAP, marginBottom:1, alignItems:"center"}}>
-                  <div style={{
-                    width:CELL, height:CELL, flexShrink:0,
-                    display:"flex", alignItems:"center", justifyContent:"center",
-                    background: cur?"#a8a5a0":ibs?"#c8c5c0":ib?"#dddbd6":"transparent",
-                  }}>
-                    {ib && !ibs && <span style={{fontSize:8,color:"#888",fontWeight:700}}>{bi}</span>}
-                    {!ib && <div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}
-                  </div>
-                  <div style={{display:"flex", gap:1}}>
-                    <div style={{
-                      width:CELL, height:CELL, borderRadius:3,
-                      background: leftColor ? SCORE_DOT_COLORS[leftColor] : rowBg,
-                      border: leftColor ? "none" : "0.5px solid #d0cec8",
-                      cursor: canEdit?"pointer":"default",
-                    }}
-                    onClick={()=>{ if(canEdit && leftColor) toggleCell("left",leftColor,s); }}
-                    />
-                  </div>
-                  <div style={{display:"flex", gap:1}}>
-                    <div style={{
-                      width:CELL, height:CELL, borderRadius:3,
-                      background: rightColor ? SCORE_DOT_COLORS[rightColor] : rowBg,
-                      border: rightColor ? "none" : "0.5px solid #d0cec8",
-                      cursor: canEdit?"pointer":"default",
-                    }}
-                    onClick={()=>{ if(canEdit && rightColor) toggleCell("right",rightColor,s); }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-    return (
+  return (
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
-      <p style={{fontSize:10,color:C.label,textAlign:"center",marginBottom:8,letterSpacing:".05em"}}>{sectionLabel}</p>
-      {/* 保存ボタン */}
+      <p style={{fontSize:10,color:C.label,textAlign:"center",marginBottom:8}}>{sectionLabel}</p>
+
       {canEdit && (
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
           <button onClick={handleSave} disabled={saving}
@@ -636,90 +517,84 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           {saveMsg && <span style={{fontSize:11,color:saveMsg.startsWith("✅")?C.olive:"#a04030"}}>{saveMsg}</span>}
         </div>
       )}
-      {/* 再生コントロール */}
+
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
-        <button onClick={handlePlay} style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-          {isPlaying?"⏸":"▶"}
+        <button onClick={handlePlay}
+          style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          {playing?"⏸":"▶"}
         </button>
         <div style={{display:"flex",alignItems:"center",gap:6,flex:1,minWidth:120}}>
           <span style={{fontSize:10,color:C.label,whiteSpace:"nowrap"}}>BPM</span>
-          <input type="range" min="40" max="200" value={bpm} onChange={e=>handleBpm(+e.target.value)}
+          <input type="range" min="40" max="200" value={bpm} onChange={function(e){handleBpm(+e.target.value);}}
             style={{flex:1,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
           <span style={{fontSize:11,fontWeight:700,color:C.choco,minWidth:34}}>{bpm}</span>
         </div>
       </div>
-      {/* メトロノーム */}
+
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3",flexWrap:"wrap"}}>
         <span style={{fontSize:10,fontWeight:700,color:C.label}}>METRO</span>
-        <div onClick={()=>setMetroOn(v=>!v)} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {sw(metroOn)}
+        <div onClick={function(){setMetroOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(metroOn)}
           <span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
         </div>
         <div style={{display:"flex",gap:4}}>
-          {[["4分",4],["三連",3]].map(([lbl,val])=>(
-            <button key={val} onClick={()=>setMetroMode(val)} style={tb(metroMode===val)}>♩ {lbl}</button>
-          ))}
+          {[["4分",4],["三連",3]].map(function(x){
+            return <button key={x[1]} onClick={function(){setMetroMode(x[1]);}}
+              style={{padding:"3px 7px",borderRadius:6,border:"0.5px solid #d0cec8",background:metroMode===x[1]?"#1a1a1a":"#fff",color:metroMode===x[1]?"#fff":"#666",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>♩ {x[0]}</button>;
+          })}
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}
-          onClick={()=>setMetroAccent(v=>!v)}>
-          <div style={{position:"relative",width:28,height:16,background:metroAccent?"#27AE60":"#d0cec8",borderRadius:8,flexShrink:0}}>
-            <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:metroAccent?"translateX(12px)":"none"}}/>
-          </div>
+        <div onClick={function(){setMetroAccent(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(metroAccent)}
           <span style={{fontSize:10,color:C.label}}>頭チーン</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:4}}>
           <span style={{fontSize:10,color:C.label}}>音量</span>
-          <input type="range" min="0" max="100" value={Math.round(metroVol*100)} onChange={e=>setMetroVol(e.target.value/100)}
+          <input type="range" min="0" max="100" value={Math.round(metroVol*100)} onChange={function(e){setMetroVol(e.target.value/100);}}
             style={{width:60,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
         </div>
       </div>
-      {/* 左右表示 */}
+
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"5px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3"}}>
         <span style={{fontSize:10,fontWeight:700,color:C.label}}>左右表示</span>
-        <div onClick={()=>setLrOn(v=>!v)} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {sw(lrOn)}
+        <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(lrOn)}
           <span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
         </div>
       </div>
-      {/* メインレイアウト */}
-      <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        {/* GUDAdrumイラスト */}
+
+      <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
         <div style={{flexShrink:0,width:140}}>
           <svg viewBox="0 0 140 166" width="140" height="166">
             <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-            <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="Noto Sans JP,sans-serif">高音</text>
-            <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="Noto Sans JP,sans-serif">低音</text>
-            {Object.entries(SCORE_DOTS).map(([color,pos])=>(
-              <g key={color}>
-                <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
-                {["左","右","両"].map(lbl=>(
-                  <text key={lbl} x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                    fontSize="11" fontWeight="bold" fontFamily="Noto Sans JP,Hiragino Sans,sans-serif"
-                    fill="#222" opacity={dotLabels[color]===lbl&&lrOn?1:0} pointerEvents="none">{lbl}</text>
-                ))}
-              </g>
-            ))}
+            <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
+            <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
+            {Object.keys(SCORE_DOTS).map(function(color){
+              var pos = SCORE_DOTS[color];
+              return (
+                <g key={color}>
+                  <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
+                  {lrOn && dotLabel[color] && (
+                    <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                      fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
+                  )}
+                </g>
+              );
+            })}
           </svg>
-
         </div>
-        {/* グリッド */}
-        <div style={{flex:1,minWidth:0}}>
-          <div style={{display:"flex",gap:2,marginBottom:3,padding:"0 3px"}}>
-            <div style={{width:18,textAlign:"center",fontSize:9,fontWeight:700,letterSpacing:".05em",color:"#2563eb",flexShrink:0}}>左</div>
-            <div style={{width:24,flexShrink:0}}/>
-            <div style={{width:18,textAlign:"center",fontSize:9,fontWeight:700,letterSpacing:".05em",color:"#2563eb",flexShrink:0}}>右</div>
+
+        <div style={{flex:1,minWidth:0,overflowX:"auto"}}>
+          <div style={{display:"flex",gap:4,marginBottom:2}}>
+            {topBars.map(function(b){ return <div key={b} style={{display:"flex",gap:2,flexShrink:0}}><div style={{width:CELL,flexShrink:0}}/><div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>左</div><div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>右</div></div>; })}
           </div>
-          <div style={{display:"flex",gap:2,marginBottom:3}}>
-            <div style={{display:"flex",gap:1,flex:1}}>
-              {SCORE_COLOR_ORDER.map(c=><div key={c} style={{flex:1,height:10,borderRadius:"50%",background:SCORE_DOT_COLORS[c]}}/>)}
-            </div>
-            <div style={{width:24,flexShrink:0}}/>
-            <div style={{display:"flex",gap:1,flex:1}}>
-              {SCORE_COLOR_ORDER.map(c=><div key={c} style={{flex:1,height:10,borderRadius:"50%",background:SCORE_DOT_COLORS[c]}}/>)}
-            </div>
+          <div style={{display:"flex",gap:4,marginBottom:6}}>
+            {topBars.map(function(b){ return renderBar(b); })}
           </div>
-          <div style={{maxHeight:420,overflowY:"auto",border:"0.5px solid #d0cec8",borderRadius:8,padding:"3px 0",WebkitOverflowScrolling:"touch"}}>
-            {gridRows}
+          <div style={{display:"flex",gap:4,marginBottom:2}}>
+            {botBars.map(function(b){ return <div key={b} style={{display:"flex",gap:2,flexShrink:0}}><div style={{width:CELL,flexShrink:0}}/><div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>左</div><div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>右</div></div>; })}
+          </div>
+          <div style={{display:"flex",gap:4}}>
+            {botBars.map(function(b){ return renderBar(b); })}
           </div>
         </div>
       </div>
