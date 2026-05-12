@@ -564,9 +564,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                     borderRadius:2,
                     background:on
                       ? SCORE_DOT_COLORS[color]
-                      : (ibs||ib)
+                      : ib
                         ? SCORE_PALE_COLORS[color]
                         : "#e8e8e8",
+                    opacity: on ? 1 : ib ? 0.6 : 1,
                     cursor:"pointer",
                     outline:cur?"2px solid #555":"none",
                     outlineOffset:"-1px",
@@ -624,24 +625,34 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var bands=[];
     for(var i=0;i<SPB;i++){
       var s=barIdx*SPB+i;
-      var ibs=i===0, ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
-      var cur=s===curStep;
+      var ibs_b=i===0;
+      var ib_b=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+      var i8_b=subdiv==="16th"&&i%2===0&&i%4!==0;
+      var cur_b=s===curStep;
       var isRowStart=s===startStepRef.current;
-      if(ibs){
+      if(ibs_b){
         bands.push(<div key={"b"+i} style={{
           position:"absolute",left:0,right:0,
           top:i*stepH,height:stepH-GAP,
-          background:isRowStart?"rgba(231,76,60,0.25)":cur?"rgba(0,0,0,0.2)":"rgba(0,0,0,0.12)",
+          background:isRowStart?"rgba(231,76,60,0.25)":cur_b?"rgba(0,0,0,0.2)":"rgba(0,0,0,0.12)",
           borderRadius:2,pointerEvents:"none",zIndex:0,
         }}/>);
-      } else if(ib){
+      } else if(ib_b){
         bands.push(<div key={"b"+i} style={{
           position:"absolute",left:0,right:0,
           top:i*stepH+Math.floor(stepH*0.3),height:Math.floor(stepH*0.4),
-          background:isRowStart?"rgba(231,76,60,0.15)":cur?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.07)",
+          background:isRowStart?"rgba(231,76,60,0.15)":cur_b?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.07)",
           borderRadius:1,pointerEvents:"none",zIndex:0,
         }}/>);
-      } else if(cur){
+      } else if(i8_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:"50%",transform:"translateX(-50%)",
+          top:i*stepH+Math.floor(stepH*0.35),
+          width:4,height:4,borderRadius:"50%",
+          background:cur_b?"rgba(0,0,0,0.4)":"rgba(0,0,0,0.15)",
+          pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(cur_b){
         bands.push(<div key={"b"+i} style={{
           position:"absolute",left:0,right:0,
           top:i*stepH,height:stepH-GAP,
@@ -650,13 +661,21 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         }}/>);
       }
     }
-
     // 中央クリック列（拍区切り目印）
     var beatCells=[];
     for(var j=0;j<SPB;j++){
       var ss=barIdx*SPB+j;
-      var jbs=j===0, jb=j%3===0&&j!==0;
-      var dot=!jbs&&!jb?<div style={{width:3,height:3,borderRadius:"50%",background:"#bbb",margin:"0 auto"}}/>:null;
+      var jbs=j===0;
+      var jb=(subdiv==="16th"?j%4===0:j%3===0)&&j!==0;
+      var j8=subdiv==="16th"&&j%2===0&&j%4!==0;
+      var dot=null;
+      if(!jbs&&!jb&&!j8){
+        // 三連の細分 or 16分の細分: 小さいドット
+        dot=<div style={{width:2,height:2,borderRadius:"50%",background:"#ccc",margin:"0 auto"}}/>;
+      } else if(j8){
+        // 8分音符位置（16分モード）: 中くらいのドット
+        dot=<div style={{width:3,height:3,borderRadius:"50%",background:"#bbb",margin:"0 auto"}}/>;
+      }
       beatCells.push(
         <div key={j}
           onClick={function(s2){return function(e){e.stopPropagation();startStepRef.current=s2;setCurStep(-1);};}(ss)}
