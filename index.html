@@ -846,10 +846,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
             </div>
           </div>
           <div style={{overflowX:"auto",width:"100%"}}>
-            <div style={{display:"flex",gap:4,marginBottom:10,justifyContent:"center"}}>
+            <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
               {topBars.map(function(b){return renderBar(b);})}
             </div>
-            <div style={{display:"flex",gap:4,justifyContent:"center"}}>
+            <br/>
+            <div style={{display:"inline-flex",gap:4}}>
               {botBars.map(function(b){return renderBar(b);})}
             </div>
           </div>
