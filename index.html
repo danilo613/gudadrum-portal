@@ -218,17 +218,31 @@ const SCORE_COLOR_ORDER = ["orange","red","lime","green","yellow","purple","cyan
 const SCORE_COLOR_NAMES = {orange:"橙",red:"赤",lime:"黄緑",green:"緑",yellow:"黄",purple:"紫",cyan:"水色",pink:"ピンク",brown:"茶"};
 const SPB = 12;
 const TOTAL_STEPS = 96;
-const SCORE_DOTS = {
-  cyan:   {cx:70.0,  cy:35.0},   // 上
-  yellow: {cx:103.9, cy:49.1},   // 右上
-  purple: {cx:118.0, cy:83.0},   // 右
-  green:  {cx:103.9, cy:116.9},  // 右下
-  orange: {cx:70.0,  cy:131.0},  // 下
-  lime:   {cx:36.1,  cy:116.9},  // 左下
-  red:    {cx:22.0,  cy:83.0},   // 左
-  brown:  {cx:36.1,  cy:49.1},   // 左上
-  pink:   {cx:70,    cy:83},     // 中央
+const SCORE_DOTS_FUNENONE = {
+  cyan:   {cx:70.0,  cy:35.0},
+  yellow: {cx:103.9, cy:49.1},
+  purple: {cx:118.0, cy:83.0},
+  green:  {cx:103.9, cy:116.9},
+  orange: {cx:70.0,  cy:131.0},
+  lime:   {cx:36.1,  cy:116.9},
+  red:    {cx:22.0,  cy:83.0},
+  brown:  {cx:36.1,  cy:49.1},
+  pink:   {cx:70,    cy:83},
 };
+
+// dreamy EYES: 180度回転、ピンクなし（8音）
+const SCORE_DOTS_DREAMY = {
+  yellow: {cx:70.0,  cy:131.0},  // 下（旧上）
+  purple: {cx:36.1,  cy:116.9},  // 左下（旧右上）
+  cyan:   {cx:22.0,  cy:83.0},   // 左（旧右）
+  lime:   {cx:36.1,  cy:49.1},   // 左上（旧右下）
+  orange: {cx:103.9, cy:49.1},   // 右上（旧左下）
+  green:  {cx:118.0, cy:83.0},   // 右（旧左）
+  red:    {cx:103.9, cy:116.9},  // 右下（旧左上）
+  brown:  {cx:70,    cy:83},     // 中央（ピンクの代わり、表示なし）
+};
+
+const SCORE_DOTS = SCORE_DOTS_FUNENONE;
 
 function makeEmptyPat() {
   const p = {};
@@ -236,7 +250,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   var SPB = 12, TOTAL = 96, CELL = 18, GAP = 1;
 
@@ -743,20 +757,25 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           <div style={{flexShrink:0,width:140,paddingTop:"167px"}}>
             <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-              <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
-              <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
-              {Object.keys(SCORE_DOTS).map(function(color){
-                var pos=SCORE_DOTS[color];
-                return (
-                  <g key={color}>
-                    <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
-                    {lrOn&&dotLabel[color]&&(
-                      <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                        fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
-                    )}
-                  </g>
-                );
-              })}
+              <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
+              <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
+              {(function(){
+                var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                return Object.keys(activeDots).filter(function(c){
+                  return !(scale==="dreamy"&&c==="brown");
+                }).map(function(color){
+                  var pos=activeDots[color];
+                  return (
+                    <g key={color}>
+                      <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
+                      {lrOn&&dotLabel[color]&&(
+                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
+                      )}
+                    </g>
+                  );
+                });
+              })()}
             </svg>
           </div>
           <div style={{minWidth:0,overflowX:"auto"}}>
@@ -774,20 +793,25 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
             <div style={{flexShrink:0,width:140,paddingTop:"167px"}}>
               <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-              <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
-              <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
-              {Object.keys(SCORE_DOTS).map(function(color){
-                var pos=SCORE_DOTS[color];
-                return (
-                  <g key={color}>
-                    <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
-                    {lrOn&&dotLabel[color]&&(
-                      <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                        fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
-                    )}
-                  </g>
-                );
-              })}
+              <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
+              <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
+              {(function(){
+                var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                return Object.keys(activeDots).filter(function(c){
+                  return !(scale==="dreamy"&&c==="brown");
+                }).map(function(color){
+                  var pos=activeDots[color];
+                  return (
+                    <g key={color}>
+                      <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
+                      {lrOn&&dotLabel[color]&&(
+                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
+                      )}
+                    </g>
+                  );
+                });
+              })()}
             </svg>
             </div>
             <div style={{minWidth:0,overflowX:"auto"}}>
@@ -1643,7 +1667,7 @@ function App() {
             <div style={{marginBottom:10}}>
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["waterlily","water lily〜水面〜"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
+                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id); loadScorePatterns(id);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
@@ -1673,6 +1697,7 @@ function App() {
               }[scoreEditSec]||scoreEditSec}
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
+              scale={scoreEditId==="dreamy"?"dreamy":"funenone"}
               onSave={saveScorePattern}
             />
           </div>
@@ -3566,6 +3591,7 @@ function App() {
                   sectionLabel={{"intro":"イントロ　0:05〜","amelo":"Aメロ　0:44〜","bmelo":"Bメロ"}[scoreSection]||scoreSection}
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
+                  scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
                   onSave={saveScorePattern}
                 />
               </div>
