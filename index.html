@@ -708,19 +708,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         </div>
       </div>
 
-      {/* 全体を中央寄せ */}
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
-
-        {/* 上段グリッド (①③⑤⑦) */}
-        <div style={{overflowX:"auto",width:"100%"}}>
-          <div style={{display:"flex",gap:2,justifyContent:"center",marginBottom:8}}>
-            {topBars.map(function(b){return renderBar(b);})}
-          </div>
-        </div>
-
-        {/* GUDAdrumイラスト（上段と下段の間・中央） */}
-        <div style={{flexShrink:0,width:140,marginBottom:8}}>
-          <svg viewBox="0 0 140 166" width="140" height="166">
+      {canEdit ? (
+        /* 編集モード: イラスト左・グリッド右の横並び */
+        <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+          <div style={{flexShrink:0,width:140}}>
+            <svg viewBox="0 0 140 166" width="140" height="166">
             <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
             <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
             <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
@@ -737,16 +729,50 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               );
             })}
           </svg>
-        </div>
-
-        {/* 下段グリッド (②④⑥⑧) */}
-        <div style={{overflowX:"auto",width:"100%"}}>
-          <div style={{display:"flex",gap:2,justifyContent:"center"}}>
-            {botBars.map(function(b){return renderBar(b);})}
+          </div>
+          <div style={{flex:1,minWidth:0,overflowX:"auto"}}>
+            <div style={{display:"flex",gap:2,marginBottom:10}}>
+              {topBars.map(function(b){return renderBar(b);})}
+            </div>
+            <div style={{display:"flex",gap:2}}>
+              {botBars.map(function(b){return renderBar(b);})}
+            </div>
           </div>
         </div>
-
-      </div>
+      ) : (
+        /* 閲覧モード: 上段→イラスト→下段の縦並び・中央寄せ */
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+          <div style={{overflowX:"auto",width:"100%"}}>
+            <div style={{display:"flex",gap:2,justifyContent:"center",marginBottom:8}}>
+              {topBars.map(function(b){return renderBar(b);})}
+            </div>
+          </div>
+          <div style={{flexShrink:0,width:140,marginBottom:8}}>
+            <svg viewBox="0 0 140 166" width="140" height="166">
+            <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+            <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
+            <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
+            {Object.keys(SCORE_DOTS).map(function(color){
+              var pos=SCORE_DOTS[color];
+              return (
+                <g key={color}>
+                  <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
+                  {lrOn&&dotLabel[color]&&(
+                    <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                      fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
+                  )}
+                </g>
+              );
+            })}
+          </svg>
+          </div>
+          <div style={{overflowX:"auto",width:"100%"}}>
+            <div style={{display:"flex",gap:2,justifyContent:"center"}}>
+              {botBars.map(function(b){return renderBar(b);})}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
