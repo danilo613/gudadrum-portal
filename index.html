@@ -888,7 +888,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbwkRXPAvl4ZmjBzBRHHH5mhDUzEzsLqUpIOArlCBVtAyfiwgcvM8iN9pMhQUjK6xg3evA/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -910,7 +910,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbwkRXPAvl4ZmjBzBRHHH5mhDUzEzsLqUpIOArlCBVtAyfiwgcvM8iN9pMhQUjK6xg3evA/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -931,7 +931,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbwkRXPAvl4ZmjBzBRHHH5mhDUzEzsLqUpIOArlCBVtAyfiwgcvM8iN9pMhQUjK6xg3evA/exec?action=faq&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?action=faq&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -1349,7 +1349,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbwkRXPAvl4ZmjBzBRHHH5mhDUzEzsLqUpIOArlCBVtAyfiwgcvM8iN9pMhQUjK6xg3evA/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
