@@ -301,28 +301,31 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function woodClick(accent) {
     const actx=actxRef.current; if(!actx) return;
-    const vol=mVolRef.current, freq=accent?900:550, dec=accent?0.055:0.075;
-    const bufSize=Math.floor(actx.sampleRate*0.1);
-    const nb=actx.createBuffer(1,bufSize,actx.sampleRate);
-    const data=nb.getChannelData(0);
-    for(let i=0;i<bufSize;i++) data[i]=(Math.random()*2-1);
-    const ns=actx.createBufferSource(); ns.buffer=nb;
-    const osc=actx.createOscillator(); osc.type="sine";
-    osc.frequency.setValueAtTime(freq,actx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(freq*0.5,actx.currentTime+dec);
-    const bpf=actx.createBiquadFilter(); bpf.type="bandpass"; bpf.frequency.value=freq*1.4; bpf.Q.value=4;
-    ns.connect(bpf);
-    const gN=actx.createGain(); gN.gain.setValueAtTime(vol*0.35,actx.currentTime); gN.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dec*0.5); bpf.connect(gN);
-    const gT=actx.createGain(); gT.gain.setValueAtTime(vol*0.65,actx.currentTime); gT.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dec); osc.connect(gT);
-    gN.connect(actx.destination); gT.connect(actx.destination);
-    ns.start(); ns.stop(actx.currentTime+0.12);
-    osc.start(); osc.stop(actx.currentTime+dec+0.01);
+    const vol=mVolRef.current;
+    const freq=accent?1200:800;
+    const dec=0.04;
+    // パキッとした短いトーン（ウッドブロック）
+    const osc1=actx.createOscillator(); osc1.type="square";
+    osc1.frequency.setValueAtTime(freq,actx.currentTime);
+    osc1.frequency.exponentialRampToValueAtTime(freq*0.3,actx.currentTime+dec);
+    const osc2=actx.createOscillator(); osc2.type="sine";
+    osc2.frequency.setValueAtTime(freq*1.5,actx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(freq*0.5,actx.currentTime+dec*0.5);
+    const hpf=actx.createBiquadFilter(); hpf.type="highpass"; hpf.frequency.value=400;
+    const g=actx.createGain();
+    g.gain.setValueAtTime(vol*0.8,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,actx.currentTime+dec);
+    osc1.connect(hpf); osc2.connect(hpf); hpf.connect(g); g.connect(actx.destination);
+    osc1.start(); osc1.stop(actx.currentTime+dec+0.01);
+    osc2.start(); osc2.stop(actx.currentTime+dec+0.01);
   }
 
   function playSound(color) {
     const actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[color]) return;
-    const s=actx.createBufferSource(); s.buffer=bufs[color]; s.connect(actx.destination); s.start(0);
+    const s=actx.createBufferSource(); s.buffer=bufs[color];
+    const g=actx.createGain(); g.gain.value=0.6;
+    s.connect(g); g.connect(actx.destination); s.start(0);
   }
 
   function doDimAll() {
@@ -368,7 +371,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     });
     if(mOnRef.current){
       const m=mModeRef.current;
-      if((m===4&&s12%4===0)||(m===8&&s12%2===0)||(m==="8u"&&s12%2!==0)) woodClick(s12===0);
+      if(m===4&&s12%3===0) woodClick(s12===0);       // 4分: 0,3,6,9
+      else if(m===3) woodClick(s12===0);              // 三連: 毎ステップ、拍頭アクセント
     }
   }
 
@@ -485,7 +489,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           <span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
         </div>
         <div style={{display:"flex",gap:4}}>
-          {[["4分",4],["8分",8],["裏","8u"]].map(([lbl,val])=>(
+          {[["4分",4],["三連",3]].map(([lbl,val])=>(
             <button key={val} onClick={()=>setMetroMode(val)} style={tb(metroMode===val)}>♩ {lbl}</button>
           ))}
         </div>
