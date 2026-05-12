@@ -253,14 +253,12 @@ function makeEmptyPat() {
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   var subdivS=useState(function(){
-    if(patternData&&patternData.meta&&patternData.meta.noteType) return patternData.meta.subdiv==="16th"?"16th":"triplet";
+    if(patternData&&patternData.meta&&patternData.meta.noteType==="16th") return "16th";
     return subdivProp||"triplet";
   }); var subdiv=subdivS[0]; var setSubdiv=subdivS[1];
-  var SPB = subdiv==="16th" ? 16 : 12;
+  var spbS=useState(subdiv==="16th"?16:12); var SPB=spbS[0]; var setSPB=spbS[1];
   var TOTAL = SPB * 8;
   var CELL = 18, GAP = 1;
-  // subdivが変わった時に強制再レンダリングするためのカウンタ
-  var reRenderS=useState(0); var reRender=reRenderS[0]; var setReRender=reRenderS[1];
 
   function emptyPat(total) {
     var t = total || TOTAL;
@@ -320,9 +318,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
   useEffect(function(){
     subdivRef.current=subdiv;
-    // subdiv変更時にleft/rightを新しいTOTALサイズに拡張
     var newTotal = subdiv==="16th" ? 128 : 96;
     var spb = subdiv==="16th" ? 16 : 12;
+    setSPB(spb);
     setLeft(function(prev){
       var p={};
       COLORS.forEach(function(c){
@@ -340,7 +338,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       return p;
     });
     if(playing) doStop();
-    setReRender(function(v){return v+1;});
   },[subdiv]);
 
   useEffect(function(){
@@ -739,12 +736,12 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap",
           padding:"6px 10px",background:"#f5f5f3",borderRadius:8,border:"0.5px solid #d0cec8"}}>
           <span style={{fontSize:10,color:C.label,fontWeight:600}}>拍子</span>
-          <button onClick={function(){setSubdiv("triplet");setMetroMode(4);}}
+          <button onClick={function(){setSubdiv("triplet");setSPB(12);setMetroMode(4);}}
             style={{padding:"3px 10px",borderRadius:6,border:"0.5px solid #d0cec8",
               background:subdiv==="triplet"?"#708238":"#fff",
               color:subdiv==="triplet"?"#fff":C.label,
               fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>三連符</button>
-          <button onClick={function(){setSubdiv("sixteenth");setMetroMode(4);}}
+          <button onClick={function(){setSubdiv("16th");setSPB(16);setMetroMode(4);}}
             style={{padding:"3px 10px",borderRadius:6,border:"0.5px solid #d0cec8",
               background:subdiv==="sixteenth"?"#708238":"#fff",
               color:subdiv==="sixteenth"?"#fff":C.label,
