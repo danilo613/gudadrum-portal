@@ -1296,13 +1296,12 @@ function App() {
   }
 
   async function saveScorePattern(scoreId, section, left, right) {
-    const colors = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-    const calls = [];
-    colors.forEach(color => {
-      calls.push(gasRead({ action:"savescore", score_id:scoreId, section, hand:"left",  color, pattern:JSON.stringify(left[color]||[]) }));
-      calls.push(gasRead({ action:"savescore", score_id:scoreId, section, hand:"right", color, pattern:JSON.stringify(right[color]||[]) }));
-    });
-    await Promise.all(calls);
+    var colors = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+    for (var i=0; i<colors.length; i++) {
+      var color = colors[i];
+      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"left",  color:color, pattern:JSON.stringify(left[color]||[]) });
+      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"right", color:color, pattern:JSON.stringify(right[color]||[]) });
+    }
   }
 
   async function gasWrite(params) {
