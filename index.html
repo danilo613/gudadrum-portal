@@ -1751,6 +1751,7 @@ function App() {
             {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
             {/* ScorePlayer（編集モード） */}
             <ScorePlayer
+              key={scoreEditId+"-"+scoreEditSec}
               scoreId={scoreEditId}
               sectionKey={scoreEditSec}
               sectionLabel={{
@@ -3648,6 +3649,7 @@ function App() {
                   ))}
                 </div>
                 <ScorePlayer
+                  key={currentScoreId+"-"+scoreSection}
                   scoreId={currentScoreId}
                   sectionKey={scoreSection}
                   sectionLabel={{"intro":"イントロ　0:05〜","amelo":"Aメロ　0:44〜","bmelo":"Bメロ"}[scoreSection]||scoreSection}
