@@ -476,6 +476,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               var s=barIdx*SPB+i;
               var on=pat[color]&&pat[color][s];
               var cur=s===curStep;
+              var ibs=i===0;
+              var ib=i%3===0&&i!==0;
               cells.push(
                 <div key={i}
                   onClick={function(ss,co,si){return function(e){
@@ -486,7 +488,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                     width:CELL,height:CELL,
                     marginBottom:GAP,
                     borderRadius:2,
-                    background:on?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color],
+                    background:on
+                      ? SCORE_DOT_COLORS[color]
+                      : ibs
+                        ? SCORE_PALE_COLORS[color]
+                        : ib
+                          ? "rgba(0,0,0,0.04)"
+                          : "#ebebeb",
                     cursor:"pointer",
                     outline:cur?"2px solid #555":"none",
                     outlineOffset:"-1px",
