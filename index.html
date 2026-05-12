@@ -863,6 +863,16 @@ function App() {
     }
   }, [currentMember]);
 
+  // メンバーページ表示時に購入済み譜面を再取得
+  useEffect(() => {
+    if (page === "member" && currentMember && !isFromAdmin && !isInstructor) {
+      loadPurchasedScores(currentMember.name);
+    }
+    if (page === "member" && (isFromAdmin || isInstructor)) {
+      setScoreList(["waterlily"]);
+    }
+  }, [page, currentMember]);
+
   function autoFetch() {
     return new Promise((resolve) => {
       const cbName = "gasCb_" + Date.now();
@@ -2040,7 +2050,7 @@ function App() {
                     <span style={{fontSize:13,color:isPurchased?C.olive:C.label,fontWeight:isPurchased?600:400}}>{song}</span>
                     <button onClick={()=>toggleScorePurchase(scoreModal.name, song, isPurchased)}
                       style={{padding:"4px 12px",borderRadius:8,border:"none",background:isPurchased?"#a04030":"#708238",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
-                      {isPurchased?"解除":"追加"}
+                      {isPurchased?"✅ 追加済み":"追加"}
                     </button>
                   </div>
                 );
