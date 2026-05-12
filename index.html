@@ -259,6 +259,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var SPB = subdiv==="16th" ? 16 : 12;
   var TOTAL = SPB * 8;
   var CELL = 18, GAP = 1;
+  // subdivが変わった時に強制再レンダリングするためのカウンタ
+  var reRenderS=useState(0); var reRender=reRenderS[0]; var setReRender=reRenderS[1];
 
   function emptyPat(total) {
     var t = total || TOTAL;
@@ -338,6 +340,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       return p;
     });
     if(playing) doStop();
+    setReRender(function(v){return v+1;});
   },[subdiv]);
 
   useEffect(function(){
@@ -720,7 +723,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
       {/* セクション情報 + 開始時間 */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
-        <p style={{fontSize:10,color:C.label}}>{sectionLabel}</p>
+        <p style={{fontSize:10,color:C.label}}>{sectionLabel}　<span style={{color:'#aaa'}}>({SPB}分割/拍)</span></p>
         {canEdit?(
           <div style={{display:"flex",alignItems:"center",gap:4}}>
             <span style={{fontSize:10,color:C.label}}>開始時間</span>
