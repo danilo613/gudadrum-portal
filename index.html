@@ -254,6 +254,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   const [metroMode, setMetroMode] = useState(4);
   const [metroVol,  setMetroVol]  = useState(0.6);
   const [lrOn,  setLrOn]  = useState(true);
+  const [metroAccent, setMetroAccent] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
   const [dotFills,  setDotFills]  = useState(() => { const d={}; Object.keys(SCORE_DOTS).forEach(c=>{d[c]=SCORE_PALE_COLORS[c];}); return d; });
@@ -682,7 +683,6 @@ function App() {
   const [scoreLoading,   setScoreLoading]   = useState(false);
   const [currentScoreId, setCurrentScoreId] = useState("waterlily");
   const [scoreEditOpen,  setScoreEditOpen]  = useState(false);
-  const [metroAccent,    setMetroAccent]    = useState(true);
   const [scoreEditSec,   setScoreEditSec]   = useState("intro");
   const [scoreEditId,    setScoreEditId]    = useState("waterlily");
 
