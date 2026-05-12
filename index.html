@@ -435,37 +435,195 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   );
 
   // グリッド行生成
-  const gridRows = [];
-  for(let s=0;s<TOTAL_STEPS;s++){
-    const ibs=s%SPB===0, ib=s%3===0, bi=Math.floor((s%SPB)/3)+1, bn=Math.floor(s/SPB)+1;
-    const cur=s===step&&isPlaying;
-    const bg=cur?(ibs?"#a8a5a0":"#b8b5b0"):ibs?"#c8c5c0":ib?"#dddbd6":"#fff";
-    const ctr=ibs
-      ?<div style={{width:24,flexShrink:0,textAlign:"center"}}><div style={{width:18,height:18,borderRadius:"50%",background:"#ccc",color:"#333",fontSize:9,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto"}}>{bn}</div></div>
-      :ib?<div style={{width:24,flexShrink:0,textAlign:"center",fontSize:8,color:"#888",fontWeight:700,lineHeight:"13px"}}>{bi}</div>
-      :<div style={{width:24,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/></div>;
-    gridRows.push(
-      <div key={s} style={{display:"flex",gap:2,padding:"0 3px",marginBottom:1,alignItems:"center",background:bg}}>
-        <div style={{display:"flex",gap:1,flex:1}}>
-          {SCORE_COLOR_ORDER.map(c=>{
-            const on=left[c][s];
-            return <div key={c} onClick={()=>toggleCell("left",c,s)}
-              style={{height:13,flex:1,borderRadius:2,background:on?SCORE_DOT_COLORS[c]:"#f0efec",border:on?"none":"0.5px solid #d0cec8",cursor:canEdit?"pointer":"default"}}/>;
-          })}
-        </div>
-        {ctr}
-        <div style={{display:"flex",gap:1,flex:1}}>
-          {SCORE_COLOR_ORDER.map(c=>{
-            const on=right[c][s];
-            return <div key={c} onClick={()=>toggleCell("right",c,s)}
-              style={{height:13,flex:1,borderRadius:2,background:on?SCORE_DOT_COLORS[c]:"#f0efec",border:on?"none":"0.5px solid #d0cec8",cursor:canEdit?"pointer":"default"}}/>;
-          })}
+  // レイアウト: 2小節×4列、上段(奇数小節)と下段(偶数小節)
+  // 8小節 = 4グループ × 2小節(上下)
+  // 各小節 = 12ステップ（三連符）
+  const CELL = 18;
+  const GAP = 2;
+
+  // グループ: [上小節index, 下小節index] × 4
+  // 小節0-7 → 上段: 0,2,4,6 / 下段: 1,3,5,7
+  const groups = [[0,1],[2,3],[4,5],[6,7]];
+
+  function renderBar(barIndex, side) {
+    const start = barIndex * SPB;
+    const cells = [];
+    for(let i=0;i<SPB;i++){
+      const s = start + i;
+      const ibs = i===0;
+      const ib = i%3===0;
+      const bi = Math.floor(i/3)+1;
+      const cur = s===step && isPlaying;
+      const pat = side==="left" ? left : right;
+      const color = SCORE_COLOR_ORDER.find(c => pat[c] && pat[c][s]);
+      const rowBg = cur?"#a8a5a0":ibs?"#c8c5c0":ib?"#dddbd6":"#fff";
+      cells.push(
+        <div key={i} style={{
+          width:CELL, height:CELL, borderRadius:3, flexShrink:0,
+          background: color ? SCORE_DOT_COLORS[color] : rowBg,
+          border: color ? "none" : "0.5px solid #d0cec8",
+          cursor: canEdit ? "pointer" : "default",
+          outline: cur ? "1.5px solid #888" : "none",
+        }}
+        onClick={()=>{
+          if(!canEdit) return;
+          if(color){
+            // 色を消す
+            toggleCell(side, color, s);
+          } else {
+            // 色選択モーダルは後で、今は最後に使った色を使う
+          }
+        }}
+        />
+      );
+    }
+    return cells;
+  }
+
+  function renderBarNum(barIndex) {
+    return (
+      <div style={{
+        width:CELL, height:CELL, flexShrink:0,
+        display:"flex", alignItems:"center", justifyContent:"center",
+        background:"#c8c5c0",
+      }}>
+        <div style={{
+          width:16, height:16, borderRadius:"50%",
+          background:"#888", color:"#fff",
+          fontSize:9, fontWeight:700,
+          display:"flex", alignItems:"center", justifyContent:"center",
+        }}>
+          {barIndex+1}
         </div>
       </div>
     );
   }
 
-  return (
+  // グリッド全体
+  const gridContent = (
+    <div style={{display:"flex", gap:4, overflowX:"auto", WebkitOverflowScrolling:"touch"}}>
+      {groups.map(([topBar, botBar], gi) => (
+        <div key={gi} style={{flexShrink:0}}>
+          {/* 上段（奇数小節） */}
+          <div style={{marginBottom:2}}>
+            {/* ヘッダー行: 小節番号 */}
+            <div style={{display:"flex", gap:GAP, marginBottom:1}}>
+              {renderBarNum(topBar)}
+              <div style={{display:"flex", gap:1}}>
+                {renderBar(topBar, "left").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
+              </div>
+              <div style={{display:"flex", gap:1}}>
+                {renderBar(topBar, "right").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
+              </div>
+            </div>
+            {/* ステップ行 */}
+            {Array.from({length:SPB}, (_,i)=>{
+              const s = topBar*SPB + i;
+              const ibs = i===0;
+              const ib = i%3===0;
+              const bi = Math.floor(i/3)+1;
+              const cur = s===step && isPlaying;
+              const leftColor = SCORE_COLOR_ORDER.find(c => left[c] && left[c][s]);
+              const rightColor = SCORE_COLOR_ORDER.find(c => right[c] && right[c][s]);
+              const rowBg = cur?"#b8b5b0":ibs?"#c8c5c0":ib?"#dddbd6":"#fff";
+              return (
+                <div key={i} style={{display:"flex", gap:GAP, marginBottom:1, alignItems:"center"}}>
+                  {/* 拍番号 */}
+                  <div style={{
+                    width:CELL, height:CELL, flexShrink:0,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    background: cur?"#a8a5a0":ibs?"#c8c5c0":ib?"#dddbd6":"transparent",
+                  }}>
+                    {ib && !ibs && <span style={{fontSize:8,color:"#888",fontWeight:700}}>{bi}</span>}
+                    {!ib && <div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}
+                  </div>
+                  {/* 左手 */}
+                  <div style={{display:"flex", gap:1}}>
+                    <div style={{
+                      width:CELL, height:CELL, borderRadius:3,
+                      background: leftColor ? SCORE_DOT_COLORS[leftColor] : rowBg,
+                      border: leftColor ? "none" : "0.5px solid #d0cec8",
+                      cursor: canEdit?"pointer":"default",
+                    }}
+                    onClick={()=>{ if(canEdit && leftColor) toggleCell("left",leftColor,s); }}
+                    />
+                  </div>
+                  {/* 右手 */}
+                  <div style={{display:"flex", gap:1}}>
+                    <div style={{
+                      width:CELL, height:CELL, borderRadius:3,
+                      background: rightColor ? SCORE_DOT_COLORS[rightColor] : rowBg,
+                      border: rightColor ? "none" : "0.5px solid #d0cec8",
+                      cursor: canEdit?"pointer":"default",
+                    }}
+                    onClick={()=>{ if(canEdit && rightColor) toggleCell("right",rightColor,s); }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 下段（偶数小節） */}
+          <div>
+            <div style={{display:"flex", gap:GAP, marginBottom:1}}>
+              {renderBarNum(botBar)}
+              <div style={{display:"flex", gap:1}}>
+                {renderBar(botBar, "left").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
+              </div>
+              <div style={{display:"flex", gap:1}}>
+                {renderBar(botBar, "right").map((cell,i)=><React.Fragment key={i}>{cell}</React.Fragment>)}
+              </div>
+            </div>
+            {Array.from({length:SPB}, (_,i)=>{
+              const s = botBar*SPB + i;
+              const ibs = i===0;
+              const ib = i%3===0;
+              const bi = Math.floor(i/3)+1;
+              const cur = s===step && isPlaying;
+              const leftColor = SCORE_COLOR_ORDER.find(c => left[c] && left[c][s]);
+              const rightColor = SCORE_COLOR_ORDER.find(c => right[c] && right[c][s]);
+              const rowBg = cur?"#b8b5b0":ibs?"#c8c5c0":ib?"#dddbd6":"#fff";
+              return (
+                <div key={i} style={{display:"flex", gap:GAP, marginBottom:1, alignItems:"center"}}>
+                  <div style={{
+                    width:CELL, height:CELL, flexShrink:0,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    background: cur?"#a8a5a0":ibs?"#c8c5c0":ib?"#dddbd6":"transparent",
+                  }}>
+                    {ib && !ibs && <span style={{fontSize:8,color:"#888",fontWeight:700}}>{bi}</span>}
+                    {!ib && <div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}
+                  </div>
+                  <div style={{display:"flex", gap:1}}>
+                    <div style={{
+                      width:CELL, height:CELL, borderRadius:3,
+                      background: leftColor ? SCORE_DOT_COLORS[leftColor] : rowBg,
+                      border: leftColor ? "none" : "0.5px solid #d0cec8",
+                      cursor: canEdit?"pointer":"default",
+                    }}
+                    onClick={()=>{ if(canEdit && leftColor) toggleCell("left",leftColor,s); }}
+                    />
+                  </div>
+                  <div style={{display:"flex", gap:1}}>
+                    <div style={{
+                      width:CELL, height:CELL, borderRadius:3,
+                      background: rightColor ? SCORE_DOT_COLORS[rightColor] : rowBg,
+                      border: rightColor ? "none" : "0.5px solid #d0cec8",
+                      cursor: canEdit?"pointer":"default",
+                    }}
+                    onClick={()=>{ if(canEdit && rightColor) toggleCell("right",rightColor,s); }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+    return (
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
       <p style={{fontSize:10,color:C.label,textAlign:"center",marginBottom:8,letterSpacing:".05em"}}>{sectionLabel}</p>
       {/* 保存ボタン */}
@@ -524,7 +682,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         </div>
       </div>
       {/* メインレイアウト */}
-      <div style={{display:"flex",gap:8,alignItems:"flex-start"}}>
+      <div style={{display:"flex",flexDirection:"column",gap:12}}>
         {/* GUDAdrumイラスト */}
         <div style={{flexShrink:0,width:140}}>
           <svg viewBox="0 0 140 166" width="140" height="166">
@@ -542,21 +700,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               </g>
             ))}
           </svg>
-          <div style={{display:"flex",gap:4,flexWrap:"wrap",marginTop:4}}>
-            {SCORE_COLOR_ORDER.map(c=>(
-              <div key={c} style={{display:"flex",alignItems:"center",gap:2}}>
-                <div style={{width:8,height:8,borderRadius:"50%",background:SCORE_DOT_COLORS[c]}}/>
-                <span style={{fontSize:9,color:C.label}}>{SCORE_COLOR_NAMES[c]}</span>
-              </div>
-            ))}
-          </div>
+
         </div>
         {/* グリッド */}
         <div style={{flex:1,minWidth:0}}>
-          <div style={{display:"flex",gap:2,marginBottom:3}}>
-            <div style={{flex:1,textAlign:"center",fontSize:9,fontWeight:700,letterSpacing:".1em",color:"#2563eb"}}>左手 ↓</div>
+          <div style={{display:"flex",gap:2,marginBottom:3,padding:"0 3px"}}>
+            <div style={{width:18,textAlign:"center",fontSize:9,fontWeight:700,letterSpacing:".05em",color:"#2563eb",flexShrink:0}}>左</div>
             <div style={{width:24,flexShrink:0}}/>
-            <div style={{flex:1,textAlign:"center",fontSize:9,fontWeight:700,letterSpacing:".1em",color:"#2563eb"}}>右手 ↓</div>
+            <div style={{width:18,textAlign:"center",fontSize:9,fontWeight:700,letterSpacing:".05em",color:"#2563eb",flexShrink:0}}>右</div>
           </div>
           <div style={{display:"flex",gap:2,marginBottom:3}}>
             <div style={{display:"flex",gap:1,flex:1}}>
@@ -683,6 +834,8 @@ function App() {
   const [scoreLoading,   setScoreLoading]   = useState(false);
   const [currentScoreId, setCurrentScoreId] = useState("waterlily");
   const [scoreEditOpen,  setScoreEditOpen]  = useState(false);
+  const [scoreModal,     setScoreModal]     = useState(null); // {name, purchased:[]}
+  const [scoreModalMsg,  setScoreModalMsg]  = useState("");
   const [scoreEditSec,   setScoreEditSec]   = useState("intro");
   const [scoreEditId,    setScoreEditId]    = useState("waterlily");
 
@@ -995,6 +1148,33 @@ function App() {
       setLessonMsg("✅ 更新しました！");
       setTimeout(()=>{ autoFetch(); setLessonMsg(""); }, 1500);
     } catch(e) { setLessonMsg("❌ "+e.message); }
+  }
+
+  async function loadMemberScores(name) {
+    try {
+      const res = await gasRead({ action:"getpurchasedscores", name });
+      const ids = (res.score_ids || []).filter(id => id && id.trim());
+      setScoreModal({ name, purchased: ids });
+      setScoreModalMsg("");
+    } catch(e) { console.warn(e); }
+  }
+
+  async function toggleScorePurchase(name, songTitle, purchased) {
+    setScoreModalMsg("保存中…");
+    try {
+      if (purchased) {
+        // 削除
+        await gasRead({ action:"removepurchasedscore", name, score_id: songTitle });
+      } else {
+        // 追加：GASのsaveScoreと別に購入シートに書く
+        await gasRead({ action:"addpurchasedscore", name, score_id: songTitle });
+      }
+      await loadMemberScores(name);
+      setScoreModalMsg("✅ 保存しました");
+      setTimeout(() => setScoreModalMsg(""), 2000);
+    } catch(e) {
+      setScoreModalMsg("❌ 失敗しました");
+    }
   }
 
   async function gasRead(params) {
@@ -1766,6 +1946,7 @@ function App() {
                         <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
                         <button onClick={e=>{e.stopPropagation();setSchedModal(mbr.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
                         <button onClick={e=>{e.stopPropagation();setPointModal({name:mbr.name,points:mbr.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
+                        {!isInstructor && <button onClick={e=>{e.stopPropagation();loadMemberScores(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a6a7a",background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎼</button>}
                         {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===mbr.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
                       </div>
                     </div>
@@ -1802,6 +1983,7 @@ function App() {
                 <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
                 <button onClick={e=>{e.stopPropagation();setSchedModal(mbr.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
                 <button onClick={e=>{e.stopPropagation();setPointModal({name:mbr.name,points:mbr.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
+                {!isInstructor && <button onClick={e=>{e.stopPropagation();loadMemberScores(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a6a7a",background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎼</button>}
                 {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===mbr.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
               </div>
             </div>
@@ -1845,6 +2027,31 @@ function App() {
           </div>
         </div>
       )}
+      {scoreModal && (
+        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
+          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:400,maxHeight:"85vh",overflowY:"auto"}}>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>🎼 譜面購入設定</h3>
+            <p style={{fontSize:13,color:C.label,marginBottom:16}}>対象：<strong>{scoreModal.name}</strong></p>
+            <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
+              {SONGS.map(song => {
+                const isPurchased = scoreModal.purchased.includes(song);
+                return (
+                  <div key={song} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",borderRadius:10,background:isPurchased?"rgba(112,130,56,0.12)":"rgba(0,0,0,0.03)",border:"1px solid "+(isPurchased?C.olive:C.border)}}>
+                    <span style={{fontSize:13,color:isPurchased?C.olive:C.label,fontWeight:isPurchased?600:400}}>{song}</span>
+                    <button onClick={()=>toggleScorePurchase(scoreModal.name, song, isPurchased)}
+                      style={{padding:"4px 12px",borderRadius:8,border:"none",background:isPurchased?"#a04030":"#708238",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                      {isPurchased?"解除":"追加"}
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+            {scoreModalMsg && <p style={{fontSize:12,color:scoreModalMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8,textAlign:"center"}}>{scoreModalMsg}</p>}
+            <button onClick={()=>setScoreModal(null)} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>閉じる</button>
+          </div>
+        </div>
+      )}
+
       {pointModal && (
         <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
           <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:400}}>
