@@ -250,9 +250,15 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-  var SPB = 12, TOTAL = 96, CELL = 18, GAP = 1;
+  var subdivS=useState(function(){
+    if(patternData&&patternData.meta&&patternData.meta.noteType) return patternData.meta.subdiv==="16th"?"16th":"triplet";
+    return subdivProp||"triplet";
+  }); var subdiv=subdivS[0]; var setSubdiv=subdivS[1];
+  var SPB = subdiv==="16th" ? 16 : 12;
+  var TOTAL = SPB * 8;
+  var CELL = 18, GAP = 1;
 
   function emptyPat() {
     var p = {};
@@ -263,7 +269,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var p = emptyPat();
     if (patternData && patternData[side]) {
       COLORS.forEach(function(c){
-        if (patternData[side][c]) p[c] = patternData[side][c].slice();
+        if (patternData[side][c]) {
+          var src = patternData[side][c];
+          // TOTALが変わった時も対応
+          for(var i=0;i<TOTAL;i++) p[c][i] = src[i]||0;
+        }
       });
     }
     return p;
@@ -284,6 +294,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var savingS=useState(false); var saving=savingS[0]; var setSaving=savingS[1];
   var saveMsgS=useState(""); var saveMsg=saveMsgS[0]; var setSaveMsg=saveMsgS[1];
   var secTimeS=useState(startTime||""); var secTime=secTimeS[0]; var setSecTime=secTimeS[1];
+  var subdivS=useState(subdivProp||"triplet"); var subdiv=subdivS[0]; var setSubdiv=subdivS[1];
   var barsS=useState("8"); var bars=barsS[0]; var setBars=barsS[1];
   var repeatS=useState("1"); var repeat=repeatS[0]; var setRepeat=repeatS[1];
 
@@ -303,6 +314,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){subdivRef.current=subdiv;},[subdiv]);
 
   useEffect(function(){
     var lp=emptyPat(),rp=emptyPat();
@@ -316,11 +328,19 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(patternData && patternData.meta){
       if(patternData.meta.bars) setBars(String(patternData.meta.bars));
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
+      if(patternData.meta.subdiv) setSubdiv(patternData.meta.subdiv);
     }
     setLeft(lp);setRight(rp);setSecTime(startTime||"");
   },[patternData,startTime]);
 
   useEffect(function(){return function(){doStop();};},[]);
+
+  // subdivが変わったらパターンをリセット
+  useEffect(function(){
+    doStop();
+    setLeft(emptyPat());
+    setRight(emptyPat());
+  },[subdiv]);
 
   // スペースキーで再生/停止
   useEffect(function(){
@@ -387,7 +407,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function tick(){
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
-    var ms=Math.round((60/bpmRef.current/3)*1000);
+    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="sixteenth"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);stepRef.current=(s+1)%TOTAL;
@@ -395,15 +415,24 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
     if(metroOnRef.current){
-      var m=metroModeRef.current,doAcc=s12===0&&metroAccentRef.current;
-      if(m===4&&s12%3===0)woodClick(doAcc);
-      else if(m===3)woodClick(doAcc);
+      var m=metroModeRef.current;
+      var doAcc=s12===0&&metroAccentRef.current;
+      var spb=subdivRef.current==="sixteenth"?16:12;
+      var s12b=stepRef.current===0?0:(stepRef.current-1)%spb; // 現在のs12
+      if(subdivRef.current==="sixteenth"){
+        if(m===4&&s12%4===0)woodClick(doAcc);
+        else if(m===8&&s12%2===0)woodClick(doAcc);
+        else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
+      } else {
+        if(m===4&&s12%3===0)woodClick(doAcc);
+        else if(m===3)woodClick(doAcc);
+      }
     }
   }
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/3)*1000));
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="sixteenth"?4:3))*1000));
   }
 
   function doStop(){
@@ -429,7 +458,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handleSave(){
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime,subdiv:subdiv});
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -449,7 +478,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var rows = [];
     for(var i=0;i<SPB;i++){
       var s=barIdx*SPB+i;
-      var ibs=i===0, ib=i%3===0&&i!==0;
+      var ibs=i===0, ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
       var cur=s===curStep;
       var isStart=s===startStepRef.current;
       // 帯の色とサイズ
@@ -498,7 +527,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               var on=pat[color]&&pat[color][s];
               var cur=s===curStep;
               var ibs=i===0;
-              var ib=i%3===0&&i!==0;
+              var ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
               cells.push(
                 <div key={i}
                   onClick={function(ss,co,si){return function(e){
@@ -571,7 +600,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var bands=[];
     for(var i=0;i<SPB;i++){
       var s=barIdx*SPB+i;
-      var ibs=i===0, ib=i%3===0&&i!==0;
+      var ibs=i===0, ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
       var cur=s===curStep;
       var isRowStart=s===startStepRef.current;
       if(ibs){
@@ -678,10 +707,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
       </div>
 
-      {/* 小節数・繰り返し */}
+      {/* 小節数・繰り返し・拍子 */}
       {canEdit ? (
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap",
           padding:"6px 10px",background:"#f5f5f3",borderRadius:8,border:"0.5px solid #d0cec8"}}>
+          <span style={{fontSize:10,color:C.label,fontWeight:600}}>拍子</span>
+          <button onClick={function(){setSubdiv("triplet");setMetroMode(4);}}
+            style={{padding:"3px 10px",borderRadius:6,border:"0.5px solid #d0cec8",
+              background:subdiv==="triplet"?"#708238":"#fff",
+              color:subdiv==="triplet"?"#fff":C.label,
+              fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>三連符</button>
+          <button onClick={function(){setSubdiv("sixteenth");setMetroMode(4);}}
+            style={{padding:"3px 10px",borderRadius:6,border:"0.5px solid #d0cec8",
+              background:subdiv==="sixteenth"?"#708238":"#fff",
+              color:subdiv==="sixteenth"?"#fff":C.label,
+              fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>16分音符</button>
+          <span style={{width:1,height:16,background:"#d0cec8",flexShrink:0}}/>
           <span style={{fontSize:10,color:C.label,fontWeight:600}}>構成</span>
           <input type="number" min="1" max="64" value={bars}
             onChange={function(e){setBars(e.target.value);}}
@@ -729,8 +770,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         <div onClick={function(){setMetroOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
           {Sw(metroOn)}<span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
         </div>
-        <div style={{display:"flex",gap:4}}>
-          {[["4分",4],["三連",3]].map(function(x){
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+          {(subdiv==="sixteenth"
+            ?[["4分",4],["8分",8],["裏","8u"]]
+            :[["4分",4],["三連",3]]
+          ).map(function(x){
             return <button key={x[1]} onClick={function(){setMetroMode(x[1]);}}
               style={{padding:"3px 7px",borderRadius:6,border:"0.5px solid #d0cec8",background:metroMode===x[1]?"#1a1a1a":"#fff",color:metroMode===x[1]?"#fff":"#666",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>♩ {x[0]}</button>;
           })}
@@ -1387,7 +1431,7 @@ function App() {
       updated.left[color]=(left[color]||[]).slice();
       updated.right[color]=(right[color]||[]).slice();
     });
-    if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;}
+    if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;updated.meta.noteType=meta.noteType;}
     setScorePatterns(function(prev){var n=Object.assign({},prev);n[scoreId]=Object.assign({},prev[scoreId]);n[scoreId][section]=updated;return n;});
   }
 
