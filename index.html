@@ -260,9 +260,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var TOTAL = SPB * 8;
   var CELL = 18, GAP = 1;
 
-  function emptyPat() {
+  function emptyPat(total) {
+    var t = total || TOTAL;
     var p = {};
-    COLORS.forEach(function(c){ p[c] = new Array(TOTAL).fill(0); });
+    COLORS.forEach(function(c){ p[c] = new Array(t).fill(0); });
     return p;
   }
   function initPat(side) {
@@ -315,8 +316,29 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
-  useEffect(function(){subdivRef.current=subdiv;if(playing){doStop();}},[subdiv]);
-  useEffect(function(){subdivRef.current=subdiv;},[subdiv]);
+  useEffect(function(){
+    subdivRef.current=subdiv;
+    // subdiv変更時にleft/rightを新しいTOTALサイズに拡張
+    var newTotal = subdiv==="16th" ? 128 : 96;
+    var spb = subdiv==="16th" ? 16 : 12;
+    setLeft(function(prev){
+      var p={};
+      COLORS.forEach(function(c){
+        p[c]=new Array(newTotal).fill(0);
+        if(prev[c]) for(var i=0;i<Math.min(prev[c].length,newTotal);i++) p[c][i]=prev[c][i]||0;
+      });
+      return p;
+    });
+    setRight(function(prev){
+      var p={};
+      COLORS.forEach(function(c){
+        p[c]=new Array(newTotal).fill(0);
+        if(prev[c]) for(var i=0;i<Math.min(prev[c].length,newTotal);i++) p[c][i]=prev[c][i]||0;
+      });
+      return p;
+    });
+    if(playing) doStop();
+  },[subdiv]);
 
   useEffect(function(){
     var lp=emptyPat(),rp=emptyPat();
