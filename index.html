@@ -238,7 +238,7 @@ function makeEmptyPat() {
 
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-  var SPB = 12, BARS = 8, TOTAL = 96, CELL = 18, GAP = 1;
+  var SPB = 12, TOTAL = 96, CELL = 18, GAP = 1;
 
   function emptyPat() {
     var p = {};
@@ -409,130 +409,131 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     </div>;
   }
 
-  // 1小節分のカラム（9色）を描画
-  // バックに細長いグレー帯（拍区切り）を重ねる
-  function renderSideGrid(barIdx, side){
-    var pat=side==="left"?left:right;
-    var totalW = COLORS.length*(CELL+GAP); // 9色分の幅
+  // 中央の拍目印カラム（左右の間）
+  // 各ステップに対応した細いセル
+  // 小節頭=濃いグレー帯、4分音符=薄いグレー帯、三連の細分=ドット
+  // クリックでその位置から再生開始
+  function renderBeatCol(barIdx){
     var stepH = CELL+GAP;
-    var totalH = SPB*stepH;
-
-    // 背景帯の定義
-    // 小節頭(i=0): 濃いグレー
-    // 4分音符(i=3,6,9): 少し明るいグレー
-    var bands = [];
+    var rows = [];
     for(var i=0;i<SPB;i++){
+      var s=barIdx*SPB+i;
       var ibs=i===0, ib=i%3===0&&i!==0;
-      if(ibs||ib){
-        var bandBg=ibs?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.07)";
-        bands.push(
-          <div key={"band"+i} style={{
-            position:"absolute", left:0, right:0,
-            top:i*stepH, height:stepH-GAP,
-            background:bandBg, borderRadius:2, pointerEvents:"none",
-          }}/>
-        );
+      var cur=s===curStep;
+      var isStart=s===startStepRef.current&&!playing;
+      var bg, h, content=null;
+      if(ibs){
+        bg="#a0a0a0"; h=stepH-GAP;
+      } else if(ib){
+        bg="#c8c8c8"; h=stepH-GAP;
+        content=<div style={{width:4,height:4,borderRadius:"50%",background:"#888",margin:"0 auto"}}/>;
+      } else {
+        bg="transparent"; h=stepH-GAP;
+        content=<div style={{width:2,height:2,borderRadius:"50%",background:"#ccc",margin:"0 auto"}}/>;
       }
-    }
-
-    // 再生中の行ハイライト
-    var playStep = curStep;
-    if(playStep>=barIdx*SPB && playStep<(barIdx+1)*SPB){
-      var pi=playStep-barIdx*SPB;
-      bands.push(
-        <div key="playbg" style={{
-          position:"absolute",left:0,right:0,
-          top:pi*stepH,height:stepH-GAP,
-          background:"rgba(80,80,80,0.35)",borderRadius:2,pointerEvents:"none",zIndex:2,
-        }}/>
+      if(cur) bg="#606060";
+      if(isStart) bg="#E74C3C";
+      rows.push(
+        <div key={i}
+          onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+          style={{
+            width:12, height:h,
+            background:bg,
+            marginBottom:GAP,
+            borderRadius:2,
+            cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"center",
+          }}>
+          {content}
+        </div>
       );
     }
+    return <div style={{display:"flex",flexDirection:"column",width:12,flexShrink:0}}>{rows}</div>;
+  }
 
-    // 各色の列
-    var cols=COLORS.map(function(color,ci){
-      var cells=[];
-      for(var i=0;i<SPB;i++){
-        var s=barIdx*SPB+i;
-        var on=pat[color]&&pat[color][s];
-        cells.push(
-          <div key={i}
-            onClick={function(ss,co,si){return function(e){
-              e.stopPropagation();
-              if(canEdit)toggleCell(si,co,ss);
-              else{startStepRef.current=ss;}
-            };}(s,color,side)}
-            style={{
-              width:CELL, height:CELL,
-              marginBottom:GAP,
-              borderRadius:2,
-              background:on?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color],
-              cursor:canEdit?"pointer":"default",
-              position:"relative", zIndex:3,
-              boxSizing:"border-box",
-              border:on?"none":"none",
-            }}
-          />
-        );
-      }
-      return <div key={color} style={{display:"flex",flexDirection:"column",marginRight:GAP}}>{cells}</div>;
-    });
-
+  // 片側（左手or右手）の9色グリッド
+  function renderSideGrid(barIdx, side){
+    var pat=side==="left"?left:right;
     return (
-      <div style={{position:"relative",display:"flex",width:totalW,height:totalH}}>
-        {/* グレー帯（後ろ） */}
-        <div style={{position:"absolute",left:0,right:0,top:0,bottom:0,pointerEvents:"none"}}>
-          {bands}
-        </div>
-        {/* 色セル */}
-        {cols}
+      <div style={{display:"flex",flexDirection:"row"}}>
+        {COLORS.map(function(color){
+          var cells=[];
+          for(var i=0;i<SPB;i++){
+            var s=barIdx*SPB+i;
+            var on=pat[color]&&pat[color][s];
+            var cur=s===curStep;
+            cells.push(
+              <div key={i}
+                onClick={function(ss,co,si){return function(e){
+                  e.stopPropagation();
+                  if(canEdit)toggleCell(si,co,ss);
+                  else{startStepRef.current=ss;setCurStep(-1);}
+                };}(s,color,side)}
+                style={{
+                  width:CELL, height:CELL,
+                  marginBottom:GAP,
+                  borderRadius:2,
+                  background:on?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color],
+                  cursor:canEdit?"pointer":"default",
+                  outline:cur?"2px solid #555":"none",
+                  outlineOffset:"-1px",
+                }}
+              />
+            );
+          }
+          return (
+            <div key={color} style={{display:"flex",flexDirection:"column",marginRight:GAP}}>
+              {cells}
+            </div>
+          );
+        })}
       </div>
     );
   }
 
-  // 1小節ブロック
+  // 1小節ブロック（小節番号左上、色見本、グリッド）
   function renderBar(barIdx){
     var isStart=Math.floor(startStepRef.current/SPB)===barIdx;
+    var colW=COLORS.length*(CELL+GAP);
     return (
-      <div key={barIdx} style={{flexShrink:0,marginRight:4}}>
-        {/* 左右ラベル行 */}
-        <div style={{display:"flex",gap:4,marginBottom:2}}>
-          <div style={{width:COLORS.length*(CELL+GAP),textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>左手</div>
-          <div style={{width:20,flexShrink:0}}/>
-          <div style={{width:COLORS.length*(CELL+GAP),textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>右手</div>
+      <div key={barIdx} style={{flexShrink:0,marginRight:6}}>
+        {/* 小節番号（左上）*/}
+        <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+          <div style={{
+            width:18,height:18,borderRadius:"50%",flexShrink:0,
+            background:isStart?"#E74C3C":"#a8a5a0",
+            color:"#fff",fontSize:10,fontWeight:700,
+            display:"flex",alignItems:"center",justifyContent:"center",
+            cursor:"pointer",
+          }}
+            onClick={function(b){return function(){startStepRef.current=b*SPB;setCurStep(-1);};}(barIdx)}>
+            {barIdx+1}
+          </div>
+          <div style={{fontSize:8,color:"#888"}}>小節</div>
         </div>
         {/* 色見本ヘッダー */}
-        <div style={{display:"flex",gap:4,marginBottom:2}}>
+        <div style={{display:"flex",gap:GAP,marginBottom:2,marginLeft:0}}>
+          {/* 左手色見本 */}
           <div style={{display:"flex"}}>
             {COLORS.map(function(c){
-              return <div key={c} style={{width:CELL,height:6,background:SCORE_DOT_COLORS[c],borderRadius:2,marginRight:GAP,opacity:0.8}}/>;
+              return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;
             })}
           </div>
-          <div style={{width:20,flexShrink:0}}/>
+          {/* 中央スペース */}
+          <div style={{width:12,flexShrink:0}}/>
+          {/* 右手色見本 */}
           <div style={{display:"flex"}}>
             {COLORS.map(function(c){
-              return <div key={c+"r"} style={{width:CELL,height:6,background:SCORE_DOT_COLORS[c],borderRadius:2,marginRight:GAP,opacity:0.8}}/>;
+              return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;
             })}
           </div>
         </div>
-        {/* 小節番号 + グリッド */}
-        <div style={{display:"flex",gap:4,alignItems:"flex-start"}}>
-          {/* 左手グリッド */}
+        {/* グリッド本体 */}
+        <div style={{display:"flex",alignItems:"flex-start",gap:0}}>
           {renderSideGrid(barIdx,"left")}
-          {/* 中央: 小節番号 */}
-          <div style={{width:20,flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center",height:SPB*(CELL+GAP)}}>
-            <div
-              onClick={function(b){return function(){startStepRef.current=b*SPB;setCurStep(-1);};}(barIdx)}
-              style={{
-                width:18,height:18,borderRadius:"50%",
-                background:isStart?"#E74C3C":"#a8a5a0",
-                color:"#fff",fontSize:10,fontWeight:700,
-                display:"flex",alignItems:"center",justifyContent:"center",
-                cursor:"pointer",
-              }}>
-              {barIdx+1}
-            </div>
-          </div>
-          {/* 右手グリッド */}
+          <div style={{width:4,flexShrink:0}}/>
+          {renderBeatCol(barIdx)}
+          <div style={{width:4,flexShrink:0}}/>
           {renderSideGrid(barIdx,"right")}
         </div>
       </div>
@@ -540,9 +541,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   var topBars=[0,2,4,6], botBars=[1,3,5,7];
-  var gridH = SPB*(CELL+GAP);
-  // ヘッダー分（ラベル行+見本行）の高さ
-  var headerH = 10 + 8 + 4; // label + swatchH + margins
+  var gridH=SPB*(CELL+GAP);
+  var headerH=18+2+5+2; // 小節番号+margin+色見本+margin
 
   return (
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
@@ -611,10 +611,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       </div>
 
       <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
-        {/* GUDAdrumイラスト: ヘッダー分下げてグリッドに揃える */}
-        <div style={{flexShrink:0,width:140,paddingTop:(headerH+4)+"px"}}>
+        {/* GUDAdrumイラスト: ヘッダー分paddingTopでグリッドに揃える */}
+        <div style={{flexShrink:0,width:140,paddingTop:headerH+"px"}}>
           <svg viewBox="0 0 140 166" width="140" height="166"
-            style={{maxHeight:(gridH+4)+"px",width:"auto",display:"block"}}>
+            style={{maxHeight:gridH+"px",width:"auto",display:"block",overflow:"visible"}}>
             <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
             <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
             <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
@@ -635,10 +635,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
         {/* グリッド */}
         <div style={{flex:1,minWidth:0,overflowX:"auto"}}>
-          <div style={{display:"flex",gap:0,marginBottom:8}}>
+          <div style={{display:"flex",gap:2,marginBottom:10}}>
             {topBars.map(function(b){return renderBar(b);})}
           </div>
-          <div style={{display:"flex",gap:0}}>
+          <div style={{display:"flex",gap:2}}>
             {botBars.map(function(b){return renderBar(b);})}
           </div>
         </div>
