@@ -1331,17 +1331,40 @@ function App() {
 
   async function saveScorePattern(scoreId, section, left, right, meta) {
     var colors = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-    for (var i=0; i<colors.length; i++) {
-      var color = colors[i];
-      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"left",  color:color, pattern:JSON.stringify(left[color]||[]) });
-      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"right", color:color, pattern:JSON.stringify(right[color]||[]) });
-    }
-    // meta情報を保存
+    // 現在のスプシデータと比較して変更があるものだけ送る
+    var existing = (scorePatterns[scoreId]||{})[section]||{};
+    var calls = [];
+    colors.forEach(function(color) {
+      var newL = JSON.stringify(left[color]||[]);
+      var newR = JSON.stringify(right[color]||[]);
+      var oldL = JSON.stringify((existing.left&&existing.left[color])||[]);
+      var oldR = JSON.stringify((existing.right&&existing.right[color])||[]);
+      if(newL !== oldL) calls.push({hand:"left", color:color, pattern:newL});
+      if(newR !== oldR) calls.push({hand:"right", color:color, pattern:newR});
+    });
+    // meta
+    var oldMeta = existing.meta||{};
     if(meta) {
-      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"meta", color:"bars",   pattern:String(meta.bars||"8") });
-      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"meta", color:"repeat", pattern:String(meta.repeat||"1") });
-      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"meta", color:"startTime", pattern:String(meta.startTime||"") });
+      if(String(meta.bars||"8") !== String(oldMeta.bars||"8")) calls.push({hand:"meta",color:"bars",pattern:String(meta.bars||"8")});
+      if(String(meta.repeat||"1") !== String(oldMeta.repeat||"1")) calls.push({hand:"meta",color:"repeat",pattern:String(meta.repeat||"1")});
+      if(String(meta.startTime||"") !== String(oldMeta.startTime||"")) calls.push({hand:"meta",color:"startTime",pattern:String(meta.startTime||"")});
     }
+    console.log("保存する変更:", calls.length, "件");
+    for(var i=0;i<calls.length;i++){
+      var c=calls[i];
+      await gasRead({action:"savescore",score_id:scoreId,section:section,hand:c.hand,color:c.color,pattern:c.pattern});
+    }
+    // ローカルのscorePatternsも更新
+    var updated = JSON.parse(JSON.stringify(existing));
+    if(!updated.left) updated.left={};
+    if(!updated.right) updated.right={};
+    if(!updated.meta) updated.meta={};
+    colors.forEach(function(color){
+      updated.left[color]=(left[color]||[]).slice();
+      updated.right[color]=(right[color]||[]).slice();
+    });
+    if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;}
+    setScorePatterns(function(prev){var n=Object.assign({},prev);n[scoreId]=Object.assign({},prev[scoreId]);n[scoreId][section]=updated;return n;});
   }
 
   async function gasWrite(params) {
