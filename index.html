@@ -238,7 +238,7 @@ function makeEmptyPat() {
 
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-  var SPB = 12, BARS = 8, TOTAL = 96, CELL = 18;
+  var SPB = 12, BARS = 8, TOTAL = 96, CELL = 14;
 
   function emptyPat() {
     var p = {};
@@ -255,344 +255,280 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     return p;
   }
 
-  var stateArr = [
-    useState(function(){ return initPat("left"); }),
-    useState(function(){ return initPat("right"); }),
-    useState(false), useState(80), useState(-1),
-    useState(false), useState(4), useState(0.6), useState(true), useState(true),
-    useState(function(){ var d={}; Object.keys(SCORE_DOTS).forEach(function(c){d[c]=SCORE_PALE_COLORS[c];}); return d; }),
-    useState({}), useState(false), useState(""),
-    useState(null), // colorPicker: {side, step}
-    useState(startTime||""), // sectionStartTime
-  ];
-  var left=stateArr[0][0], setLeft=stateArr[0][1];
-  var right=stateArr[1][0], setRight=stateArr[1][1];
-  var playing=stateArr[2][0], setPlaying=stateArr[2][1];
-  var bpm=stateArr[3][0], setBpm=stateArr[3][1];
-  var curStep=stateArr[4][0], setCurStep=stateArr[4][1];
-  var metroOn=stateArr[5][0], setMetroOn=stateArr[5][1];
-  var metroMode=stateArr[6][0], setMetroMode=stateArr[6][1];
-  var metroVol=stateArr[7][0], setMetroVol=stateArr[7][1];
-  var metroAccent=stateArr[8][0], setMetroAccent=stateArr[8][1];
-  var lrOn=stateArr[9][0], setLrOn=stateArr[9][1];
-  var dotFills=stateArr[10][0], setDotFills=stateArr[10][1];
-  var dotLabel=stateArr[11][0], setDotLabel=stateArr[11][1];
-  var saving=stateArr[12][0], setSaving=stateArr[12][1];
-  var saveMsg=stateArr[13][0], setSaveMsg=stateArr[13][1];
-  var colorPicker=stateArr[14][0], setColorPicker=stateArr[14][1];
-  var secStartTime=stateArr[15][0], setSecStartTime=stateArr[15][1];
+  var left=useState(function(){ return initPat("left"); });
+  var setLeft=left[1]; left=left[0];
+  var right=useState(function(){ return initPat("right"); });
+  var setRight=right[1]; right=right[0];
+  var playingS=useState(false); var playing=playingS[0]; var setPlaying=playingS[1];
+  var bpmS=useState(80); var bpm=bpmS[0]; var setBpm=bpmS[1];
+  var curStepS=useState(-1); var curStep=curStepS[0]; var setCurStep=curStepS[1];
+  var metroOnS=useState(false); var metroOn=metroOnS[0]; var setMetroOn=metroOnS[1];
+  var metroModeS=useState(4); var metroMode=metroModeS[0]; var setMetroMode=metroModeS[1];
+  var metroVolS=useState(0.6); var metroVol=metroVolS[0]; var setMetroVol=metroVolS[1];
+  var metroAccentS=useState(true); var metroAccent=metroAccentS[0]; var setMetroAccent=metroAccentS[1];
+  var lrOnS=useState(true); var lrOn=lrOnS[0]; var setLrOn=lrOnS[1];
+  var dotFillsS=useState(function(){ var d={}; Object.keys(SCORE_DOTS).forEach(function(c){d[c]=SCORE_PALE_COLORS[c];}); return d; });
+  var dotFills=dotFillsS[0]; var setDotFills=dotFillsS[1];
+  var dotLabelS=useState({}); var dotLabel=dotLabelS[0]; var setDotLabel=dotLabelS[1];
+  var savingS=useState(false); var saving=savingS[0]; var setSaving=savingS[1];
+  var saveMsgS=useState(""); var saveMsg=saveMsgS[0]; var setSaveMsg=saveMsgS[1];
+  var secTimeS=useState(startTime||""); var secTime=secTimeS[0]; var setSecTime=secTimeS[1];
 
-  var startStepRef = useRef(0);
-  var iidRef = useRef(null);
-  var stepRef = useRef(0);
-  var dimRef = useRef(null);
-  var actxRef = useRef(null);
-  var bufsRef = useRef({});
-  var leftRef = useRef(left);
-  var rightRef = useRef(right);
-  var bpmRef = useRef(bpm);
-  var metroOnRef = useRef(metroOn);
-  var metroModeRef = useRef(metroMode);
-  var metroVolRef = useRef(metroVol);
-  var metroAccentRef = useRef(metroAccent);
-  var lrOnRef = useRef(lrOn);
+  var startStepRef=useRef(0);
+  var iidRef=useRef(null); var stepRef=useRef(0); var dimRef=useRef(null);
+  var actxRef=useRef(null); var bufsRef=useRef({});
+  var leftRef=useRef(left); var rightRef=useRef(right);
+  var bpmRef=useRef(bpm); var metroOnRef=useRef(metroOn);
+  var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
+  var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
 
-  useEffect(function(){ leftRef.current = left; }, [left]);
-  useEffect(function(){ rightRef.current = right; }, [right]);
-  useEffect(function(){ bpmRef.current = bpm; }, [bpm]);
-  useEffect(function(){ metroOnRef.current = metroOn; }, [metroOn]);
-  useEffect(function(){ metroModeRef.current = metroMode; }, [metroMode]);
-  useEffect(function(){ metroVolRef.current = metroVol; }, [metroVol]);
-  useEffect(function(){ metroAccentRef.current = metroAccent; }, [metroAccent]);
-  useEffect(function(){ lrOnRef.current = lrOn; }, [lrOn]);
+  useEffect(function(){ leftRef.current=left; },[left]);
+  useEffect(function(){ rightRef.current=right; },[right]);
+  useEffect(function(){ bpmRef.current=bpm; },[bpm]);
+  useEffect(function(){ metroOnRef.current=metroOn; },[metroOn]);
+  useEffect(function(){ metroModeRef.current=metroMode; },[metroMode]);
+  useEffect(function(){ metroVolRef.current=metroVol; },[metroVol]);
+  useEffect(function(){ metroAccentRef.current=metroAccent; },[metroAccent]);
+  useEffect(function(){ lrOnRef.current=lrOn; },[lrOn]);
 
   useEffect(function(){
-    var lp = emptyPat(), rp = emptyPat();
-    if (patternData) {
+    var lp=emptyPat(), rp=emptyPat();
+    if(patternData){
       COLORS.forEach(function(c){
-        if (patternData.left && patternData.left[c]) lp[c] = patternData.left[c].slice();
-        if (patternData.right && patternData.right[c]) rp[c] = patternData.right[c].slice();
+        if(patternData.left&&patternData.left[c]) lp[c]=patternData.left[c].slice();
+        if(patternData.right&&patternData.right[c]) rp[c]=patternData.right[c].slice();
       });
     }
     setLeft(lp); setRight(rp);
-    setSecStartTime(startTime||"");
-  }, [patternData, startTime]);
+    setSecTime(startTime||"");
+  },[patternData,startTime]);
 
-  useEffect(function(){ return function(){ doStop(); }; }, []);
+  useEffect(function(){ return function(){ doStop(); }; },[]);
 
   function initAudio(cb) {
-    if (actxRef.current) { if(cb) cb(); return; }
-    var Ctx = window.AudioContext || window.webkitAudioContext;
-    actxRef.current = new Ctx();
-    var keys = Object.keys(METRO_SOUNDS_B64);
-    var done = 0;
+    if(actxRef.current){if(cb)cb();return;}
+    var Ctx=window.AudioContext||window.webkitAudioContext;
+    actxRef.current=new Ctx();
+    var keys=Object.keys(METRO_SOUNDS_B64); var done=0;
     keys.forEach(function(k){
-      var bin = atob(METRO_SOUNDS_B64[k]);
-      var arr = new Uint8Array(bin.length);
+      var bin=atob(METRO_SOUNDS_B64[k]),arr=new Uint8Array(bin.length);
       for(var i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i);
-      actxRef.current.decodeAudioData(arr.buffer, function(buf){
-        bufsRef.current['metro_'+k] = buf;
-        done++;
-        if(done===keys.length) {
-          var skeys = Object.keys(SCORE_SOUND_URLS);
-          var sdone = 0;
-          if (skeys.length === 0 && cb) { cb(); return; }
+      actxRef.current.decodeAudioData(arr.buffer,function(buf){
+        bufsRef.current['metro_'+k]=buf; done++;
+        if(done===keys.length){
+          var skeys=Object.keys(SCORE_SOUND_URLS); var sdone=0;
+          if(!skeys.length&&cb){cb();return;}
           skeys.forEach(function(sk){
-            fetch(SCORE_SOUND_URLS[sk])
-              .then(function(r){return r.arrayBuffer();})
-              .then(function(buf){ return actxRef.current.decodeAudioData(buf); })
-              .then(function(abuf){ bufsRef.current[sk]=abuf; sdone++; if(sdone===skeys.length&&cb) cb(); })
-              .catch(function(){ sdone++; if(sdone===skeys.length&&cb) cb(); });
+            fetch(SCORE_SOUND_URLS[sk]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufsRef.current[sk]=ab;sdone++;if(sdone===skeys.length&&cb)cb();})
+              .catch(function(){sdone++;if(sdone===skeys.length&&cb)cb();});
           });
         }
-      }, function(){ done++; if(done===keys.length&&cb) cb(); });
+      },function(){done++;if(done===keys.length&&cb)cb();});
     });
   }
 
-  function playSound(color) {
-    var actx=actxRef.current, bufs=bufsRef.current;
-    if(!actx||!bufs[color]) return;
-    var s=actx.createBufferSource(); s.buffer=bufs[color];
-    var g=actx.createGain(); g.gain.value=0.6;
-    s.connect(g); g.connect(actx.destination); s.start(0);
+  function playSound(c){
+    var actx=actxRef.current,bufs=bufsRef.current;
+    if(!actx||!bufs[c])return;
+    var s=actx.createBufferSource();s.buffer=bufs[c];
+    var g=actx.createGain();g.gain.value=0.6;
+    s.connect(g);g.connect(actx.destination);s.start(0);
   }
 
-  function woodClick(accent) {
-    var actx=actxRef.current, bufs=bufsRef.current; if(!actx) return;
+  function woodClick(accent){
+    var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
     var vol=metroVolRef.current;
     var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
-    if(!bufs[key]) return;
-    var s=actx.createBufferSource(); s.buffer=bufs[key];
-    var g=actx.createGain(); g.gain.value=vol;
-    s.connect(g); g.connect(actx.destination); s.start(0);
+    if(!bufs[key])return;
+    var s=actx.createBufferSource();s.buffer=bufs[key];
+    var g=actx.createGain();g.gain.value=vol;
+    s.connect(g);g.connect(actx.destination);s.start(0);
   }
 
-  function dimAll() {
-    var fills={};
-    Object.keys(SCORE_DOTS).forEach(function(c){ fills[c]=SCORE_PALE_COLORS[c]; });
-    setDotFills(fills); setDotLabel({});
+  function dimAll(){
+    var f={};
+    Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
+    setDotFills(f);setDotLabel({});
   }
 
-  function flashDot(color, hand) {
-    setDotFills(function(prev){ var n=Object.assign({},prev); n[color]=SCORE_DOT_COLORS[color]; return n; });
-    if(lrOnRef.current) setDotLabel(function(prev){ var n=Object.assign({},prev); n[color]=hand; return n; });
+  function flashDot(color,hand){
+    setDotFills(function(p){var n=Object.assign({},p);n[color]=SCORE_DOT_COLORS[color];return n;});
+    if(lrOnRef.current) setDotLabel(function(p){var n=Object.assign({},p);n[color]=hand;return n;});
   }
 
-  function tick() {
-    var s=stepRef.current;
-    var L=leftRef.current, R=rightRef.current;
-    var s12=s%SPB;
+  function tick(){
+    var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var ms=Math.round((60/bpmRef.current/3)*1000);
-    if(dimRef.current) clearTimeout(dimRef.current);
-    dimRef.current=setTimeout(dimAll, Math.round(ms*0.75));
+    if(dimRef.current)clearTimeout(dimRef.current);
+    dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
     stepRef.current=(s+1)%TOTAL;
     var fired={};
-    COLORS.forEach(function(c){ if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;} });
-    COLORS.forEach(function(c){ if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;} });
+    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
+    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
     if(metroOnRef.current){
-      var m=metroModeRef.current;
-      var doAcc=s12===0&&metroAccentRef.current;
-      if(m===4&&s12%3===0) woodClick(doAcc);
-      else if(m===3) woodClick(doAcc);
+      var m=metroModeRef.current,doAcc=s12===0&&metroAccentRef.current;
+      if(m===4&&s12%3===0)woodClick(doAcc);
+      else if(m===3)woodClick(doAcc);
     }
   }
 
-  function doStart() {
-    if(iidRef.current) clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick, Math.round((60/bpmRef.current/3)*1000));
+  function doStart(){
+    if(iidRef.current)clearInterval(iidRef.current);
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/3)*1000));
   }
 
-  function doStop() {
+  function doStop(){
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    dimAll();
-    stepRef.current=startStepRef.current;
-    setCurStep(-1); setPlaying(false);
+    dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
   }
 
-  function handlePlay() {
+  function handlePlay(){
     if(playing){doStop();return;}
-    initAudio(function(){
-      stepRef.current=startStepRef.current;
-      setPlaying(true); doStart();
-    });
+    initAudio(function(){stepRef.current=startStepRef.current;setPlaying(true);doStart();});
   }
 
-  function handleBpm(v){ setBpm(v); bpmRef.current=v; if(playing) doStart(); }
+  function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
 
-  // 再生開始位置をセル行クリックで設定
-  function setStartStep(s) {
-    startStepRef.current=s;
-    if(!playing){ stepRef.current=s; setCurStep(-1); }
-  }
-
-  // 編集: 色選択パレットを表示
-  function handleCellClick(side, step) {
-    if(!canEdit) return;
-    // その行に既に色があれば消す
-    var pat = side==="left" ? left : right;
-    var existColor = null;
-    for(var ci=0;ci<COLORS.length;ci++){
-      if(pat[COLORS[ci]]&&pat[COLORS[ci]][step]){ existColor=COLORS[ci]; break; }
-    }
-    if(existColor) {
-      // 色を消す
-      var setter = side==="left"?setLeft:setRight;
-      setter(function(prev){
-        var p=Object.assign({},prev); p[existColor]=prev[existColor].slice(); p[existColor][step]=0; return p;
-      });
-    } else {
-      // 色選択パレットを表示
-      setColorPicker({side:side, step:step});
-    }
-  }
-
-  function pickColor(color) {
-    if(!colorPicker) return;
-    var side=colorPicker.side, step=colorPicker.step;
+  function toggleCell(side,color,idx){
+    if(!canEdit)return;
     var setter=side==="left"?setLeft:setRight;
     setter(function(prev){
-      var p=Object.assign({},prev);
-      // 同じstepの他の色を消す
-      COLORS.forEach(function(c){ p[c]=prev[c].slice(); p[c][step]=0; });
-      p[color][step]=1;
-      return p;
+      var p=Object.assign({},prev);p[color]=prev[color].slice();p[color][idx]^=1;return p;
     });
-    setColorPicker(null);
   }
 
-  function handleSave() {
-    setSaving(true); setSaveMsg("");
-    var p = onSave(scoreId, sectionKey, left, right);
-    if(p&&p.then) {
-      p.then(function(){ setSaveMsg("✅ 保存しました"); setSaving(false); setTimeout(function(){setSaveMsg("");},3000); })
-       .catch(function(){ setSaveMsg("❌ 失敗しました"); setSaving(false); });
-    } else { setSaveMsg("✅ 保存しました"); setSaving(false); setTimeout(function(){setSaveMsg("");},3000); }
+  function handleSave(){
+    setSaving(true);setSaveMsg("");
+    var p=onSave(scoreId,sectionKey,left,right);
+    if(p&&p.then){
+      p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
+       .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
+    } else {setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);}
   }
 
-  function Sw(on) {
-    return (
-      <div style={{position:"relative",width:28,height:16,background:on?"#27AE60":"#d0cec8",borderRadius:8,flexShrink:0,transition:"background .2s"}}>
-        <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:on?"translateX(12px)":"none"}}/>
-      </div>
-    );
+  function Sw(on){
+    return <div style={{position:"relative",width:28,height:16,background:on?"#27AE60":"#d0cec8",borderRadius:8,flexShrink:0,transition:"background .2s"}}>
+      <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:on?"translateX(12px)":"none"}}/>
+    </div>;
   }
 
-  function renderCol(barIdx, side) {
-    var pat=side==="left"?left:right;
-    var cells=[];
-    for(var i=0;i<SPB;i++){
-      var s=barIdx*SPB+i;
-      var ibs=i===0, ib=i%3===0;
-      var cur=s===curStep;
-      var isStart=s===startStepRef.current;
-      var color=null;
-      for(var ci=0;ci<COLORS.length;ci++){
-        if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]){color=COLORS[ci];break;}
-      }
-      // うっすら色: 列ごとに薄い色をベースに
-      var bg;
-      if(color) bg=SCORE_DOT_COLORS[color];
-      else if(cur) bg="#a8a5a0";
-      else if(ibs) bg="#c8c5c0";
-      else if(ib) bg="#dddbd6";
-      else bg="#f0efec";
+  // 1小節分のグリッドを描画（9色×12ステップ、左右）
+  function renderBar(barIdx){
+    var isStartBar=Math.floor(startStepRef.current/SPB)===barIdx;
+    var L=left,R=right;
 
-      cells.push(
-        <div key={i}
-          onClick={function(ss,side2){return function(e){
-            e.stopPropagation();
-            if(canEdit) handleCellClick(side2,ss);
-            else setStartStep(ss);
-          };}(s,side)}
-          onContextMenu={function(ss){return function(e){e.preventDefault();setStartStep(ss);};}(s)}
-          style={{
-            width:CELL,height:CELL,borderRadius:3,flexShrink:0,
-            background:bg,
-            border:isStart?"2px solid #E74C3C":"0.5px solid #d0cec8",
-            marginBottom:1,
-            cursor:canEdit?"pointer":"crosshair",
-            position:"relative",
-          }}
-        />
-      );
+    // 各ステップ × 各色のセル
+    function renderColorCells(side,pat){
+      var cols=[];
+      COLORS.forEach(function(color){
+        var cells=[];
+        for(var i=0;i<SPB;i++){
+          var s=barIdx*SPB+i;
+          var on=pat[color]&&pat[color][s];
+          var ibs=i===0,ib=i%3===0;
+          var cur=s===curStep;
+          var isStart=s===startStepRef.current;
+          // 薄い色ベース、ONなら濃い色
+          var bg=on?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
+          if(cur) bg=on?SCORE_DOT_COLORS[color]:"#b0ada8";
+          cells.push(
+            <div key={i}
+              onClick={function(ss,co,si){return function(e){
+                e.stopPropagation();
+                if(canEdit) toggleCell(si,co,ss);
+                else startStepRef.current=ss;
+              };}(s,color,side)}
+              style={{
+                width:CELL,height:CELL,flexShrink:0,
+                background:bg,
+                borderRadius:2,
+                marginBottom:1,
+                border:cur?"1.5px solid #888":(isStart&&i===startStepRef.current%SPB)?"1.5px solid #E74C3C":"0.5px solid rgba(0,0,0,0.08)",
+                cursor:canEdit?"pointer":"default",
+                opacity: (!on&&(ibs||ib))?0.7:1,
+              }}
+            />
+          );
+        }
+        cols.push(
+          <div key={color} style={{marginRight:1}}>
+            {cells}
+          </div>
+        );
+      });
+      return cols;
     }
-    return cells;
-  }
 
-  function renderBar(barIdx) {
-    var isStartBar = Math.floor(startStepRef.current/SPB)===barIdx;
     return (
       <div key={barIdx} style={{flexShrink:0}}>
-        <div
-          onClick={function(b){return function(){ setStartStep(b*SPB); };}(barIdx)}
-          style={{width:CELL,height:CELL,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:1,
-            background:isStartBar?"#E74C3C":"#c8c5c0",borderRadius:3,cursor:"pointer"}}>
-          <div style={{width:16,height:16,borderRadius:"50%",background:isStartBar?"#fff":"#888",
-            color:isStartBar?"#E74C3C":"#fff",fontSize:9,fontWeight:700,
+        {/* 小節番号 */}
+        <div onClick={function(b){return function(){startStepRef.current=b*SPB;setCurStep(function(v){return v;});};}(barIdx)}
+          style={{
+            height:CELL,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:2,
+            background:isStartBar?"#E74C3C":"#c8c5c0",borderRadius:3,cursor:"pointer",
+            marginRight:1,
+          }}>
+          <div style={{width:14,height:14,borderRadius:"50%",background:isStartBar?"#fff":"#888",
+            color:isStartBar?"#E74C3C":"#fff",fontSize:8,fontWeight:700,
             display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
         </div>
-        <div style={{display:"flex",gap:2}}>
-          <div>{renderCol(barIdx,"left")}</div>
-          <div>{renderCol(barIdx,"right")}</div>
+        {/* 左右グリッド */}
+        <div style={{display:"flex",gap:3}}>
+          <div style={{display:"flex"}}>{renderColorCells("left",L)}</div>
+          <div style={{width:1,background:"#d0cec8",alignSelf:"stretch",flexShrink:0}}/>
+          <div style={{display:"flex"}}>{renderColorCells("right",R)}</div>
         </div>
       </div>
     );
   }
 
-  var topBars=[0,2,4,6], botBars=[1,3,5,7];
+  // 色ヘッダー（左右9色）
+  function renderColorHeader(){
+    return (
+      <div style={{display:"flex",gap:3,marginBottom:2,paddingLeft:CELL+2}}>
+        <div style={{display:"flex"}}>
+          {COLORS.map(function(c){
+            return <div key={c} style={{width:CELL,height:8,background:SCORE_DOT_COLORS[c],borderRadius:2,marginRight:1,opacity:0.7}}/>;
+          })}
+        </div>
+        <div style={{width:1,flexShrink:0}}/>
+        <div style={{display:"flex"}}>
+          {COLORS.map(function(c){
+            return <div key={c+"r"} style={{width:CELL,height:8,background:SCORE_DOT_COLORS[c],borderRadius:2,marginRight:1,opacity:0.7}}/>;
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  var topBars=[0,2,4,6],botBars=[1,3,5,7];
 
   return (
-    <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}} onClick={function(){setColorPicker(null);}}>
+    <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
       {/* セクション情報 + 開始時間 */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
-        <p style={{fontSize:10,color:C.label,letterSpacing:".05em"}}>{sectionLabel}</p>
-        {canEdit ? (
+        <p style={{fontSize:10,color:C.label}}>{sectionLabel}</p>
+        {canEdit?(
           <div style={{display:"flex",alignItems:"center",gap:4}}>
             <span style={{fontSize:10,color:C.label}}>開始時間</span>
-            <input type="text" placeholder="0:05〜" value={secStartTime}
-              onChange={function(e){
-                setSecStartTime(e.target.value);
-                if(onStartTimeChange) onStartTimeChange(e.target.value);
-              }}
+            <input type="text" placeholder="0:05〜" value={secTime}
+              onChange={function(e){setSecTime(e.target.value);if(onStartTimeChange)onStartTimeChange(e.target.value);}}
               style={{width:60,padding:"2px 6px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,fontFamily:"inherit",color:C.choco}}/>
           </div>
-        ) : (
-          secStartTime ? <p style={{fontSize:10,color:C.label}}>{secStartTime}</p> : null
-        )}
+        ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
       </div>
 
-      {canEdit && (
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+      {canEdit&&(
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
           <button onClick={handleSave} disabled={saving}
             style={{padding:"6px 16px",borderRadius:8,border:"none",background:saving?"#aaa":"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
             {saving?"保存中…":"💾 保存"}
           </button>
           {saveMsg&&<span style={{fontSize:11,color:saveMsg.startsWith("✅")?C.olive:"#a04030"}}>{saveMsg}</span>}
-          <span style={{fontSize:10,color:C.label}}>※セルをクリックで色選択 / 小節番号クリックで再生開始位置</span>
-        </div>
-      )}
-
-      {!canEdit && (
-        <p style={{fontSize:10,color:C.label,marginBottom:8}}>※セルまたは小節番号をクリックで再生開始位置を設定</p>
-      )}
-
-      {/* 色選択パレット */}
-      {colorPicker && (
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10,padding:"8px 10px",background:"#fff",border:"1px solid #d0cec8",borderRadius:10}}
-          onClick={function(e){e.stopPropagation();}}>
-          <span style={{fontSize:10,color:C.label,width:"100%",marginBottom:4}}>色を選択：</span>
-          {COLORS.map(function(c){
-            return (
-              <div key={c} onClick={function(){pickColor(c);}}
-                style={{width:24,height:24,borderRadius:"50%",background:SCORE_DOT_COLORS[c],cursor:"pointer",border:"2px solid white",boxShadow:"0 1px 4px rgba(0,0,0,0.2)"}}
-                title={SCORE_COLOR_NAMES[c]}
-              />
-            );
-          })}
-          <button onClick={function(){setColorPicker(null);}}
-            style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",background:"#f5f5f3",fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>キャンセル</button>
         </div>
       )}
 
@@ -638,6 +574,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       </div>
 
       <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+        {/* GUDAdrumイラスト */}
         <div style={{flexShrink:0,width:140}}>
           <svg viewBox="0 0 140 166" width="140" height="166">
             <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
@@ -658,28 +595,35 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           </svg>
         </div>
 
+        {/* グリッド */}
         <div style={{flex:1,minWidth:0,overflowX:"auto"}}>
+          {/* 左手・右手ラベル */}
           <div style={{display:"flex",gap:4,marginBottom:2}}>
             {topBars.map(function(b){
-              return <div key={b} style={{display:"flex",gap:2,flexShrink:0}}>
-                <div style={{width:CELL,flexShrink:0}}/>
-                <div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>左</div>
-                <div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>右</div>
+              var w=COLORS.length*CELL+COLORS.length;
+              return <div key={b} style={{flexShrink:0,marginRight:1}}>
+                <div style={{height:CELL,marginBottom:2}}/>
+                <div style={{display:"flex",gap:3}}>
+                  <div style={{width:w,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>左手</div>
+                  <div style={{width:1}}/>
+                  <div style={{width:w,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>右手</div>
+                </div>
               </div>;
             })}
           </div>
-          <div style={{display:"flex",gap:4,marginBottom:6}}>
+          {/* 色見本ヘッダー（上段） */}
+          <div style={{display:"flex",gap:4,marginBottom:1}}>
+            {topBars.map(function(b){ return <div key={b} style={{flexShrink:0}}>{renderColorHeader()}</div>; })}
+          </div>
+          {/* 上段 */}
+          <div style={{display:"flex",gap:4,marginBottom:8}}>
             {topBars.map(function(b){return renderBar(b);})}
           </div>
-          <div style={{display:"flex",gap:4,marginBottom:2}}>
-            {botBars.map(function(b){
-              return <div key={b} style={{display:"flex",gap:2,flexShrink:0}}>
-                <div style={{width:CELL,flexShrink:0}}/>
-                <div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>左</div>
-                <div style={{width:CELL,textAlign:"center",fontSize:8,color:"#2563eb",fontWeight:700}}>右</div>
-              </div>;
-            })}
+          {/* 色見本ヘッダー（下段） */}
+          <div style={{display:"flex",gap:4,marginBottom:1}}>
+            {botBars.map(function(b){ return <div key={b} style={{flexShrink:0}}>{renderColorHeader()}</div>; })}
           </div>
+          {/* 下段 */}
           <div style={{display:"flex",gap:4}}>
             {botBars.map(function(b){return renderBar(b);})}
           </div>
