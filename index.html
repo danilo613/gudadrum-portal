@@ -415,7 +415,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function tick(){
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
-    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="sixteenth"?4:3))*1000);
+    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);stepRef.current=(s+1)%TOTAL;
@@ -425,9 +425,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(metroOnRef.current){
       var m=metroModeRef.current;
       var doAcc=s12===0&&metroAccentRef.current;
-      var spb=subdivRef.current==="sixteenth"?16:12;
+      var spb=subdivRef.current==="16th"?16:12;
       var s12b=stepRef.current===0?0:(stepRef.current-1)%spb; // 現在のs12
-      if(subdivRef.current==="sixteenth"){
+      if(subdivRef.current==="16th"){
         if(m===4&&s12%4===0)woodClick(doAcc);
         else if(m===8&&s12%2===0)woodClick(doAcc);
         else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
@@ -440,7 +440,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="sixteenth"?4:3))*1000));
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
   function doStop(){
@@ -788,7 +788,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           {Sw(metroOn)}<span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {(subdiv==="sixteenth"
+          {(subdiv==="16th"
             ?[["4分",4],["8分",8],["裏","8u"]]
             :[["4分",4],["三連",3]]
           ).map(function(x){
