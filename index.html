@@ -2678,44 +2678,16 @@ function App() {
 
         {/* よくある質問 */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>{setFaqOpen(!faqOpen); if(!faqOpen && faqItems.length===0) fetchFaq();}} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+          <button onClick={()=>setFaqOpen(!faqOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
             <span style={{fontSize:13,color:C.label,fontWeight:700}}>❓ よくある質問</span>
             <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:faqOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
           </button>
           {faqOpen && (
             <div style={{borderTop:"1px solid "+C.border,padding:"14px 16px"}}>
-              {faqItems.length === 0 ? (
-                <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
-              ) : (
-                <div>
-                  {faqItems.map((item,i)=>{
-                    if (item.type === "divider") return <div key={i} style={{height:1,background:"rgba(112,130,56,0.15)",margin:"12px 0"}}/>;
-                    const text = item.text;
-                    if (!text || !text.trim()) return null;
-                    // 見出し
-                    if (item.type === "heading_1" || item.type === "heading_2" || item.type === "heading_3") {
-                      const fontSize = item.type === "heading_1" ? 18 : item.type === "heading_2" ? 15 : 14;
-                      return <p key={i} style={{fontSize,fontWeight:700,color:C.choco,marginTop:14,marginBottom:6,letterSpacing:"0.04em"}}>{text}</p>;
-                    }
-                    // リンクを含む段落
-                    if (item.links && item.links.length > 0) {
-                      let remaining = text;
-                      const parts = [];
-                      item.links.forEach((lnk,j)=>{
-                        const idx = remaining.indexOf(lnk.text);
-                        if (idx >= 0) {
-                          if (idx > 0) parts.push(<span key={"t"+j}>{remaining.substring(0,idx)}</span>);
-                          parts.push(<a key={"l"+j} href={lnk.url} target="_blank" rel="noreferrer" style={{color:C.olive,textDecoration:"underline"}}>{lnk.text}</a>);
-                          remaining = remaining.substring(idx + lnk.text.length);
-                        }
-                      });
-                      if (remaining) parts.push(<span key="rest">{remaining}</span>);
-                      return <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.8,marginBottom:6,whiteSpace:"pre-wrap"}}>{parts}</p>;
-                    }
-                    return <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.8,marginBottom:6,whiteSpace:"pre-wrap"}}>{text}</p>;
-                  })}
-                </div>
-              )}
+              <a href="https://able-chemistry-1ee.notion.site/35d2b1d0bdf980fd9ad7c7de5dd64896?source=copy_link" target="_blank" rel="noreferrer"
+                style={{...BTN_STYLE, padding:"12px", display:"block"}}>
+                📖 よくある質問を見る
+              </a>
             </div>
           )}
         </div>
