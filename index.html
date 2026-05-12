@@ -238,7 +238,7 @@ function makeEmptyPat() {
 
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-  var SPB = 12, BARS = 8, TOTAL = 96, CELL = 14;
+  var SPB = 12, BARS = 8, TOTAL = 96, CELL = 18;
 
   function emptyPat() {
     var p = {};
@@ -434,7 +434,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           var isStart=s===startStepRef.current;
           // 薄い色ベース、ONなら濃い色
           var bg=on?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
-          if(cur) bg=on?SCORE_DOT_COLORS[color]:"#b0ada8";
+          if(!on&&ibs) bg="#a8a5a0";
+          else if(!on&&ib) bg="#d8d6d2";
+          if(cur) bg=on?SCORE_DOT_COLORS[color]:"#909090";
           cells.push(
             <div key={i}
               onClick={function(ss,co,si){return function(e){
@@ -469,11 +471,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         <div onClick={function(b){return function(){startStepRef.current=b*SPB;setCurStep(function(v){return v;});};}(barIdx)}
           style={{
             height:CELL,display:"flex",alignItems:"center",justifyContent:"center",marginBottom:2,
-            background:isStartBar?"#E74C3C":"#c8c5c0",borderRadius:3,cursor:"pointer",
+            background:isStartBar?"#E74C3C":"#a8a5a0",borderRadius:3,cursor:"pointer",
             marginRight:1,
           }}>
-          <div style={{width:14,height:14,borderRadius:"50%",background:isStartBar?"#fff":"#888",
-            color:isStartBar?"#E74C3C":"#fff",fontSize:8,fontWeight:700,
+          <div style={{width:CELL-2,height:CELL-2,borderRadius:"50%",background:isStartBar?"#fff":"#666",
+            color:isStartBar?"#E74C3C":"#fff",fontSize:9,fontWeight:700,
             display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
         </div>
         {/* 左右グリッド */}
@@ -489,7 +491,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   // 色ヘッダー（左右9色）
   function renderColorHeader(){
     return (
-      <div style={{display:"flex",gap:3,marginBottom:2,paddingLeft:CELL+2}}>
+      <div style={{display:"flex",gap:3,marginBottom:2,paddingLeft:CELL+4}}>
         <div style={{display:"flex"}}>
           {COLORS.map(function(c){
             return <div key={c} style={{width:CELL,height:8,background:SCORE_DOT_COLORS[c],borderRadius:2,marginRight:1,opacity:0.7}}/>;
@@ -575,7 +577,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
       <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
         {/* GUDAdrumイラスト */}
-        <div style={{flexShrink:0,width:140}}>
+        <div style={{flexShrink:0,width:140,position:"sticky",top:0,alignSelf:"flex-start"}}>
           <svg viewBox="0 0 140 166" width="140" height="166">
             <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
             <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
