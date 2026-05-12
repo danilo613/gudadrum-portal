@@ -980,11 +980,14 @@ function App() {
 
   async function loadPurchasedScores(name) {
     setScoreLoading(true);
+    setScoreList([]); // 必ずリセット
     try {
       const res = await gasRead({ action:"getpurchasedscores", name });
-      const ids = (res.score_ids || []).filter(id => id && id.trim() !== "");
+      console.log("購入済み譜面レスポンス:", res);
+      const ids = (res.score_ids || []).filter(id => typeof id === "string" && id.trim() !== "");
+      console.log("購入済み譜面IDs:", ids);
       setScoreList(ids);
-    } catch(e) { console.warn(e); setScoreList([]); }
+    } catch(e) { console.warn("loadPurchasedScores error:", e); setScoreList([]); }
     setScoreLoading(false);
   }
 
@@ -3103,7 +3106,7 @@ function App() {
         </div>
 
         {/* 譜面プレイヤー */}
-        {(isFromAdmin || isInstructor || scoreList.length > 0) && (
+        {(isFromAdmin || scoreList.length > 0) && (
           <div style={{marginBottom:8}}>
             <button onClick={()=>{
               if(!scorePage){ const id=isFromAdmin||isInstructor?"waterlily":scoreList[0]; setCurrentScoreId(id); loadScorePatterns(id); }
@@ -3138,7 +3141,7 @@ function App() {
                   sectionKey={scoreSection}
                   sectionLabel={{"intro":"イントロ　0:05〜","amelo":"Aメロ　0:44〜","bmelo":"Bメロ"}[scoreSection]||scoreSection}
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
-                  canEdit={isFromAdmin||isInstructor}
+                  canEdit={isFromAdmin}
                   onSave={saveScorePattern}
                 />
               </div>
