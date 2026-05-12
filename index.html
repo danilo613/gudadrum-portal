@@ -822,16 +822,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       {canEdit ? (
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
           <div style={{display:"flex",justifyContent:"center"}}>
-          <div style={{width:140}}>
-            <svg viewBox="0 0 140 166" width="140" height="166">
+            <div style={{width:140}}>
+              <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
               <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
               <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
               {(function(){
                 var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).filter(function(c){
-                  return true;
-                }).map(function(color){
+                return Object.keys(activeDots).filter(function(c){return true;}).map(function(color){
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
@@ -845,12 +843,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                 });
               })()}
             </svg>
+            </div>
           </div>
-          <div style={{minWidth:0,overflowX:"auto"}}>
-            <div style={{display:"flex",gap:2,marginBottom:10}}>
+          <div style={{overflowX:"auto",width:"100%"}}>
+            <div style={{display:"flex",gap:4,marginBottom:10,justifyContent:"center"}}>
               {topBars.map(function(b){return renderBar(b);})}
             </div>
-            <div style={{display:"flex",gap:2}}>
+            <div style={{display:"flex",gap:4,justifyContent:"center"}}>
               {botBars.map(function(b){return renderBar(b);})}
             </div>
           </div>
@@ -865,9 +864,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
               {(function(){
                 var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).filter(function(c){
-                  return true;
-                }).map(function(color){
+                return Object.keys(activeDots).filter(function(c){return true;}).map(function(color){
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
