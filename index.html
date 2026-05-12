@@ -352,7 +352,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(patternData && patternData.meta){
       if(patternData.meta.bars) setBars(String(patternData.meta.bars));
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
-      if(patternData.meta.subdiv) setSubdiv(patternData.meta.subdiv);
+      var nt = patternData.meta.noteType||patternData.meta.subdiv||"triplet";
+      var newSPB2 = nt==="16th"?16:12;
+      setSubdiv(nt);
+      setSPB(newSPB2);
     }
     setLeft(lp);setRight(rp);setSecTime(startTime||"");
   },[patternData,startTime]);
