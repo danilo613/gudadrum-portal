@@ -1188,9 +1188,7 @@ function App() {
   }
 
   async function gasRead(params) {
-    const url = "/api/gas?" + new URLSearchParams(params).toString();
-    const res = await fetch(url);
-    return await res.json();
+    return gasWrite(params);
   }
 
   async function loadPurchasedScores(name) {
