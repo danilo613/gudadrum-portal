@@ -270,6 +270,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var savingS=useState(false); var saving=savingS[0]; var setSaving=savingS[1];
   var saveMsgS=useState(""); var saveMsg=saveMsgS[0]; var setSaveMsg=saveMsgS[1];
   var secTimeS=useState(startTime||""); var secTime=secTimeS[0]; var setSecTime=secTimeS[1];
+  var barsS=useState("8"); var bars=barsS[0]; var setBars=barsS[1];
+  var repeatS=useState("1"); var repeat=repeatS[0]; var setRepeat=repeatS[1];
 
   var startStepRef=useRef(0);
   var iidRef=useRef(null); var stepRef=useRef(0); var dimRef=useRef(null);
@@ -295,6 +297,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         if(patternData.left&&patternData.left[c]) lp[c]=patternData.left[c].slice();
         if(patternData.right&&patternData.right[c]) rp[c]=patternData.right[c].slice();
       });
+    }
+    // metaデータを読み込む
+    if(patternData && patternData.meta){
+      if(patternData.meta.bars) setBars(String(patternData.meta.bars));
+      if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
     }
     setLeft(lp);setRight(rp);setSecTime(startTime||"");
   },[patternData,startTime]);
@@ -408,7 +415,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handleSave(){
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right);
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -656,6 +663,29 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           </div>
         ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
       </div>
+
+      {/* 小節数・繰り返し */}
+      {canEdit ? (
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap",
+          padding:"6px 10px",background:"#f5f5f3",borderRadius:8,border:"0.5px solid #d0cec8"}}>
+          <span style={{fontSize:10,color:C.label,fontWeight:600}}>構成</span>
+          <input type="number" min="1" max="64" value={bars}
+            onChange={function(e){setBars(e.target.value);}}
+            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
+          <span style={{fontSize:10,color:C.label}}>小節</span>
+          <span style={{fontSize:10,color:C.label}}>×</span>
+          <input type="number" min="1" max="20" value={repeat}
+            onChange={function(e){setRepeat(e.target.value);}}
+            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
+          <span style={{fontSize:10,color:C.label}}>回</span>
+        </div>
+      ) : (
+        (bars||repeat) ? (
+          <p style={{fontSize:11,color:C.label,textAlign:"center",marginBottom:8}}>
+            {bars}小節 × {repeat}回
+          </p>
+        ) : null
+      )}
 
       {canEdit&&(
         <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
@@ -1286,8 +1316,12 @@ function App() {
       console.log("filtered rows:", rows.length);
       const patterns = {};
       rows.forEach(function(r) {
-        if (!patterns[r.section]) patterns[r.section] = { left:{}, right:{} };
-        try { patterns[r.section][r.hand][r.color] = JSON.parse(r.pattern); } catch(e) {}
+        if (!patterns[r.section]) patterns[r.section] = { left:{}, right:{}, meta:{} };
+        if(r.hand === "meta") {
+          patterns[r.section].meta[r.color] = r.pattern;
+        } else {
+          try { patterns[r.section][r.hand][r.color] = JSON.parse(r.pattern); } catch(e) {}
+        }
       });
       console.log("patterns:", JSON.stringify(Object.keys(patterns)));
       setScorePatterns(function(prev){ return Object.assign({}, prev, {[scoreId]: patterns}); });
@@ -1295,12 +1329,18 @@ function App() {
     setScoreLoading(false);
   }
 
-  async function saveScorePattern(scoreId, section, left, right) {
+  async function saveScorePattern(scoreId, section, left, right, meta) {
     var colors = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
     for (var i=0; i<colors.length; i++) {
       var color = colors[i];
       await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"left",  color:color, pattern:JSON.stringify(left[color]||[]) });
       await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"right", color:color, pattern:JSON.stringify(right[color]||[]) });
+    }
+    // meta情報を保存
+    if(meta) {
+      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"meta", color:"bars",   pattern:String(meta.bars||"8") });
+      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"meta", color:"repeat", pattern:String(meta.repeat||"1") });
+      await gasRead({ action:"savescore", score_id:scoreId, section:section, hand:"meta", color:"startTime", pattern:String(meta.startTime||"") });
     }
   }
 
