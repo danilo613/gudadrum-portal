@@ -3645,7 +3645,7 @@ function App() {
         {(isFromAdmin || scoreList.length > 0) && (
           <div style={{marginBottom:8}}>
             <button onClick={()=>{
-              if(!scorePage){ const id=isFromAdmin||isInstructor?"waterlily":scoreList[0]; setCurrentScoreId(id); loadScorePatterns(id); }
+              if(!scorePage){ const id=scoreList.length>0?scoreList[0]:"waterlily"; setCurrentScoreId(id); loadAllScorePatterns(); }
               setScorePage(v=>!v);
             }}
               style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#5a8a9a,#3a6a7a)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(58,106,122,0.4)",display:"block"}}>
@@ -3657,7 +3657,7 @@ function App() {
                 {/* 曲選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
                   {scoreList.map(id=>(
-                    <button key={id} onClick={()=>{setCurrentScoreId(id);}}
+                    <button key={id} onClick={()=>{setCurrentScoreId(id); if(!scorePatterns||Object.keys(scorePatterns).length===0) loadAllScorePatterns();}}
                       style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:currentScoreId===id?"#4B3621":"#fff",color:currentScoreId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {SCORE_ID_TO_NAME[id]||id}
                     </button>
