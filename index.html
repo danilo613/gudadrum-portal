@@ -320,6 +320,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
   var onSectionEndRef=useRef(onSectionEnd);
+  var barsRef=useRef(parseInt(bars)||8);
 
 
   useEffect(function(){leftRef.current=left;},[left]);
@@ -330,6 +331,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){barsRef.current=Math.max(2,Math.min(parseInt(bars)||8,32));},[bars]);
   useEffect(function(){onSectionEndRef.current=onSectionEnd;},[onSectionEnd]);
   // sectionKeyが変わった時、通し再生中なら自動で再生
   var prevSectionKeyRef=useRef(sectionKey);
@@ -461,8 +463,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
     var spbNow = subdivRef.current==="16th"?16:12;
-    var nb = Math.max(2,Math.min(parseInt(bars)||8,32));
-    var totalNow = nb * spbNow;
+    var totalNow = barsRef.current * spbNow;
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
     // 1周完了
@@ -850,8 +851,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
     var spbNow = subdivRef.current==="16th"?16:12;
-    var nb = Math.max(2,Math.min(parseInt(bars)||8,32));
-    var totalNow = nb * spbNow;
+    var totalNow = barsRef.current * spbNow;
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
     // 1周完了
