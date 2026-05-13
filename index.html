@@ -458,6 +458,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function tick(){
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
+    var spbNow2=subdivRef.current==="16th"?16:12;
+    var totalNow2=barsRef.current*spbNow2;
+    if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
@@ -846,6 +849,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function tick(){
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
+    var spbNow2=subdivRef.current==="16th"?16:12;
+    var totalNow2=barsRef.current*spbNow2;
+    if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
