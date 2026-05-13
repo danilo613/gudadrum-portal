@@ -480,9 +480,19 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function toggleCell(side,color,idx){
     if(!canEdit)return;
     var setter=side==="left"?setLeft:setRight;
+    var willBeOn;
     setter(function(prev){
-      var p=Object.assign({},prev);p[color]=prev[color].slice();p[color][idx]^=1;return p;
+      var p=Object.assign({},prev);p[color]=prev[color].slice();
+      p[color][idx]^=1;
+      willBeOn=p[color][idx]===1;
+      return p;
     });
+    // ONになった時だけ音を鳴らす
+    setTimeout(function(){
+      if(willBeOn) {
+        initAudio(function(){ playSound(color); });
+      }
+    }, 0);
   }
 
   function handleSave(){
@@ -840,9 +850,19 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function toggleCell(side,color,idx){
     if(!canEdit)return;
     var setter=side==="left"?setLeft:setRight;
+    var willBeOn;
     setter(function(prev){
-      var p=Object.assign({},prev);p[color]=prev[color].slice();p[color][idx]^=1;return p;
+      var p=Object.assign({},prev);p[color]=prev[color].slice();
+      p[color][idx]^=1;
+      willBeOn=p[color][idx]===1;
+      return p;
     });
+    // ONになった時だけ音を鳴らす
+    setTimeout(function(){
+      if(willBeOn) {
+        initAudio(function(){ playSound(color); });
+      }
+    }, 0);
   }
 
   function handleSave(){
@@ -1412,12 +1432,11 @@ function App() {
       // 全曲データを一括取得（キャッシュがなければ）
       var firstId = scoreList.length>0?scoreList[0]:"waterlily";
       loadScorePatterns(firstId);
-      if (isFromAdmin || isInstructor) {
-        // 管理者・講師は全曲表示
-        setScoreList(["waterlily","dreamy","aoi"]);
-      } else if (currentMember) {
-        // 一般メンバーは購入済みのみ
+      if (currentMember && !isFromAdmin && !isInstructor) {
         loadPurchasedScores(currentMember.name);
+      } else if (isFromAdmin || isInstructor) {
+        // 管理者がメンバーページを確認する時は全曲表示
+        setScoreList(["waterlily","dreamy","aoi"]);
       }
     }
   }, [page, currentMember]);
