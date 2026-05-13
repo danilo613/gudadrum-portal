@@ -262,7 +262,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onLoopComplete, autoPlay }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
@@ -319,9 +319,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
-  var repeatRef=useRef(parseInt(repeat)||1);
-  var loopCountRef=useRef(0);
-  var totalStepsRef=useRef((Math.max(2,Math.min(parseInt(bars)||8,32)))*SPB);
+
   var loopCompleteRef=useRef(onLoopComplete);
 
   useEffect(function(){leftRef.current=left;},[left]);
@@ -332,36 +330,16 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
-  useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
-  useEffect(function(){
-    var spb=subdivRef.current==="16th"?16:12;
-    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
-    totalStepsRef.current=nb*spb;
-  },[bars]);
+
   useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
   useEffect(function(){
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
     numBarsRef.current=nb;
     totalStepsRef.current=nb*SPB;
   },[bars,SPB]);
-  // autoPlay+patternDataが揃ったら自動再生
-  useEffect(function(){
-    if(autoPlay && patternData) {
-      doStop();
-      initAudio(function(){
-        stepRef.current=0;
-        setPlaying(true);
-        doStart();
-      });
-    }
-  },[sectionKey, autoPlay, patternData]);
-  useEffect(function(){loopCompleteRef.current=onLoopComplete;},[onLoopComplete]);
+
   useEffect(function(){
     subdivRef.current=subdiv;
-    // totalStepsRefも更新
-    var spb=subdiv==="16th"?16:12;
-    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
-    totalStepsRef.current=nb*spb;
     // subdivPropが変わった時にleft/rightを正しいサイズで再構築
     var total = SPB * 8;
     var lp={}, rp={};
@@ -473,27 +451,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
-    var nextStep = s+1;
-    if(nextStep >= totalStepsRef.current) {
-      // 1周完了
-      loopCountRef.current += 1;
-      if(loopCountRef.current < repeatRef.current) {
-        // まだ繰り返す
-        stepRef.current = 0;
-      } else {
-        // 繰り返し完了 → 次のセクションへ or 停止
-        loopCountRef.current = 0;
-        if(loopCompleteRef.current) {
-          var cont = loopCompleteRef.current();
-          if(!cont) { doStop(); return; }
-          stepRef.current = 0;
-        } else {
-          stepRef.current = 0; // loopCompleteなければ単純リピート
-        }
-      }
-    } else {
-      stepRef.current = nextStep;
-    }
+    stepRef.current=(s+1)%(numBars*SPB);
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
@@ -519,7 +477,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
-    loopCountRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
@@ -872,27 +829,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
-    var nextStep = s+1;
-    if(nextStep >= totalStepsRef.current) {
-      // 1周完了
-      loopCountRef.current += 1;
-      if(loopCountRef.current < repeatRef.current) {
-        // まだ繰り返す
-        stepRef.current = 0;
-      } else {
-        // 繰り返し完了 → 次のセクションへ or 停止
-        loopCountRef.current = 0;
-        if(loopCompleteRef.current) {
-          var cont = loopCompleteRef.current();
-          if(!cont) { doStop(); return; }
-          stepRef.current = 0;
-        } else {
-          stepRef.current = 0; // loopCompleteなければ単純リピート
-        }
-      }
-    } else {
-      stepRef.current = nextStep;
-    }
+    stepRef.current=(s+1)%(numBars*SPB);
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
@@ -918,7 +855,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
-    loopCountRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
@@ -1485,11 +1421,7 @@ function App() {
   const [scoreList,      setScoreList]      = useState([]);
   const [scoreSection,   setScoreSection]   = useState("intro");
   const [selectedSections, setSelectedSections] = useState([]); // 複数選択
-  const [playQueue,     setPlayQueue]     = useState([]); // 通し再生キュー
-  const [playQueueIdx,  setPlayQueueIdx]  = useState(0);  // 現在の位置
-  const [isQueuePlay,   setIsQueuePlay]   = useState(false); // 通し再生中
-  const playQueueRef    = React.useRef([]);
-  const playQueueIdxRef = React.useRef(0);
+
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
   const [currentScoreId, setCurrentScoreId] = useState("waterlily");
@@ -4222,25 +4154,7 @@ function App() {
                   canEdit={false}
                   scoreLoading={scoreLoading}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
-                  autoPlay={isQueuePlay}
-                  onLoopComplete={isQueuePlay?()=>{
-                    var nextIdx=playQueueIdxRef.current+1;
-                    console.log("LoopComplete: idx=",playQueueIdxRef.current,"queue=",playQueueRef.current);
-                    if(nextIdx<playQueueRef.current.length){
-                      playQueueIdxRef.current=nextIdx;
-                      setPlayQueueIdx(nextIdx);
-                      setScoreSection(playQueueRef.current[nextIdx]);
-                      console.log("Next section:", playQueueRef.current[nextIdx]);
-                      return true;
-                    } else {
-                      playQueueRef.current=[];
-                      playQueueIdxRef.current=0;
-                      setIsQueuePlay(false);
-                      setPlayQueue([]);
-                      setPlayQueueIdx(0);
-                      return false;
-                    }
-                  }:null}
+
                   subdivProp={(function(){var s=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;});return s?s[2]:"triplet";})()}
                   onSave={saveScorePattern}
                 />
