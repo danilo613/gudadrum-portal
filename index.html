@@ -1784,6 +1784,7 @@ function App() {
             {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
             {/* ScorePlayer（編集モード） */}
             <ScorePlayer
+              key={scoreEditId+"-"+scoreEditSec+"-"+(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               scoreId={scoreEditId}
               sectionKey={scoreEditSec}
               sectionLabel={{
