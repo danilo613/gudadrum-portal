@@ -210,6 +210,12 @@ const SCORE_SOUND_URLS = {
   pink:"/sounds/pink.mp3",
   lime:"/sounds/lime.mp3",
 };
+const SCORE_ID_TO_NAME = {
+  waterlily: "water lily〜水面〜",
+  dreamy: "dreamy EYES",
+  aoi: "蒼〜aoi〜",
+};
+
 const SCORE_SECTIONS = {
   waterlily: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
   dreamy: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["ameloPrime","Aメロ'","16th"],["bmelo","Bメロ","16th"],["ameloPrime2","Aメロ'","16th"],["bmelo2","Bメロ","16th"],["cmelo","Cメロ","16th"],["cmeloPrime","Cメロ'","16th"],["sabi","サビ","16th"],["interlude1","間奏①","triplet"],["interlude1p","間奏①'","triplet"],["interlude2","間奏②","16th"]],
@@ -3649,16 +3655,16 @@ function App() {
                 {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
                 {/* 曲選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
-                  {(isFromAdmin||isInstructor?["waterlily"]:scoreList).map(id=>(
-                    <button key={id} onClick={()=>{setCurrentScoreId(id);loadScorePatterns(id);}}
+                  {(isFromAdmin||isInstructor?["waterlily","dreamy","aoi"]:scoreList).map(id=>(
+                    <button key={id} onClick={()=>{setCurrentScoreId(id);}}
                       style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:currentScoreId===id?"#4B3621":"#fff",color:currentScoreId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                      {id==="waterlily"?"water lily〜水面〜":id}
+                      {SCORE_ID_TO_NAME[id]||id}
                     </button>
                   ))}
                 </div>
                 {/* セクション選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
-                  {[["intro","イントロ"],["amelo","Aメロ"],["bmelo","Bメロ"]].map(([key,lbl])=>(
+                  {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl])=>(
                     <button key={key} onClick={()=>setScoreSection(key)}
                       style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreSection===key?"#708238":"#fff",color:scoreSection===key?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {lbl}
@@ -3668,7 +3674,7 @@ function App() {
                 <ScorePlayer
                   scoreId={currentScoreId}
                   sectionKey={scoreSection}
-                  sectionLabel={{"intro":"イントロ　0:05〜","amelo":"Aメロ　0:44〜","bmelo":"Bメロ"}[scoreSection]||scoreSection}
+                  sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
