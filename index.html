@@ -1415,7 +1415,7 @@ function App() {
   async function loadAllScorePatterns() {
     setScoreLoading(true);
     try {
-      const res = await gasRead({ action:"getscores" });
+      const res = await gasWrite({ action:"getscores" });
       const rows = res.rows || [];
       const allPatterns = {};
       rows.forEach(function(r) {
