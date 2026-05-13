@@ -329,6 +329,12 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
+  useEffect(function(){
+    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+    numBarsRef.current=nb;
+    totalStepsRef.current=nb*SPB;
+  },[bars,SPB]);
   // autoPlay+patternDataが揃ったら自動再生
   useEffect(function(){
     if(autoPlay && patternData) {
@@ -453,7 +459,28 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
-    setCurStep(s);stepRef.current=(s+1)%TOTAL;
+    setCurStep(s);
+    var nextStep = s+1;
+    if(nextStep >= totalStepsRef.current) {
+      // 1周完了
+      loopCountRef.current += 1;
+      if(loopCountRef.current < repeatRef.current) {
+        // まだ繰り返す
+        stepRef.current = 0;
+      } else {
+        // 繰り返し完了 → 次のセクションへ or 停止
+        loopCountRef.current = 0;
+        if(loopCompleteRef.current) {
+          var cont = loopCompleteRef.current();
+          if(!cont) { doStop(); return; }
+          stepRef.current = 0;
+        } else {
+          stepRef.current = 0; // loopCompleteなければ単純リピート
+        }
+      }
+    } else {
+      stepRef.current = nextStep;
+    }
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
@@ -479,6 +506,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
+    loopCountRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
@@ -830,7 +858,28 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
-    setCurStep(s);stepRef.current=(s+1)%TOTAL;
+    setCurStep(s);
+    var nextStep = s+1;
+    if(nextStep >= totalStepsRef.current) {
+      // 1周完了
+      loopCountRef.current += 1;
+      if(loopCountRef.current < repeatRef.current) {
+        // まだ繰り返す
+        stepRef.current = 0;
+      } else {
+        // 繰り返し完了 → 次のセクションへ or 停止
+        loopCountRef.current = 0;
+        if(loopCompleteRef.current) {
+          var cont = loopCompleteRef.current();
+          if(!cont) { doStop(); return; }
+          stepRef.current = 0;
+        } else {
+          stepRef.current = 0; // loopCompleteなければ単純リピート
+        }
+      }
+    } else {
+      stepRef.current = nextStep;
+    }
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
@@ -856,6 +905,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
+    loopCountRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
