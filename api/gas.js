@@ -1,9 +1,8 @@
 export const config = { runtime: "edge" };
 export default async function handler(req) {
-  const GAS = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec";
+  const GAS = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec";
   
   let url = GAS;
-  let gasRes;
   
   if (req.method === "POST") {
     const body = await req.json();
@@ -15,8 +14,8 @@ export default async function handler(req) {
     url = query ? `${GAS}?${query}` : GAS;
   }
   
-  gasRes = await fetch(url);
-  const text = await gasRes.text();
+  const res = await fetch(url);
+  const text = await res.text();
   return new Response(text, {
     headers: {
       "Content-Type": "application/json",
