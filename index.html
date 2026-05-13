@@ -1420,7 +1420,6 @@ function App() {
   const [scorePage,      setScorePage]      = useState(false);
   const [scoreList,      setScoreList]      = useState([]);
   const [scoreSection,   setScoreSection]   = useState("intro");
-  const [selectedSections, setSelectedSections] = useState([]); // 複数選択
 
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
@@ -4090,33 +4089,7 @@ function App() {
             </button>
             {scorePage && (
               <div style={{background:"rgba(255,255,255,0.95)",border:"1px solid "+C.border,borderRadius:14,padding:16,marginTop:8}}>
-                {/* 全選択・通し再生ボタン */}
-                <div style={{display:"flex",gap:6,marginBottom:8,flexWrap:"wrap"}}>
-                  <button onClick={()=>{
-                    var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(function(s){return s[0];});
-                    setSelectedSections(all);
-                  }} style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                    全選択
-                  </button>
-                  <button onClick={()=>setSelectedSections([])}
-                    style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                    選択解除
-                  </button>
-                  {selectedSections.length>0&&(
-                    <button onClick={()=>{
-                      var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
-                      var queue=sections.filter(function(s){return selectedSections.includes(s[0]);}).map(function(s){return s[0];});
-                      playQueueRef.current=queue;
-                      playQueueIdxRef.current=0;
-                      setPlayQueue(queue);
-                      setPlayQueueIdx(0);
-                      setScoreSection(queue[0]);
-                      setIsQueuePlay(true);
-                    }} style={{padding:"4px 12px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#5a8a9a,#3a6a7a)",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-                      ▶ 通し再生 ({selectedSections.length}セクション)
-                    </button>
-                  )}
-                </div>
+                
                 {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
                 {/* 曲選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
@@ -4130,15 +4103,9 @@ function App() {
                 {/* セクション選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
                   {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl])=>(
-                    <button key={key} onClick={()=>{
-                      setScoreSection(key);
-                      setSelectedSections(function(prev){
-                        return prev.includes(key)?prev.filter(function(k){return k!==key;}):[...prev,key];
-                      });
-                    }}
-                      style={{padding:"4px 12px",borderRadius:8,
-                        border:selectedSections.includes(key)?"2px solid #708238":"0.5px solid "+C.border,
-                        background:scoreSection===key?"#708238":selectedSections.includes(key)?"rgba(112,130,56,0.15)":"#fff",
+                    <button key={key} onClick={()=>setScoreSection(key)}
+                      style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,
+                        background:scoreSection===key?"#708238":"#fff",
                         color:scoreSection===key?"#fff":C.label,
                         fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {lbl}
