@@ -1567,7 +1567,7 @@ function App() {
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
     const normPass = s => String(s||"").replace(/[０-９]/g, c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\s/g,"");
     if (m.password && normPass(String(m.password)) !== normPass(password)) { setLoginErr("パスワードが違います"); return; }
-    setCurrentMember(m); setIsFromAdmin(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false); loadPurchasedScores(m.name);
+    setCurrentMember(m); setIsFromAdmin(false); setIsInstructor(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false); loadPurchasedScores(m.name);
     recordLogin(m.name);
   }
 
