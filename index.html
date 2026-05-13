@@ -4169,7 +4169,7 @@ function App() {
                   ))}
                 </div>
                 <ScorePlayer
-                  key={currentScoreId+"-"+scoreSection+"-"+((scorePatterns[currentScoreId]||{})[scoreSection]?"loaded":"empty")}
+                  key={currentScoreId+"-"+scoreSection+"-"+(scoreLoading?"loading":((scorePatterns[currentScoreId]||{})[scoreSection]?"loaded":"empty"))}
                   scoreId={currentScoreId}
                   sectionKey={scoreSection}
                   sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
