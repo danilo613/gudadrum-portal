@@ -329,6 +329,21 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
   useEffect(function(){
     subdivRef.current=subdiv;
+    // subdivPropが変わった時にleft/rightを正しいサイズで再構築
+    var total = SPB * 8;
+    var lp={}, rp={};
+    COLORS.forEach(function(c){
+      lp[c]=new Array(total).fill(0);
+      rp[c]=new Array(total).fill(0);
+      if(patternData&&patternData.left&&patternData.left[c]){
+        for(var i=0;i<Math.min(patternData.left[c].length,total);i++) lp[c][i]=patternData.left[c][i]||0;
+      }
+      if(patternData&&patternData.right&&patternData.right[c]){
+        for(var i=0;i<Math.min(patternData.right[c].length,total);i++) rp[c][i]=patternData.right[c][i]||0;
+      }
+    });
+    setLeft(lp); setRight(rp);
+    leftRef.current=lp; rightRef.current=rp;
   },[subdiv]);
 
   useEffect(function(){
