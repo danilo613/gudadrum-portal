@@ -272,19 +272,19 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   console.log("ScorePlayer:", scoreId, sectionKey, "subdivProp=", subdivProp, "SPB=", SPB);
 
   function emptyPat(total) {
-    var t = total || 128; // 常に最大サイズで確保
+    var t = total || (SPB * 8); // SPBに基づいたサイズ
     var p = {};
     COLORS.forEach(function(c){ p[c] = new Array(t).fill(0); });
     return p;
   }
   function initPat(side) {
-    var p = emptyPat();
+    var total = SPB * 8;
+    var p = emptyPat(total);
     if (patternData && patternData[side]) {
       COLORS.forEach(function(c){
         if (patternData[side][c]) {
           var src = patternData[side][c];
-          // TOTALが変わった時も対応
-          for(var i=0;i<TOTAL;i++) p[c][i] = src[i]||0;
+          for(var i=0;i<total;i++) p[c][i] = src[i]||0;
         }
       });
     }
