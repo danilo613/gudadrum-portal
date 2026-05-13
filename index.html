@@ -2156,6 +2156,7 @@ function App() {
             {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
             {/* ScorePlayer（編集モード） */}
             <ScorePlayer
+              key={scoreEditId+"-"+scoreEditSec+"-"+((scorePatterns[scoreEditId]||{})[scoreEditSec]?"loaded":"empty")}
               scoreId={scoreEditId}
               sectionKey={scoreEditSec}
               sectionLabel={{
@@ -4061,6 +4062,7 @@ function App() {
                   ))}
                 </div>
                 <ScorePlayer
+                  key={currentScoreId+"-"+scoreSection+"-"+((scorePatterns[currentScoreId]||{})[scoreSection]?"loaded":"empty")}
                   scoreId={currentScoreId}
                   sectionKey={scoreSection}
                   sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
