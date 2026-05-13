@@ -269,6 +269,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var SPB = subdiv==="16th" ? 16 : 12;
   var TOTAL = SPB * 8;
   var CELL = 18, GAP = 1;
+  console.log("ScorePlayer:", scoreId, sectionKey, "subdivProp=", subdivProp, "SPB=", SPB);
 
   function emptyPat(total) {
     var t = total || 128; // 常に最大サイズで確保
@@ -1460,9 +1461,19 @@ function App() {
   }
 
   async function gasWrite(params) {
-    const url = "/api/gas?" + new URLSearchParams(params).toString();
-    const res = await fetch(url);
-    return await res.json();
+    // 短いリクエストはGET、長いものはPOSTで送る
+    const query = new URLSearchParams(params).toString();
+    if (query.length < 1500) {
+      const res = await fetch("/api/gas?" + query);
+      return await res.json();
+    } else {
+      const res = await fetch("/api/gas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(params)
+      });
+      return await res.json();
+    }
   }
 
   async function postLesson(overwrite) {
