@@ -1041,16 +1041,17 @@ function App() {
 
   // メンバーページ表示時に購入済み譜面を再取得
   useEffect(() => {
-    if (page === "member" && currentMember && !isFromAdmin && !isInstructor) {
-      loadPurchasedScores(currentMember.name);
-    }
-    if (page === "member" && (isFromAdmin || isInstructor)) {
-      setScoreList(["waterlily"]);
-    }
-    // メンバーページ表示時に全曲データを一括取得（キャッシュがなければ）
     if (page === "member") {
+      // 全曲データを一括取得（キャッシュがなければ）
       if(!scorePatterns || Object.keys(scorePatterns).length === 0) {
         loadAllScorePatterns();
+      }
+      if (isFromAdmin || isInstructor) {
+        // 管理者・講師は全曲表示
+        setScoreList(["waterlily","dreamy","aoi"]);
+      } else if (currentMember) {
+        // 一般メンバーは購入済みのみ
+        loadPurchasedScores(currentMember.name);
       }
     }
   }, [page, currentMember]);
