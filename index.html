@@ -319,6 +319,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
+  var loopCompleteRef=useRef(onLoopComplete);
 
   useEffect(function(){leftRef.current=left;},[left]);
   useEffect(function(){rightRef.current=right;},[right]);
@@ -328,6 +329,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){loopCompleteRef.current=onLoopComplete;},[onLoopComplete]);
   useEffect(function(){
     subdivRef.current=subdiv;
     // subdivPropが変わった時にleft/rightを正しいサイズで再構築
