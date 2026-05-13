@@ -1066,9 +1066,8 @@ function App() {
   useEffect(() => {
     if (page === "member") {
       // 全曲データを一括取得（キャッシュがなければ）
-      if(!scorePatterns || Object.keys(scorePatterns).length === 0) {
-        loadAllScorePatterns();
-      }
+      var firstId = scoreList.length>0?scoreList[0]:"waterlily";
+      loadScorePatterns(firstId);
       if (isFromAdmin || isInstructor) {
         // 管理者・講師は全曲表示
         setScoreList(["waterlily","dreamy","aoi"]);
@@ -1094,7 +1093,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -1116,7 +1115,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -1137,7 +1136,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?action=faq&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?action=faq&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -1406,7 +1405,7 @@ function App() {
       script.id = cbName;
       var urlParams = new URLSearchParams(params);
       urlParams.set("callback", cbName);
-      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?" + urlParams.toString();
+      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?" + urlParams.toString();
       script.onerror = function() {
         delete window[cbName];
         script.remove();
@@ -1437,30 +1436,33 @@ function App() {
     setScoreLoading(false);
   }
 
-  async function loadAllScorePatterns() {
+  async function loadScorePatterns(scoreId) {
+    // 既にキャッシュがあればスキップ
+    if(scorePatterns[scoreId] && Object.keys(scorePatterns[scoreId]).length > 0) return;
     setScoreLoading(true);
     try {
-      const res = await gasRead({ action:"getscores" });
+      const res = await gasRead({ action:"getscores", score_id:scoreId });
       const rows = res.rows || [];
-      const allPatterns = {};
+      const patterns = {};
       rows.forEach(function(r) {
-        if(!allPatterns[r.score_id]) allPatterns[r.score_id] = {};
-        if(!allPatterns[r.score_id][r.section]) allPatterns[r.score_id][r.section] = { left:{}, right:{}, meta:{} };
+        if(!patterns[r.section]) patterns[r.section] = { left:{}, right:{}, meta:{} };
         if(r.hand === "meta") {
-          allPatterns[r.score_id][r.section].meta[r.color] = r.pattern;
+          patterns[r.section].meta[r.color] = r.pattern;
         } else {
-          try { allPatterns[r.score_id][r.section][r.hand][r.color] = JSON.parse(r.pattern); } catch(e) {}
+          try { patterns[r.section][r.hand][r.color] = JSON.parse(r.pattern); } catch(e) {}
         }
       });
-      setScorePatterns(allPatterns);
-    } catch(e) { console.warn("loadAllScorePatterns error:", e); }
+      setScorePatterns(function(prev){
+        return Object.assign({}, prev, {[scoreId]: patterns});
+      });
+    } catch(e) { console.warn("loadScorePatterns error:", e); }
     setScoreLoading(false);
   }
 
-  async function loadScorePatterns(scoreId, forceReload) {
-    // 後方互換性のため残す（内部的には全曲取得）
-    if(!forceReload && scorePatterns && Object.keys(scorePatterns).length > 0) return;
-    await loadAllScorePatterns();
+  async function loadAllScorePatterns() {
+    // 全曲を並列取得
+    var songIds = ["waterlily","dreamy","aoi"];
+    await Promise.all(songIds.map(function(id){ return loadScorePatterns(id); }));
   }
 
   async function saveScorePattern(scoreId, section, left, right, meta) {
@@ -1629,7 +1631,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -1776,7 +1778,7 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
-        {!isInstructor && <button onClick={()=>{setScoreEditOpen(function(v){if(!v){loadAllScorePatterns();}return !v;}); }}
+        {!isInstructor && <button onClick={()=>{setScoreEditOpen(function(v){if(!v){loadScorePatterns(scoreEditId);}return !v;}); }}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:scoreEditOpen?"linear-gradient(135deg,#5a9aaa,#3a6a7a)":"rgba(58,106,122,0.1)",color:scoreEditOpen?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎼 譜面編集 {scoreEditOpen?"▲":"▼"}
         </button>}
@@ -1788,7 +1790,7 @@ function App() {
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
-                  <button key={id} onClick={()=>{setScoreEditId(id);}}
+                  <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
                   </button>
@@ -3686,7 +3688,7 @@ function App() {
                 setCurrentScoreId(id);
                 setScoreSection("intro");
                 setScorePage(true);
-                loadAllScorePatterns();
+                loadScorePatterns(id);
               } else {
                 setScorePage(false);
               }
@@ -3700,7 +3702,7 @@ function App() {
                 {/* 曲選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
                   {scoreList.map(id=>(
-                    <button key={id} onClick={()=>{setCurrentScoreId(id); if(!scorePatterns||Object.keys(scorePatterns).length===0) loadAllScorePatterns();}}
+                    <button key={id} onClick={()=>{setCurrentScoreId(id); loadScorePatterns(id);}}
                       style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:currentScoreId===id?"#4B3621":"#fff",color:currentScoreId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {SCORE_ID_TO_NAME[id]||id}
                     </button>
