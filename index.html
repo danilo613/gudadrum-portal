@@ -329,7 +329,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
   useEffect(function(){
     subdivRef.current=subdiv;
-    // subdivが変わったらleft/rightを正しいサイズでリセット
+  },[subdiv]);
+
+  useEffect(function(){
     var total = SPB * 8;
     var lp={}, rp={};
     COLORS.forEach(function(c){
@@ -342,33 +344,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         for(var i=0;i<Math.min(patternData.right[c].length,total);i++) rp[c][i]=patternData.right[c][i]||0;
       }
     });
-    setLeft(lp); setRight(rp);
-    leftRef.current=lp; rightRef.current=rp;
-  },[subdiv]);
-
-  useEffect(function(){
-    // patternDataがない場合はグリッドをクリア
-    var total = SPB * 8;
-    if(!patternData){
-      var ep={};
-      COLORS.forEach(function(c){ep[c]=new Array(total).fill(0);});
-      setLeft(ep); setRight(ep);
-      leftRef.current=ep; rightRef.current=ep;
-      return;
-    }
-    var total = SPB * 8;
-    var lp={}, rp={};
-    COLORS.forEach(function(c){
-      lp[c]=new Array(total).fill(0);
-      rp[c]=new Array(total).fill(0);
-      if(patternData.left&&patternData.left[c]){
-        for(var i=0;i<Math.min(patternData.left[c].length,total);i++) lp[c][i]=patternData.left[c][i]||0;
-      }
-      if(patternData.right&&patternData.right[c]){
-        for(var i=0;i<Math.min(patternData.right[c].length,total);i++) rp[c][i]=patternData.right[c][i]||0;
-      }
-    });
-    if(patternData.meta){
+    if(patternData&&patternData.meta){
       if(patternData.meta.bars) setBars(String(patternData.meta.bars));
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
       if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
@@ -379,13 +355,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   },[patternData,startTime,subdivProp]);
 
   useEffect(function(){return function(){doStop();};},[]);
-
-  // subdivが変わったらパターンをリセット
-  useEffect(function(){
-    doStop();
-    setLeft(emptyPat());
-    setRight(emptyPat());
-  },[subdiv]);
 
   // スペースキーで再生/停止
   useEffect(function(){
@@ -398,6 +367,366 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     window.addEventListener("keydown",onKey);
     return function(){window.removeEventListener("keydown",onKey);};
   },[playing]);
+
+  function initAudio(cb){
+    if(actxRef.current){if(cb)cb();return;}
+    var Ctx=window.AudioContext||window.webkitAudioContext;
+    actxRef.current=new Ctx();
+    var keys=Object.keys(METRO_SOUNDS_B64);var done=0;
+    keys.forEach(function(k){
+      var bin=atob(METRO_SOUNDS_B64[k]),arr=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+      actxRef.current.decodeAudioData(arr.buffer,function(buf){
+        bufsRef.current['metro_'+k]=buf;done++;
+        if(done===keys.length){
+          var skeys=Object.keys(SCORE_SOUND_URLS);var sdone=0;
+          if(!skeys.length&&cb){cb();return;}
+          skeys.forEach(function(sk){
+            fetch(SCORE_SOUND_URLS[sk]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufsRef.current[sk]=ab;sdone++;if(sdone===skeys.length&&cb)cb();})
+              .catch(function(){sdone++;if(sdone===skeys.length&&cb)cb();});
+          });
+        }
+      },function(){done++;if(done===keys.length&&cb)cb();});
+    });
+  }
+
+  function playSound(c){
+    var actx=actxRef.current,bufs=bufsRef.current;
+    if(!actx||!bufs[c])return;
+    var s=actx.createBufferSource();s.buffer=bufs[c];
+    var g=actx.createGain();g.gain.value=0.6;
+    s.connect(g);g.connect(actx.destination);s.start(0);
+  }
+
+  function woodClick(accent){
+    var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
+    var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
+    if(!bufs[key])return;
+    var s=actx.createBufferSource();s.buffer=bufs[key];
+    var g=actx.createGain();g.gain.value=metroVolRef.current;
+    s.connect(g);g.connect(actx.destination);s.start(0);
+  }
+
+  function dimAll(){
+    var f={};Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
+    setDotFills(f);setDotLabel({});
+  }
+
+  function flashDot(color,hand){
+    setDotFills(function(p){var n=Object.assign({},p);n[color]=SCORE_DOT_COLORS[color];return n;});
+    if(lrOnRef.current)setDotLabel(function(p){var n=Object.assign({},p);n[color]=hand;return n;});
+  }
+
+  function tick(){
+    var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
+    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    if(dimRef.current)clearTimeout(dimRef.current);
+    dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
+    setCurStep(s);stepRef.current=(s+1)%TOTAL;
+    var fired={};
+    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
+    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
+    if(metroOnRef.current){
+      var m=metroModeRef.current;
+      var doAcc=s12===0&&metroAccentRef.current;
+      var spb=subdivRef.current==="16th"?16:12;
+      var s12b=stepRef.current===0?0:(stepRef.current-1)%spb; // 現在のs12
+      if(subdivRef.current==="16th"){
+        if(m===4&&s12%4===0)woodClick(doAcc);
+        else if(m===8&&s12%2===0)woodClick(doAcc);
+        else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
+      } else {
+        if(m===4&&s12%3===0)woodClick(doAcc);
+        else if(m===3)woodClick(doAcc);
+      }
+    }
+  }
+
+  function doStart(){
+    if(iidRef.current)clearInterval(iidRef.current);
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+  }
+
+  function doStop(){
+    if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
+    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
+    dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
+  }
+
+  function handlePlay(){
+    if(playing){doStop();return;}
+    initAudio(function(){stepRef.current=startStepRef.current;setPlaying(true);doStart();});
+  }
+
+  function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
+
+  function toggleCell(side,color,idx){
+    if(!canEdit)return;
+    var setter=side==="left"?setLeft:setRight;
+    setter(function(prev){
+      var p=Object.assign({},prev);p[color]=prev[color].slice();p[color][idx]^=1;return p;
+    });
+  }
+
+  function handleSave(){
+    setSaving(true);setSaveMsg("");
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
+    if(p&&p.then){
+      p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
+       .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
+    }else{setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);}
+  }
+
+  function Sw(on){
+    return <div style={{position:"relative",width:28,height:16,background:on?"#27AE60":"#d0cec8",borderRadius:8,flexShrink:0,transition:"background .2s"}}>
+      <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:on?"translateX(12px)":"none"}}/>
+    </div>;
+  }
+
+  // 中央の拍目印カラム（左右の間）
+  // 小節頭・4分音符の位置に横帯を表示、クリックで再生開始位置を設定
+  function renderBeatCol(barIdx){
+    var stepH = CELL+GAP;
+    var rows = [];
+    for(var i=0;i<SPB;i++){
+      var s=barIdx*SPB+i;
+      var ibs=i===0, ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+      var cur=s===curStep;
+      var isStart=s===startStepRef.current;
+      // 帯の色とサイズ
+      var band=null;
+      if(ibs){
+        // 小節頭: 濃いグレーの太い横帯
+        band=<div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:isStart?"#E74C3C":cur?"#505050":"#909090",borderRadius:2}}/>;
+      } else if(ib){
+        // 4分音符: 薄いグレーの細い横帯（中央寄り）
+        band=<div style={{position:"absolute",top:"30%",left:0,right:0,height:"40%",background:isStart?"rgba(231,76,60,0.6)":cur?"#808080":"#bbbbbb",borderRadius:1}}/>;
+      } else {
+        // 三連の細分: 小さいドット
+        band=<div style={{position:"absolute",top:"50%",left:"50%",width:3,height:3,borderRadius:"50%",background:cur?"#888":"#d0d0d0",transform:"translate(-50%,-50%)"}}/>;
+      }
+      rows.push(
+        <div key={i}
+          onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+          style={{
+            position:"relative",
+            width:14, height:stepH-GAP,
+            marginBottom:GAP,
+            cursor:"pointer",
+            overflow:"visible",
+          }}>
+          {band}
+        </div>
+      );
+    }
+    return <div style={{display:"flex",flexDirection:"column",width:12,flexShrink:0}}>{rows}</div>;
+  }
+
+  // 片側（左手or右手）のグリッド
+  // canEdit=true: 9色列、各色薄い色ベース、クリックでON/OFF
+  // canEdit=false: 1列、設定色を表示、なければ薄いグレー
+  function renderSideGrid(barIdx, side){
+    var pat=side==="left"?left:right;
+
+    if(canEdit){
+      // 編集モード: 9色列
+      return (
+        <div style={{display:"flex",flexDirection:"row"}}>
+          {COLORS.map(function(color){
+            var cells=[];
+            for(var i=0;i<SPB;i++){
+              var s=barIdx*SPB+i;
+              var on=pat[color]&&pat[color][s];
+              var cur=s===curStep;
+              var ibs=i===0;
+              var ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+              cells.push(
+                <div key={i}
+                  onClick={function(ss,co,si){return function(e){
+                    e.stopPropagation();
+                    toggleCell(si,co,ss);
+                  };}(s,color,side)}
+                  style={{
+                    width:CELL,height:CELL,
+                    marginBottom:GAP,
+                    borderRadius:2,
+                    background:on
+                      ? SCORE_DOT_COLORS[color]
+                      : (ibs||ib)
+                        ? SCORE_PALE_COLORS[color]
+                        : "#e8e8e8",
+                    opacity: on ? 1 : (ibs||ib) ? 0.6 : 1,
+                    cursor:"pointer",
+                    outline:cur?"2px solid #555":"none",
+                    outlineOffset:"-1px",
+                    position:"relative",zIndex:2,
+                  }}
+                />
+              );
+            }
+            return <div key={color} style={{display:"flex",flexDirection:"column",marginRight:GAP}}>{cells}</div>;
+          })}
+        </div>
+      );
+    } else {
+      // 閲覧モード: 1列のみ
+      var cells=[];
+      for(var i=0;i<SPB;i++){
+        var s=barIdx*SPB+i;
+        var cur=s===curStep;
+        var isStart=s===startStepRef.current;
+        // その行に設定されてる色を探す
+        var foundColor=null;
+        for(var ci=0;ci<COLORS.length;ci++){
+          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]){foundColor=COLORS[ci];break;}
+        }
+        cells.push(
+          <div key={i}
+            onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+            style={{
+              width:CELL,height:CELL,
+              marginBottom:GAP,
+              borderRadius:2,
+              background:foundColor?SCORE_DOT_COLORS[foundColor]:"#e8e6e2",
+              cursor:"pointer",
+              outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
+              outlineOffset:"-1px",
+              position:"relative",zIndex:2,
+            }}
+          />
+        );
+      }
+      return <div style={{display:"flex",flexDirection:"column"}}>{cells}</div>;
+    }
+  }
+
+  // 1小節ブロック
+  function renderBar(barIdx){
+    var isStart=Math.floor(startStepRef.current/SPB)===barIdx;
+    var stepH=CELL+GAP;
+    var nCols=canEdit?COLORS.length:1;
+    var sideW=nCols*(CELL+GAP);
+    var beatW=14;
+    var totalW=sideW+beatW+sideW;
+
+    // 帯リスト（後ろに配置）
+    var bands=[];
+    for(var i=0;i<SPB;i++){
+      var s=barIdx*SPB+i;
+      var ibs_b=i===0;
+      var ib_b=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+      var i8_b=subdiv==="16th"&&i%2===0&&i%4!==0;
+      var cur_b=s===curStep;
+      var isRowStart=s===startStepRef.current;
+      if(ibs_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH,height:stepH-GAP,
+          background:isRowStart?"rgba(231,76,60,0.25)":cur_b?"rgba(0,0,0,0.2)":"rgba(0,0,0,0.12)",
+          borderRadius:2,pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(ib_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH+Math.floor(stepH*0.3),height:Math.floor(stepH*0.4),
+          background:isRowStart?"rgba(231,76,60,0.15)":cur_b?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.07)",
+          borderRadius:1,pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(i8_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:"50%",transform:"translateX(-50%)",
+          top:i*stepH+Math.floor(stepH*0.35),
+          width:4,height:4,borderRadius:"50%",
+          background:cur_b?"rgba(0,0,0,0.4)":"rgba(0,0,0,0.15)",
+          pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(cur_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH,height:stepH-GAP,
+          background:"rgba(0,0,0,0.15)",
+          borderRadius:2,pointerEvents:"none",zIndex:0,
+        }}/>);
+      }
+    }
+    // 中央クリック列（拍区切り目印）
+    var beatCells=[];
+    for(var j=0;j<SPB;j++){
+      var ss=barIdx*SPB+j;
+      var jbs=j===0;
+      var jb=(subdiv==="16th"?j%4===0:j%3===0)&&j!==0;
+      var j8=subdiv==="16th"&&j%2===0&&j%4!==0;
+      var dot=null;
+      if(!jbs&&!jb&&!j8){
+        // 三連の細分 or 16分の細分: 小さいドット
+        dot=<div style={{width:2,height:2,borderRadius:"50%",background:"#ccc",margin:"0 auto"}}/>;
+      } else if(j8){
+        // 8分音符位置（16分モード）: 中くらいのドット
+        dot=<div style={{width:3,height:3,borderRadius:"50%",background:"#bbb",margin:"0 auto"}}/>;
+      }
+      beatCells.push(
+        <div key={j}
+          onClick={function(s2){return function(e){e.stopPropagation();startStepRef.current=s2;setCurStep(-1);};}(ss)}
+          style={{height:stepH-GAP,marginBottom:GAP,width:beatW,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",zIndex:1}}>
+          {dot}
+        </div>
+      );
+    }
+
+    return (
+      <div key={barIdx} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",boxShadow:"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+        {/* 小節番号 */}
+        <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+          <div onClick={function(b){return function(){startStepRef.current=b*SPB;setCurStep(-1);};}(barIdx)}
+            style={{width:18,height:18,borderRadius:"50%",flexShrink:0,
+              background:isStart?"#E74C3C":"#a8a5a0",
+              color:"#fff",fontSize:10,fontWeight:700,
+              display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            {barIdx+1}
+          </div>
+          <div style={{fontSize:8,color:"#888"}}>小節</div>
+        </div>
+        {/* 色見本（編集モードのみ） */}
+        {canEdit&&(
+          <div style={{display:"flex",gap:0,marginBottom:2}}>
+            <div style={{display:"flex"}}>
+              {COLORS.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+            <div style={{width:beatW,flexShrink:0}}/>
+            <div style={{display:"flex"}}>
+              {COLORS.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+          </div>
+        )}
+        {/* グリッド本体: position:relativeで帯を後ろに */}
+        <div style={{position:"relative",width:totalW,height:SPB*stepH}}>
+          {/* 帯（後ろ） */}
+          {bands}
+          {/* 左手 */}
+          <div style={{position:"absolute",left:0,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"left")}
+          </div>
+          {/* 中央クリック列 */}
+          <div style={{position:"absolute",left:sideW,top:0,width:beatW,zIndex:1}}>
+            {beatCells}
+          </div>
+          {/* 右手 */}
+          <div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"right")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  var topBars=[0,2,4,6], botBars=[1,3,5,7];
+  var gridH=SPB*(CELL+GAP);
+  var headerH=18+2+5+2; // 小節番号+margin+色見本+margin
+
+
+
 
   function initAudio(cb){
     if(actxRef.current){if(cb)cb();return;}
@@ -1812,7 +2141,6 @@ function App() {
             {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
             {/* ScorePlayer（編集モード） */}
             <ScorePlayer
-              key={scoreEditId+"-"+scoreEditSec+"-"+(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               scoreId={scoreEditId}
               sectionKey={scoreEditSec}
               sectionLabel={{
