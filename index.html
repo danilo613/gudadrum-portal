@@ -319,6 +319,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
+  var repeatRef=useRef(parseInt(repeat)||1);
+  var loopCountRef=useRef(0);
+  var totalStepsRef=useRef((Math.max(2,Math.min(parseInt(bars)||8,32)))*SPB);
   var loopCompleteRef=useRef(onLoopComplete);
 
   useEffect(function(){leftRef.current=left;},[left]);
@@ -329,6 +332,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
+  useEffect(function(){
+    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+    totalStepsRef.current=nb*SPB;
+  },[bars,SPB]);
   useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
   useEffect(function(){
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
