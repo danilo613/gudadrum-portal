@@ -262,7 +262,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
@@ -319,6 +319,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
+  var onSectionEndRef=useRef(onSectionEnd);
 
 
   useEffect(function(){leftRef.current=left;},[left]);
@@ -329,6 +330,21 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){onSectionEndRef.current=onSectionEnd;},[onSectionEnd]);
+  // sectionKeyが変わった時、通し再生中なら自動で再生
+  var prevSectionKeyRef=useRef(sectionKey);
+  useEffect(function(){
+    if(prevSectionKeyRef.current !== sectionKey && onSectionEndRef.current) {
+      prevSectionKeyRef.current = sectionKey;
+      initAudio(function(){
+        stepRef.current=0;
+        setPlaying(true);
+        doStart();
+      });
+    } else {
+      prevSectionKeyRef.current = sectionKey;
+    }
+  },[sectionKey]);
 
 
   useEffect(function(){
@@ -444,7 +460,15 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
-    stepRef.current=(s+1)%(numBars*SPB);
+    var spbNow = subdivRef.current==="16th"?16:12;
+    var nb = Math.max(2,Math.min(parseInt(bars)||8,32));
+    var totalNow = nb * spbNow;
+    var nextStep = (s+1) % totalNow;
+    stepRef.current = nextStep;
+    // 1周完了
+    if(nextStep === 0 && onSectionEndRef.current) {
+      onSectionEndRef.current();
+    }
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
@@ -822,7 +846,15 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
-    stepRef.current=(s+1)%(numBars*SPB);
+    var spbNow = subdivRef.current==="16th"?16:12;
+    var nb = Math.max(2,Math.min(parseInt(bars)||8,32));
+    var totalNow = nb * spbNow;
+    var nextStep = (s+1) % totalNow;
+    stepRef.current = nextStep;
+    // 1周完了
+    if(nextStep === 0 && onSectionEndRef.current) {
+      onSectionEndRef.current();
+    }
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
@@ -1413,6 +1445,10 @@ function App() {
   const [scorePage,      setScorePage]      = useState(false);
   const [scoreList,      setScoreList]      = useState([]);
   const [scoreSection,   setScoreSection]   = useState("intro");
+  const [selectedSecs,  setSelectedSecs]  = useState([]); // 複数選択
+  const playQueueRef    = React.useRef([]);
+  const playQueueIdxRef = React.useRef(0);
+  const isQueuePlayRef  = React.useRef(false);
 
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
@@ -4095,10 +4131,25 @@ function App() {
                 </div>
                 {/* セクション選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
+                  {/* 全選択ボタン */}
+                  <div style={{display:"flex",gap:6,marginBottom:6,flexWrap:"wrap"}}>
+                    <button onClick={function(){
+                      var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(function(s){return s[0];});
+                      setSelectedSecs(all);
+                    }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>全選択</button>
+                    <button onClick={function(){setSelectedSecs([]);}}
+                      style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>解除</button>
+                  </div>
                   {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl])=>(
-                    <button key={key} onClick={()=>setScoreSection(key)}
-                      style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,
-                        background:scoreSection===key?"#708238":"#fff",
+                    <button key={key} onClick={function(){
+                      setScoreSection(key);
+                      setSelectedSecs(function(prev){
+                        return prev.includes(key)?prev.filter(function(k){return k!==key;}):[].concat(prev,[key]);
+                      });
+                    }}
+                      style={{padding:"4px 12px",borderRadius:8,
+                        border:selectedSecs.includes(key)?"2px solid #708238":"0.5px solid "+C.border,
+                        background:scoreSection===key?"#708238":selectedSecs.includes(key)?"rgba(112,130,56,0.15)":"#fff",
                         color:scoreSection===key?"#fff":C.label,
                         fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {lbl}
@@ -4114,6 +4165,25 @@ function App() {
                   canEdit={false}
                   scoreLoading={scoreLoading}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
+                  onSectionEnd={function(){
+                    if(!isQueuePlayRef.current) return;
+                    var nextIdx = playQueueIdxRef.current + 1;
+                    if(nextIdx < playQueueRef.current.length){
+                      playQueueIdxRef.current = nextIdx;
+                      setScoreSection(playQueueRef.current[nextIdx]);
+                    } else {
+                      isQueuePlayRef.current = false;
+                      playQueueIdxRef.current = 0;
+                    }
+                  }}
+                  onQueueStart={selectedSecs.length>0?function(){
+                    var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
+                    var queue=sections.filter(function(s){return selectedSecs.includes(s[0]);}).map(function(s){return s[0];});
+                    playQueueRef.current=queue;
+                    playQueueIdxRef.current=0;
+                    isQueuePlayRef.current=true;
+                    setScoreSection(queue[0]);
+                  }:null}
 
                   subdivProp={(function(){var s=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;});return s?s[2]:"triplet";})()}
                   onSave={saveScorePattern}
