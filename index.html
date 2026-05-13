@@ -267,6 +267,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
   var SPB = subdiv==="16th" ? 16 : 12;
+  // TOTALはnumBarsから計算（下で再定義）
   var TOTAL = SPB * 8;
   var CELL = 18, GAP = 1;
   console.log("ScorePlayer:", scoreId, sectionKey, "subdivProp=", subdivProp, "SPB=", SPB);
@@ -746,7 +747,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     );
   }
 
-  var topBars=[0,2,4,6], botBars=[1,3,5,7];
+  var numBars = Math.max(2, Math.min(parseInt(bars)||8, 32));
+  var TOTAL = SPB * numBars;
+  // 上段: 奇数インデックス(0,2,4...) 下段: 偶数インデックス(1,3,5...)
+  var topBars=[], botBars=[];
+  for(var bi=0;bi<numBars;bi++){
+    if(bi%2===0) topBars.push(bi);
+    else botBars.push(bi);
+  }
   var gridH=SPB*(CELL+GAP);
   var headerH=18+2+5+2; // 小節番号+margin+色見本+margin
 
@@ -1116,7 +1124,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     );
   }
 
-  var topBars=[0,2,4,6], botBars=[1,3,5,7];
+  var numBars = Math.max(2, Math.min(parseInt(bars)||8, 32));
+  var TOTAL = SPB * numBars;
+  // 上段: 奇数インデックス(0,2,4...) 下段: 偶数インデックス(1,3,5...)
+  var topBars=[], botBars=[];
+  for(var bi=0;bi<numBars;bi++){
+    if(bi%2===0) topBars.push(bi);
+    else botBars.push(bi);
+  }
   var gridH=SPB*(CELL+GAP);
   var headerH=18+2+5+2; // 小節番号+margin+色見本+margin
 
