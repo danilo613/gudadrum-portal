@@ -1394,8 +1394,34 @@ function App() {
   }
 
   async function gasRead(params) {
-    // Vercelプロキシ経由（gasWriteと同じルート）
-    return gasWrite(params);
+    return new Promise(function(resolve, reject) {
+      var cbName = "gasCb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
+      window[cbName] = function(data) {
+        delete window[cbName];
+        var el = document.getElementById(cbName);
+        if(el) el.remove();
+        resolve(data);
+      };
+      var script = document.createElement("script");
+      script.id = cbName;
+      var urlParams = new URLSearchParams(params);
+      urlParams.set("callback", cbName);
+      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?" + urlParams.toString();
+      script.onerror = function() {
+        delete window[cbName];
+        script.remove();
+        reject(new Error("GAS request failed"));
+      };
+      document.body.appendChild(script);
+      setTimeout(function() {
+        if(window[cbName]) {
+          delete window[cbName];
+          var el = document.getElementById(cbName);
+          if(el) el.remove();
+          reject(new Error("GAS timeout"));
+        }
+      }, 15000);
+    });
   }
 
   async function loadPurchasedScores(name) {
