@@ -334,9 +334,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
   useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
   useEffect(function(){
+    var spb=subdivRef.current==="16th"?16:12;
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
-    totalStepsRef.current=nb*SPB;
-  },[bars,SPB]);
+    totalStepsRef.current=nb*spb;
+  },[bars]);
   useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
   useEffect(function(){
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
@@ -357,6 +358,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){loopCompleteRef.current=onLoopComplete;},[onLoopComplete]);
   useEffect(function(){
     subdivRef.current=subdiv;
+    // totalStepsRefも更新
+    var spb=subdiv==="16th"?16:12;
+    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+    totalStepsRef.current=nb*spb;
     // subdivPropが変わった時にleft/rightを正しいサイズで再構築
     var total = SPB * 8;
     var lp={}, rp={};
