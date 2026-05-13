@@ -1039,6 +1039,12 @@ function App() {
     if (page === "member" && (isFromAdmin || isInstructor)) {
       setScoreList(["waterlily"]);
     }
+    // メンバーページ表示時に全曲データを一括取得（キャッシュがなければ）
+    if (page === "member") {
+      if(!scorePatterns || Object.keys(scorePatterns).length === 0) {
+        loadAllScorePatterns();
+      }
+    }
   }, [page, currentMember]);
 
   function autoFetch() {
@@ -1397,26 +1403,31 @@ function App() {
     setScoreLoading(false);
   }
 
-  async function loadScorePatterns(scoreId) {
+  async function loadAllScorePatterns() {
+    // 全曲のデータを一括取得
     setScoreLoading(true);
     try {
       const res = await gasRead({ action:"getscores" });
-      console.log("getscores response:", res);
-      const rows = (res.rows || []).filter(function(r){ return r.score_id === scoreId; });
-      console.log("filtered rows:", rows.length);
-      const patterns = {};
+      const rows = res.rows || [];
+      const allPatterns = {};
       rows.forEach(function(r) {
-        if (!patterns[r.section]) patterns[r.section] = { left:{}, right:{}, meta:{} };
+        if(!allPatterns[r.score_id]) allPatterns[r.score_id] = {};
+        if(!allPatterns[r.score_id][r.section]) allPatterns[r.score_id][r.section] = { left:{}, right:{}, meta:{} };
         if(r.hand === "meta") {
-          patterns[r.section].meta[r.color] = r.pattern;
+          allPatterns[r.score_id][r.section].meta[r.color] = r.pattern;
         } else {
-          try { patterns[r.section][r.hand][r.color] = JSON.parse(r.pattern); } catch(e) {}
+          try { allPatterns[r.score_id][r.section][r.hand][r.color] = JSON.parse(r.pattern); } catch(e) {}
         }
       });
-      console.log("patterns:", JSON.stringify(Object.keys(patterns)));
-      setScorePatterns(function(prev){ return Object.assign({}, prev, {[scoreId]: patterns}); });
-    } catch(e) { console.warn("loadScorePatterns error:", e); }
+      setScorePatterns(allPatterns);
+    } catch(e) { console.warn("loadAllScorePatterns error:", e); }
     setScoreLoading(false);
+  }
+
+  async function loadScorePatterns(scoreId, forceReload) {
+    // 後方互換性のため残す（内部的には全曲取得）
+    if(!forceReload && scorePatterns && Object.keys(scorePatterns).length > 0) return;
+    await loadAllScorePatterns();
   }
 
   async function saveScorePattern(scoreId, section, left, right, meta) {
@@ -1722,7 +1733,7 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
-        {!isInstructor && <button onClick={()=>{setScoreEditOpen(function(v){if(!v){loadScorePatterns(scoreEditId);}return !v;});}}
+        {!isInstructor && <button onClick={()=>{setScoreEditOpen(function(v){if(!v){loadAllScorePatterns();}return !v;}); }}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:scoreEditOpen?"linear-gradient(135deg,#5a9aaa,#3a6a7a)":"rgba(58,106,122,0.1)",color:scoreEditOpen?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎼 譜面編集 {scoreEditOpen?"▲":"▼"}
         </button>}
@@ -1734,7 +1745,7 @@ function App() {
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
-                  <button key={id} onClick={()=>{setScoreEditId(id); loadScorePatterns(id);}}
+                  <button key={id} onClick={()=>{setScoreEditId(id);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
                   </button>
