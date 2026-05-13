@@ -320,7 +320,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
 
-  var loopCompleteRef=useRef(onLoopComplete);
 
   useEffect(function(){leftRef.current=left;},[left]);
   useEffect(function(){rightRef.current=right;},[right]);
@@ -331,7 +330,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
 
-  useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
 
   useEffect(function(){
     subdivRef.current=subdiv;
