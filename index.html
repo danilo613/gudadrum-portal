@@ -466,8 +466,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
     // 1周完了
-    if(nextStep === 0 && onSectionEndRef.current) {
-      onSectionEndRef.current();
+    if(nextStep === 0) {
+      console.log("tick: section end, onSectionEnd=", !!onSectionEndRef.current);
+      if(onSectionEndRef.current) {
+        onSectionEndRef.current();
+      }
     }
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
@@ -852,8 +855,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
     // 1周完了
-    if(nextStep === 0 && onSectionEndRef.current) {
-      onSectionEndRef.current();
+    if(nextStep === 0) {
+      console.log("tick: section end, onSectionEnd=", !!onSectionEndRef.current);
+      if(onSectionEndRef.current) {
+        onSectionEndRef.current();
+      }
     }
     var fired={};
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
