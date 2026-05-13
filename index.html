@@ -262,7 +262,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
@@ -353,7 +353,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     setLeft(lp); setRight(rp);
     leftRef.current=lp; rightRef.current=rp;
     if(startTime) setSecTime(startTime);
-  },[patternData,startTime,subdivProp]);
+  },[patternData,startTime,subdivProp,scoreLoading]);
 
   useEffect(function(){return function(){doStop();};},[]);
 
@@ -1413,7 +1413,6 @@ function App() {
   }
 
   async function loadAllScorePatterns() {
-    // 全曲のデータを一括取得
     setScoreLoading(true);
     try {
       const res = await gasRead({ action:"getscores" });
@@ -1783,6 +1782,7 @@ function App() {
               }[scoreEditSec]||scoreEditSec}
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
+              scoreLoading={scoreLoading}
               scale={scoreEditId==="dreamy"?"dreamy":"funenone"}
               subdivProp={(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(([k])=>k===scoreEditSec)?.[2]||"triplet"}
               onSave={saveScorePattern}
@@ -3678,6 +3678,7 @@ function App() {
                   sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
+                  scoreLoading={scoreLoading}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
                   subdivProp={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(([k])=>k===scoreSection)?.[2]||"triplet"}
                   onSave={saveScorePattern}
