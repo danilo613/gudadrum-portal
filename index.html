@@ -4162,10 +4162,12 @@ function App() {
                   autoPlay={isQueuePlay}
                   onLoopComplete={isQueuePlay?()=>{
                     var nextIdx=playQueueIdxRef.current+1;
+                    console.log("LoopComplete: idx=",playQueueIdxRef.current,"queue=",playQueueRef.current);
                     if(nextIdx<playQueueRef.current.length){
                       playQueueIdxRef.current=nextIdx;
                       setPlayQueueIdx(nextIdx);
                       setScoreSection(playQueueRef.current[nextIdx]);
+                      console.log("Next section:", playQueueRef.current[nextIdx]);
                       return true;
                     } else {
                       playQueueRef.current=[];
