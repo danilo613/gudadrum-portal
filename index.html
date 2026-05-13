@@ -332,11 +332,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
 
   useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
-  useEffect(function(){
-    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
-    numBarsRef.current=nb;
-    totalStepsRef.current=nb*SPB;
-  },[bars,SPB]);
 
   useEffect(function(){
     subdivRef.current=subdiv;
