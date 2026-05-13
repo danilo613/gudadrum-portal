@@ -329,16 +329,17 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
-  // sectionKeyが変わった時にautoPlayなら自動継続
+  // autoPlay+patternDataが揃ったら自動再生
   useEffect(function(){
     if(autoPlay && patternData) {
+      doStop();
       initAudio(function(){
         stepRef.current=0;
         setPlaying(true);
         doStart();
       });
     }
-  },[sectionKey]);
+  },[sectionKey, autoPlay, patternData]);
   useEffect(function(){loopCompleteRef.current=onLoopComplete;},[onLoopComplete]);
   useEffect(function(){
     subdivRef.current=subdiv;
