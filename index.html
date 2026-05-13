@@ -3655,7 +3655,7 @@ function App() {
                 {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
                 {/* 曲選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
-                  {(isFromAdmin||isInstructor?["waterlily","dreamy","aoi"]:scoreList).map(id=>(
+                  {scoreList.map(id=>(
                     <button key={id} onClick={()=>{setCurrentScoreId(id);}}
                       style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:currentScoreId===id?"#4B3621":"#fff",color:currentScoreId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {SCORE_ID_TO_NAME[id]||id}
