@@ -331,8 +331,15 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   },[subdiv]);
 
   useEffect(function(){
-    // patternDataがundefinedの場合は何もしない（ロード中）
-    if(!patternData) return;
+    // patternDataがない場合はグリッドをクリア
+    var total = SPB * 8;
+    if(!patternData){
+      var ep={};
+      COLORS.forEach(function(c){ep[c]=new Array(total).fill(0);});
+      setLeft(ep); setRight(ep);
+      leftRef.current=ep; rightRef.current=ep;
+      return;
+    }
     var total = SPB * 8;
     var lp={}, rp={};
     COLORS.forEach(function(c){
@@ -353,7 +360,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     setLeft(lp); setRight(rp);
     leftRef.current=lp; rightRef.current=rp;
     if(startTime) setSecTime(startTime);
-  },[patternData,startTime,subdivProp,scoreLoading]);
+  },[patternData,startTime,subdivProp]);
 
   useEffect(function(){return function(){doStop();};},[]);
 
@@ -1371,32 +1378,8 @@ function App() {
   }
 
   async function gasRead(params) {
-    return new Promise((resolve, reject) => {
-      const cbName = "gasCb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-      window[cbName] = function(data) {
-        delete window[cbName];
-        document.getElementById(cbName) && document.getElementById(cbName).remove();
-        resolve(data);
-      };
-      const script = document.createElement("script");
-      script.id = cbName;
-      const urlParams = new URLSearchParams(params);
-      urlParams.set("callback", cbName);
-      script.src = "https://script.google.com/macros/s/AKfycbxd_XHX5qnOf-pS7xBztHHbYll6bgwZ7J-Hno6AbJOjlR8C1WD5k4s_D7xszBOir6HF0w/exec?" + urlParams.toString();
-      script.onerror = function() {
-        delete window[cbName];
-        script.remove();
-        reject(new Error("GAS request failed"));
-      };
-      document.body.appendChild(script);
-      setTimeout(() => {
-        if (window[cbName]) {
-          delete window[cbName];
-          script.remove();
-          reject(new Error("GAS request timeout"));
-        }
-      }, 10000);
-    });
+    // Vercelプロキシ経由（gasWriteと同じルート）
+    return gasWrite(params);
   }
 
   async function loadPurchasedScores(name) {
@@ -1775,7 +1758,6 @@ function App() {
             {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
             {/* ScorePlayer（編集モード） */}
             <ScorePlayer
-              key={scoreEditId+"-"+scoreEditSec}
               scoreId={scoreEditId}
               sectionKey={scoreEditSec}
               sectionLabel={{
@@ -3646,14 +3628,12 @@ function App() {
         {(isFromAdmin || scoreList.length > 0) && (
           <div style={{marginBottom:8}}>
             <button onClick={()=>{
+              const id=scoreList.length>0?scoreList[0]:"waterlily";
               if(!scorePage){
-                const id=scoreList.length>0?scoreList[0]:"waterlily";
                 setCurrentScoreId(id);
                 setScoreSection("intro");
-                // データ取得してから開く
-                loadAllScorePatterns().then(function(){
-                  setScorePage(true);
-                });
+                setScorePage(true);
+                loadAllScorePatterns();
               } else {
                 setScorePage(false);
               }
@@ -3683,7 +3663,6 @@ function App() {
                   ))}
                 </div>
                 <ScorePlayer
-                  key={currentScoreId+"-"+scoreSection}
                   scoreId={currentScoreId}
                   sectionKey={scoreSection}
                   sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
