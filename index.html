@@ -353,6 +353,7 @@ function makeEmptyPat() {
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2 }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
+  console.log("ScorePlayer instrument2=", instrument2, "COLORS2=", COLORS2);
   var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
   var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
   var DOTS2 = instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
@@ -401,6 +402,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var rightS=useState(function(){return initPat("right");}); var right=rightS[0]; var setRight=rightS[1];
   var playingS=useState(false); var playing=playingS[0]; var setPlaying=playingS[1];
   var bpmS=useState(sharedBpm||80);
+  var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
   var highlightColorS=useState(null); var highlightColor=highlightColorS[0]; var setHighlightColor=highlightColorS[1];
   var startBarS=useState(0); var startBar=startBarS[0]; var setStartBar=startBarS[1]; var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
   var setBpm=function(v){ setBpmLocal(typeof v==="function"?v(bpmS[0]):v); if(onBpmChange) onBpmChange(typeof v==="function"?v(bpmS[0]):v); };
@@ -557,14 +559,27 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       actxRef.current.decodeAudioData(arr.buffer,function(buf){
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
-          var soundUrls=getSoundUrls(scoreId);
-          var skeys=Object.keys(soundUrls);var sdone=0;
-          if(!skeys.length&&cb){cb();return;}
+          // 1台目の音源
+          var soundUrls=getSoundUrls(scoreId, scoreId==="iridescence"?soundType:(scoreId==="aoi"?"arcane":null));
+          var skeys=Object.keys(soundUrls);
+          // 2台目の音源
+          var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
+          var skeys2=Object.keys(soundUrls2);
+          var total=skeys.length+skeys2.length;
+          if(total===0){if(cb)cb();return;}
+          var loaded=0;
+          function onLoad(){loaded++;if(loaded===total&&cb)cb();}
           skeys.forEach(function(sk){
             fetch(soundUrls[sk]).then(function(r){return r.arrayBuffer();})
               .then(function(b){return actxRef.current.decodeAudioData(b);})
-              .then(function(ab){bufsRef.current[sk]=ab;sdone++;if(sdone===skeys.length&&cb)cb();})
-              .catch(function(){sdone++;if(sdone===skeys.length&&cb)cb();});
+              .then(function(ab){bufsRef.current[sk]=ab;onLoad();})
+              .catch(function(){onLoad();});
+          });
+          skeys2.forEach(function(sk2){
+            fetch(soundUrls2[sk2]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufs2Ref.current[sk2]=ab;onLoad();})
+              .catch(function(){onLoad();});
           });
         }
       },function(){done++;if(done===keys.length&&cb)cb();});
@@ -1055,14 +1070,27 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       actxRef.current.decodeAudioData(arr.buffer,function(buf){
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
-          var soundUrls=getSoundUrls(scoreId);
-          var skeys=Object.keys(soundUrls);var sdone=0;
-          if(!skeys.length&&cb){cb();return;}
+          // 1台目の音源
+          var soundUrls=getSoundUrls(scoreId, scoreId==="iridescence"?soundType:(scoreId==="aoi"?"arcane":null));
+          var skeys=Object.keys(soundUrls);
+          // 2台目の音源
+          var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
+          var skeys2=Object.keys(soundUrls2);
+          var total=skeys.length+skeys2.length;
+          if(total===0){if(cb)cb();return;}
+          var loaded=0;
+          function onLoad(){loaded++;if(loaded===total&&cb)cb();}
           skeys.forEach(function(sk){
             fetch(soundUrls[sk]).then(function(r){return r.arrayBuffer();})
               .then(function(b){return actxRef.current.decodeAudioData(b);})
-              .then(function(ab){bufsRef.current[sk]=ab;sdone++;if(sdone===skeys.length&&cb)cb();})
-              .catch(function(){sdone++;if(sdone===skeys.length&&cb)cb();});
+              .then(function(ab){bufsRef.current[sk]=ab;onLoad();})
+              .catch(function(){onLoad();});
+          });
+          skeys2.forEach(function(sk2){
+            fetch(soundUrls2[sk2]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufs2Ref.current[sk2]=ab;onLoad();})
+              .catch(function(){onLoad();});
           });
         }
       },function(){done++;if(done===keys.length&&cb)cb();});
@@ -1601,6 +1629,23 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       </div>
 
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3",flexWrap:"wrap"}}>
+        {!canEdit&&scoreId==="iridescence"&&(
+          <div style={{display:"flex",alignItems:"center",gap:6,marginRight:8}}>
+            <span style={{fontSize:10,color:C.label,fontWeight:600}}>音階</span>
+            <button onClick={function(){setSoundType("enigma");actxRef.current=null;bufsRef.current={};}}
+              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+                background:soundType==="enigma"?"#708238":"#fff",color:soundType==="enigma"?"#fff":C.label,
+                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              秘ノ音
+            </button>
+            <button onClick={function(){setSoundType("arcane");actxRef.current=null;bufsRef.current={};}}
+              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+                background:soundType==="arcane"?"#708238":"#fff",color:soundType==="arcane"?"#fff":C.label,
+                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              響ノ音
+            </button>
+          </div>
+        )}
         <span style={{fontSize:10,fontWeight:700,color:C.label}}>METRO</span>
         <div onClick={function(){setMetroOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
           {Sw(metroOn)}<span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
@@ -4767,7 +4812,7 @@ function App() {
                   scoreLoading={scoreLoading}
                   scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi"||currentScoreId==="megumi")?"dreamy":"funenone"}
                   instrument2={currentScoreId==="megumi"?"arcane":null}
-                  patternData2={(currentScoreId==="megumi"&&(scorePatterns["megumi"]||{})[scoreSection])?{left:((scorePatterns["megumi"]||{})[scoreSection].left2||{}),right:((scorePatterns["megumi"]||{})[scoreSection].right2||{})}:null}
+                  patternData2={currentScoreId==="megumi"?{left:((scorePatterns["megumi"]||{})[scoreSection]||{}).left2||{},right:((scorePatterns["megumi"]||{})[scoreSection]||{}).right2||{}}:null}
                   isQueuePlaying={isQueuePlay}
                   autoPlay={isQueuePlay}
                   onLoopComplete={isQueuePlay?function(){
