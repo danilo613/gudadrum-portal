@@ -4214,7 +4214,12 @@ function App() {
                   ))}
                 </div>
                 <ScorePlayer
-                  key={currentScoreId+"-"+scoreSection}
+                  key={(function(){
+                    var sec = SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
+                    var cur = sec.find(function(s){return s[0]===scoreSection;});
+                    var subdiv = cur?cur[2]:"triplet";
+                    return currentScoreId+"-"+subdiv;
+                  })()}
                   scoreId={currentScoreId}
                   sectionKey={scoreSection}
                   sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
