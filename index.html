@@ -523,9 +523,18 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   }
 
-  function doStart(){
+  function doStart(startAtTime){
     if(iidRef.current)clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+    var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    if(startAtTime && actxRef.current){
+      // 指定時刻まで待ってからsetIntervalを開始
+      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000));
+      setTimeout(function(){
+        iidRef.current=setInterval(tick, msPerStep);
+      }, waitMs);
+    } else {
+      iidRef.current=setInterval(tick, msPerStep);
+    }
   }
 
   function doStop(){
@@ -548,11 +557,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         for(var i=0;i<4;i++){
           woodClick(i===0&&metroAccentRef.current, startAt+i*secPerBeat);
         }
-        // 4拍後に本番開始
-        var delayMs=Math.round((4*secPerBeat+0.05)*1000);
-        setTimeout(function(){
-          setPlaying(true);doStart();
-        }, delayMs);
+        // 4拍後の正確な時刻にdoStartを指定
+        var playAt = startAt + 4*secPerBeat;
+        setPlaying(true);
+        doStart(playAt);
       } else {
         setPlaying(true);doStart();
       }
@@ -936,9 +944,18 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   }
 
-  function doStart(){
+  function doStart(startAtTime){
     if(iidRef.current)clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+    var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    if(startAtTime && actxRef.current){
+      // 指定時刻まで待ってからsetIntervalを開始
+      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000));
+      setTimeout(function(){
+        iidRef.current=setInterval(tick, msPerStep);
+      }, waitMs);
+    } else {
+      iidRef.current=setInterval(tick, msPerStep);
+    }
   }
 
   function doStop(){
