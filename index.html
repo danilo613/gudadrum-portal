@@ -555,8 +555,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       } else {
         countInStepsRef.current = 0;
       }
+      doStart(); // setPlayingより先にタイマーを開始
       setPlaying(true);
-      doStart(); // 通常のdoStart（startAtTime不要）
     });
   }
 
