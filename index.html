@@ -326,6 +326,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
   var onSectionEndRef=useRef(onSectionEnd);
   var barsRef=useRef(parseInt(bars)||8);
+  var countInStepsRef=useRef(0); // カウントイン残りステップ数（0=カウントインなし）
 
 
   useEffect(function(){leftRef.current=left;},[left]);
@@ -383,8 +384,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   useEffect(function(){
     console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
-    // patternDataのmetaからbarsとsubdivを取得してtotalを正確に計算
-    var metaBars = patternData&&patternData.meta&&patternData.meta.bars?parseInt(patternData.meta.bars)||8:parseInt(bars)||8;
+    // meta.barsが存在する時だけその値を使う。なければ常に8（デフォルト）
+    var metaBars = (patternData&&patternData.meta&&patternData.meta.bars)?parseInt(patternData.meta.bars)||8:8;
     var nb = Math.max(2, Math.min(metaBars, 32));
     var spb = subdivRef.current==="16th"?16:12;
     var total = nb * spb;
@@ -404,6 +405,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(patternData.meta.bars){
         setBars(String(patternData.meta.bars));
         barsRef.current=Math.max(2,Math.min(parseInt(patternData.meta.bars)||8,32));
+      } else {
+        setBars("8");
+        barsRef.current=8;
       }
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
       if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
@@ -479,6 +483,16 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
+    // カウントイン処理
+    if(countInStepsRef.current > 0){
+      var spbNow3=subdivRef.current==="16th"?4:3;
+      var remaining=countInStepsRef.current;
+      var totalCount=4*spbNow3;
+      var countPos=totalCount-remaining;
+      if(countPos%spbNow3===0) woodClick(countPos===0&&metroAccentRef.current);
+      countInStepsRef.current--;
+      return; // まだ本番を始めない
+    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
@@ -524,6 +538,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
+    countInStepsRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
@@ -888,6 +903,16 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
+    // カウントイン処理
+    if(countInStepsRef.current > 0){
+      var spbNow3=subdivRef.current==="16th"?4:3;
+      var remaining=countInStepsRef.current;
+      var totalCount=4*spbNow3;
+      var countPos=totalCount-remaining;
+      if(countPos%spbNow3===0) woodClick(countPos===0&&metroAccentRef.current);
+      countInStepsRef.current--;
+      return; // まだ本番を始めない
+    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
@@ -933,6 +958,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
+    countInStepsRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
