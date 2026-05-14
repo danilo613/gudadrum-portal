@@ -348,14 +348,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   },[sharedMetroMode]);
   useEffect(function(){
     console.log("ScorePlayer MOUNTED:", scoreId, sectionKey, "isQueuePlaying=", isQueuePlaying);
-    // 通し再生中ならマウント時に自動再生
-    if(isQueuePlaying) {
-      initAudio(function(){
+    // 音源を先読みして間をなくす
+    initAudio(function(){
+      if(isQueuePlaying) {
         stepRef.current=0;
         setPlaying(true);
         doStart();
-      });
-    }
+      }
+    });
     return function(){ console.log("ScorePlayer UNMOUNTED:", scoreId, sectionKey); };
   },[]);
   useEffect(function(){barsRef.current=Math.max(2,Math.min(parseInt(bars)||8,32));},[bars]);
