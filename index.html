@@ -1523,7 +1523,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
-                      <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
+                      <circle cx={pos.cx} cy={pos.cy}
+                        r={color===highlightColor?17:15}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
+                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
+                        style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
                           fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
@@ -1559,7 +1563,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
-                      <circle cx={pos.cx} cy={pos.cy} r="15" fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>
+                      <circle cx={pos.cx} cy={pos.cy}
+                        r={color===highlightColor?17:15}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
+                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
+                        style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
                           fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
