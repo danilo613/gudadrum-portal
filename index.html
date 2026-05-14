@@ -1640,6 +1640,7 @@ function App() {
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
   const [pointNote, setPointNote] = useState("");
+  const [adjustTargetPoints, setAdjustTargetPoints] = useState("");
   const [feedbackName, setFeedbackName] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
   const [feedbackStatus, setFeedbackStatus] = useState("");
@@ -1740,7 +1741,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycby6nxzhU-dAC1c6MnLgeI1TthbiJ96IMu-MK-V9VeVUHQLuTR6O6svQRmTySL8ExQc6Lg/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -1762,7 +1763,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycby6nxzhU-dAC1c6MnLgeI1TthbiJ96IMu-MK-V9VeVUHQLuTR6O6svQRmTySL8ExQc6Lg/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -1783,7 +1784,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?action=faq&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycby6nxzhU-dAC1c6MnLgeI1TthbiJ96IMu-MK-V9VeVUHQLuTR6O6svQRmTySL8ExQc6Lg/exec?action=faq&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -2052,7 +2053,7 @@ function App() {
       script.id = cbName;
       var urlParams = new URLSearchParams(params);
       urlParams.set("callback", cbName);
-      script.src = "https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec?" + urlParams.toString();
+      script.src = "https://script.google.com/macros/s/AKfycby6nxzhU-dAC1c6MnLgeI1TthbiJ96IMu-MK-V9VeVUHQLuTR6O6svQRmTySL8ExQc6Lg/exec?" + urlParams.toString();
       script.onerror = function() {
         delete window[cbName];
         script.remove();
@@ -2379,7 +2380,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbx39S46l_JGvlCmHP3ELFhQ2xLUUpRQSyLQSGcn0ipVC2pteT8qP2n26UyXux-q79ctrw/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycby6nxzhU-dAC1c6MnLgeI1TthbiJ96IMu-MK-V9VeVUHQLuTR6O6svQRmTySL8ExQc6Lg/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -3111,6 +3112,56 @@ function App() {
                   <option value="">-- 選択してください --</option>
                   {INSTRUCTORS.map(n=><option key={n} value={n}>{n}</option>)}
                 </select>
+              </div>
+            )}
+            {/* 累計ポイント調整 */}
+            {!isInstructor&&(
+              <div style={{marginBottom:16,padding:"10px 12px",background:"rgba(231,76,60,0.06)",borderRadius:10,border:"1px solid rgba(231,76,60,0.2)"}}>
+                <label style={{fontSize:11,color:"#c0392b",display:"block",marginBottom:6,fontWeight:600}}>🔧 累計ポイントを直接設定（DANiLO専用）</label>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <input type="number" value={adjustTargetPoints} onChange={e=>setAdjustTargetPoints(e.target.value)}
+                    style={{width:100,border:"1px solid #e8a090",borderRadius:8,padding:"6px 10px",fontSize:13,color:C.choco}}
+                    placeholder="目標P"/>
+                  <span style={{fontSize:12,color:C.label}}>Pに設定</span>
+                  <button onClick={function(){
+                    if(!adjustTargetPoints) return;
+                    var tp=parseInt(adjustTargetPoints);
+                    if(isNaN(tp)){setPointMsg("❌ 数値を入力してください");return;}
+                    gasWrite({action:"setpoints",name:pointModal.name,points:String(tp),note:"累計ポイント調整",recorder:"DANiLO"})
+                    .then(function(d){
+                      if(d.error){setPointMsg("❌ "+d.error);}
+                      else{setPointMsg("✅ "+tp+"Pに設定しました");setAdjustTargetPoints("");}
+                    });
+                  }} style={{padding:"6px 14px",borderRadius:8,border:"none",background:"#c0392b",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                    設定
+                  </button>
+                </div>
+              </div>
+            )}
+            {/* 累計ポイント調整 */}
+            {!isInstructor&&(
+              <div style={{marginBottom:16,padding:"10px 12px",background:"rgba(231,76,60,0.07)",borderRadius:10,border:"1px solid rgba(231,76,60,0.2)"}}>
+                <label style={{fontSize:11,color:"#c0392b",display:"block",marginBottom:6,fontWeight:600}}>🔧 累計ポイントを直接設定</label>
+                <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                  <input type="number" id="directPointInput" placeholder={String(pointModal.points)}
+                    style={{flex:1,border:"1px solid #e8d5d5",borderRadius:8,padding:"8px 12px",fontSize:13,color:C.choco}}/>
+                  <span style={{fontSize:13,color:C.label}}>P</span>
+                  <button onClick={function(){
+                    var val=parseInt(document.getElementById("directPointInput").value);
+                    if(isNaN(val)||val<0){setPointMsg("❌ 正しい数値を入力してください");return;}
+                    setPointMsg("保存中…");
+                    gasWrite({action:"setpoints",name:pointModal.name,points:String(val),note:"累計ポイント調整",recorder:"DANiLO"}).then(function(d){
+                      if(d.error){setPointMsg("❌ "+d.error);}
+                      else{
+                        setPointMsg("✅ 調整完了！");
+                        setMembers(function(prev){return prev.map(function(m){return m.name===pointModal.name?Object.assign({},m,{ポイント:val}):m;});});
+                        setPointModal(function(prev){return Object.assign({},prev,{points:val});});
+                      }
+                    });
+                  }} style={{padding:"8px 14px",borderRadius:8,border:"none",background:"#c0392b",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
+                    設定
+                  </button>
+                </div>
               </div>
             )}
             <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>付与・減算するポイント数</label>
