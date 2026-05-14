@@ -523,16 +523,17 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   }
 
-  function doStart(startAtTime){
+  function doStart(startAtTime, onReady){
     if(iidRef.current)clearInterval(iidRef.current);
     var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(startAtTime && actxRef.current){
-      // 指定時刻まで待ってからsetIntervalを開始
       var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000));
       setTimeout(function(){
+        if(onReady) onReady();
         iidRef.current=setInterval(tick, msPerStep);
       }, waitMs);
     } else {
+      if(onReady) onReady();
       iidRef.current=setInterval(tick, msPerStep);
     }
   }
@@ -559,8 +560,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         }
         // 4拍後の正確な時刻にdoStartを指定
         var playAt = startAt + 4*secPerBeat;
-        setPlaying(true);
-        doStart(playAt);
+        doStart(playAt, function(){ setPlaying(true); });
       } else {
         setPlaying(true);doStart();
       }
@@ -944,16 +944,17 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   }
 
-  function doStart(startAtTime){
+  function doStart(startAtTime, onReady){
     if(iidRef.current)clearInterval(iidRef.current);
     var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(startAtTime && actxRef.current){
-      // 指定時刻まで待ってからsetIntervalを開始
       var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000));
       setTimeout(function(){
+        if(onReady) onReady();
         iidRef.current=setInterval(tick, msPerStep);
       }, waitMs);
     } else {
+      if(onReady) onReady();
       iidRef.current=setInterval(tick, msPerStep);
     }
   }
