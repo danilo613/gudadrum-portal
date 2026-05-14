@@ -4457,9 +4457,16 @@ function App() {
                   </div>
                   {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl])=>(
                     <button key={key} onClick={function(){
-                      setScoreSection(key);
                       setSelectedSecs(function(prev){
-                        return prev.includes(key)?prev.filter(function(k){return k!==key;}):[].concat(prev,[key]);
+                        if(prev.includes(key)){
+                          // 解除：表示セクションを別のに切り替え
+                          var next=prev.filter(function(k){return k!==key;});
+                          if(scoreSection===key && next.length>0) setScoreSection(next[next.length-1]);
+                          return next;
+                        } else {
+                          setScoreSection(key);
+                          return [].concat(prev,[key]);
+                        }
                       });
                     }}
                       style={{padding:"4px 12px",borderRadius:8,
