@@ -1300,6 +1300,17 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       </div>
 
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3",flexWrap:"wrap"}}>
+        {!canEdit&&(
+          <div style={{display:"flex",alignItems:"center",gap:6,marginRight:8}}>
+            <span style={{fontSize:10,color:C.label,fontWeight:600}}>カウントイン</span>
+            <button onClick={function(){setCountIn(function(v){return !v;})}}
+              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+                background:countIn?"#708238":"#fff",color:countIn?"#fff":C.label,
+                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              {countIn?"ON":"OFF"}
+            </button>
+          </div>
+        )}
         <span style={{fontSize:10,fontWeight:700,color:C.label}}>METRO</span>
         <div onClick={function(){setMetroOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
           {Sw(metroOn)}<span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
