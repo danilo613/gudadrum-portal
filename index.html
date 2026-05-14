@@ -4426,6 +4426,23 @@ function App() {
                       {SCORE_ID_TO_NAME[id]||id}
                     </button>
                   ))}
+                  <div style={{marginLeft:"auto",display:"flex",gap:4,flexShrink:0}}>
+                    <button onClick={function(){
+                      var sections=SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
+                      var cur=sections.find(function(s){return s[0]===scoreSection;});
+                      var nt=cur?cur[2]:"triplet";
+                      var pd=(scorePatterns[currentScoreId]||{})[scoreSection];
+                      var lbl=cur?cur[1]:scoreSection;
+                      printSection(currentScoreId,scoreSection,lbl,nt,pd,scorePatterns[currentScoreId]||{});
+                    }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                      印刷（この）
+                    </button>
+                    <button onClick={function(){
+                      printAllSections(currentScoreId,scorePatterns[currentScoreId]||{});
+                    }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                      印刷（全）
+                    </button>
+                  </div>
                 </div>
                 {/* セクション選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
