@@ -345,7 +345,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(sharedMetroMode){ setMetroModeLocal(sharedMetroMode); metroModeRef.current=sharedMetroMode; }
   },[sharedMetroMode]);
   useEffect(function(){
-    console.log("ScorePlayer MOUNTED:", scoreId, sectionKey, "isQueuePlaying=", isQueuePlaying);
+    console.log("ScorePlayer MOUNTED:", scoreId, sectionKey, "isQueuePlaying=", isQueuePlaying, "canEdit=", canEdit);
     // 音源を先読みして間をなくす
     initAudio(function(){
       if(isQueuePlaying) {
@@ -1368,6 +1368,21 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   return (
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
+      {/* 印刷ボタン */}
+      {!canEdit&&(
+        <div style={{display:"flex",justifyContent:"flex-end",marginBottom:4,gap:4}}>
+          <button onClick={handlePrint}
+            style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+            印刷（このセクション）
+          </button>
+          {onPrintAll&&(
+            <button onClick={onPrintAll}
+              style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              印刷（全セクション）
+            </button>
+          )}
+        </div>
+      )}
       {/* セクション情報 + 開始時間 */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:8,gap:2}}>
         <p style={{fontSize:16,fontWeight:700,color:C.label,margin:0}}>{sectionLabel}</p>
