@@ -199,6 +199,30 @@ const METRO_SOUNDS_B64 = {
 };
 
 // 音源はVercelのpublic/soundsから読み込む
+const SCORE_HIBIKI_COLORS = {
+  turquoise: "#00C8C0",
+  steelgray: "#707880",
+  salmon:    "#FF6B6B",
+  royalblue: "#2050C0",
+  gold:      "#D4A020",
+  emerald:   "#50B080",
+  charcoal:  "#2C2A28",
+  sage:      "#5C6B5A",
+  plum:      "#5845C0",
+};
+const SCORE_HIBIKI_PALE_COLORS = {
+  turquoise: "#B0F0EE",
+  steelgray: "#D8D8DC",
+  salmon:    "#FFD0D0",
+  royalblue: "#B0C0E8",
+  gold:      "#F0DCA0",
+  emerald:   "#B0DCC8",
+  charcoal:  "#A0A0A0",
+  sage:      "#C0C8BE",
+  plum:      "#C8C0F0",
+};
+const SCORE_HIBIKI_COLORS_ORDER = ["turquoise","steelgray","salmon","royalblue","gold","emerald","charcoal","sage","plum"];
+
 const SCORE_SOUND_URLS = {
   default: {
     yellow:"/sounds/yellow.mp3",
@@ -232,6 +256,7 @@ const SCORE_ID_TO_NAME = {
   dreamy: "dreamy EYES",
   aoi: "蒼〜aoi〜",
   iridescence: "iridescence",
+  megumi: "めぐみの空",
 };
 
 const SCORE_SECTIONS = {
@@ -239,6 +264,23 @@ const SCORE_SECTIONS = {
   dreamy: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["ameloPrime","Aメロ'","16th"],["bmelo","Bメロ","16th"],["ameloPrime2","Aメロ'","16th"],["bmelo2","Bメロ","16th"],["cmelo","Cメロ","16th"],["cmeloPrime","Cメロ'","16th"],["sabi","サビ","16th"],["interlude1","間奏①","triplet"],["interlude1p","間奏①'","triplet"],["interlude2","間奏②","triplet"],["interlude2p","間奏②'","triplet"],["outro","アウトロ","16th"]],
   aoi: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
   iridescence: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["bmelo","Bメロ","16th"],["amelo2","Aメロ","16th"],["bmelo2","Bメロ","16th"],["introPrime","イントロ'","16th"],["sabi","サビ","16th"],["sabiPrime","サビ'","16th"],["maai","間合い","16th"],["intro2","イントロ","16th"],["amelo3","Aメロ","16th"],["bmelo3","Bメロ","16th"],["outro","アウトロ","16th"]],
+  megumi: [
+    ["intro","イントロ","16th"],
+    ["amelo","Aメロ","16th"],
+    ["introPrime","イントロ'","16th"],
+    ["amelo2","Aメロ②","16th"],
+    ["sabi","サビ","16th"],
+    ["amelo3","Aメロ③","16th"],
+    ["sabi2","サビ","triplet"],
+    ["interlude","間奏","triplet"],
+    ["sabi3","サビ","triplet"],
+    ["sabi4","サビ②","16th"],
+    ["outro","アウトロ","triplet"],
+    ["outro2","アウトロ②","triplet"],
+    ["outro3","アウトロ③","triplet"],
+    ["outro4","アウトロ④","triplet"],
+    ["sabiF","サビ","16th"],
+  ],
 };
 
 const SCORE_DOT_COLORS = {"yellow":"#F5E642","red":"#E83020","purple":"#8844CC","green":"#1A8A40","brown":"#C4A882","cyan":"#00BFEF","orange":"#F07020","pink":"#F020B0","lime":"#8CC830"};
@@ -2113,7 +2155,7 @@ function App() {
   }
 
   function buildSectionHtml(scoreId, secKey, secLabel, nt, pd, allPatterns) {
-    var DOTS_P = (scoreId==="dreamy"||scoreId==="iridescence"||scoreId==="aoi")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS_P = (scoreId==="dreamy"||scoreId==="iridescence"||scoreId==="aoi"||scoreId==="megumi")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
     var scoreTitle = SCORE_ID_TO_NAME[scoreId]||scoreId;
     var sections = SCORE_SECTIONS[scoreId]||SCORE_SECTIONS.waterlily;
     var spb = nt==="16th"?16:12;
@@ -2566,7 +2608,7 @@ function App() {
             <div style={{marginBottom:10}}>
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"]].map(([id,lbl])=>(
+                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
@@ -2599,7 +2641,7 @@ function App() {
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
               scoreLoading={scoreLoading}
-              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi")?"dreamy":"funenone"}
+              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi")?"dreamy":"funenone"}
               subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               onSave={saveScorePattern}
             />
@@ -4577,7 +4619,7 @@ function App() {
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
                   scoreLoading={scoreLoading}
-                  scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi")?"dreamy":"funenone"}
+                  scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi"||currentScoreId==="megumi")?"dreamy":"funenone"}
                   isQueuePlaying={isQueuePlay}
                   autoPlay={isQueuePlay}
                   onLoopComplete={isQueuePlay?function(){
