@@ -214,12 +214,14 @@ const SCORE_ID_TO_NAME = {
   waterlily: "water lily〜水面〜",
   dreamy: "dreamy EYES",
   aoi: "蒼〜aoi〜",
+  iridescence: "iridescence",
 };
 
 const SCORE_SECTIONS = {
   waterlily: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
   dreamy: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["ameloPrime","Aメロ'","16th"],["bmelo","Bメロ","16th"],["ameloPrime2","Aメロ'","16th"],["bmelo2","Bメロ","16th"],["cmelo","Cメロ","16th"],["cmeloPrime","Cメロ'","16th"],["sabi","サビ","16th"],["interlude1","間奏①","triplet"],["interlude1p","間奏①'","triplet"],["interlude2","間奏②","triplet"],["interlude2p","間奏②'","triplet"],["outro","アウトロ","16th"]],
   aoi: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
+  iridescence: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["bmelo","Bメロ","16th"],["amelo2","Aメロ","16th"],["bmelo2","Bメロ","16th"],["introPrime","イントロ'","16th"],["sabi","サビ","16th"],["sabiPrime","サビ'","16th"],["maai","間合い","16th"],["intro2","イントロ","16th"],["amelo3","Aメロ","16th"],["bmelo3","Bメロ","16th"],["outro","アウトロ","16th"]],
 };
 
 const SCORE_DOT_COLORS = {"yellow":"#F5E642","red":"#E83020","purple":"#8844CC","green":"#1A8A40","brown":"#C4A882","cyan":"#00BFEF","orange":"#F07020","pink":"#F020B0","lime":"#8CC830"};
@@ -2512,7 +2514,7 @@ function App() {
             <div style={{marginBottom:10}}>
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
+                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
