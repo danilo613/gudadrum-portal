@@ -200,16 +200,33 @@ const METRO_SOUNDS_B64 = {
 
 // 音源はVercelのpublic/soundsから読み込む
 const SCORE_SOUND_URLS = {
-  yellow:"/sounds/yellow.mp3",
-  red:"/sounds/red.mp3",
-  purple:"/sounds/purple.mp3",
-  green:"/sounds/green.mp3",
-  brown:"/sounds/brown.mp3",
-  cyan:"/sounds/cyan.mp3",
-  orange:"/sounds/orange.mp3",
-  pink:"/sounds/pink.mp3",
-  lime:"/sounds/lime.mp3",
+  default: {
+    yellow:"/sounds/yellow.mp3",
+    red:"/sounds/red.mp3",
+    purple:"/sounds/purple.mp3",
+    green:"/sounds/green.mp3",
+    brown:"/sounds/brown.mp3",
+    cyan:"/sounds/cyan.mp3",
+    orange:"/sounds/orange.mp3",
+    pink:"/sounds/pink.mp3",
+    lime:"/sounds/lime.mp3",
+  },
+  enigma: {
+    yellow:"/sounds/enigma_yellow.mp3",
+    red:"/sounds/enigma_red.mp3",
+    purple:"/sounds/enigma_purple.mp3",
+    green:"/sounds/enigma_green.mp3",
+    brown:"/sounds/enigma_brown.mp3",
+    cyan:"/sounds/enigma_cyan.mp3",
+    orange:"/sounds/enigma_orange.mp3",
+    pink:"/sounds/enigma_pink.mp3",
+    lime:"/sounds/enigma_lime.mp3",
+  },
 };
+function getSoundUrls(scoreId) {
+  if(scoreId==="iridescence") return SCORE_SOUND_URLS.enigma;
+  return SCORE_SOUND_URLS.default;
+}
 const SCORE_ID_TO_NAME = {
   waterlily: "water lily〜水面〜",
   dreamy: "dreamy EYES",
@@ -442,10 +459,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       actxRef.current.decodeAudioData(arr.buffer,function(buf){
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
-          var skeys=Object.keys(SCORE_SOUND_URLS);var sdone=0;
+          var soundUrls=getSoundUrls(scoreId);
+          var skeys=Object.keys(soundUrls);var sdone=0;
           if(!skeys.length&&cb){cb();return;}
           skeys.forEach(function(sk){
-            fetch(SCORE_SOUND_URLS[sk]).then(function(r){return r.arrayBuffer();})
+            fetch(soundUrls[sk]).then(function(r){return r.arrayBuffer();})
               .then(function(b){return actxRef.current.decodeAudioData(b);})
               .then(function(ab){bufsRef.current[sk]=ab;sdone++;if(sdone===skeys.length&&cb)cb();})
               .catch(function(){sdone++;if(sdone===skeys.length&&cb)cb();});
@@ -915,10 +933,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       actxRef.current.decodeAudioData(arr.buffer,function(buf){
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
-          var skeys=Object.keys(SCORE_SOUND_URLS);var sdone=0;
+          var soundUrls=getSoundUrls(scoreId);
+          var skeys=Object.keys(soundUrls);var sdone=0;
           if(!skeys.length&&cb){cb();return;}
           skeys.forEach(function(sk){
-            fetch(SCORE_SOUND_URLS[sk]).then(function(r){return r.arrayBuffer();})
+            fetch(soundUrls[sk]).then(function(r){return r.arrayBuffer();})
               .then(function(b){return actxRef.current.decodeAudioData(b);})
               .then(function(ab){bufsRef.current[sk]=ab;sdone++;if(sdone===skeys.length&&cb)cb();})
               .catch(function(){sdone++;if(sdone===skeys.length&&cb)cb();});
