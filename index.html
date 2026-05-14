@@ -1463,7 +1463,6 @@ function App() {
   const playQueueRef    = React.useRef([]);
   const playQueueIdxRef = React.useRef(0);
   const isQueuePlayRef  = React.useRef(false);
-  const loadedKeysRef   = React.useRef({});
 
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
@@ -4172,13 +4171,7 @@ function App() {
                   ))}
                 </div>
                 <ScorePlayer
-                  key={(function(){
-                    var k=currentScoreId+"-"+scoreSection;
-                    if(!loadedKeysRef.current[k] && !scoreLoading && (scorePatterns[currentScoreId]||{})[scoreSection]){
-                      loadedKeysRef.current[k]=true;
-                    }
-                    return k+"-"+(loadedKeysRef.current[k]?"loaded":"empty");
-                  })()}
+                  key={currentScoreId+"-"+scoreSection}
                   scoreId={currentScoreId}
                   sectionKey={scoreSection}
                   sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
