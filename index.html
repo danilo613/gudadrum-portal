@@ -3121,7 +3121,7 @@ function App() {
                 <div style={{display:"flex",gap:8,alignItems:"center"}}>
                   <input type="number" value={adjustTargetPoints} onChange={e=>setAdjustTargetPoints(e.target.value)}
                     style={{width:100,border:"1px solid #e8a090",borderRadius:8,padding:"6px 10px",fontSize:13,color:C.choco}}
-                    placeholder="目標P"/>
+                    placeholder={String(pointModal.points)}/>
                   <span style={{fontSize:12,color:C.label}}>Pに設定</span>
                   <button onClick={function(){
                     if(!adjustTargetPoints) return;
@@ -3139,31 +3139,7 @@ function App() {
               </div>
             )}
             {/* 累計ポイント調整 */}
-            {!isInstructor&&(
-              <div style={{marginBottom:16,padding:"10px 12px",background:"rgba(231,76,60,0.07)",borderRadius:10,border:"1px solid rgba(231,76,60,0.2)"}}>
-                <label style={{fontSize:11,color:"#c0392b",display:"block",marginBottom:6,fontWeight:600}}>🔧 累計ポイントを直接設定</label>
-                <div style={{display:"flex",gap:8,alignItems:"center"}}>
-                  <input type="number" id="directPointInput" placeholder={String(pointModal.points)}
-                    style={{flex:1,border:"1px solid #e8d5d5",borderRadius:8,padding:"8px 12px",fontSize:13,color:C.choco}}/>
-                  <span style={{fontSize:13,color:C.label}}>P</span>
-                  <button onClick={function(){
-                    var val=parseInt(document.getElementById("directPointInput").value);
-                    if(isNaN(val)||val<0){setPointMsg("❌ 正しい数値を入力してください");return;}
-                    setPointMsg("保存中…");
-                    gasWrite({action:"setpoints",name:pointModal.name,points:String(val),note:"累計ポイント調整",recorder:"DANiLO"}).then(function(d){
-                      if(d.error){setPointMsg("❌ "+d.error);}
-                      else{
-                        setPointMsg("✅ 調整完了！");
-                        setMembers(function(prev){return prev.map(function(m){return m.name===pointModal.name?Object.assign({},m,{ポイント:val}):m;});});
-                        setPointModal(function(prev){return Object.assign({},prev,{points:val});});
-                      }
-                    });
-                  }} style={{padding:"8px 14px",borderRadius:8,border:"none",background:"#c0392b",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
-                    設定
-                  </button>
-                </div>
-              </div>
-            )}
+            
             <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>付与・減算するポイント数</label>
             <input type="number" value={pointValue} onChange={e=>setPointValue(e.target.value)}
               min={isInstructor?"0":undefined}
