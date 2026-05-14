@@ -527,7 +527,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(iidRef.current)clearInterval(iidRef.current);
     var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(startAtTime && actxRef.current){
-      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000));
+      // setIntervalはwaitMs後に開始してmsPerStep後に最初のtickが来る
+      // なのでwaitMs - msPerStep後にsetIntervalを開始すると
+      // ちょうどstartAtTimeに最初のtickが来る
+      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000) - msPerStep);
       setTimeout(function(){
         if(onReady) onReady();
         iidRef.current=setInterval(tick, msPerStep);
@@ -948,7 +951,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(iidRef.current)clearInterval(iidRef.current);
     var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(startAtTime && actxRef.current){
-      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000));
+      // setIntervalはwaitMs後に開始してmsPerStep後に最初のtickが来る
+      // なのでwaitMs - msPerStep後にsetIntervalを開始すると
+      // ちょうどstartAtTimeに最初のtickが来る
+      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000) - msPerStep);
       setTimeout(function(){
         if(onReady) onReady();
         iidRef.current=setInterval(tick, msPerStep);
