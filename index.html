@@ -201,24 +201,24 @@ const METRO_SOUNDS_B64 = {
 // 音源はVercelのpublic/soundsから読み込む
 const SCORE_HIBIKI_COLORS = {
   turquoise: "#00C8C0",
-  steelgray: "#707880",
+  steelgray: "#A0A8B8",
   salmon:    "#FF6B6B",
   royalblue: "#2050C0",
   gold:      "#D4A020",
   emerald:   "#50B080",
   charcoal:  "#2C2A28",
-  sage:      "#5C6B5A",
+  sage:      "#244E2E",
   plum:      "#5845C0",
 };
 const SCORE_HIBIKI_PALE_COLORS = {
   turquoise: "#B0F0EE",
-  steelgray: "#D8D8DC",
+  steelgray: "#E0E4EC",
   salmon:    "#FFD0D0",
   royalblue: "#B0C0E8",
   gold:      "#F0DCA0",
   emerald:   "#B0DCC8",
   charcoal:  "#A0A0A0",
-  sage:      "#C0C8BE",
+  sage:      "#A8C4A8",
   plum:      "#C8C0F0",
 };
 const SCORE_HIBIKI_COLORS_ORDER = ["turquoise","steelgray","salmon","royalblue","gold","emerald","charcoal","sage","plum"];
@@ -246,9 +246,23 @@ const SCORE_SOUND_URLS = {
     pink:"/sounds/enigma_pink.mp3",
     lime:"/sounds/enigma_lime.mp3",
   },
+  arcane: {
+    turquoise:"/sounds/arcane_turquoise.mp3",
+    steelgray:"/sounds/arcane_steelgray.mp3",
+    salmon:"/sounds/arcane_salmon.mp3",
+    royalblue:"/sounds/arcane_royalblue.mp3",
+    gold:"/sounds/arcane_gold.mp3",
+    emerald:"/sounds/arcane_emerald.mp3",
+    charcoal:"/sounds/arcane_charcoal.mp3",
+    sage:"/sounds/arcane_sage.mp3",
+    plum:"/sounds/arcane_plum.mp3",
+  },
 };
-function getSoundUrls(scoreId) {
+function getSoundUrls(scoreId, soundType) {
+  if(soundType==="arcane") return SCORE_SOUND_URLS.arcane;
+  if(soundType==="enigma") return SCORE_SOUND_URLS.enigma;
   if(scoreId==="iridescence") return SCORE_SOUND_URLS.enigma;
+  if(scoreId==="aoi") return SCORE_SOUND_URLS.arcane;
   return SCORE_SOUND_URLS.default;
 }
 const SCORE_ID_TO_NAME = {
@@ -336,8 +350,12 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2 }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+  var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
+  var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
+  var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
+  var DOTS2 = instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
   var SPB = subdiv==="16th" ? 16 : 12;
@@ -367,6 +385,19 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   var leftS=useState(function(){return initPat("left");}); var left=leftS[0]; var setLeft=leftS[1];
+  // 2台目のstate
+  function initPat2(side){
+    var total=SPB*8; var p={};
+    COLORS2.forEach(function(c){p[c]=new Array(total).fill(0);});
+    if(patternData2&&patternData2[side]){
+      COLORS2.forEach(function(c){
+        if(patternData2[side][c]){for(var i=0;i<Math.min(patternData2[side][c].length,total);i++)p[c][i]=patternData2[side][c][i]||0;}
+      });
+    }
+    return p;
+  }
+  var left2S=useState(function(){return instrument2?initPat2("left"):{};}); var left2=left2S[0]; var setLeft2=left2S[1];
+  var right2S=useState(function(){return instrument2?initPat2("right"):{};}); var right2=right2S[0]; var setRight2=right2S[1];
   var rightS=useState(function(){return initPat("right");}); var right=rightS[0]; var setRight=rightS[1];
   var playingS=useState(false); var playing=playingS[0]; var setPlaying=playingS[1];
   var bpmS=useState(sharedBpm||80);
@@ -393,7 +424,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var startStepRef=useRef(0);
   var iidRef=useRef(null); var stepRef=useRef(0); var dimRef=useRef(null);
   var actxRef=useRef(null); var bufsRef=useRef({});
+  var bufs2Ref=useRef({}); // 2台目の音源バッファ
   var leftRef=useRef(left); var rightRef=useRef(right);
+  var left2Ref=useRef(left2); var right2Ref=useRef(right2);
   var bpmRef=useRef(bpm); var metroOnRef=useRef(metroOn);
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
@@ -403,6 +436,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
 
   useEffect(function(){leftRef.current=left;},[left]);
+  useEffect(function(){if(left2Ref)left2Ref.current=left2;},[left2]);
+  useEffect(function(){if(right2Ref)right2Ref.current=right2;},[right2]);
   useEffect(function(){rightRef.current=right;},[right]);
   useEffect(function(){bpmRef.current=bpm;},[bpm]);
   useEffect(function(){metroOnRef.current=metroOn;},[metroOn]);
@@ -588,6 +623,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       }
     }
     var fired={};
+    // 2台目の音を鳴らす
+    if(instrument2){
+      var L2=left2Ref?left2Ref.current:{}; var R2=right2Ref?right2Ref.current:{};
+      COLORS2.forEach(function(c){
+        if(L2[c]&&L2[c][s]&&bufs2Ref.current[c]){
+          var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
+          var g=actxRef.current.createGain(); g.gain.value=0.6;
+          src.connect(g); g.connect(actxRef.current.destination); src.start(0);
+        }
+        if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
+          var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
+          var g2=actxRef.current.createGain(); g2.gain.value=0.6;
+          src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
+        }
+      });
+    }
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
     if(metroOnRef.current){
@@ -1070,6 +1121,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       }
     }
     var fired={};
+    // 2台目の音を鳴らす
+    if(instrument2){
+      var L2=left2Ref?left2Ref.current:{}; var R2=right2Ref?right2Ref.current:{};
+      COLORS2.forEach(function(c){
+        if(L2[c]&&L2[c][s]&&bufs2Ref.current[c]){
+          var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
+          var g=actxRef.current.createGain(); g.gain.value=0.6;
+          src.connect(g); g.connect(actxRef.current.destination); src.start(0);
+        }
+        if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
+          var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
+          var g2=actxRef.current.createGain(); g2.gain.value=0.6;
+          src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
+        }
+      });
+    }
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
     if(metroOnRef.current){
@@ -1606,7 +1673,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         </div>
       ) : (
         <div style={{display:"flex",justifyContent:"center"}}>
-          <div style={{display:"flex",gap:12,alignItems:"flex-start"}}>
+          <div style={{display:"flex",gap:instrument2?24:12,alignItems:"flex-start"}}>
             <div style={{flexShrink:0,width:140,paddingTop:"167px"}}>
               <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
@@ -1641,6 +1708,72 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                 {botBars.map(function(b){return renderBar(b);})}
               </div>
             </div>
+            {/* 2台目グリッド */}
+            {instrument2&&(function(){
+              var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+              var pat2={left:left2,right:right2};
+              var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
+              var topBars2=[],botBars2=[];
+              for(var i=0;i<numBars2;i++){if(i%2===0)topBars2.push(i);else botBars2.push(i);}
+              function renderBar2(barIdx){
+                var cells=[];
+                for(var i=0;i<SPB;i++){
+                  var s=barIdx*SPB+i;
+                  var foundColors2=[];
+                  for(var ci=0;ci<COLORS2.length;ci++){
+                    if(pat2.left[COLORS2[ci]]&&pat2.left[COLORS2[ci]][s]) foundColors2.push(COLORS2[ci]);
+                    if(foundColors2.length>=2) break;
+                  }
+                  var foundColors2R=[];
+                  for(var ci2=0;ci2<COLORS2.length;ci2++){
+                    if(pat2.right[COLORS2[ci2]]&&pat2.right[COLORS2[ci2]][s]) foundColors2R.push(COLORS2[ci2]);
+                    if(foundColors2R.length>=2) break;
+                  }
+                  var ibs=i===0,ib=subdiv==="16th"?i%4===0:i%3===0,i8=subdiv==="16th"&&i%2===0&&i%4!==0;
+                  var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+                  var lBg=foundColors2.length===0?"#e8e6e2":foundColors2.length===1?DOT_COLORS2[foundColors2[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[foundColors2[0]]+" 50%,"+DOT_COLORS2[foundColors2[1]]+" 50%)";
+                  var rBg=foundColors2R.length===0?"#e8e6e2":foundColors2R.length===1?DOT_COLORS2[foundColors2R[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[foundColors2R[0]]+" 50%,"+DOT_COLORS2[foundColors2R[1]]+" 50%)";
+                  cells.push(
+                    <div key={i} style={{display:"flex",height:(CELL+GAP)+"px",alignItems:"center",background:bg}}>
+                      <div style={{width:CELL,height:CELL-1,background:lBg,borderRadius:2}}/>
+                      <div style={{width:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{i8&&<div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}</div>
+                      <div style={{width:CELL,height:CELL-1,background:rBg,borderRadius:2}}/>
+                    </div>
+                  );
+                }
+                return (
+                  <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+                    style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",
+                      boxShadow:startBar===barIdx?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+                      <div style={{width:18,height:18,borderRadius:"50%",background:startBar===barIdx?"#E74C3C":"#a8a5a0",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
+                    </div>
+                    {cells}
+                  </div>
+                );
+              }
+              return (
+                <div>
+                  {/* 響ノ音イラスト */}
+                  <div style={{display:"flex",justifyContent:"center",marginBottom:8}}>
+                    <svg viewBox="0 0 140 166" width="120" height="142">
+                      <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                      <text x="70" y="8" textAnchor="middle" fontSize="10" fill="#999">低音</text>
+                      <text x="70" y="160" textAnchor="middle" fontSize="10" fill="#999">高音</text>
+                      {Object.keys(DOTS_2).map(function(color){
+                        var pos=DOTS_2[color];
+                        var hasNote=COLORS2.some(function(c){return c===color&&(Object.values(left2).some(function(arr){return arr.some(function(v){return v;});})||Object.values(right2).some(function(arr){return arr.some(function(v){return v;});}));});
+                        return <circle key={color} cx={pos.cx} cy={pos.cy} r="13" fill={DOT_COLORS2[color]||"#ccc"} stroke="white" strokeWidth="1.5"/>;
+                      })}
+                    </svg>
+                  </div>
+                  <div style={{overflowX:"auto"}}>
+                    <div style={{display:"flex",gap:2,marginBottom:4}}>{topBars2.map(function(b){return renderBar2(b);})}</div>
+                    <div style={{display:"flex",gap:2}}>{botBars2.map(function(b){return renderBar2(b);})}</div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -4633,6 +4766,8 @@ function App() {
                   canEdit={false}
                   scoreLoading={scoreLoading}
                   scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi"||currentScoreId==="megumi")?"dreamy":"funenone"}
+                  instrument2={currentScoreId==="megumi"?"arcane":null}
+                  patternData2={(currentScoreId==="megumi"&&(scorePatterns["megumi"]||{})[scoreSection])?{left:((scorePatterns["megumi"]||{})[scoreSection].left2||{}),right:((scorePatterns["megumi"]||{})[scoreSection].right2||{})}:null}
                   isQueuePlaying={isQueuePlay}
                   autoPlay={isQueuePlay}
                   onLoopComplete={isQueuePlay?function(){
