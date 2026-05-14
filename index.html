@@ -483,16 +483,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
-    // カウントイン処理
-    if(countInStepsRef.current > 0){
-      var spbNow3=subdivRef.current==="16th"?4:3;
-      var remaining=countInStepsRef.current;
-      var totalCount=4*spbNow3;
-      var countPos=totalCount-remaining;
-      if(countPos%spbNow3===0) woodClick(countPos===0&&metroAccentRef.current);
-      countInStepsRef.current--;
-      return; // まだ本番を始めない
-    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
@@ -538,7 +528,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
-    countInStepsRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
@@ -903,16 +892,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
-    // カウントイン処理
-    if(countInStepsRef.current > 0){
-      var spbNow3=subdivRef.current==="16th"?4:3;
-      var remaining=countInStepsRef.current;
-      var totalCount=4*spbNow3;
-      var countPos=totalCount-remaining;
-      if(countPos%spbNow3===0) woodClick(countPos===0&&metroAccentRef.current);
-      countInStepsRef.current--;
-      return; // まだ本番を始めない
-    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
@@ -958,7 +937,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function doStop(){
-    countInStepsRef.current=0;
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
