@@ -262,7 +262,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
@@ -1368,21 +1368,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   return (
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
-      {/* 印刷ボタン */}
-      {!canEdit&&(
-        <div style={{display:"flex",justifyContent:"flex-end",marginBottom:4,gap:4}}>
-          <button onClick={handlePrint}
-            style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-            印刷（このセクション）
-          </button>
-          {onPrintAll&&(
-            <button onClick={onPrintAll}
-              style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#666",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-              印刷（全セクション）
-            </button>
-          )}
-        </div>
-      )}
+
       {/* セクション情報 + 開始時間 */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:8,gap:2}}>
         <p style={{fontSize:16,fontWeight:700,color:C.label,margin:0}}>{sectionLabel}</p>
@@ -2072,6 +2058,102 @@ function App() {
     setScoreLoading(false);
   }
 
+  function buildSectionHtml(scoreId, secKey, secLabel, nt, pd, allPatterns) {
+    var DOTS_P = scoreId==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var scoreTitle = SCORE_ID_TO_NAME[scoreId]||scoreId;
+    var sections = SCORE_SECTIONS[scoreId]||SCORE_SECTIONS.waterlily;
+    var spb = nt==="16th"?16:12;
+    var nb = pd&&pd.meta&&pd.meta.bars?Math.max(2,Math.min(parseInt(pd.meta.bars)||8,32)):8;
+    var st = pd&&pd.meta&&pd.meta.startTime||"";
+    var L = pd&&pd.left||{};
+    var R = pd&&pd.right||{};
+    var COLORS_P = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+    var CELL_P = 24, GAP_P = 1;
+    // 使用色
+    var usedC = {};
+    COLORS_P.forEach(function(c){
+      for(var i=0;i<nb*spb;i++){
+        if((L[c]&&L[c][i])||(R[c]&&R[c][i])){ usedC[c]=true; break; }
+      }
+    });
+    // SVGドット
+    var svgD = "";
+    Object.keys(DOTS_P).forEach(function(color){
+      var pos=DOTS_P[color];
+      var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
+      svgD+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="14" fill="'+fill+'" stroke="white" stroke-width="2"/>';
+    });
+    var svgHtml='<svg viewBox="0 0 140 166" width="160" height="190">'
+      +'<circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" stroke-width="1"/>'
+      +'<text x="70" y="10" text-anchor="middle" font-size="9" fill="#999">'+(scoreId==="dreamy"?"低音":"高音")+'</text>'
+      +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+(scoreId==="dreamy"?"高音":"低音")+'</text>'
+      +svgD+'</svg>';
+    // セクションの流れ
+    var flowHtml = sections.map(function(s){
+      var active = s[0]===secKey;
+      return '<span style="display:inline-block;padding:2px 8px;margin:2px;border-radius:4px;font-size:11px;'
+        +(active?'background:#333;color:#fff;font-weight:700;':'color:#999;')
+        +'">'+s[1]+'</span>';
+    }).join('<span style="color:#ccc;font-size:11px">›</span>');
+    // グリッド小節
+    var barsHtml = "";
+    for(var bi=0;bi<nb;bi++){
+      var rows = "";
+      for(var i=0;i<spb;i++){
+        var s=bi*spb+i;
+        var ibs=i===0, ib=nt==="16th"?i%4===0:i%3===0, i8=nt==="16th"&&i%2===0&&i%4!==0;
+        var lC=null, rC=null;
+        COLORS_P.forEach(function(c){ if(L[c]&&L[c][s]) lC=c; if(R[c]&&R[c][s]) rC=c; });
+        var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+        var h=(CELL_P+GAP_P)+"px";
+        rows+='<div style="display:flex;height:'+h+';align-items:center;background:'+bg+'">'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(lC?SCORE_DOT_COLORS[lC]:"#e8e8e8")+';border-radius:3px;margin-right:1px"></div>'
+          +'<div style="width:10px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(rC?SCORE_DOT_COLORS[rC]:"#e8e8e8")+';border-radius:3px;margin-left:1px"></div>'
+          +'</div>';
+      }
+      barsHtml+='<div style="display:inline-block;margin:4px;background:#fff;border-radius:10px;padding:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'
+        +'<div style="font-size:11px;font-weight:700;color:#888;margin-bottom:3px;text-align:center">'+(bi+1)+'</div>'+rows+'</div>';
+    }
+    return '<div style="text-align:center;margin-bottom:8px">'
+      +'<div style="font-size:24px;font-weight:700;color:#222;margin-bottom:4px">'+scoreTitle+'</div>'
+      +'<div style="margin-bottom:6px;line-height:1.8">'+flowHtml+'</div>'
+      +'<div style="font-size:20px;font-weight:700;color:#333;margin-bottom:2px">'+secLabel+'</div>'
+      +(st?'<div style="font-size:13px;color:#888;margin-bottom:4px">'+st+'〜</div>':'')
+      +'<div style="font-size:11px;color:#aaa;margin-bottom:12px">'+nb+'小節 / '+(nt==="16th"?"16分":"三連")+'</div>'
+      +'<div style="display:flex;justify-content:center;margin-bottom:12px">'+svgHtml+'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2px">'+barsHtml+'</div>'
+      +'</div>';
+  }
+
+  function printSection(scoreId, secKey, secLabel, nt, pd, allPatterns) {
+    var body = buildSectionHtml(scoreId, secKey, secLabel, nt, pd, allPatterns);
+    var win = window.open("","_blank");
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+secLabel+'</title>'
+      +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>'
+      +'</head><body>'+body+'</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
+  }
+
+  function printAllSections(scoreId, allPatterns) {
+    var sections = SCORE_SECTIONS[scoreId]||SCORE_SECTIONS.waterlily;
+    var pages = sections.map(function(sec, idx){
+      var pd = allPatterns[sec[0]];
+      var body = buildSectionHtml(scoreId, sec[0], sec[1], sec[2], pd, allPatterns);
+      return '<div style="page-break-after:'+(idx<sections.length-1?"always":"avoid")+'">'+body+'</div>';
+    }).join("");
+    var title = SCORE_ID_TO_NAME[scoreId]||scoreId;
+    var win = window.open("","_blank");
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+title+'</title>'
+      +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>'
+      +'</head><body>'+pages+'</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
+  }
+
   async function loadScorePatterns(scoreId) {
     // 既にキャッシュがあればスキップ
     if(scorePatterns[scoreId] && Object.keys(scorePatterns[scoreId]).length > 0) return;
@@ -2421,9 +2503,30 @@ function App() {
         {!isInstructor && scoreEditOpen && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px"}}>
             <p style={{fontSize:13,fontWeight:700,color:"#3a6a7a",marginBottom:12}}>🎼 譜面データ編集</p>
-            {/* 曲選択 */}
+            {/* 曲選択 + 印刷ボタン */}
             <div style={{marginBottom:10}}>
-              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
+                <p style={{fontSize:11,color:C.label,fontWeight:600,margin:0}}>曲を選択</p>
+                <div style={{display:"flex",gap:4}}>
+                  <button onClick={function(){
+                    // このセクションの印刷はScorePlayerのhandlePrintを直接呼ぶ
+                    // App側で実装
+                    var sections=SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
+                    var cur=sections.find(function(s){return s[0]===scoreSection;});
+                    var nt=cur?cur[2]:"triplet";
+                    var pd=(scorePatterns[currentScoreId]||{})[scoreSection];
+                    var lbl=cur?cur[1]:scoreSection;
+                    printSection(currentScoreId, scoreSection, lbl, nt, pd, (scorePatterns[currentScoreId]||{}));
+                  }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                    印刷（このセクション）
+                  </button>
+                  <button onClick={function(){
+                    printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});
+                  }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                    印刷（全セクション）
+                  </button>
+                </div>
+              </div>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
@@ -4395,91 +4498,7 @@ function App() {
                     if(v.metroOn!==undefined) setSharedMetroOn(v.metroOn);
                     if(v.metroMode!==undefined) setSharedMetroMode(v.metroMode);
                   }}
-                  onPrintAll={function(){
-                    // 全セクションのデータを収集して印刷
-                    var sections=SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
-                    var allPatterns=scorePatterns[currentScoreId]||{};
-                    var DOTS_P=currentScoreId==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                    var pages="";
-                    sections.forEach(function(sec,idx){
-                      var key=sec[0],lbl=sec[1],nt=sec[2];
-                      var pd=allPatterns[key];
-                      var spb=nt==="16th"?16:12;
-                      var nb=pd&&pd.meta&&pd.meta.bars?Math.max(2,Math.min(parseInt(pd.meta.bars)||8,32)):8;
-                      var L=pd&&pd.left||{};
-                      var R=pd&&pd.right||{};
-                      var st=pd&&pd.meta&&pd.meta.startTime||"";
-                      var COLORS_P=["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-                      var CELL_P=20,GAP_P=1,stepH=CELL_P+GAP_P;
-                      // 使用色
-                      var usedC={};
-                      COLORS_P.forEach(function(c){
-                        for(var i=0;i<nb*spb;i++){
-                          if((L[c]&&L[c][i])||(R[c]&&R[c][i])){ usedC[c]=true; break; }
-                        }
-                      });
-                      // SVG
-                      var svgD="";
-                      Object.keys(DOTS_P).forEach(function(color){
-                        var pos=DOTS_P[color];
-                        var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
-                        svgD+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
-                      });
-                      var svgH='<svg viewBox="0 0 140 166" width="90" height="107" style="flex-shrink:0">'
-                        +'<circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" stroke-width="1"/>'
-                        +'<text x="70" y="10" text-anchor="middle" font-size="9" fill="#999">'+(currentScoreId==="dreamy"?"低音":"高音")+'</text>'
-                        +'<text x="70" y="160" text-anchor="middle" font-size="9" fill="#999">'+(currentScoreId==="dreamy"?"高音":"低音")+'</text>'
-                        +svgD+'</svg>';
-                      // 小節
-                      var barsH="";
-                      for(var bi=0;bi<nb;bi++){
-                        var rows="";
-                        for(var i=0;i<spb;i++){
-                          var s=bi*spb+i;
-                          var ibs=i===0,ib=nt==="16th"?i%4===0:i%3===0,i8=nt==="16th"&&i%2===0&&i%4!==0;
-                          var lC=null,rC=null;
-                          COLORS_P.forEach(function(c){ if(L[c]&&L[c][s]) lC=c; if(R[c]&&R[c][s]) rC=c; });
-                          var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
-                          var h=stepH+"px";
-                          rows+='<div style="display:flex;height:'+h+';align-items:center;background:'+bg+'">'
-                            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(lC?SCORE_DOT_COLORS[lC]:"#e8e8e8")+';border-radius:3px;margin-right:1px"></div>'
-                            +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
-                            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(rC?SCORE_DOT_COLORS[rC]:"#e8e8e8")+';border-radius:3px;margin-left:1px"></div>'
-                            +'</div>';
-                        }
-                        barsH+='<div style="display:inline-block;margin:3px;background:#fff;border-radius:8px;padding:5px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'
-                          +'<div style="font-size:10px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(bi+1)+'</div>'+rows+'</div>';
-                      }
-                      pages+='<div style="page-break-after:'+(idx<sections.length-1?"always":"avoid")+';padding:10px">'
-                        +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
-                        +svgH
-                        +'<div><div style="font-size:20px;font-weight:700;color:#333">'+lbl+'</div>'
-                        +(st?'<div style="font-size:12px;color:#888;margin-top:3px">'+st+'〜</div>':'')
-                        +'<div style="font-size:10px;color:#aaa;margin-top:2px">'+nb+'小節 / '+(nt==="16th"?"16分":"三連")+'</div>'
-                        +'</div></div>'
-                        +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsH+'</div>'
-                        +'</div>';
-                    });
-                    var win=window.open("","_blank");
-                    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+SCORE_ID_TO_NAME[currentScoreId]+'</title>'
-                      +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
-                      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
-                      +'</style></head><body>'+pages+'</body></html>');
-                    win.document.close();
-                    setTimeout(function(){win.print();},300);
-                  }}
-                  onSectionEnd={function(){
-                    if(!isQueuePlayRef.current) return;
-                    var nextIdx = playQueueIdxRef.current + 1;
-                    if(nextIdx < playQueueRef.current.length){
-                      playQueueIdxRef.current = nextIdx;
-                      setScoreSection(playQueueRef.current[nextIdx]);
-                    } else {
-                      isQueuePlayRef.current = false;
-                      setIsQueuePlay(false);
-                      playQueueIdxRef.current = 0;
-                    }
-                  }}
+                  onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
                   onQueueStart={selectedSecs.length>0?function(){
                     var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
                     var queue=sections.filter(function(s){return selectedSecs.includes(s[0]);}).map(function(s){return s[0];});
