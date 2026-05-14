@@ -764,11 +764,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         var s=barIdx*SPB+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
-        // その行に設定されてる色を探す
-        var foundColor=null;
+        // その行に設定されてる色を探す（最大2色）
+        var foundColors=[];
         for(var ci=0;ci<COLORS.length;ci++){
-          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]){foundColor=COLORS[ci];break;}
+          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+          if(foundColors.length>=2) break;
         }
+        var foundColor=foundColors[0]||null;
         cells.push(
           <div key={i}
             onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
@@ -776,7 +778,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               width:CELL,height:CELL,
               marginBottom:GAP,
               borderRadius:2,
-              background:foundColor?SCORE_DOT_COLORS[foundColor]:"#e8e6e2",
+              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
               cursor:"pointer",
               outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
               outlineOffset:"-1px",
@@ -1232,11 +1234,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         var s=barIdx*SPB+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
-        // その行に設定されてる色を探す
-        var foundColor=null;
+        // その行に設定されてる色を探す（最大2色）
+        var foundColors=[];
         for(var ci=0;ci<COLORS.length;ci++){
-          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]){foundColor=COLORS[ci];break;}
+          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+          if(foundColors.length>=2) break;
         }
+        var foundColor=foundColors[0]||null;
         cells.push(
           <div key={i}
             onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
@@ -1244,7 +1248,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               width:CELL,height:CELL,
               marginBottom:GAP,
               borderRadius:2,
-              background:foundColor?SCORE_DOT_COLORS[foundColor]:"#e8e6e2",
+              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
               cursor:"pointer",
               outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
               outlineOffset:"-1px",
