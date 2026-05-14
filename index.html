@@ -262,7 +262,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
@@ -538,6 +538,83 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       stepRef.current=startStepRef.current;
       setPlaying(true);doStart();
     });
+  }
+
+  function handlePrint(){
+    var DOTS=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+    var spb=subdiv==="16th"?16:12;
+    var CELL_P=20, GAP_P=1;
+    var stepH=CELL_P+GAP_P;
+    // このセクションで使われてる色を検出
+    var usedColors={};
+    COLORS.forEach(function(c){
+      for(var i=0;i<nb*spb;i++){
+        if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
+      }
+    });
+
+    // 小節ごとのHTML生成
+    function barHtml(barIdx){
+      var rows="";
+      for(var i=0;i<spb;i++){
+        var s=barIdx*spb+i;
+        var ibs=i===0;
+        var ib=subdiv==="16th"?i%4===0:i%3===0;
+        var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
+        // 左手・右手の色を取得
+        var lColor=null, rColor=null;
+        COLORS.forEach(function(c){
+          if(left[c]&&left[c][s]) lColor=c;
+          if(right[c]&&right[c][s]) rColor=c;
+        });
+        var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+        var lBg=lColor?SCORE_DOT_COLORS[lColor]:"#e8e8e8";
+        var rBg=rColor?SCORE_DOT_COLORS[rColor]:"#e8e8e8";
+        var h=stepH+"px";
+        rows+='<div style="display:flex;height:'+h+';align-items:center;background:'+bg+'">'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+lBg+';border-radius:3px;margin-right:'+GAP_P+'px"></div>'
+          +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+rBg+';border-radius:3px;margin-left:'+GAP_P+'px"></div>'
+          +'</div>';
+      }
+      return '<div style="display:inline-block;margin:4px;background:#fff;border-radius:8px;padding:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'
+        +'<div style="font-size:10px;font-weight:700;color:#888;margin-bottom:3px;text-align:center">'+(barIdx+1)+'</div>'
+        +rows+'</div>';
+    }
+
+    var barsHtml="";
+    for(var bi=0;bi<nb;bi++) barsHtml+=barHtml(bi);
+
+    // SVGイラスト
+    var svgDots="";
+    Object.keys(DOTS).forEach(function(color){
+      var pos=DOTS[color];
+      var fill=usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
+      svgDots+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+    });
+    var svgHtml='<svg viewBox="0 0 140 166" width="100" height="118" style="flex-shrink:0">'
+      +'<circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" stroke-width="1"/>'
+      +'<text x="70" y="10" text-anchor="middle" font-size="9" fill="#999">'+(scale==="dreamy"?"低音":"高音")+'</text>'
+      +'<text x="70" y="160" text-anchor="middle" font-size="9" fill="#999">'+(scale==="dreamy"?"高音":"低音")+'</text>'
+      +svgDots+'</svg>';
+
+    var win=window.open("","_blank");
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
+      +'<title>'+sectionLabel+'</title>'
+      +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+      +'</style></head><body>'
+      +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
+      +svgHtml
+      +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
+      +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
+      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節 × '+repeat+'回 / '+(subdiv==="16th"?"16分":"三連")+'</div>'
+      +'</div></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
+      +'</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
   }
 
   function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
@@ -929,6 +1006,83 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
 
+
+  function handlePrint(){
+    var DOTS=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+    var spb=subdiv==="16th"?16:12;
+    var CELL_P=20, GAP_P=1;
+    var stepH=CELL_P+GAP_P;
+    // このセクションで使われてる色を検出
+    var usedColors={};
+    COLORS.forEach(function(c){
+      for(var i=0;i<nb*spb;i++){
+        if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
+      }
+    });
+
+    // 小節ごとのHTML生成
+    function barHtml(barIdx){
+      var rows="";
+      for(var i=0;i<spb;i++){
+        var s=barIdx*spb+i;
+        var ibs=i===0;
+        var ib=subdiv==="16th"?i%4===0:i%3===0;
+        var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
+        // 左手・右手の色を取得
+        var lColor=null, rColor=null;
+        COLORS.forEach(function(c){
+          if(left[c]&&left[c][s]) lColor=c;
+          if(right[c]&&right[c][s]) rColor=c;
+        });
+        var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+        var lBg=lColor?SCORE_DOT_COLORS[lColor]:"#e8e8e8";
+        var rBg=rColor?SCORE_DOT_COLORS[rColor]:"#e8e8e8";
+        var h=stepH+"px";
+        rows+='<div style="display:flex;height:'+h+';align-items:center;background:'+bg+'">'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+lBg+';border-radius:3px;margin-right:'+GAP_P+'px"></div>'
+          +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+rBg+';border-radius:3px;margin-left:'+GAP_P+'px"></div>'
+          +'</div>';
+      }
+      return '<div style="display:inline-block;margin:4px;background:#fff;border-radius:8px;padding:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'
+        +'<div style="font-size:10px;font-weight:700;color:#888;margin-bottom:3px;text-align:center">'+(barIdx+1)+'</div>'
+        +rows+'</div>';
+    }
+
+    var barsHtml="";
+    for(var bi=0;bi<nb;bi++) barsHtml+=barHtml(bi);
+
+    // SVGイラスト
+    var svgDots="";
+    Object.keys(DOTS).forEach(function(color){
+      var pos=DOTS[color];
+      var fill=usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
+      svgDots+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+    });
+    var svgHtml='<svg viewBox="0 0 140 166" width="100" height="118" style="flex-shrink:0">'
+      +'<circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" stroke-width="1"/>'
+      +'<text x="70" y="10" text-anchor="middle" font-size="9" fill="#999">'+(scale==="dreamy"?"低音":"高音")+'</text>'
+      +'<text x="70" y="160" text-anchor="middle" font-size="9" fill="#999">'+(scale==="dreamy"?"高音":"低音")+'</text>'
+      +svgDots+'</svg>';
+
+    var win=window.open("","_blank");
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
+      +'<title>'+sectionLabel+'</title>'
+      +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+      +'</style></head><body>'
+      +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
+      +svgHtml
+      +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
+      +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
+      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節 × '+repeat+'回 / '+(subdiv==="16th"?"16分":"三連")+'</div>'
+      +'</div></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
+      +'</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
+  }
 
   function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
 
@@ -4225,6 +4379,79 @@ function App() {
                   onMetroChange={function(v){
                     if(v.metroOn!==undefined) setSharedMetroOn(v.metroOn);
                     if(v.metroMode!==undefined) setSharedMetroMode(v.metroMode);
+                  }}
+                  onPrintAll={function(){
+                    // 全セクションのデータを収集して印刷
+                    var sections=SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
+                    var allPatterns=scorePatterns[currentScoreId]||{};
+                    var DOTS_P=currentScoreId==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                    var pages="";
+                    sections.forEach(function(sec,idx){
+                      var key=sec[0],lbl=sec[1],nt=sec[2];
+                      var pd=allPatterns[key];
+                      var spb=nt==="16th"?16:12;
+                      var nb=pd&&pd.meta&&pd.meta.bars?Math.max(2,Math.min(parseInt(pd.meta.bars)||8,32)):8;
+                      var L=pd&&pd.left||{};
+                      var R=pd&&pd.right||{};
+                      var st=pd&&pd.meta&&pd.meta.startTime||"";
+                      var COLORS_P=["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+                      var CELL_P=20,GAP_P=1,stepH=CELL_P+GAP_P;
+                      // 使用色
+                      var usedC={};
+                      COLORS_P.forEach(function(c){
+                        for(var i=0;i<nb*spb;i++){
+                          if((L[c]&&L[c][i])||(R[c]&&R[c][i])){ usedC[c]=true; break; }
+                        }
+                      });
+                      // SVG
+                      var svgD="";
+                      Object.keys(DOTS_P).forEach(function(color){
+                        var pos=DOTS_P[color];
+                        var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
+                        svgD+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+                      });
+                      var svgH='<svg viewBox="0 0 140 166" width="90" height="107" style="flex-shrink:0">'
+                        +'<circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" stroke-width="1"/>'
+                        +'<text x="70" y="10" text-anchor="middle" font-size="9" fill="#999">'+(currentScoreId==="dreamy"?"低音":"高音")+'</text>'
+                        +'<text x="70" y="160" text-anchor="middle" font-size="9" fill="#999">'+(currentScoreId==="dreamy"?"高音":"低音")+'</text>'
+                        +svgD+'</svg>';
+                      // 小節
+                      var barsH="";
+                      for(var bi=0;bi<nb;bi++){
+                        var rows="";
+                        for(var i=0;i<spb;i++){
+                          var s=bi*spb+i;
+                          var ibs=i===0,ib=nt==="16th"?i%4===0:i%3===0,i8=nt==="16th"&&i%2===0&&i%4!==0;
+                          var lC=null,rC=null;
+                          COLORS_P.forEach(function(c){ if(L[c]&&L[c][s]) lC=c; if(R[c]&&R[c][s]) rC=c; });
+                          var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+                          var h=stepH+"px";
+                          rows+='<div style="display:flex;height:'+h+';align-items:center;background:'+bg+'">'
+                            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(lC?SCORE_DOT_COLORS[lC]:"#e8e8e8")+';border-radius:3px;margin-right:1px"></div>'
+                            +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+                            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(rC?SCORE_DOT_COLORS[rC]:"#e8e8e8")+';border-radius:3px;margin-left:1px"></div>'
+                            +'</div>';
+                        }
+                        barsH+='<div style="display:inline-block;margin:3px;background:#fff;border-radius:8px;padding:5px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'
+                          +'<div style="font-size:10px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(bi+1)+'</div>'+rows+'</div>';
+                      }
+                      pages+='<div style="page-break-after:'+(idx<sections.length-1?"always":"avoid")+';padding:10px">'
+                        +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
+                        +svgH
+                        +'<div><div style="font-size:20px;font-weight:700;color:#333">'+lbl+'</div>'
+                        +(st?'<div style="font-size:12px;color:#888;margin-top:3px">'+st+'〜</div>':'')
+                        +'<div style="font-size:10px;color:#aaa;margin-top:2px">'+nb+'小節 / '+(nt==="16th"?"16分":"三連")+'</div>'
+                        +'</div></div>'
+                        +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsH+'</div>'
+                        +'</div>';
+                    });
+                    var win=window.open("","_blank");
+                    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+SCORE_ID_TO_NAME[currentScoreId]+'</title>'
+                      +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
+                      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+                      +'</style></head><body>'+pages+'</body></html>');
+                    win.document.close();
+                    setTimeout(function(){win.print();},300);
                   }}
                   onSectionEnd={function(){
                     if(!isQueuePlayRef.current) return;
