@@ -484,6 +484,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
+    // カウントイン処理（tickと完全に同じタイマー）
+    if(countInStepsRef.current < 0){
+      var spb4=subdivRef.current==="16th"?4:3;
+      var idx4=4*spb4+countInStepsRef.current; // 0始まりのインデックス
+      if(idx4%spb4===0) woodClick(idx4===0&&metroAccentRef.current);
+      countInStepsRef.current++;
+      return;
+    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
@@ -523,22 +531,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   }
 
-  function doStart(startAtTime, onReady){
+  function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
-    if(startAtTime && actxRef.current){
-      // setIntervalはwaitMs後に開始してmsPerStep後に最初のtickが来る
-      // なのでwaitMs - msPerStep後にsetIntervalを開始すると
-      // ちょうどstartAtTimeに最初のtickが来る
-      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000) - msPerStep);
-      setTimeout(function(){
-        if(onReady) onReady();
-        iidRef.current=setInterval(tick, msPerStep);
-      }, waitMs);
-    } else {
-      if(onReady) onReady();
-      iidRef.current=setInterval(tick, msPerStep);
-    }
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
   function doStop(){
@@ -552,21 +547,16 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(playing){doStop();return;}
     initAudio(function(){
       stepRef.current=startStepRef.current;
-      countInStepsRef.current=0;
       if(countIn){
-        var actx=actxRef.current;
-        var secPerBeat=60/bpmRef.current;
-        var startAt=actx.currentTime+0.05;
-        // Web Audio APIで正確な時刻に4拍スケジュール
-        for(var i=0;i<4;i++){
-          woodClick(i===0&&metroAccentRef.current, startAt+i*secPerBeat);
-        }
-        // 4拍後の正確な時刻にdoStartを指定
-        var playAt = startAt + 4*secPerBeat;
-        doStart(playAt, function(){ setPlaying(true); });
+        var spb=subdivRef.current==="16th"?4:3;
+        // カウントインステップ数（負の値）
+        // tick内でこの値が0になったら本番スタート
+        countInStepsRef.current = -(4*spb);
       } else {
-        setPlaying(true);doStart();
+        countInStepsRef.current = 0;
       }
+      setPlaying(true);
+      doStart(); // 通常のdoStart（startAtTime不要）
     });
   }
 
@@ -908,6 +898,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
+    // カウントイン処理（tickと完全に同じタイマー）
+    if(countInStepsRef.current < 0){
+      var spb4=subdivRef.current==="16th"?4:3;
+      var idx4=4*spb4+countInStepsRef.current; // 0始まりのインデックス
+      if(idx4%spb4===0) woodClick(idx4===0&&metroAccentRef.current);
+      countInStepsRef.current++;
+      return;
+    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
@@ -947,22 +945,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   }
 
-  function doStart(startAtTime, onReady){
+  function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    var msPerStep=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
-    if(startAtTime && actxRef.current){
-      // setIntervalはwaitMs後に開始してmsPerStep後に最初のtickが来る
-      // なのでwaitMs - msPerStep後にsetIntervalを開始すると
-      // ちょうどstartAtTimeに最初のtickが来る
-      var waitMs=Math.max(0, Math.round((startAtTime - actxRef.current.currentTime)*1000) - msPerStep);
-      setTimeout(function(){
-        if(onReady) onReady();
-        iidRef.current=setInterval(tick, msPerStep);
-      }, waitMs);
-    } else {
-      if(onReady) onReady();
-      iidRef.current=setInterval(tick, msPerStep);
-    }
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
   function doStop(){
