@@ -1462,6 +1462,7 @@ function App() {
   const playQueueRef    = React.useRef([]);
   const playQueueIdxRef = React.useRef(0);
   const isQueuePlayRef  = React.useRef(false);
+  const [isQueuePlay, setIsQueuePlay] = useState(false);
 
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
@@ -4178,7 +4179,7 @@ function App() {
                   canEdit={false}
                   scoreLoading={scoreLoading}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
-                  isQueuePlaying={isQueuePlayRef.current}
+                  isQueuePlaying={isQueuePlay}
                   onSectionEnd={function(){
                     if(!isQueuePlayRef.current) return;
                     var nextIdx = playQueueIdxRef.current + 1;
@@ -4187,6 +4188,7 @@ function App() {
                       setScoreSection(playQueueRef.current[nextIdx]);
                     } else {
                       isQueuePlayRef.current = false;
+                      setIsQueuePlay(false);
                       playQueueIdxRef.current = 0;
                     }
                   }}
@@ -4196,6 +4198,7 @@ function App() {
                     playQueueRef.current=queue;
                     playQueueIdxRef.current=0;
                     isQueuePlayRef.current=true;
+                    setIsQueuePlay(true);
                     setScoreSection(queue[0]);
                   }:null}
 
