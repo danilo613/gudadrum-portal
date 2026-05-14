@@ -2563,9 +2563,10 @@ function App() {
               key={scoreEditId+"-"+scoreEditSec+"-"+((scorePatterns[scoreEditId]||{})[scoreEditSec]?"loaded":"empty")}
               scoreId={scoreEditId}
               sectionKey={scoreEditSec}
-              sectionLabel={{
-                intro:"イントロ",amelo:"Aメロ",bmelo:"Bメロ",between:"間",introPrime:"イントロ'"
-              }[scoreEditSec]||scoreEditSec}
+              sectionLabel={(function(){
+                var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});
+                return sec?sec[1]:scoreEditSec;
+              })()}
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
               scoreLoading={scoreLoading}
