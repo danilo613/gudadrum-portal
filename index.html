@@ -382,7 +382,12 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   },[subdiv]);
 
   useEffect(function(){
-    var total = SPB * 8;
+    // patternDataのmetaからbarsとsubdivを取得してtotalを正確に計算
+    var metaBars = patternData&&patternData.meta&&patternData.meta.bars?parseInt(patternData.meta.bars)||8:parseInt(bars)||8;
+    var nb = Math.max(2, Math.min(metaBars, 32));
+    var spb = subdivRef.current==="16th"?16:12;
+    var total = nb * spb;
+    barsRef.current = nb;
     var lp={}, rp={};
     COLORS.forEach(function(c){
       lp[c]=new Array(total).fill(0);
