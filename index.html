@@ -2505,28 +2505,7 @@ function App() {
             <p style={{fontSize:13,fontWeight:700,color:"#3a6a7a",marginBottom:12}}>🎼 譜面データ編集</p>
             {/* 曲選択 + 印刷ボタン */}
             <div style={{marginBottom:10}}>
-              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}>
-                <p style={{fontSize:11,color:C.label,fontWeight:600,margin:0}}>曲を選択</p>
-                <div style={{display:"flex",gap:4}}>
-                  <button onClick={function(){
-                    // このセクションの印刷はScorePlayerのhandlePrintを直接呼ぶ
-                    // App側で実装
-                    var sections=SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
-                    var cur=sections.find(function(s){return s[0]===scoreSection;});
-                    var nt=cur?cur[2]:"triplet";
-                    var pd=(scorePatterns[currentScoreId]||{})[scoreSection];
-                    var lbl=cur?cur[1]:scoreSection;
-                    printSection(currentScoreId, scoreSection, lbl, nt, pd, (scorePatterns[currentScoreId]||{}));
-                  }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                    印刷（このセクション）
-                  </button>
-                  <button onClick={function(){
-                    printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});
-                  }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                    印刷（全セクション）
-                  </button>
-                </div>
-              </div>
+              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
@@ -4440,7 +4419,7 @@ function App() {
                 
                 {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
                 {/* 曲選択 */}
-                <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap"}}>
+                <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
                   {scoreList.map(id=>(
                     <button key={id} onClick={()=>{setCurrentScoreId(id); loadScorePatterns(id);}}
                       style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:currentScoreId===id?"#4B3621":"#fff",color:currentScoreId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
