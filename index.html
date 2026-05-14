@@ -463,13 +463,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
 
-  function woodClick(accent){
+  function woodClick(accent, atTime){
     var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
     var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
     if(!bufs[key])return;
     var s=actx.createBufferSource();s.buffer=bufs[key];
     var g=actx.createGain();g.gain.value=metroVolRef.current;
-    s.connect(g);g.connect(actx.destination);s.start(0);
+    s.connect(g);g.connect(actx.destination);
+    s.start(atTime||actx.currentTime);
   }
 
   function dimAll(){
@@ -483,16 +484,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
-    // カウントイン処理（同じタイマーで動く）
-    if(countInStepsRef.current < 0){
-      var spbNow3=subdivRef.current==="16th"?4:3;
-      var spbFull=subdivRef.current==="16th"?16:12;
-      var totalCount=4*spbNow3;
-      var countPos=totalCount+countInStepsRef.current; // 0から始まるインデックス
-      if(countPos%spbNow3===0) woodClick(countPos===0&&metroAccentRef.current);
-      countInStepsRef.current++;
-      return;
-    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
@@ -547,20 +538,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function handlePlay(){
     if(playing){doStop();return;}
     initAudio(function(){
+      stepRef.current=startStepRef.current;
+      countInStepsRef.current=0;
       if(countIn){
-        var msPerBeat=Math.round((60/bpmRef.current)*1000);
-        var count=0;
-        var countTimer=setInterval(function(){
-          woodClick(count===0&&metroAccentRef.current);
-          count++;
-          if(count>=4){
-            clearInterval(countTimer);
-            stepRef.current=startStepRef.current;
-            setPlaying(true);doStart();
-          }
-        }, msPerBeat);
+        var actx=actxRef.current;
+        var secPerBeat=60/bpmRef.current;
+        var startAt=actx.currentTime+0.05;
+        // Web Audio APIで正確な時刻に4拍スケジュール
+        for(var i=0;i<4;i++){
+          woodClick(i===0&&metroAccentRef.current, startAt+i*secPerBeat);
+        }
+        // 4拍後に本番開始
+        var delayMs=Math.round((4*secPerBeat+0.05)*1000);
+        setTimeout(function(){
+          setPlaying(true);doStart();
+        }, delayMs);
       } else {
-        stepRef.current=startStepRef.current;
         setPlaying(true);doStart();
       }
     });
@@ -883,13 +876,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
 
-  function woodClick(accent){
+  function woodClick(accent, atTime){
     var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
     var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
     if(!bufs[key])return;
     var s=actx.createBufferSource();s.buffer=bufs[key];
     var g=actx.createGain();g.gain.value=metroVolRef.current;
-    s.connect(g);g.connect(actx.destination);s.start(0);
+    s.connect(g);g.connect(actx.destination);
+    s.start(atTime||actx.currentTime);
   }
 
   function dimAll(){
@@ -903,16 +897,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function tick(){
-    // カウントイン処理（同じタイマーで動く）
-    if(countInStepsRef.current < 0){
-      var spbNow3=subdivRef.current==="16th"?4:3;
-      var spbFull=subdivRef.current==="16th"?16:12;
-      var totalCount=4*spbNow3;
-      var countPos=totalCount+countInStepsRef.current; // 0から始まるインデックス
-      if(countPos%spbNow3===0) woodClick(countPos===0&&metroAccentRef.current);
-      countInStepsRef.current++;
-      return;
-    }
     var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
     var spbNow2=subdivRef.current==="16th"?16:12;
     var totalNow2=barsRef.current*spbNow2;
