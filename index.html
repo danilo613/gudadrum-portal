@@ -382,6 +382,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   },[subdiv]);
 
   useEffect(function(){
+    console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
     // patternDataのmetaからbarsとsubdivを取得してtotalを正確に計算
     var metaBars = patternData&&patternData.meta&&patternData.meta.bars?parseInt(patternData.meta.bars)||8:parseInt(bars)||8;
     var nb = Math.max(2, Math.min(metaBars, 32));
