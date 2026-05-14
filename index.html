@@ -2096,7 +2096,7 @@ function App() {
   }
 
   function buildSectionHtml(scoreId, secKey, secLabel, nt, pd, allPatterns) {
-    var DOTS_P = (scoreId==="dreamy"||scoreId==="iridescence")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS_P = (scoreId==="dreamy"||scoreId==="iridescence"||scoreId==="aoi")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
     var scoreTitle = SCORE_ID_TO_NAME[scoreId]||scoreId;
     var sections = SCORE_SECTIONS[scoreId]||SCORE_SECTIONS.waterlily;
     var spb = nt==="16th"?16:12;
@@ -2582,7 +2582,7 @@ function App() {
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
               scoreLoading={scoreLoading}
-              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence")?"dreamy":"funenone"}
+              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi")?"dreamy":"funenone"}
               subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               onSave={saveScorePattern}
             />
@@ -4560,7 +4560,7 @@ function App() {
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
                   scoreLoading={scoreLoading}
-                  scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence")?"dreamy":"funenone"}
+                  scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi")?"dreamy":"funenone"}
                   isQueuePlaying={isQueuePlay}
                   autoPlay={isQueuePlay}
                   onLoopComplete={isQueuePlay?function(){
