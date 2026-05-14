@@ -331,6 +331,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){
+    console.log("ScorePlayer MOUNTED:", scoreId, sectionKey);
+    return function(){ console.log("ScorePlayer UNMOUNTED:", scoreId, sectionKey); };
+  },[]);
   useEffect(function(){barsRef.current=Math.max(2,Math.min(parseInt(bars)||8,32));},[bars]);
   useEffect(function(){onSectionEndRef.current=onSectionEnd;},[onSectionEnd]);
   // sectionKeyが変わった時、通し再生中なら自動で再生
