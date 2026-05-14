@@ -295,7 +295,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var leftS=useState(function(){return initPat("left");}); var left=leftS[0]; var setLeft=leftS[1];
   var rightS=useState(function(){return initPat("right");}); var right=rightS[0]; var setRight=rightS[1];
   var playingS=useState(false); var playing=playingS[0]; var setPlaying=playingS[1];
-  var bpmS=useState(sharedBpm||80); var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
+  var bpmS=useState(sharedBpm||80);
+  var countInS=useState(false); var countIn=countInS[0]; var setCountIn=countInS[1]; var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
   var setBpm=function(v){ setBpmLocal(typeof v==="function"?v(bpmS[0]):v); if(onBpmChange) onBpmChange(typeof v==="function"?v(bpmS[0]):v); };
   var curStepS=useState(-1); var curStep=curStepS[0]; var setCurStep=curStepS[1];
   var metroOnS=useState(sharedMetroOn||false); var metroOn=metroOnS[0]; var setMetroOnLocal=metroOnS[1];
@@ -312,6 +313,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var secTimeS=useState(startTime||""); var secTime=secTimeS[0]; var setSecTime=secTimeS[1];
   var subdivS=useState(subdivProp||"triplet"); var subdiv=subdivS[0]; var setSubdiv=subdivS[1];
   var barsS=useState("8"); var bars=barsS[0]; var setBars=barsS[1];
+  var countInS=useState(false); var countIn=countInS[0]; var setCountIn=countInS[1];
   var repeatS=useState("1"); var repeat=repeatS[0]; var setRepeat=repeatS[1];
 
   var startStepRef=useRef(0);
@@ -393,14 +395,17 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       }
     });
     if(patternData&&patternData.meta){
-      if(patternData.meta.bars) setBars(String(patternData.meta.bars));
+      if(patternData.meta.bars){
+        setBars(String(patternData.meta.bars));
+        barsRef.current=Math.max(2,Math.min(parseInt(patternData.meta.bars)||8,32));
+      }
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
       if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
     }
     setLeft(lp); setRight(rp);
     leftRef.current=lp; rightRef.current=rp;
     if(startTime) setSecTime(startTime);
-  },[patternData,startTime,subdivProp]);
+  },[patternData,startTime,subdivProp,sectionKey]);
 
   useEffect(function(){return function(){doStop();};},[]);
 
@@ -521,19 +526,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function handlePlay(){
     if(playing){doStop();return;}
     initAudio(function(){
-      var spbNow=subdivRef.current==="16th"?16:12;
-      var msPerBeat=Math.round((60/bpmRef.current)*1000);
-      var count=0;
-      var beats=4;
-      var countTimer=setInterval(function(){
-        woodClick(count===0&&metroAccentRef.current);
-        count++;
-        if(count>=beats){
-          clearInterval(countTimer);
-          stepRef.current=startStepRef.current;
-          setPlaying(true);doStart();
-        }
-      }, msPerBeat);
+      if(countIn){
+        var msPerBeat=Math.round((60/bpmRef.current)*1000);
+        var count=0;
+        var countTimer=setInterval(function(){
+          woodClick(count===0&&metroAccentRef.current);
+          count++;
+          if(count>=4){
+            clearInterval(countTimer);
+            stepRef.current=startStepRef.current;
+            setPlaying(true);doStart();
+          }
+        }, msPerBeat);
+      } else {
+        stepRef.current=startStepRef.current;
+        setPlaying(true);doStart();
+      }
     });
   }
 
@@ -927,19 +935,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function handlePlay(){
     if(playing){doStop();return;}
     initAudio(function(){
-      var spbNow=subdivRef.current==="16th"?16:12;
-      var msPerBeat=Math.round((60/bpmRef.current)*1000);
-      var count=0;
-      var beats=4;
-      var countTimer=setInterval(function(){
-        woodClick(count===0&&metroAccentRef.current);
-        count++;
-        if(count>=beats){
-          clearInterval(countTimer);
-          stepRef.current=startStepRef.current;
-          setPlaying(true);doStart();
-        }
-      }, msPerBeat);
+      if(countIn){
+        var msPerBeat=Math.round((60/bpmRef.current)*1000);
+        var count=0;
+        var countTimer=setInterval(function(){
+          woodClick(count===0&&metroAccentRef.current);
+          count++;
+          if(count>=4){
+            clearInterval(countTimer);
+            stepRef.current=startStepRef.current;
+            setPlaying(true);doStart();
+          }
+        }, msPerBeat);
+      } else {
+        stepRef.current=startStepRef.current;
+        setPlaying(true);doStart();
+      }
     });
   }
 
