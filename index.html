@@ -262,7 +262,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
@@ -295,10 +295,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var leftS=useState(function(){return initPat("left");}); var left=leftS[0]; var setLeft=leftS[1];
   var rightS=useState(function(){return initPat("right");}); var right=rightS[0]; var setRight=rightS[1];
   var playingS=useState(false); var playing=playingS[0]; var setPlaying=playingS[1];
-  var bpmS=useState(80); var bpm=bpmS[0]; var setBpm=bpmS[1];
+  var bpmS=useState(sharedBpm||80); var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
+  var setBpm=function(v){ setBpmLocal(typeof v==="function"?v(bpmS[0]):v); if(onBpmChange) onBpmChange(typeof v==="function"?v(bpmS[0]):v); };
   var curStepS=useState(-1); var curStep=curStepS[0]; var setCurStep=curStepS[1];
-  var metroOnS=useState(false); var metroOn=metroOnS[0]; var setMetroOn=metroOnS[1];
-  var metroModeS=useState(4); var metroMode=metroModeS[0]; var setMetroMode=metroModeS[1];
+  var metroOnS=useState(sharedMetroOn||false); var metroOn=metroOnS[0]; var setMetroOnLocal=metroOnS[1];
+  var setMetroOn=function(v){ var val=typeof v==="function"?v(metroOnS[0]):v; setMetroOnLocal(val); if(onMetroChange) onMetroChange({metroOn:val}); };
+  var metroModeS=useState(sharedMetroMode||4); var metroMode=metroModeS[0]; var setMetroModeLocal=metroModeS[1];
+  var setMetroMode=function(v){ var val=typeof v==="function"?v(metroModeS[0]):v; setMetroModeLocal(val); if(onMetroChange) onMetroChange({metroMode:val}); };
   var metroVolS=useState(0.6); var metroVol=metroVolS[0]; var setMetroVol=metroVolS[1];
   var metroAccentS=useState(true); var metroAccent=metroAccentS[0]; var setMetroAccent=metroAccentS[1];
   var lrOnS=useState(true); var lrOn=lrOnS[0]; var setLrOn=lrOnS[1];
@@ -331,6 +334,15 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){
+    if(sharedBpm && sharedBpm !== bpm){ setBpmLocal(sharedBpm); bpmRef.current=sharedBpm; }
+  },[sharedBpm]);
+  useEffect(function(){
+    if(sharedMetroOn!==undefined){ setMetroOnLocal(sharedMetroOn); metroOnRef.current=sharedMetroOn; }
+  },[sharedMetroOn]);
+  useEffect(function(){
+    if(sharedMetroMode){ setMetroModeLocal(sharedMetroMode); metroModeRef.current=sharedMetroMode; }
+  },[sharedMetroMode]);
   useEffect(function(){
     console.log("ScorePlayer MOUNTED:", scoreId, sectionKey, "isQueuePlaying=", isQueuePlaying);
     // 通し再生中ならマウント時に自動再生
@@ -508,7 +520,21 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handlePlay(){
     if(playing){doStop();return;}
-    initAudio(function(){stepRef.current=startStepRef.current;setPlaying(true);doStart();});
+    initAudio(function(){
+      var spbNow=subdivRef.current==="16th"?16:12;
+      var msPerBeat=Math.round((60/bpmRef.current)*1000);
+      var count=0;
+      var beats=4;
+      var countTimer=setInterval(function(){
+        woodClick(count===0&&metroAccentRef.current);
+        count++;
+        if(count>=beats){
+          clearInterval(countTimer);
+          stepRef.current=startStepRef.current;
+          setPlaying(true);doStart();
+        }
+      }, msPerBeat);
+    });
   }
 
   function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
@@ -900,7 +926,21 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handlePlay(){
     if(playing){doStop();return;}
-    initAudio(function(){stepRef.current=startStepRef.current;setPlaying(true);doStart();});
+    initAudio(function(){
+      var spbNow=subdivRef.current==="16th"?16:12;
+      var msPerBeat=Math.round((60/bpmRef.current)*1000);
+      var count=0;
+      var beats=4;
+      var countTimer=setInterval(function(){
+        woodClick(count===0&&metroAccentRef.current);
+        count++;
+        if(count>=beats){
+          clearInterval(countTimer);
+          stepRef.current=startStepRef.current;
+          setPlaying(true);doStart();
+        }
+      }, msPerBeat);
+    });
   }
 
   function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
@@ -1463,6 +1503,9 @@ function App() {
   const playQueueIdxRef = React.useRef(0);
   const isQueuePlayRef  = React.useRef(false);
   const [isQueuePlay, setIsQueuePlay] = useState(false);
+  const [sharedBpm, setSharedBpm] = useState(80);
+  const [sharedMetroOn, setSharedMetroOn] = useState(false);
+  const [sharedMetroMode, setSharedMetroMode] = useState(4);
 
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
@@ -4180,6 +4223,14 @@ function App() {
                   scoreLoading={scoreLoading}
                   scale={currentScoreId==="dreamy"?"dreamy":"funenone"}
                   isQueuePlaying={isQueuePlay}
+                  sharedBpm={sharedBpm}
+                  onBpmChange={function(v){setSharedBpm(v);}}
+                  sharedMetroOn={sharedMetroOn}
+                  sharedMetroMode={sharedMetroMode}
+                  onMetroChange={function(v){
+                    if(v.metroOn!==undefined) setSharedMetroOn(v.metroOn);
+                    if(v.metroMode!==undefined) setSharedMetroMode(v.metroMode);
+                  }}
                   onSectionEnd={function(){
                     if(!isQueuePlayRef.current) return;
                     var nextIdx = playQueueIdxRef.current + 1;
