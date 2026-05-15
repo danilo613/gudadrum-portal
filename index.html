@@ -1798,6 +1798,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
               var topBars2=[],botBars2=[];
               for(var i=0;i<numBars2;i++){if(i%2===0)topBars2.push(i);else botBars2.push(i);}
+              function grad2(cs){if(cs.length===0)return "#e8e6e2";if(cs.length===1)return DOT_COLORS2[cs[0]];return "linear-gradient(to bottom,"+DOT_COLORS2[cs[0]]+" 50%,"+DOT_COLORS2[cs[1]]+" 50%)";}
               function renderBar2(barIdx){
                 var cells=[];
                 for(var i=0;i<SPB;i++){
@@ -1814,7 +1815,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                   }
                   var ibs=i===0,ib=subdiv==="16th"?i%4===0:i%3===0,i8=subdiv==="16th"&&i%2===0&&i%4!==0;
                   var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
-                  function grad2(cs){if(cs.length===0)return "#e8e6e2";if(cs.length===1)return DOT_COLORS2[cs[0]];return "linear-gradient(to bottom,"+DOT_COLORS2[cs[0]]+" 50%,"+DOT_COLORS2[cs[1]]+" 50%)";}
                   var lBg=grad2(foundColors2);
                   var rBg=grad2(foundColors2R);
                   cells.push(
