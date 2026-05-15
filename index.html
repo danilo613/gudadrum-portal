@@ -1702,7 +1702,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                     <g key={color}>
                       <circle cx={pos.cx} cy={pos.cy}
                         r={color===highlightColor?17:15}
-                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color])}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
@@ -1728,36 +1728,62 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         </div>
       ) : (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
-          {/* イラスト2つ横並び */}
-          <div style={{display:"flex",gap:instrument2?40:0,justifyContent:"center",marginBottom:12}}>
+          {/* イラスト横並び（上） */}
+          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
+            {/* 1台目イラスト */}
             <div style={{textAlign:"center"}}>
-              {instrument2&&<div style={{fontSize:10,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
-              <svg viewBox="0 0 140 166" width="140" height="166">
+              {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
+              <svg viewBox="0 0 140 166" width="120" height="142">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-              <text x="70" y="8" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
-              <text x="70" y="160" textAnchor="middle" fontSize="10" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
+              <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
+              <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
               {(function(){
                 var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).filter(function(c){return true;}).map(function(color){
+                return Object.keys(activeDots).map(function(color){
                   var pos=activeDots[color];
+                  var usedColors={};
+                  COLORS.forEach(function(c){
+                    for(var i=0;i<numBars*SPB;i++){
+                      if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
+                    }
+                  });
                   return (
                     <g key={color}>
                       <circle cx={pos.cx} cy={pos.cy}
                         r={color===highlightColor?17:15}
-                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color])}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
-                      {lrOn&&dotLabel[color]&&(
-                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
-                      )}
                     </g>
                   );
                 });
               })()}
-            </svg>
+              </svg>
             </div>
-            <div style={{minWidth:0,overflowX:"auto"}}>
+            {/* 2台目イラスト */}
+            {instrument2&&(function(){
+              var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
+              return (
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+                  <svg viewBox="0 0 140 166" width="120" height="142">
+                    <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                    <text x="70" y="8" textAnchor="middle" fontSize="9" fill="#999">低音</text>
+                    <text x="70" y="160" textAnchor="middle" fontSize="9" fill="#999">高音</text>
+                    {Object.keys(DOTS_I).map(function(color){
+                      var pos=DOTS_I[color];
+                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="15"
+                        fill={SCORE_HIBIKI_COLORS[color]||"#ccc"} stroke="white" strokeWidth="1.5"/>;
+                    })}
+                  </svg>
+                </div>
+              );
+            })()}
+          </div>
+          {/* グリッド横並び（下） */}
+          <div style={{display:"flex",gap:instrument2?32:0,justifyContent:"center",alignItems:"flex-start",overflowX:"auto",width:"100%"}}>
+            {/* 1台目グリッド */}
+            <div>
               <div style={{display:"flex",gap:2,marginBottom:10}}>
                 {topBars.map(function(b){return renderBar(b);})}
               </div>
@@ -1799,27 +1825,15 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                   );
                 }
                 return (
-                  <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
-                    style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",
-                      boxShadow:startBar===barIdx?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
-                    <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
-                      <div style={{width:18,height:18,borderRadius:"50%",background:startBar===barIdx?"#E74C3C":"#a8a5a0",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
-                    </div>
-                    {cells}
-                  </div>
-                );
-              }
-              return (
                 <div>
-                  <div style={{overflowX:"auto"}}>
-                    <div style={{display:"flex",gap:2,marginBottom:4}}>{topBars2.map(function(b){return renderBar2(b);})}</div>
-                    <div style={{display:"flex",gap:2}}>{botBars2.map(function(b){return renderBar2(b);})}</div>
-                  </div>
+                  <div style={{display:"flex",gap:2,marginBottom:10}}>{topBars2.map(function(b){return renderBar2(b);})}</div>
+                  <div style={{display:"flex",gap:2}}>{botBars2.map(function(b){return renderBar2(b);})}</div>
                 </div>
               );
             })()}
           </div>
         </div>
+      </div>
       )}
     </div>
   );
