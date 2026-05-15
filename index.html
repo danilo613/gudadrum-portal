@@ -1571,6 +1571,54 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var gridH=SPB*(CELL+GAP);
   var headerH=18+2+5+2; // 小節番号+margin+色見本+margin
 
+  // 2台目グリッドの計算（instrument2がある時）
+  var grid2Element = null;
+  if(instrument2) {
+    var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+    var pat2={left:left2,right:right2};
+    var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
+    var topBars2=[],botBars2=[];
+    for(var bi2=0;bi2<numBars2;bi2++){if(bi2%2===0)topBars2.push(bi2);else botBars2.push(bi2);}
+    var renderBar2=function(barIdx){
+      var cells2=[];
+      for(var i2=0;i2<SPB;i2++){
+        var s2=barIdx*SPB+i2;
+        var fc2=[],fc2R=[];
+        for(var ci=0;ci<COLORS2.length;ci++){
+          if(pat2.left[COLORS2[ci]]&&pat2.left[COLORS2[ci]][s2]) fc2.push(COLORS2[ci]);
+          if(pat2.right[COLORS2[ci]]&&pat2.right[COLORS2[ci]][s2]) fc2R.push(COLORS2[ci]);
+        }
+        var ibs2=i2===0,ib2=subdiv==="16th"?i2%4===0:i2%3===0,i8b=subdiv==="16th"&&i2%2===0&&i2%4!==0;
+        var bg2=ibs2?"rgba(0,0,0,0.1)":ib2?"rgba(0,0,0,0.05)":"transparent";
+        var lBg2=fc2.length===0?"#e8e6e2":fc2.length===1?DOT_COLORS2[fc2[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[fc2[0]]+" 50%,"+DOT_COLORS2[fc2[1]]+" 50%)";
+        var rBg2=fc2R.length===0?"#e8e6e2":fc2R.length===1?DOT_COLORS2[fc2R[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[fc2R[0]]+" 50%,"+DOT_COLORS2[fc2R[1]]+" 50%)";
+        cells2.push(
+          <div key={i2} style={{display:"flex",height:(CELL+GAP)+"px",alignItems:"center",background:bg2}}>
+            <div style={{width:CELL,height:CELL-1,background:lBg2,borderRadius:2}}/>
+            <div style={{width:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{i8b&&<div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}</div>
+            <div style={{width:CELL,height:CELL-1,background:rBg2,borderRadius:2}}/>
+          </div>
+        );
+      }
+      return (
+        <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+          style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",
+            boxShadow:startBar===barIdx?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+            <div style={{width:18,height:18,borderRadius:"50%",background:startBar===barIdx?"#E74C3C":"#a8a5a0",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
+          </div>
+          {cells2}
+        </div>
+      );
+    };
+    grid2Element = (
+      <div>
+        <div style={{display:"flex",gap:2,marginBottom:10}}>{topBars2.map(function(b){return renderBar2(b);})}</div>
+        <div style={{display:"flex",gap:2}}>{botBars2.map(function(b){return renderBar2(b);})}</div>
+      </div>
+    );
+  }
+
   return (
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
 
@@ -1792,46 +1840,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               </div>
             </div>
             {/* 2台目グリッド */}
-            {instrument2&&(function(){
-              var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
-              var pat2={left:left2,right:right2};
-              var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
-              var topBars2=[],botBars2=[];
-              for(var i=0;i<numBars2;i++){if(i%2===0)topBars2.push(i);else botBars2.push(i);}
-              function grad2(cs){if(cs.length===0)return "#e8e6e2";if(cs.length===1)return DOT_COLORS2[cs[0]];return "linear-gradient(to bottom,"+DOT_COLORS2[cs[0]]+" 50%,"+DOT_COLORS2[cs[1]]+" 50%)";}
-              function renderBar2(barIdx){
-                var cells=[];
-                for(var i=0;i<SPB;i++){
-                  var s=barIdx*SPB+i;
-                  var foundColors2=[];
-                  for(var ci=0;ci<COLORS2.length;ci++){
-                    if(pat2.left[COLORS2[ci]]&&pat2.left[COLORS2[ci]][s]) foundColors2.push(COLORS2[ci]);
-                    if(foundColors2.length>=2) break;
-                  }
-                  var foundColors2R=[];
-                  for(var ci2=0;ci2<COLORS2.length;ci2++){
-                    if(pat2.right[COLORS2[ci2]]&&pat2.right[COLORS2[ci2]][s]) foundColors2R.push(COLORS2[ci2]);
-                    if(foundColors2R.length>=2) break;
-                  }
-                  var ibs=i===0,ib=subdiv==="16th"?i%4===0:i%3===0,i8=subdiv==="16th"&&i%2===0&&i%4!==0;
-                  var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
-                  var lBg=grad2(foundColors2);
-                  var rBg=grad2(foundColors2R);
-                  cells.push(
-                    <div key={i} style={{display:"flex",height:(CELL+GAP)+"px",alignItems:"center",background:bg}}>
-                      <div style={{width:CELL,height:CELL-1,background:lBg,borderRadius:2}}/>
-                      <div style={{width:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{i8&&<div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}</div>
-                      <div style={{width:CELL,height:CELL-1,background:rBg,borderRadius:2}}/>
-                    </div>
-                  );
-                }
-                return (
-                <div>
-                  <div style={{display:"flex",gap:2,marginBottom:10}}>{topBars2.map(function(b){return renderBar2(b);})}</div>
-                  <div style={{display:"flex",gap:2}}>{botBars2.map(function(b){return renderBar2(b);})}</div>
-                </div>
-              );
-            })()}
+            {grid2Element}
           </div>
         </div>
       </div>
