@@ -1814,8 +1814,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                   }
                   var ibs=i===0,ib=subdiv==="16th"?i%4===0:i%3===0,i8=subdiv==="16th"&&i%2===0&&i%4!==0;
                   var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
-                  var lBg=foundColors2.length===0?"#e8e6e2":foundColors2.length===1?DOT_COLORS2[foundColors2[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[foundColors2[0]]+" 50%,"+DOT_COLORS2[foundColors2[1]]+" 50%)";
-                  var rBg=foundColors2R.length===0?"#e8e6e2":foundColors2R.length===1?DOT_COLORS2[foundColors2R[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[foundColors2R[0]]+" 50%,"+DOT_COLORS2[foundColors2R[1]]+" 50%)";
+                  function grad2(cs){if(cs.length===0)return "#e8e6e2";if(cs.length===1)return DOT_COLORS2[cs[0]];return "linear-gradient(to bottom,"+DOT_COLORS2[cs[0]]+" 50%,"+DOT_COLORS2[cs[1]]+" 50%)";}
+                  var lBg=grad2(foundColors2);
+                  var rBg=grad2(foundColors2R);
                   cells.push(
                     <div key={i} style={{display:"flex",height:(CELL+GAP)+"px",alignItems:"center",background:bg}}>
                       <div style={{width:CELL,height:CELL-1,background:lBg,borderRadius:2}}/>
