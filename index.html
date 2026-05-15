@@ -2943,6 +2943,8 @@ function App() {
               canEdit={true}
               scoreLoading={scoreLoading}
               scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi")?"dreamy":"funenone"}
+              instrument2={scoreEditId==="megumi"?"arcane":null}
+              patternData2={scoreEditId==="megumi"?{left:((scorePatterns["megumi"]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns["megumi"]||{})[scoreEditSec]||{}).right2||{}}:null}
               subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               onSave={saveScorePattern}
             />
