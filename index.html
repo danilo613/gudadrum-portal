@@ -1573,6 +1573,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   // 2台目グリッドの計算（instrument2がある時）
   var grid2Element = null;
+  var grid2EditElement = null;
   if(instrument2) {
     var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
     var pat2={left:left2,right:right2};
@@ -1615,6 +1616,52 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       <div>
         <div style={{display:"flex",gap:2,marginBottom:10}}>{topBars2.map(function(b){return renderBar2(b);})}</div>
         <div style={{display:"flex",gap:2}}>{botBars2.map(function(b){return renderBar2(b);})}</div>
+      </div>
+    );
+    // 編集用2台目グリッド
+    var renderBar2Edit=function(barIdx){
+      var cells2e=[];
+      for(var i2e=0;i2e<SPB;i2e++){
+        var s2e=barIdx*SPB+i2e;
+        var ibs2e=i2e===0,ib2e=subdiv==="16th"?i2e%4===0:i2e%3===0,i8e=subdiv==="16th"&&i2e%2===0&&i2e%4!==0;
+        var bg2e=ibs2e?"rgba(0,0,0,0.1)":ib2e?"rgba(0,0,0,0.05)":"transparent";
+        var rowCells=COLORS2.map(function(c2){
+          var on2=left2[c2]&&left2[c2][s2e];
+          return (
+            <div key={c2} onClick={function(cc,ss){return function(){
+              if(!canEdit)return;
+              setLeft2(function(prev){
+                var p=Object.assign({},prev);p[cc]=prev[cc].slice();p[cc][ss]^=1;return p;
+              });
+            };}(c2,s2e)}
+              style={{width:CELL,height:CELL-1,borderRadius:2,cursor:"pointer",
+                background:on2?SCORE_HIBIKI_COLORS[c2]:SCORE_HIBIKI_PALE_COLORS[c2],
+                border:on2?"none":"1px solid #e0e0dc",margin:"0 1px"}}/>
+          );
+        });
+        cells2e.push(
+          <div key={i2e} style={{display:"flex",height:(CELL+GAP)+"px",alignItems:"center",background:bg2e}}>
+            {rowCells}
+          </div>
+        );
+      }
+      return (
+        <div key={barIdx} style={{flexShrink:0,marginRight:4,background:"#fff",borderRadius:10,padding:"6px",
+          boxShadow:"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+          <div style={{fontSize:10,fontWeight:700,color:"#888",marginBottom:2,textAlign:"center"}}>{barIdx+1}</div>
+          {cells2e}
+        </div>
+      );
+    };
+    grid2EditElement = (
+      <div>
+        <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
+          {topBars2.map(function(b){return renderBar2Edit(b);})}
+        </div>
+        <br/>
+        <div style={{display:"inline-flex",gap:4}}>
+          {botBars2.map(function(b){return renderBar2Edit(b);})}
+        </div>
       </div>
     );
   }
@@ -1764,14 +1811,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
             </svg>
             </div>
           </div>
-          <div style={{overflowX:"auto",width:"100%"}}>
-            <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
-              {topBars.map(function(b){return renderBar(b);})}
+          <div style={{display:"flex",gap:instrument2?32:0,overflowX:"auto",width:"100%"}}>
+            <div>
+              <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
+                {topBars.map(function(b){return renderBar(b);})}
+              </div>
+              <br/>
+              <div style={{display:"inline-flex",gap:4}}>
+                {botBars.map(function(b){return renderBar(b);})}
+              </div>
             </div>
-            <br/>
-            <div style={{display:"inline-flex",gap:4}}>
-              {botBars.map(function(b){return renderBar(b);})}
-            </div>
+            {instrument2&&grid2EditElement&&(
+              <div>
+                <div style={{fontSize:11,color:C.label,fontWeight:600,marginBottom:6,textAlign:"center"}}>響ノ音</div>
+                {grid2EditElement}
+              </div>
+            )}
           </div>
         </div>
       ) : (
@@ -1820,8 +1875,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                     <text x="70" y="160" textAnchor="middle" fontSize="9" fill="#999">高音</text>
                     {Object.keys(DOTS_I).map(function(color){
                       var pos=DOTS_I[color];
+                      var used2={};
+                      COLORS2.forEach(function(c){
+                        for(var i=0;i<numBars*SPB;i++){
+                          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
+                        }
+                      });
                       return <circle key={color} cx={pos.cx} cy={pos.cy} r="15"
-                        fill={SCORE_HIBIKI_COLORS[color]||"#ccc"} stroke="white" strokeWidth="1.5"/>;
+                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
                     })}
                   </svg>
                 </div>
@@ -2497,8 +2558,9 @@ function App() {
     await Promise.all(songIds.map(function(id){ return loadScorePatterns(id); }));
   }
 
-  async function saveScorePattern(scoreId, section, left, right, meta) {
+  async function saveScorePattern(scoreId, section, left, right, meta, left2, right2) {
     var colors = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+    var colors2 = ["turquoise","steelgray","salmon","royalblue","gold","emerald","charcoal","sage","plum"];
     // 現在のスプシデータと比較して変更があるものだけ送る
     var existing = (scorePatterns[scoreId]||{})[section]||{};
     var calls = [];
@@ -2510,6 +2572,17 @@ function App() {
       if(newL !== oldL) calls.push({hand:"left", color:color, pattern:newL});
       if(newR !== oldR) calls.push({hand:"right", color:color, pattern:newR});
     });
+    // 2台目（instrument2）のデータ
+    if(left2 && right2) {
+      colors2.forEach(function(color) {
+        var newL2 = JSON.stringify(left2[color]||[]);
+        var newR2 = JSON.stringify(right2[color]||[]);
+        var oldL2 = JSON.stringify((existing.left2&&existing.left2[color])||[]);
+        var oldR2 = JSON.stringify((existing.right2&&existing.right2[color])||[]);
+        if(newL2 !== oldL2) calls.push({hand:"left2", color:color, pattern:newL2});
+        if(newR2 !== oldR2) calls.push({hand:"right2", color:color, pattern:newR2});
+      });
+    }
     // meta
     var oldMeta = existing.meta||{};
     if(meta) {
