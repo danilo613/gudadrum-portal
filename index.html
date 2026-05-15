@@ -1574,6 +1574,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   // 2台目グリッドの計算（instrument2がある時）
   var grid2Element = null;
   var grid2EditElement = null;
+  var renderBar2Edit = null;
   if(instrument2) {
     var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
     var pat2={left:left2,right:right2};
