@@ -1833,20 +1833,27 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               </div>
             )}
           </div>
-          <div style={{display:"flex",gap:instrument2?32:0,overflowX:"auto",width:"100%"}}>
-            <div>
-              <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
-                {topBars.map(function(b){return renderBar(b);})}
-              </div>
-              <br/>
-              <div style={{display:"inline-flex",gap:4}}>
-                {botBars.map(function(b){return renderBar(b);})}
-              </div>
-            </div>
-            {instrument2&&grid2EditElement&&(
+           <div style={{overflowX:"auto",width:"100%"}}>
+            {instrument2?(
               <div>
-                <div style={{fontSize:11,color:C.label,fontWeight:600,marginBottom:6,textAlign:"center"}}>響ノ音</div>
-                {grid2EditElement}
+                {Array.from({length:numBars},function(_,bi){
+                  return (
+                    <div key={bi} style={{display:"flex",gap:8,marginBottom:8,alignItems:"flex-start"}}>
+                      {renderBar(bi)}
+                      {renderBar2Edit&&renderBar2Edit(bi)}
+                    </div>
+                  );
+                })}
+              </div>
+            ):(
+              <div>
+                <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
+                  {topBars.map(function(b){return renderBar(b);})}
+                </div>
+                <br/>
+                <div style={{display:"inline-flex",gap:4}}>
+                  {botBars.map(function(b){return renderBar(b);})}
+                </div>
               </div>
             )}
           </div>
