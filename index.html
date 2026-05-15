@@ -1810,6 +1810,24 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               })()}
             </svg>
             </div>
+            {/* 響ノ音イラスト（instrument2がある時） */}
+            {instrument2&&(
+              <div style={{textAlign:"center",marginLeft:32}}>
+                <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+                <svg viewBox="0 0 140 166" width="120" height="142">
+                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                  <text x="70" y="8" textAnchor="middle" fontSize="9" fill="#999">低音</text>
+                  <text x="70" y="160" textAnchor="middle" fontSize="9" fill="#999">高音</text>
+                  {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
+                    var pos=SCORE_DOTS_HIBIKI[color];
+                    return <circle key={color} cx={pos.cx} cy={pos.cy}
+                      r={color===highlightColor?17:15}
+                      fill={SCORE_HIBIKI_COLORS[color]||"#ccc"} stroke="white" strokeWidth="1.5"
+                      style={{transition:"all 0.15s"}}/>;
+                  })}
+                </svg>
+              </div>
+            )}
           </div>
           <div style={{display:"flex",gap:instrument2?32:0,overflowX:"auto",width:"100%"}}>
             <div>
