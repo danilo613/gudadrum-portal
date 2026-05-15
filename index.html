@@ -1797,7 +1797,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                     <g key={color}>
                       <circle cx={pos.cx} cy={pos.cy}
                         r={color===highlightColor?17:15}
-                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color])}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
@@ -1844,17 +1844,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
                 var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
                 return Object.keys(activeDots).map(function(color){
                   var pos=activeDots[color];
-                  var usedColors={};
-                  COLORS.forEach(function(c){
-                    for(var i=0;i<numBars*SPB;i++){
-                      if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
-                    }
-                  });
                   return (
                     <g key={color}>
                       <circle cx={pos.cx} cy={pos.cy}
                         r={color===highlightColor?17:15}
-                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color])}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
                     </g>
