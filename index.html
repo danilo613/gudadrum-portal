@@ -1951,9 +1951,21 @@ function renderSideGrid2(barIdx, side){
         </div>
       )}
 
-      <div style={{position:"sticky",top:0,zIndex:20,background:"rgba(245,245,243,0.97)",
-        backdropFilter:"blur(4px)",paddingTop:8,paddingBottom:4,marginBottom:4,
-        borderBottom:"1px solid #e8e8e8",marginLeft:-16,marginRight:-16,paddingLeft:16,paddingRight:16}}>
+      <div ref={function(el){
+        if(el){
+          var h=el.offsetHeight;
+          el.parentNode.style.paddingTop=h+"px";
+          el.style.position="fixed";
+          el.style.top="0";
+          el.style.left=el.parentNode.getBoundingClientRect().left+"px";
+          el.style.width=el.parentNode.offsetWidth+"px";
+          el.style.zIndex="100";
+          el.style.background="rgba(245,245,243,0.97)";
+          el.style.borderBottom="1px solid #e8e8e8";
+          el.style.padding="8px 16px 4px";
+          el.style.boxSizing="border-box";
+        }
+      }}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
         <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
           style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
