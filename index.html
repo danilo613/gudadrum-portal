@@ -1951,21 +1951,27 @@ function renderSideGrid2(barIdx, side){
         </div>
       )}
 
-      <div ref={function(el){
-        if(el){
-          var h=el.offsetHeight;
-          el.parentNode.style.paddingTop=h+"px";
-          el.style.position="fixed";
-          el.style.top="0";
-          el.style.left=el.parentNode.getBoundingClientRect().left+"px";
-          el.style.width=el.parentNode.offsetWidth+"px";
-          el.style.zIndex="100";
-          el.style.background="rgba(245,245,243,0.97)";
-          el.style.borderBottom="1px solid #e8e8e8";
-          el.style.padding="8px 16px 4px";
-          el.style.boxSizing="border-box";
-        }
-      }}>
+      <div style={{
+        position:"fixed", left:floatPos.x, top:floatPos.y, zIndex:200,
+        background:"rgba(245,245,243,0.97)", backdropFilter:"blur(6px)",
+        border:"1px solid #d0cec8", borderRadius:12, padding:"8px 12px",
+        boxShadow:"0 4px 16px rgba(0,0,0,0.15)", minWidth:280, cursor:"default",
+        userSelect:"none"
+      }}
+        onMouseDown={function(e){
+          if(e.target.tagName==="BUTTON"||e.target.tagName==="INPUT"||e.target.closest("button")) return;
+          draggingRef.current=true;
+          dragOffRef.current={x:e.clientX-floatPos.x, y:e.clientY-floatPos.y};
+          var onMove=function(ev){
+            if(!draggingRef.current)return;
+            setFloatPos({x:ev.clientX-dragOffRef.current.x, y:ev.clientY-dragOffRef.current.y});
+          };
+          var onUp=function(){draggingRef.current=false; window.removeEventListener("mousemove",onMove); window.removeEventListener("mouseup",onUp);};
+          window.addEventListener("mousemove",onMove);
+          window.addEventListener("mouseup",onUp);
+        }}
+      >
+      <div style={{fontSize:9,color:"#aaa",textAlign:"center",marginBottom:4,cursor:"move"}}>⠿ ドラッグで移動</div>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
         <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
           style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -2029,10 +2035,1949 @@ function renderSideGrid2(barIdx, side){
       </div>
 
       {canEdit ? (
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8}}>
-            {/* 響ノ音を先に表示 */}
-            {instrument2&&(
+        <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
+          {/* 左：イラスト固定カラム */}
+          {instrument2?(
+            <div style={{flexShrink:0,position:"sticky",top:8}}>
+              <div style={{textAlign:"center",marginBottom:8}}>
+                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>響ノ音</div>
+                <svg viewBox="0 0 140 166" width="80" height="95">
+                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  {(function(){
+                    var used2={};
+                    COLORS2.forEach(function(c){
+                      for(var i=0;i<numBars*SPB;i++){
+                        if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
+                      }
+                    });
+                    return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
+                      var pos=SCORE_DOTS_HIBIKI[color];
+                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
+                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        stroke="white" strokeWidth="1.5"/>;
+                    });
+                  })()}
+                </svg>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>風ノ音</div>
+                <svg viewBox="0 0 140 166" width="80" height="95">
+                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  {(function(){
+                    var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                    return Object.keys(activeDots).map(function(color){
+                      var pos=activeDots[color];
+                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
+                        fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
+                    });
+                  })()}
+                </svg>
+              </div>
+            </div>
+          ):null}
+          {/* 右：再生コントロール＋グリッド */}
+          <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:instrument2?0:8}}>
+          {instrument2?null:(
+            {/* 響ノ音を先に表示（instrument2なし時のみここで表示） */}
+            {false&&instrument2&&(
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+                <svg viewBox="0 0 140 166" width="140" height="166">
+                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  {(function(){
+                    var used2e={};
+                    COLORS2.forEach(function(c){
+                      for(var i=0;i<numBars*SPB;i++){
+                        if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2e[c]=true; break; }
+                      }
+                    });
+                    return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
+                      var pos=SCORE_DOTS_HIBIKI[color];
+                      return <circle key={color} cx={pos.cx} cy={pos.cy}
+                        r={color===highlightColor?17:15}
+                        fill={used2e[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>;
+                    });
+                  })()}
+                </svg>
+              </div>
+            )}
+            {/* 風ノ音 */}
+            <div style={{textAlign:"center"}}>
+              {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
+            <div style={{width:140}}>
+              <svg viewBox="0 0 140 166" width="140" height="166">
+              <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+              <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{scale==="dreamy"?"低音":"高音"}</text>
+              <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{scale==="dreamy"?"高音":"低音"}</text>
+              {(function(){
+                var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                return Object.keys(activeDots).filter(function(c){return true;}).map(function(color){
+                  var pos=activeDots[color];
+                  return (
+                    <g key={color}>
+                      <circle cx={pos.cx} cy={pos.cy}
+                        r={color===highlightColor?17:15}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
+                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
+                        style={{transition:"all 0.15s"}}/>
+                      {lrOn&&dotLabel[color]&&(
+                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
+                      )}
+                    </g>
+                  );
+                });
+              })()}
+            </svg>
+            </div>
+            </div>
+
+          </div>
+           <div style={{overflowX:"auto",width:"100%",marginTop:8}}>
+            {instrument2?(
+              <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+                {Array.from({length:numBars},function(_,bi){
+                  return (
+                    <div key={bi} style={{display:"flex",gap:8,marginBottom:8,alignItems:"flex-start"}}>
+                      {renderBar2Edit&&renderBar2Edit(bi)}
+                      {renderBar(bi)}
+                    </div>
+                  );
+                })}
+              </div>
+            ):(
+              <div>
+                <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
+                  {topBars.map(function(b){return renderBar(b);})}
+                </div>
+                <br/>
+                <div style={{display:"inline-flex",gap:4}}>
+                  {botBars.map(function(b){return renderBar(b);})}
+                </div>
+              </div>
+            )}
+          </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+          {/* イラスト横並び（上） */}
+          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
+            {/* 1台目イラスト（instrument2がある時は響ノ音を先に） */}
+            {instrument2&&(function(){
+              var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
+              return (
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+                  <svg viewBox="0 0 140 166" width="120" height="142">
+                    <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                    {(function(){
+                      var used2={};
+                      COLORS2.forEach(function(c){
+                        for(var i=0;i<numBars*SPB;i++){
+                          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
+                        }
+                      });
+                      return Object.keys(DOTS_I).map(function(color){
+                        var pos=DOTS_I[color];
+                        return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
+                          fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                          stroke="white" strokeWidth="1.5"/>;
+                      });
+                    })()}
+                  </svg>
+                </div>
+              );
+            })()}
+            <div style={{textAlign:"center"}}>
+              {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
+              <svg viewBox="0 0 140 166" width="120" height="142">
+              <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+              <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
+              <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
+              {(function(){
+                var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                return Object.keys(activeDots).map(function(color){
+                  var pos=activeDots[color];
+                  return (
+                    <g key={color}>
+                      <circle cx={pos.cx} cy={pos.cy}
+                        r={color===highlightColor?17:15}
+                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
+                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
+                        style={{transition:"all 0.15s"}}/>
+                    </g>
+                  );
+                });
+              })()}
+              </svg>
+            </div>
+            {/* 2台目イラスト */}
+            {instrument2&&(function(){
+              var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
+              return (
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+                  <svg viewBox="0 0 140 166" width="120" height="142">
+                    <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                    {Object.keys(DOTS_I).map(function(color){
+                      var pos=DOTS_I[color];
+                      var used2={};
+                      COLORS2.forEach(function(c){
+                        for(var i=0;i<numBars*SPB;i++){
+                          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
+                        }
+                      });
+                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="15"
+                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
+                    })}
+                  </svg>
+                </div>
+              );
+            })()}
+          </div>
+          {/* グリッド横並び（下） */}
+          <div style={{display:"flex",gap:instrument2?32:0,justifyContent:"center",alignItems:"flex-start",overflowX:"auto",width:"100%",flexWrap:"wrap"}}>
+            {/* 1台目グリッド */}
+            <div>
+              <div style={{display:"flex",gap:2,marginBottom:10}}>
+                {topBars.map(function(b){return renderBar(b);})}
+              </div>
+              <div style={{display:"flex",gap:2}}>
+                {botBars.map(function(b){return renderBar(b);})}
+              </div>
+            </div>
+            {/* 2台目グリッド */}
+            {grid2Element}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+          </div>
+          </div>
+          </div>
+          </div>
+        </div>
+      
+l, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2 }) {
+  var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+  var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
+  console.log("ScorePlayer instrument2=", instrument2, "COLORS2=", COLORS2);
+  var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
+  var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
+  var DOTS2 = instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+  // noteTypeはpropから受け取る（楽曲ごとに固定）
+  var subdiv = subdivProp||"triplet";
+  var SPB = subdiv==="16th" ? 16 : 12;
+  // TOTALはnumBarsから計算（下で再定義）
+  var TOTAL = SPB * 8;
+  var CELL = 18, GAP = 1;
+  console.log("ScorePlayer:", scoreId, sectionKey, "subdivProp=", subdivProp, "SPB=", SPB);
+
+  function emptyPat(total) {
+    var t = total || (SPB * 8); // SPBに基づいたサイズ
+    var p = {};
+    COLORS.forEach(function(c){ p[c] = new Array(t).fill(0); });
+    return p;
+  }
+  function initPat(side) {
+    var total = SPB * 8;
+    var p = emptyPat(total);
+    if (patternData && patternData[side]) {
+      COLORS.forEach(function(c){
+        if (patternData[side][c]) {
+          var src = patternData[side][c];
+          for(var i=0;i<total;i++) p[c][i] = src[i]||0;
+        }
+      });
+    }
+    return p;
+  }
+
+  var leftS=useState(function(){return initPat("left");}); var left=leftS[0]; var setLeft=leftS[1];
+  // 2台目のstate
+  function initPat2(side){
+    var total=Math.max(2,Math.min(parseInt(bars)||8,32))*SPB; var p={};
+    COLORS2.forEach(function(c){p[c]=new Array(total).fill(0);});
+    if(patternData2&&patternData2[side]){
+      COLORS2.forEach(function(c){
+        if(patternData2[side][c]){for(var i=0;i<Math.min(patternData2[side][c].length,total);i++)p[c][i]=patternData2[side][c][i]||0;}
+      });
+    }
+    return p;
+  }
+  var left2S=useState(function(){return instrument2?initPat2("left"):{};}); var left2=left2S[0]; var setLeft2=left2S[1];
+  var right2S=useState(function(){return instrument2?initPat2("right"):{};}); var right2=right2S[0]; var setRight2=right2S[1];
+  var rightS=useState(function(){return initPat("right");}); var right=rightS[0]; var setRight=rightS[1];
+  var playingS=useState(false); var playing=playingS[0]; var setPlaying=playingS[1];
+  var bpmS=useState(sharedBpm||80);
+  var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
+  var highlightColorS=useState(null); var highlightColor=highlightColorS[0]; var setHighlightColor=highlightColorS[1];
+  var startBarS=useState(0); var startBar=startBarS[0]; var setStartBar=startBarS[1]; var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
+  var setBpm=function(v){ setBpmLocal(typeof v==="function"?v(bpmS[0]):v); if(onBpmChange) onBpmChange(typeof v==="function"?v(bpmS[0]):v); };
+  var curStepS=useState(-1); var curStep=curStepS[0]; var setCurStep=curStepS[1];
+  var metroOnS=useState(sharedMetroOn||false); var metroOn=metroOnS[0]; var setMetroOnLocal=metroOnS[1];
+  var setMetroOn=function(v){ var val=typeof v==="function"?v(metroOnS[0]):v; setMetroOnLocal(val); if(onMetroChange) onMetroChange({metroOn:val}); };
+  var metroModeS=useState(sharedMetroMode||4); var metroMode=metroModeS[0]; var setMetroModeLocal=metroModeS[1];
+  var setMetroMode=function(v){ var val=typeof v==="function"?v(metroModeS[0]):v; setMetroModeLocal(val); if(onMetroChange) onMetroChange({metroMode:val}); };
+  var metroVolS=useState(0.6); var metroVol=metroVolS[0]; var setMetroVol=metroVolS[1];
+  var metroAccentS=useState(true); var metroAccent=metroAccentS[0]; var setMetroAccent=metroAccentS[1];
+  var lrOnS=useState(true); var lrOn=lrOnS[0]; var setLrOn=lrOnS[1];
+  var dotFillsS=useState(function(){var d={};Object.keys(SCORE_DOTS).forEach(function(c){d[c]=SCORE_PALE_COLORS[c];});return d;}); var dotFills=dotFillsS[0]; var setDotFills=dotFillsS[1];
+  var dotLabelS=useState({}); var dotLabel=dotLabelS[0]; var setDotLabel=dotLabelS[1];
+  var savingS=useState(false); var saving=savingS[0]; var setSaving=savingS[1];
+  var saveMsgS=useState(""); var saveMsg=saveMsgS[0]; var setSaveMsg=saveMsgS[1];
+  var secTimeS=useState(startTime||""); var secTime=secTimeS[0]; var setSecTime=secTimeS[1];
+  var subdivS=useState(subdivProp||"triplet"); var subdiv=subdivS[0]; var setSubdiv=subdivS[1];
+  var barsS=useState("8"); var bars=barsS[0]; var setBars=barsS[1];
+  var repeatS=useState("1"); var repeat=repeatS[0]; var setRepeat=repeatS[1];
+
+  var startStepRef=useRef(0);
+  var iidRef=useRef(null); var stepRef=useRef(0); var dimRef=useRef(null);
+  var actxRef=useRef(null); var bufsRef=useRef({});
+  var bufs2Ref=useRef({}); // 2台目の音源バッファ
+  var leftRef=useRef(left); var rightRef=useRef(right);
+  var left2Ref=useRef(left2); var right2Ref=useRef(right2);
+  var bpmRef=useRef(bpm); var metroOnRef=useRef(metroOn);
+  var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
+  var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
+  var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
+  var onSectionEndRef=useRef(onSectionEnd);
+  var barsRef=useRef(parseInt(bars)||8);
+
+
+  useEffect(function(){leftRef.current=left;},[left]);
+  useEffect(function(){if(left2Ref)left2Ref.current=left2;},[left2]);
+  useEffect(function(){if(right2Ref)right2Ref.current=right2;},[right2]);
+  useEffect(function(){rightRef.current=right;},[right]);
+  useEffect(function(){bpmRef.current=bpm;},[bpm]);
+  useEffect(function(){metroOnRef.current=metroOn;},[metroOn]);
+  useEffect(function(){metroModeRef.current=metroMode;},[metroMode]);
+  useEffect(function(){metroVolRef.current=metroVol;},[metroVol]);
+  useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
+  useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
+  useEffect(function(){
+    if(sharedBpm && sharedBpm !== bpm){ setBpmLocal(sharedBpm); bpmRef.current=sharedBpm; }
+  },[sharedBpm]);
+  useEffect(function(){
+    if(sharedMetroOn!==undefined){ setMetroOnLocal(sharedMetroOn); metroOnRef.current=sharedMetroOn; }
+  },[sharedMetroOn]);
+  useEffect(function(){
+    if(sharedMetroMode){ setMetroModeLocal(sharedMetroMode); metroModeRef.current=sharedMetroMode; }
+  },[sharedMetroMode]);
+  useEffect(function(){
+    // 音源を先読みして間をなくす
+    initAudio(function(){});
+    return function(){};
+  },[]);
+  useEffect(function(){barsRef.current=Math.max(2,Math.min(parseInt(bars)||8,32));},[bars]);
+  useEffect(function(){onSectionEndRef.current=onSectionEnd;},[onSectionEnd]);
+  // onLoopCompleteをRefで管理
+  var onLoopCompleteRef=React.useRef(onLoopComplete);
+  useEffect(function(){onLoopCompleteRef.current=onLoopComplete;},[onLoopComplete]);
+
+  // sectionKeyが変わった時、autoPlayならば自動再生
+  var prevKeyRef=React.useRef(sectionKey);
+  useEffect(function(){
+    if(prevKeyRef.current !== sectionKey){
+      prevKeyRef.current = sectionKey;
+      if(autoPlay){
+        initAudio(function(){
+          stepRef.current=0;
+          setPlaying(true);
+          doStart();
+        });
+      }
+    }
+  },[sectionKey]);
+
+
+
+  useEffect(function(){
+    subdivRef.current=subdiv;
+    // subdivPropが変わった時にleft/rightを正しいサイズで再構築
+    var total = SPB * 8;
+    var lp={}, rp={};
+    COLORS.forEach(function(c){
+      lp[c]=new Array(total).fill(0);
+      rp[c]=new Array(total).fill(0);
+      if(patternData&&patternData.left&&patternData.left[c]){
+        for(var i=0;i<Math.min(patternData.left[c].length,total);i++) lp[c][i]=patternData.left[c][i]||0;
+      }
+      if(patternData&&patternData.right&&patternData.right[c]){
+        for(var i=0;i<Math.min(patternData.right[c].length,total);i++) rp[c][i]=patternData.right[c][i]||0;
+      }
+    });
+    setLeft(lp); setRight(rp);
+    leftRef.current=lp; rightRef.current=rp;
+  },[subdiv]);
+
+  useEffect(function(){
+    console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
+    // meta.barsが存在する時だけその値を使う。なければ常に8（デフォルト）
+    var metaBars = (patternData&&patternData.meta&&patternData.meta.bars)?parseInt(patternData.meta.bars)||8:8;
+    var nb = Math.max(2, Math.min(metaBars, 32));
+    var spb = subdivRef.current==="16th"?16:12;
+    var total = nb * spb;
+    barsRef.current = nb;
+    var lp={}, rp={};
+    COLORS.forEach(function(c){
+      lp[c]=new Array(total).fill(0);
+      rp[c]=new Array(total).fill(0);
+      if(patternData&&patternData.left&&patternData.left[c]){
+        for(var i=0;i<Math.min(patternData.left[c].length,total);i++) lp[c][i]=patternData.left[c][i]||0;
+      }
+      if(patternData&&patternData.right&&patternData.right[c]){
+        for(var i=0;i<Math.min(patternData.right[c].length,total);i++) rp[c][i]=patternData.right[c][i]||0;
+      }
+    });
+    if(patternData&&patternData.meta){
+      if(patternData.meta.bars){
+        setBars(String(patternData.meta.bars));
+        barsRef.current=Math.max(2,Math.min(parseInt(patternData.meta.bars)||8,32));
+      } else {
+        setBars("8");
+        barsRef.current=8;
+      }
+      if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
+      if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
+    }
+    setLeft(lp); setRight(rp);
+    leftRef.current=lp; rightRef.current=rp;
+    if(startTime) setSecTime(startTime);
+  },[patternData,startTime,subdivProp,sectionKey]);
+
+  useEffect(function(){return function(){doStop();};},[]);
+
+  // スペースキーで再生/停止
+  useEffect(function(){
+    function onKey(e){
+      if(e.code==="Space"&&e.target.tagName!=="INPUT"&&e.target.tagName!=="TEXTAREA"){
+        e.preventDefault();
+        handlePlay();
+      }
+    }
+    window.addEventListener("keydown",onKey);
+    return function(){window.removeEventListener("keydown",onKey);};
+  },[playing]);
+
+  function initAudio(cb){
+    if(actxRef.current){if(cb)cb();return;}
+    var Ctx=window.AudioContext||window.webkitAudioContext;
+    actxRef.current=new Ctx();
+    var keys=Object.keys(METRO_SOUNDS_B64);var done=0;
+    keys.forEach(function(k){
+      var bin=atob(METRO_SOUNDS_B64[k]),arr=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+      actxRef.current.decodeAudioData(arr.buffer,function(buf){
+        bufsRef.current['metro_'+k]=buf;done++;
+        if(done===keys.length){
+          // 1台目の音源
+          var soundUrls=getSoundUrls(scoreId, scoreId==="iridescence"?soundType:(scoreId==="aoi"?"arcane":null));
+          var skeys=Object.keys(soundUrls);
+          // 2台目の音源
+          var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
+          var skeys2=Object.keys(soundUrls2);
+          var total=skeys.length+skeys2.length;
+          if(total===0){if(cb)cb();return;}
+          var loaded=0;
+          function onLoad(){loaded++;if(loaded===total&&cb)cb();}
+          skeys.forEach(function(sk){
+            fetch(soundUrls[sk]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufsRef.current[sk]=ab;onLoad();})
+              .catch(function(){onLoad();});
+          });
+          skeys2.forEach(function(sk2){
+            fetch(soundUrls2[sk2]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufs2Ref.current[sk2]=ab;onLoad();})
+              .catch(function(){onLoad();});
+          });
+        }
+      },function(){done++;if(done===keys.length&&cb)cb();});
+    });
+  }
+
+  function playSound(c){
+    var actx=actxRef.current,bufs=bufsRef.current;
+    if(!actx||!bufs[c])return;
+    var s=actx.createBufferSource();s.buffer=bufs[c];
+    var g=actx.createGain();g.gain.value=0.6;
+    s.connect(g);g.connect(actx.destination);s.start(0);
+  }
+  function playSound2(c){
+    var actx=actxRef.current,bufs2=bufs2Ref.current;
+    if(!actx||!bufs2[c])return;
+    var s=actx.createBufferSource();s.buffer=bufs2[c];
+    var g=actx.createGain();g.gain.value=0.6;
+    s.connect(g);g.connect(actx.destination);s.start(0);
+  }
+
+  function woodClick(accent, atTime){
+    var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
+    var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
+    if(!bufs[key])return;
+    var s=actx.createBufferSource();s.buffer=bufs[key];
+    var g=actx.createGain();g.gain.value=metroVolRef.current;
+    s.connect(g);g.connect(actx.destination);
+    s.start(atTime||actx.currentTime);
+  }
+
+  function dimAll(){
+    var f={};Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
+    setDotFills(f);setDotLabel({});
+  }
+
+  function flashDot(color,hand){
+    setDotFills(function(p){var n=Object.assign({},p);n[color]=SCORE_DOT_COLORS[color];return n;});
+    if(lrOnRef.current)setDotLabel(function(p){var n=Object.assign({},p);n[color]=hand;return n;});
+  }
+
+  function tick(){
+    var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
+    var spbNow2=subdivRef.current==="16th"?16:12;
+    var totalNow2=barsRef.current*spbNow2;
+    if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
+    if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
+    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    if(dimRef.current)clearTimeout(dimRef.current);
+    dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
+    setCurStep(s);
+    var spbNow = subdivRef.current==="16th"?16:12;
+    var totalNow = barsRef.current * spbNow;
+    var nextStep = (s+1) % totalNow;
+    stepRef.current = nextStep;
+    // 1周完了
+    if(nextStep === 0) {
+      if(onLoopCompleteRef.current) {
+        var cont=onLoopCompleteRef.current();
+        if(!cont){ doStop(); return; }
+      } else if(onSectionEndRef.current) {
+        onSectionEndRef.current();
+      }
+    }
+    var fired={};
+    // 2台目の音を鳴らす
+    if(instrument2){
+      var L2=left2Ref?left2Ref.current:{}; var R2=right2Ref?right2Ref.current:{};
+      COLORS2.forEach(function(c){
+        if(L2[c]&&L2[c][s]&&bufs2Ref.current[c]){
+          var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
+          var g=actxRef.current.createGain(); g.gain.value=0.6;
+          src.connect(g); g.connect(actxRef.current.destination); src.start(0);
+        }
+        if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
+          var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
+          var g2=actxRef.current.createGain(); g2.gain.value=0.6;
+          src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
+        }
+      });
+    }
+    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
+    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
+    if(metroOnRef.current){
+      var m=metroModeRef.current;
+      var doAcc=s12===0&&metroAccentRef.current;
+      var spb=subdivRef.current==="16th"?16:12;
+      var s12b=stepRef.current===0?0:(stepRef.current-1)%spb; // 現在のs12
+      if(subdivRef.current==="16th"){
+        if(m===4&&s12%4===0)woodClick(doAcc);
+        else if(m===8&&s12%2===0)woodClick(doAcc);
+        else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
+      } else {
+        if(m===4&&s12%3===0)woodClick(doAcc);
+        else if(m===3)woodClick(doAcc);
+      }
+    }
+  }
+
+  function doStart(){
+    if(iidRef.current)clearInterval(iidRef.current);
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+  }
+
+  function doStop(){
+    if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
+    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
+    dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
+  }
+
+  function handlePlay(){
+    if(playing){doStop();return;}
+    initAudio(function(){
+      stepRef.current=startStepRef.current;
+      setPlaying(true);doStart();
+    });
+  }
+
+  function handlePrint(){
+    var DOTS=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+    var spb=subdiv==="16th"?16:12;
+    var CELL_P=20, GAP_P=1;
+    var stepH=CELL_P+GAP_P;
+    // このセクションで使われてる色を検出
+    var usedColors={};
+    COLORS.forEach(function(c){
+      for(var i=0;i<nb*spb;i++){
+        if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
+      }
+    });
+
+    // 小節ごとのHTML生成
+    function barHtml(barIdx){
+      var rows="";
+      for(var i=0;i<spb;i++){
+        var s=barIdx*spb+i;
+        var ibs=i===0;
+        var ib=subdiv==="16th"?i%4===0:i%3===0;
+        var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
+        // 左手・右手の色を取得
+        var lColor=null, rColor=null;
+        COLORS.forEach(function(c){
+          if(left[c]&&left[c][s]) lColor=c;
+          if(right[c]&&right[c][s]) rColor=c;
+        });
+        var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+        var lBg=lColor?SCORE_DOT_COLORS[lColor]:"#e8e8e8";
+        var rBg=rColor?SCORE_DOT_COLORS[rColor]:"#e8e8e8";
+        var h=stepH+"px";
+        rows+='<div style="display:flex;height:'+h+';align-items:center;background:'+bg+'">'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+lBg+';border-radius:3px;margin-right:'+GAP_P+'px"></div>'
+          +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+rBg+';border-radius:3px;margin-left:'+GAP_P+'px"></div>'
+          +'</div>';
+      }
+      return '<div style="display:inline-block;margin:4px;background:#fff;border-radius:8px;padding:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'
+        +'<div style="font-size:10px;font-weight:700;color:#888;margin-bottom:3px;text-align:center">'+(barIdx+1)+'</div>'
+        +rows+'</div>';
+    }
+
+    var barsHtml="";
+    for(var bi=0;bi<nb;bi++) barsHtml+=barHtml(bi);
+
+    // SVGイラスト
+    var svgDots="";
+    Object.keys(DOTS).forEach(function(color){
+      var pos=DOTS[color];
+      var fill=color===highlightColor?SCORE_DOT_COLORS[color]:(usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color]);
+        var strokeW=color===highlightColor?"3":"1.5";
+        var r=color===highlightColor?"17":"15";
+      svgDots+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+    });
+    var svgHtml='<svg viewBox="0 0 140 166" width="100" height="118" style="flex-shrink:0">'
+      +'<circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" stroke-width="1"/>'
+      +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+(scale==="dreamy"?"低音":"高音")+'</text>'
+      +'<text x="70" y="160" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+(scale==="dreamy"?"高音":"低音")+'</text>'
+      +svgDots+'</svg>';
+
+    var win=window.open("","_blank");
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
+      +'<title>'+sectionLabel+'</title>'
+      +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+      +'</style></head><body>'
+      +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
+      +svgHtml
+      +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
+      +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
+      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節 × '+repeat+'回 / '+(subdiv==="16th"?"16分":"三連")+'</div>'
+      +'</div></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
+      +'</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
+  }
+
+  function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
+
+  function toggleCell2(side,color,idx){
+    if(!canEdit)return;
+    var setter=side==="left"?setLeft2:setRight2;
+    var willBeOn;
+    var totalSteps2=Math.max(2,Math.min(parseInt(bars)||8,32))*SPB;
+    setter(function(prev){
+      var p=Object.assign({},prev);
+      if(!p[color]) p[color]=new Array(totalSteps2).fill(0);
+      else p[color]=prev[color].slice();
+      p[color][idx]^=1;
+      willBeOn=p[color][idx]===1;
+      return p;
+    });
+    setTimeout(function(){
+      if(willBeOn) initAudio(function(){ playSound2(color); });
+    },0);
+  }
+
+  function toggleCell(side,color,idx){
+    if(!canEdit)return;
+    var setter=side==="left"?setLeft:setRight;
+    var willBeOn;
+    setter(function(prev){
+      var p=Object.assign({},prev);p[color]=prev[color].slice();
+      p[color][idx]^=1;
+      willBeOn=p[color][idx]===1;
+      return p;
+    });
+    // ONになった時だけ音を鳴らす
+    setTimeout(function(){
+      if(willBeOn) {
+        setHighlightColor(color);
+        setTimeout(function(){ setHighlightColor(null); }, 300);
+        initAudio(function(){ playSound(color); });
+      }
+    }, 0);
+  }
+
+  function handleSave(){
+    setSaving(true);setSaveMsg("");
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
+    if(p&&p.then){
+      p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
+       .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
+    }else{setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);}
+  }
+
+  function Sw(on){
+    return <div style={{position:"relative",width:28,height:16,background:on?"#27AE60":"#d0cec8",borderRadius:8,flexShrink:0,transition:"background .2s"}}>
+      <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:on?"translateX(12px)":"none"}}/>
+    </div>;
+  }
+
+  // 中央の拍目印カラム（左右の間）
+  // 小節頭・4分音符の位置に横帯を表示、クリックで再生開始位置を設定
+  function renderBeatCol(barIdx){
+    var stepH = CELL+GAP;
+    var rows = [];
+    for(var i=0;i<SPB;i++){
+      var s=barIdx*SPB+i;
+      var ibs=i===0, ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+      var cur=s===curStep;
+      var isStart=s===startStepRef.current;
+      // 帯の色とサイズ
+      var band=null;
+      if(ibs){
+        // 小節頭: 濃いグレーの太い横帯
+        band=<div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:isStart?"#E74C3C":cur?"#505050":"#909090",borderRadius:2}}/>;
+      } else if(ib){
+        // 4分音符: 薄いグレーの細い横帯（中央寄り）
+        band=<div style={{position:"absolute",top:"30%",left:0,right:0,height:"40%",background:isStart?"rgba(231,76,60,0.6)":cur?"#808080":"#bbbbbb",borderRadius:1}}/>;
+      } else {
+        // 三連の細分: 小さいドット
+        band=<div style={{position:"absolute",top:"50%",left:"50%",width:3,height:3,borderRadius:"50%",background:cur?"#888":"#d0d0d0",transform:"translate(-50%,-50%)"}}/>;
+      }
+      rows.push(
+        <div key={i}
+          onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+          style={{
+            position:"relative",
+            width:14, height:stepH-GAP,
+            marginBottom:GAP,
+            cursor:"pointer",
+            overflow:"visible",
+          }}>
+          {band}
+        </div>
+      );
+    }
+    return <div style={{display:"flex",flexDirection:"column",width:12,flexShrink:0}}>{rows}</div>;
+  }
+
+  // 片側（左手or右手）のグリッド
+  // canEdit=true: 9色列、各色薄い色ベース、クリックでON/OFF
+  // canEdit=false: 1列、設定色を表示、なければ薄いグレー
+  function renderSideGrid(barIdx, side){
+    var pat=side==="left"?left:right;
+
+    if(canEdit){
+      // 編集モード: 9色列
+      return (
+        <div style={{display:"flex",flexDirection:"row"}}>
+          {COLORS.map(function(color){
+            var cells=[];
+            for(var i=0;i<SPB;i++){
+              var s=barIdx*SPB+i;
+              var on=pat[color]&&pat[color][s];
+              var cur=s===curStep;
+              var ibs=i===0;
+              var ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+              cells.push(
+                <div key={i}
+                  onClick={function(ss,co,si){return function(e){
+                    e.stopPropagation();
+                    toggleCell(si,co,ss);
+                  };}(s,color,side)}
+                  style={{
+                    width:CELL,height:CELL,
+                    marginBottom:GAP,
+                    borderRadius:2,
+                    background:on
+                      ? SCORE_DOT_COLORS[color]
+                      : (ibs||ib)
+                        ? SCORE_PALE_COLORS[color]
+                        : "#e8e8e8",
+                    opacity: on ? 1 : (ibs||ib) ? 0.6 : 1,
+                    cursor:"pointer",
+                    outline:cur?"2px solid #555":"none",
+                    outlineOffset:"-1px",
+                    position:"relative",zIndex:2,
+                  }}
+                />
+              );
+            }
+            return <div key={color} style={{display:"flex",flexDirection:"column",marginRight:GAP}}>{cells}</div>;
+          })}
+        </div>
+      );
+    } else {
+      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
+      if(!lrOn && side==="right") return null;
+      var cells=[];
+      for(var i=0;i<SPB;i++){
+        var s=barIdx*SPB+i;
+        var cur=s===curStep;
+        var isStart=s===startStepRef.current;
+        // その行に設定されてる色を探す（最大2色）
+        var foundColors=[];
+        for(var ci=0;ci<COLORS.length;ci++){
+          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+          if(foundColors.length>=2) break;
+        }
+        var foundColor=foundColors[0]||null;
+        cells.push(
+          <div key={i}
+            onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+            style={{
+              width:CELL,height:CELL,
+              marginBottom:GAP,
+              borderRadius:2,
+              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              cursor:"pointer",
+              outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
+              outlineOffset:"-1px",
+              position:"relative",zIndex:2,
+            }}
+          />
+        );
+      }
+      return <div style={{display:"flex",flexDirection:"column"}}>{cells}</div>;
+    }
+  }
+
+  // 1小節ブロック
+function renderSideGrid2(barIdx, side){
+    var pat=side==="left"?left2:right2;
+
+    if(canEdit){
+      // 編集モード: 9色列
+      return (
+        <div style={{display:"flex",flexDirection:"row"}}>
+          {COLORS2.map(function(color){
+            var cells=[];
+            for(var i=0;i<SPB;i++){
+              var s=barIdx*SPB+i;
+              var on=pat[color]&&pat[color][s];
+              var cur=s===curStep;
+              var ibs=i===0;
+              var ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+              cells.push(
+                <div key={i}
+                  onClick={function(ss,co,si){return function(e){
+                    e.stopPropagation();
+                    toggleCell2(si,co,ss);
+                  };}(s,color,side)}
+                  style={{
+                    width:CELL,height:CELL,
+                    marginBottom:GAP,
+                    borderRadius:2,
+                    background:on
+                      ? SCORE_HIBIKI_COLORS[color]
+                      : (ibs||ib)
+                        ? SCORE_HIBIKI_PALE_COLORS[color]
+                        : "#e8e8e8",
+                    opacity: on ? 1 : (ibs||ib) ? 0.6 : 1,
+                    cursor:"pointer",
+                    outline:cur?"2px solid #555":"none",
+                    outlineOffset:"-1px",
+                    position:"relative",zIndex:2,
+                  }}
+                />
+              );
+            }
+            return <div key={color} style={{display:"flex",flexDirection:"column",marginRight:GAP}}>{cells}</div>;
+          })}
+        </div>
+      );
+    } else {
+      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
+      if(!lrOn && side==="right") return null;
+      var cells=[];
+      for(var i=0;i<SPB;i++){
+        var s=barIdx*SPB+i;
+        var cur=s===curStep;
+        var isStart=s===startStepRef.current;
+        // その行に設定されてる色を探す（最大2色）
+        var foundColors=[];
+        for(var ci=0;ci<COLORS.length;ci++){
+          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+          if(foundColors.length>=2) break;
+        }
+        var foundColor=foundColors[0]||null;
+        cells.push(
+          <div key={i}
+            onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+            style={{
+              width:CELL,height:CELL,
+              marginBottom:GAP,
+              borderRadius:2,
+              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              cursor:"pointer",
+              outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
+              outlineOffset:"-1px",
+              position:"relative",zIndex:2,
+            }}
+          />
+        );
+      }
+      return <div style={{display:"flex",flexDirection:"column"}}>{cells}</div>;
+    }
+  }
+
+  // 1小節ブロック
+  function renderBar(barIdx){
+    var isStart=startBar===barIdx;
+    var stepH=CELL+GAP;
+    var nCols=canEdit?COLORS.length:1;
+    var sideW=nCols*(CELL+GAP);
+    var beatW=lrOn?14:0;
+    var totalW=lrOn?sideW+beatW+sideW:sideW;
+
+    // 帯リスト（後ろに配置）
+    var bands=[];
+    for(var i=0;i<SPB;i++){
+      var s=barIdx*SPB+i;
+      var ibs_b=i===0;
+      var ib_b=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+      var i8_b=subdiv==="16th"&&i%2===0&&i%4!==0;
+      var cur_b=s===curStep;
+      var isRowStart=s===startStepRef.current;
+      if(ibs_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH,height:stepH-GAP,
+          background:isRowStart?"rgba(231,76,60,0.25)":cur_b?"rgba(0,0,0,0.2)":"rgba(0,0,0,0.12)",
+          borderRadius:2,pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(ib_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH+Math.floor(stepH*0.3),height:Math.floor(stepH*0.4),
+          background:isRowStart?"rgba(231,76,60,0.15)":cur_b?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.07)",
+          borderRadius:1,pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(i8_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:"50%",transform:"translateX(-50%)",
+          top:i*stepH+Math.floor(stepH*0.35),
+          width:4,height:4,borderRadius:"50%",
+          background:cur_b?"rgba(0,0,0,0.4)":"rgba(0,0,0,0.15)",
+          pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(cur_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH,height:stepH-GAP,
+          background:"rgba(0,0,0,0.15)",
+          borderRadius:2,pointerEvents:"none",zIndex:0,
+        }}/>);
+      }
+    }
+    // 中央クリック列（拍区切り目印）
+    var beatCells=[];
+    for(var j=0;j<SPB;j++){
+      var ss=barIdx*SPB+j;
+      var jbs=j===0;
+      var jb=(subdiv==="16th"?j%4===0:j%3===0)&&j!==0;
+      var j8=subdiv==="16th"&&j%2===0&&j%4!==0;
+      var dot=null;
+      if(!jbs&&!jb&&!j8){
+        // 三連の細分 or 16分の細分: 小さいドット
+        dot=<div style={{width:2,height:2,borderRadius:"50%",background:"#ccc",margin:"0 auto"}}/>;
+      } else if(j8){
+        // 8分音符位置（16分モード）: 中くらいのドット
+        dot=<div style={{width:3,height:3,borderRadius:"50%",background:"#bbb",margin:"0 auto"}}/>;
+      }
+      beatCells.push(
+        <div key={j}
+          onClick={function(s2){return function(e){e.stopPropagation();startStepRef.current=s2;setCurStep(-1);};}(ss)}
+          style={{height:stepH-GAP,marginBottom:GAP,width:beatW,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",zIndex:1}}>
+          {dot}
+        </div>
+      );
+    }
+
+    return (
+      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+        {/* 小節番号 */}
+        <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+          <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+            style={{width:18,height:18,borderRadius:"50%",flexShrink:0,
+              background:isStart?"#E74C3C":"#a8a5a0",
+              color:"#fff",fontSize:10,fontWeight:700,
+              display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            {barIdx+1}
+          </div>
+          <div style={{fontSize:8,color:"#888"}}>小節</div>
+        </div>
+        {/* 色見本（編集モードのみ） */}
+        {canEdit&&(
+          <div style={{display:"flex",gap:0,marginBottom:2}}>
+            <div style={{display:"flex"}}>
+              {COLORS.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+            <div style={{width:beatW,flexShrink:0}}/>
+            <div style={{display:"flex"}}>
+              {COLORS.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+          </div>
+        )}
+        {/* グリッド本体: position:relativeで帯を後ろに */}
+        <div style={{position:"relative",width:totalW,height:SPB*stepH}}>
+          {/* 帯（後ろ） */}
+          {bands}
+          {/* 左手 */}
+          <div style={{position:"absolute",left:0,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"left")}
+          </div>
+          {/* 中央クリック列 */}
+          <div style={{position:"absolute",left:sideW,top:0,width:beatW,zIndex:1}}>
+            {beatCells}
+          </div>
+          {/* 右手 */}
+          <div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"right")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  var numBars = Math.max(2, Math.min(parseInt(bars)||8, 32));
+  var TOTAL = SPB * numBars;
+  // 上段: 奇数インデックス(0,2,4...) 下段: 偶数インデックス(1,3,5...)
+  var topBars=[], botBars=[];
+  for(var bi=0;bi<numBars;bi++){
+    if(bi%2===0) topBars.push(bi);
+    else botBars.push(bi);
+  }
+  var gridH=SPB*(CELL+GAP);
+  var headerH=18+2+5+2; // 小節番号+margin+色見本+margin
+
+
+
+
+  function initAudio(cb){
+    if(actxRef.current){if(cb)cb();return;}
+    var Ctx=window.AudioContext||window.webkitAudioContext;
+    actxRef.current=new Ctx();
+    var keys=Object.keys(METRO_SOUNDS_B64);var done=0;
+    keys.forEach(function(k){
+      var bin=atob(METRO_SOUNDS_B64[k]),arr=new Uint8Array(bin.length);
+      for(var i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+      actxRef.current.decodeAudioData(arr.buffer,function(buf){
+        bufsRef.current['metro_'+k]=buf;done++;
+        if(done===keys.length){
+          // 1台目の音源
+          var soundUrls=getSoundUrls(scoreId, scoreId==="iridescence"?soundType:(scoreId==="aoi"?"arcane":null));
+          var skeys=Object.keys(soundUrls);
+          // 2台目の音源
+          var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
+          var skeys2=Object.keys(soundUrls2);
+          var total=skeys.length+skeys2.length;
+          if(total===0){if(cb)cb();return;}
+          var loaded=0;
+          function onLoad(){loaded++;if(loaded===total&&cb)cb();}
+          skeys.forEach(function(sk){
+            fetch(soundUrls[sk]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufsRef.current[sk]=ab;onLoad();})
+              .catch(function(){onLoad();});
+          });
+          skeys2.forEach(function(sk2){
+            fetch(soundUrls2[sk2]).then(function(r){return r.arrayBuffer();})
+              .then(function(b){return actxRef.current.decodeAudioData(b);})
+              .then(function(ab){bufs2Ref.current[sk2]=ab;onLoad();})
+              .catch(function(){onLoad();});
+          });
+        }
+      },function(){done++;if(done===keys.length&&cb)cb();});
+    });
+  }
+
+  function playSound(c){
+    var actx=actxRef.current,bufs=bufsRef.current;
+    if(!actx||!bufs[c])return;
+    var s=actx.createBufferSource();s.buffer=bufs[c];
+    var g=actx.createGain();g.gain.value=0.6;
+    s.connect(g);g.connect(actx.destination);s.start(0);
+  }
+  function playSound2(c){
+    var actx=actxRef.current,bufs2=bufs2Ref.current;
+    if(!actx||!bufs2[c])return;
+    var s=actx.createBufferSource();s.buffer=bufs2[c];
+    var g=actx.createGain();g.gain.value=0.6;
+    s.connect(g);g.connect(actx.destination);s.start(0);
+  }
+
+  function woodClick(accent, atTime){
+    var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
+    var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
+    if(!bufs[key])return;
+    var s=actx.createBufferSource();s.buffer=bufs[key];
+    var g=actx.createGain();g.gain.value=metroVolRef.current;
+    s.connect(g);g.connect(actx.destination);
+    s.start(atTime||actx.currentTime);
+  }
+
+  function dimAll(){
+    var f={};Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
+    setDotFills(f);setDotLabel({});
+  }
+
+  function flashDot(color,hand){
+    setDotFills(function(p){var n=Object.assign({},p);n[color]=SCORE_DOT_COLORS[color];return n;});
+    if(lrOnRef.current)setDotLabel(function(p){var n=Object.assign({},p);n[color]=hand;return n;});
+  }
+
+  function tick(){
+    var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
+    var spbNow2=subdivRef.current==="16th"?16:12;
+    var totalNow2=barsRef.current*spbNow2;
+    if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
+    if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
+    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    if(dimRef.current)clearTimeout(dimRef.current);
+    dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
+    setCurStep(s);
+    var spbNow = subdivRef.current==="16th"?16:12;
+    var totalNow = barsRef.current * spbNow;
+    var nextStep = (s+1) % totalNow;
+    stepRef.current = nextStep;
+    // 1周完了
+    if(nextStep === 0) {
+      if(onLoopCompleteRef.current) {
+        var cont=onLoopCompleteRef.current();
+        if(!cont){ doStop(); return; }
+      } else if(onSectionEndRef.current) {
+        onSectionEndRef.current();
+      }
+    }
+    var fired={};
+    // 2台目の音を鳴らす
+    if(instrument2){
+      var L2=left2Ref?left2Ref.current:{}; var R2=right2Ref?right2Ref.current:{};
+      COLORS2.forEach(function(c){
+        if(L2[c]&&L2[c][s]&&bufs2Ref.current[c]){
+          var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
+          var g=actxRef.current.createGain(); g.gain.value=0.6;
+          src.connect(g); g.connect(actxRef.current.destination); src.start(0);
+        }
+        if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
+          var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
+          var g2=actxRef.current.createGain(); g2.gain.value=0.6;
+          src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
+        }
+      });
+    }
+    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
+    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
+    if(metroOnRef.current){
+      var m=metroModeRef.current;
+      var doAcc=s12===0&&metroAccentRef.current;
+      var spb=subdivRef.current==="16th"?16:12;
+      var s12b=stepRef.current===0?0:(stepRef.current-1)%spb; // 現在のs12
+      if(subdivRef.current==="16th"){
+        if(m===4&&s12%4===0)woodClick(doAcc);
+        else if(m===8&&s12%2===0)woodClick(doAcc);
+        else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
+      } else {
+        if(m===4&&s12%3===0)woodClick(doAcc);
+        else if(m===3)woodClick(doAcc);
+      }
+    }
+  }
+
+  function doStart(){
+    if(iidRef.current)clearInterval(iidRef.current);
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+  }
+
+  function doStop(){
+    if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
+    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
+    dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
+  }
+
+
+
+  function handlePrint(){
+    var DOTS=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+    var spb=subdiv==="16th"?16:12;
+    var CELL_P=20, GAP_P=1;
+    var stepH=CELL_P+GAP_P;
+    // このセクションで使われてる色を検出
+    var usedColors={};
+    COLORS.forEach(function(c){
+      for(var i=0;i<nb*spb;i++){
+        if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
+      }
+    });
+
+    // 小節ごとのHTML生成
+    function barHtml(barIdx){
+      var rows="";
+      for(var i=0;i<spb;i++){
+        var s=barIdx*spb+i;
+        var ibs=i===0;
+        var ib=subdiv==="16th"?i%4===0:i%3===0;
+        var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
+        // 左手・右手の色を取得
+        var lColor=null, rColor=null;
+        COLORS.forEach(function(c){
+          if(left[c]&&left[c][s]) lColor=c;
+          if(right[c]&&right[c][s]) rColor=c;
+        });
+        var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+        var lBg=lColor?SCORE_DOT_COLORS[lColor]:"#e8e8e8";
+        var rBg=rColor?SCORE_DOT_COLORS[rColor]:"#e8e8e8";
+        var h=stepH+"px";
+        rows+='<div style="display:flex;height:'+h+';align-items:center;background:'+bg+'">'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+lBg+';border-radius:3px;margin-right:'+GAP_P+'px"></div>'
+          +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+rBg+';border-radius:3px;margin-left:'+GAP_P+'px"></div>'
+          +'</div>';
+      }
+      return '<div style="display:inline-block;margin:4px;background:#fff;border-radius:8px;padding:6px;box-shadow:0 1px 4px rgba(0,0,0,0.1)">'
+        +'<div style="font-size:10px;font-weight:700;color:#888;margin-bottom:3px;text-align:center">'+(barIdx+1)+'</div>'
+        +rows+'</div>';
+    }
+
+    var barsHtml="";
+    for(var bi=0;bi<nb;bi++) barsHtml+=barHtml(bi);
+
+    // SVGイラスト
+    var svgDots="";
+    Object.keys(DOTS).forEach(function(color){
+      var pos=DOTS[color];
+      var fill=color===highlightColor?SCORE_DOT_COLORS[color]:(usedColors[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color]);
+        var strokeW=color===highlightColor?"3":"1.5";
+        var r=color===highlightColor?"17":"15";
+      svgDots+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+    });
+    var svgHtml='<svg viewBox="0 0 140 166" width="100" height="118" style="flex-shrink:0">'
+      +'<circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" stroke-width="1"/>'
+      +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+(scale==="dreamy"?"低音":"高音")+'</text>'
+      +'<text x="70" y="160" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+(scale==="dreamy"?"高音":"低音")+'</text>'
+      +svgDots+'</svg>';
+
+    var win=window.open("","_blank");
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
+      +'<title>'+sectionLabel+'</title>'
+      +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+      +'</style></head><body>'
+      +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
+      +svgHtml
+      +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
+      +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
+      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節 × '+repeat+'回 / '+(subdiv==="16th"?"16分":"三連")+'</div>'
+      +'</div></div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
+      +'</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
+  }
+
+  function handleBpm(v){setBpm(v);bpmRef.current=v;if(playing)doStart();}
+
+  function toggleCell2(side,color,idx){
+    if(!canEdit)return;
+    var setter=side==="left"?setLeft2:setRight2;
+    var willBeOn;
+    var totalSteps2=Math.max(2,Math.min(parseInt(bars)||8,32))*SPB;
+    setter(function(prev){
+      var p=Object.assign({},prev);
+      if(!p[color]) p[color]=new Array(totalSteps2).fill(0);
+      else p[color]=prev[color].slice();
+      p[color][idx]^=1;
+      willBeOn=p[color][idx]===1;
+      return p;
+    });
+    setTimeout(function(){
+      if(willBeOn) initAudio(function(){ playSound2(color); });
+    },0);
+  }
+
+  function toggleCell(side,color,idx){
+    if(!canEdit)return;
+    var setter=side==="left"?setLeft:setRight;
+    var willBeOn;
+    setter(function(prev){
+      var p=Object.assign({},prev);p[color]=prev[color].slice();
+      p[color][idx]^=1;
+      willBeOn=p[color][idx]===1;
+      return p;
+    });
+    // ONになった時だけ音を鳴らす
+    setTimeout(function(){
+      if(willBeOn) {
+        setHighlightColor(color);
+        setTimeout(function(){ setHighlightColor(null); }, 300);
+        initAudio(function(){ playSound(color); });
+      }
+    }, 0);
+  }
+
+  function handleSave(){
+    setSaving(true);setSaveMsg("");
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
+    if(p&&p.then){
+      p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
+       .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
+    }else{setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);}
+  }
+
+  function Sw(on){
+    return <div style={{position:"relative",width:28,height:16,background:on?"#27AE60":"#d0cec8",borderRadius:8,flexShrink:0,transition:"background .2s"}}>
+      <div style={{position:"absolute",top:2,left:2,width:12,height:12,background:"#fff",borderRadius:"50%",transition:"transform .2s",transform:on?"translateX(12px)":"none"}}/>
+    </div>;
+  }
+
+  // 中央の拍目印カラム（左右の間）
+  // 小節頭・4分音符の位置に横帯を表示、クリックで再生開始位置を設定
+  function renderBeatCol(barIdx){
+    var stepH = CELL+GAP;
+    var rows = [];
+    for(var i=0;i<SPB;i++){
+      var s=barIdx*SPB+i;
+      var ibs=i===0, ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+      var cur=s===curStep;
+      var isStart=s===startStepRef.current;
+      // 帯の色とサイズ
+      var band=null;
+      if(ibs){
+        // 小節頭: 濃いグレーの太い横帯
+        band=<div style={{position:"absolute",top:0,left:0,right:0,height:"100%",background:isStart?"#E74C3C":cur?"#505050":"#909090",borderRadius:2}}/>;
+      } else if(ib){
+        // 4分音符: 薄いグレーの細い横帯（中央寄り）
+        band=<div style={{position:"absolute",top:"30%",left:0,right:0,height:"40%",background:isStart?"rgba(231,76,60,0.6)":cur?"#808080":"#bbbbbb",borderRadius:1}}/>;
+      } else {
+        // 三連の細分: 小さいドット
+        band=<div style={{position:"absolute",top:"50%",left:"50%",width:3,height:3,borderRadius:"50%",background:cur?"#888":"#d0d0d0",transform:"translate(-50%,-50%)"}}/>;
+      }
+      rows.push(
+        <div key={i}
+          onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+          style={{
+            position:"relative",
+            width:14, height:stepH-GAP,
+            marginBottom:GAP,
+            cursor:"pointer",
+            overflow:"visible",
+          }}>
+          {band}
+        </div>
+      );
+    }
+    return <div style={{display:"flex",flexDirection:"column",width:12,flexShrink:0}}>{rows}</div>;
+  }
+
+  // 片側（左手or右手）のグリッド
+  // canEdit=true: 9色列、各色薄い色ベース、クリックでON/OFF
+  // canEdit=false: 1列、設定色を表示、なければ薄いグレー
+  function renderSideGrid(barIdx, side){
+    var pat=side==="left"?left:right;
+
+    if(canEdit){
+      // 編集モード: 9色列
+      return (
+        <div style={{display:"flex",flexDirection:"row"}}>
+          {COLORS.map(function(color){
+            var cells=[];
+            for(var i=0;i<SPB;i++){
+              var s=barIdx*SPB+i;
+              var on=pat[color]&&pat[color][s];
+              var cur=s===curStep;
+              var ibs=i===0;
+              var ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+              cells.push(
+                <div key={i}
+                  onClick={function(ss,co,si){return function(e){
+                    e.stopPropagation();
+                    toggleCell(si,co,ss);
+                  };}(s,color,side)}
+                  style={{
+                    width:CELL,height:CELL,
+                    marginBottom:GAP,
+                    borderRadius:2,
+                    background:on
+                      ? SCORE_DOT_COLORS[color]
+                      : (ibs||ib)
+                        ? SCORE_PALE_COLORS[color]
+                        : "#e8e8e8",
+                    opacity: on ? 1 : (ibs||ib) ? 0.6 : 1,
+                    cursor:"pointer",
+                    outline:cur?"2px solid #555":"none",
+                    outlineOffset:"-1px",
+                    position:"relative",zIndex:2,
+                  }}
+                />
+              );
+            }
+            return <div key={color} style={{display:"flex",flexDirection:"column",marginRight:GAP}}>{cells}</div>;
+          })}
+        </div>
+      );
+    } else {
+      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
+      if(!lrOn && side==="right") return null;
+      var cells=[];
+      for(var i=0;i<SPB;i++){
+        var s=barIdx*SPB+i;
+        var cur=s===curStep;
+        var isStart=s===startStepRef.current;
+        // その行に設定されてる色を探す（最大2色）
+        var foundColors=[];
+        for(var ci=0;ci<COLORS.length;ci++){
+          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+          if(foundColors.length>=2) break;
+        }
+        var foundColor=foundColors[0]||null;
+        cells.push(
+          <div key={i}
+            onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+            style={{
+              width:CELL,height:CELL,
+              marginBottom:GAP,
+              borderRadius:2,
+              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              cursor:"pointer",
+              outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
+              outlineOffset:"-1px",
+              position:"relative",zIndex:2,
+            }}
+          />
+        );
+      }
+      return <div style={{display:"flex",flexDirection:"column"}}>{cells}</div>;
+    }
+  }
+
+  // 1小節ブロック
+function renderSideGrid2(barIdx, side){
+    var pat=side==="left"?left2:right2;
+
+    if(canEdit){
+      // 編集モード: 9色列
+      return (
+        <div style={{display:"flex",flexDirection:"row"}}>
+          {COLORS2.map(function(color){
+            var cells=[];
+            for(var i=0;i<SPB;i++){
+              var s=barIdx*SPB+i;
+              var on=pat[color]&&pat[color][s];
+              var cur=s===curStep;
+              var ibs=i===0;
+              var ib=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+              cells.push(
+                <div key={i}
+                  onClick={function(ss,co,si){return function(e){
+                    e.stopPropagation();
+                    toggleCell2(si,co,ss);
+                  };}(s,color,side)}
+                  style={{
+                    width:CELL,height:CELL,
+                    marginBottom:GAP,
+                    borderRadius:2,
+                    background:on
+                      ? SCORE_HIBIKI_COLORS[color]
+                      : (ibs||ib)
+                        ? SCORE_HIBIKI_PALE_COLORS[color]
+                        : "#e8e8e8",
+                    opacity: on ? 1 : (ibs||ib) ? 0.6 : 1,
+                    cursor:"pointer",
+                    outline:cur?"2px solid #555":"none",
+                    outlineOffset:"-1px",
+                    position:"relative",zIndex:2,
+                  }}
+                />
+              );
+            }
+            return <div key={color} style={{display:"flex",flexDirection:"column",marginRight:GAP}}>{cells}</div>;
+          })}
+        </div>
+      );
+    } else {
+      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
+      if(!lrOn && side==="right") return null;
+      var cells=[];
+      for(var i=0;i<SPB;i++){
+        var s=barIdx*SPB+i;
+        var cur=s===curStep;
+        var isStart=s===startStepRef.current;
+        // その行に設定されてる色を探す（最大2色）
+        var foundColors=[];
+        for(var ci=0;ci<COLORS.length;ci++){
+          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+          if(foundColors.length>=2) break;
+        }
+        var foundColor=foundColors[0]||null;
+        cells.push(
+          <div key={i}
+            onClick={function(ss){return function(e){e.stopPropagation();startStepRef.current=ss;setCurStep(-1);};}(s)}
+            style={{
+              width:CELL,height:CELL,
+              marginBottom:GAP,
+              borderRadius:2,
+              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              cursor:"pointer",
+              outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
+              outlineOffset:"-1px",
+              position:"relative",zIndex:2,
+            }}
+          />
+        );
+      }
+      return <div style={{display:"flex",flexDirection:"column"}}>{cells}</div>;
+    }
+  }
+
+  // 1小節ブロック
+  function renderBar(barIdx){
+    var isStart=startBar===barIdx;
+    var stepH=CELL+GAP;
+    var nCols=canEdit?COLORS.length:1;
+    var sideW=nCols*(CELL+GAP);
+    var beatW=lrOn?14:0;
+    var totalW=lrOn?sideW+beatW+sideW:sideW;
+
+    // 帯リスト（後ろに配置）
+    var bands=[];
+    for(var i=0;i<SPB;i++){
+      var s=barIdx*SPB+i;
+      var ibs_b=i===0;
+      var ib_b=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
+      var i8_b=subdiv==="16th"&&i%2===0&&i%4!==0;
+      var cur_b=s===curStep;
+      var isRowStart=s===startStepRef.current;
+      if(ibs_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH,height:stepH-GAP,
+          background:isRowStart?"rgba(231,76,60,0.25)":cur_b?"rgba(0,0,0,0.2)":"rgba(0,0,0,0.12)",
+          borderRadius:2,pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(ib_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH+Math.floor(stepH*0.3),height:Math.floor(stepH*0.4),
+          background:isRowStart?"rgba(231,76,60,0.15)":cur_b?"rgba(0,0,0,0.15)":"rgba(0,0,0,0.07)",
+          borderRadius:1,pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(i8_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:"50%",transform:"translateX(-50%)",
+          top:i*stepH+Math.floor(stepH*0.35),
+          width:4,height:4,borderRadius:"50%",
+          background:cur_b?"rgba(0,0,0,0.4)":"rgba(0,0,0,0.15)",
+          pointerEvents:"none",zIndex:0,
+        }}/>);
+      } else if(cur_b){
+        bands.push(<div key={"b"+i} style={{
+          position:"absolute",left:0,right:0,
+          top:i*stepH,height:stepH-GAP,
+          background:"rgba(0,0,0,0.15)",
+          borderRadius:2,pointerEvents:"none",zIndex:0,
+        }}/>);
+      }
+    }
+    // 中央クリック列（拍区切り目印）
+    var beatCells=[];
+    for(var j=0;j<SPB;j++){
+      var ss=barIdx*SPB+j;
+      var jbs=j===0;
+      var jb=(subdiv==="16th"?j%4===0:j%3===0)&&j!==0;
+      var j8=subdiv==="16th"&&j%2===0&&j%4!==0;
+      var dot=null;
+      if(!jbs&&!jb&&!j8){
+        // 三連の細分 or 16分の細分: 小さいドット
+        dot=<div style={{width:2,height:2,borderRadius:"50%",background:"#ccc",margin:"0 auto"}}/>;
+      } else if(j8){
+        // 8分音符位置（16分モード）: 中くらいのドット
+        dot=<div style={{width:3,height:3,borderRadius:"50%",background:"#bbb",margin:"0 auto"}}/>;
+      }
+      beatCells.push(
+        <div key={j}
+          onClick={function(s2){return function(e){e.stopPropagation();startStepRef.current=s2;setCurStep(-1);};}(ss)}
+          style={{height:stepH-GAP,marginBottom:GAP,width:beatW,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",position:"relative",zIndex:1}}>
+          {dot}
+        </div>
+      );
+    }
+
+    return (
+      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+        {/* 小節番号 */}
+        <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+          <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+            style={{width:18,height:18,borderRadius:"50%",flexShrink:0,
+              background:isStart?"#E74C3C":"#a8a5a0",
+              color:"#fff",fontSize:10,fontWeight:700,
+              display:"flex",alignItems:"center",justifyContent:"center",cursor:"pointer"}}>
+            {barIdx+1}
+          </div>
+          <div style={{fontSize:8,color:"#888"}}>小節</div>
+        </div>
+        {/* 色見本（編集モードのみ） */}
+        {canEdit&&(
+          <div style={{display:"flex",gap:0,marginBottom:2}}>
+            <div style={{display:"flex"}}>
+              {COLORS.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+            <div style={{width:beatW,flexShrink:0}}/>
+            <div style={{display:"flex"}}>
+              {COLORS.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+          </div>
+        )}
+        {/* グリッド本体: position:relativeで帯を後ろに */}
+        <div style={{position:"relative",width:totalW,height:SPB*stepH}}>
+          {/* 帯（後ろ） */}
+          {bands}
+          {/* 左手 */}
+          <div style={{position:"absolute",left:0,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"left")}
+          </div>
+          {/* 中央クリック列 */}
+          <div style={{position:"absolute",left:sideW,top:0,width:beatW,zIndex:1}}>
+            {beatCells}
+          </div>
+          {/* 右手 */}
+          <div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"right")}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  var numBars = Math.max(2, Math.min(parseInt(bars)||8, 32));
+  var TOTAL = SPB * numBars;
+  // 上段: 奇数インデックス(0,2,4...) 下段: 偶数インデックス(1,3,5...)
+  var topBars=[], botBars=[];
+  for(var bi=0;bi<numBars;bi++){
+    if(bi%2===0) topBars.push(bi);
+    else botBars.push(bi);
+  }
+  var gridH=SPB*(CELL+GAP);
+  var headerH=18+2+5+2; // 小節番号+margin+色見本+margin
+
+  // 2台目グリッドの計算（instrument2がある時）
+  var grid2Element = null;
+  var grid2EditElement = null;
+  var renderBar2Edit = null;
+  if(instrument2) {
+    var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+    var pat2={left:left2,right:right2};
+    var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
+    var topBars2=[],botBars2=[];
+    for(var bi2=0;bi2<numBars2;bi2++){if(bi2%2===0)topBars2.push(bi2);else botBars2.push(bi2);}
+    var renderBar2=function(barIdx){
+      var cells2=[];
+      for(var i2=0;i2<SPB;i2++){
+        var s2=barIdx*SPB+i2;
+        var fc2=[],fc2R=[];
+        for(var ci=0;ci<COLORS2.length;ci++){
+          if(pat2.left[COLORS2[ci]]&&pat2.left[COLORS2[ci]][s2]) fc2.push(COLORS2[ci]);
+          if(pat2.right[COLORS2[ci]]&&pat2.right[COLORS2[ci]][s2]) fc2R.push(COLORS2[ci]);
+        }
+        var ibs2=i2===0,ib2=subdiv==="16th"?i2%4===0:i2%3===0,i8b=subdiv==="16th"&&i2%2===0&&i2%4!==0;
+        var bg2=ibs2?"rgba(0,0,0,0.1)":ib2?"rgba(0,0,0,0.05)":"transparent";
+        var lBg2=fc2.length===0?"#e8e6e2":fc2.length===1?DOT_COLORS2[fc2[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[fc2[0]]+" 50%,"+DOT_COLORS2[fc2[1]]+" 50%)";
+        var rBg2=fc2R.length===0?"#e8e6e2":fc2R.length===1?DOT_COLORS2[fc2R[0]]:"linear-gradient(to bottom,"+DOT_COLORS2[fc2R[0]]+" 50%,"+DOT_COLORS2[fc2R[1]]+" 50%)";
+        cells2.push(
+          <div key={i2} style={{display:"flex",height:(CELL+GAP)+"px",alignItems:"center",background:bg2}}>
+            <div style={{width:CELL,height:CELL-1,background:lBg2,borderRadius:2}}/>
+            <div style={{width:14,display:"flex",alignItems:"center",justifyContent:"center"}}>{i8b&&<div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}</div>
+            <div style={{width:CELL,height:CELL-1,background:rBg2,borderRadius:2}}/>
+          </div>
+        );
+      }
+      return (
+        <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+          style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",
+            boxShadow:startBar===barIdx?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+            <div style={{width:18,height:18,borderRadius:"50%",background:startBar===barIdx?"#E74C3C":"#a8a5a0",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
+          </div>
+          {cells2}
+        </div>
+      );
+    };
+    grid2Element = (
+      <div>
+        <div style={{display:"flex",gap:2,marginBottom:10}}>{topBars2.map(function(b){return renderBar2(b);})}</div>
+        <div style={{display:"flex",gap:2}}>{botBars2.map(function(b){return renderBar2(b);})}</div>
+      </div>
+    );
+    // 編集用2台目グリッド
+    var renderBar2Edit=function(barIdx){
+      var nCols2=COLORS2.length;
+      var sideW2=nCols2*(CELL+GAP);
+      var beatW2=14;
+      var totalW2=sideW2+beatW2+sideW2;
+      var stepH2=CELL+GAP;
+      // 拍子帯
+      var bands2=[];
+      for(var i2b=0;i2b<SPB;i2b++){
+        var ibs2b=i2b===0;
+        var ib2b=(subdiv==="16th"?i2b%4===0:i2b%3===0)&&i2b!==0;
+        if(ibs2b||ib2b){
+          bands2.push(<div key={"b2"+i2b} style={{position:"absolute",left:0,right:0,top:i2b*stepH2,height:stepH2-GAP,
+            background:ibs2b?"rgba(0,0,0,0.12)":"rgba(0,0,0,0.05)",borderRadius:2,pointerEvents:"none"}}/>);
+        }
+      }
+      // 拍子点
+      var beatCells2=[];
+      for(var i2c=0;i2c<SPB;i2c++){
+        var i8_2=subdiv==="16th"&&i2c%2===0&&i2c%4!==0;
+        beatCells2.push(<div key={i2c} style={{width:beatW2,height:stepH2,display:"flex",alignItems:"center",justifyContent:"center"}}>
+          {i8_2&&<div style={{width:3,height:3,borderRadius:"50%",background:"#ccc"}}/>}
+        </div>);
+      }
+      return (
+        <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+          style={{flexShrink:0,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",
+          boxShadow:startBar===barIdx?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",
+          border:"1px solid #e8e8e8"}}>
+          <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
+            <div style={{width:18,height:18,borderRadius:"50%",
+              background:startBar===barIdx?"#E74C3C":"#a8a5a0",
+              color:"#fff",fontSize:10,fontWeight:700,
+              display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
+          </div>
+          <div style={{position:"relative",width:totalW2,height:SPB*stepH2}}>
+            {bands2}
+            <div style={{position:"absolute",left:0,top:0,zIndex:1}}>
+              {renderSideGrid2(barIdx,"left")}
+            </div>
+            <div style={{position:"absolute",left:sideW2,top:0,width:beatW2,zIndex:1}}>
+              <div style={{display:"flex",flexDirection:"column"}}>{beatCells2}</div>
+            </div>
+            <div style={{position:"absolute",left:sideW2+beatW2,top:0,zIndex:1}}>
+              {renderSideGrid2(barIdx,"right")}
+            </div>
+          </div>
+        </div>
+      );
+    };
+    grid2EditElement = (
+      <div>
+        <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
+          {topBars2.map(function(b){return renderBar2Edit(b);})}
+        </div>
+        <br/>
+        <div style={{display:"inline-flex",gap:4}}>
+          {botBars2.map(function(b){return renderBar2Edit(b);})}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px",overflow:"visible"}}>
+
+      {/* セクション情報 + 開始時間 */}
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:8,gap:2}}>
+        <p style={{fontSize:16,fontWeight:700,color:C.label,margin:0}}>{sectionLabel}</p>
+        {!canEdit&&secTime&&(
+          <p style={{fontSize:11,color:C.label,margin:0,opacity:0.7}}>{secTime}〜</p>
+        )}
+        {canEdit?(
+          <div style={{display:"flex",alignItems:"center",gap:4}}>
+            <span style={{fontSize:10,color:C.label}}>開始時間</span>
+            <input type="text" placeholder="0:05〜" value={secTime}
+              onChange={function(e){setSecTime(e.target.value);if(onStartTimeChange)onStartTimeChange(e.target.value);}}
+              style={{width:60,padding:"2px 6px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,fontFamily:"inherit",color:C.choco}}/>
+          </div>
+        ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
+      </div>
+
+      {/* 小節数・繰り返し・拍子 */}
+      {canEdit ? (
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap",
+          padding:"6px 10px",background:"#f5f5f3",borderRadius:8,border:"0.5px solid #d0cec8"}}>
+          <span style={{fontSize:10,color:C.label,fontWeight:600}}>{subdiv==="16th"?"16分音符":"三連符"}</span>
+          <span style={{width:1,height:16,background:"#d0cec8",flexShrink:0}}/>
+          <span style={{fontSize:10,color:C.label,fontWeight:600}}>構成</span>
+          <input type="number" min="1" max="64" value={bars}
+            onChange={function(e){setBars(e.target.value);}}
+            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
+          <span style={{fontSize:10,color:C.label}}>小節</span>
+          <span style={{fontSize:10,color:C.label}}>×</span>
+          <input type="number" min="1" max="20" value={repeat}
+            onChange={function(e){setRepeat(e.target.value);}}
+            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
+          <span style={{fontSize:10,color:C.label}}>回</span>
+        </div>
+      ) : (
+        (bars||repeat) ? (
+          <p style={{fontSize:11,color:C.label,textAlign:"center",marginBottom:8}}>
+            {bars}小節 × {repeat}回
+          </p>
+        ) : null
+      )}
+
+      {canEdit&&(
+        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
+          <button onClick={handleSave} disabled={saving}
+            style={{padding:"6px 16px",borderRadius:8,border:"none",background:saving?"#aaa":"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+            {saving?"保存中…":"💾 保存"}
+          </button>
+          {saveMsg&&<span style={{fontSize:11,color:saveMsg.startsWith("✅")?C.olive:"#a04030"}}>{saveMsg}</span>}
+        </div>
+      )}
+
+      <div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
+        <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
+          style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          {playing?"⏸":"▶"}
+        </button>
+        <div style={{display:"flex",alignItems:"center",gap:6,flex:1,minWidth:120}}>
+          <span style={{fontSize:10,color:C.label,whiteSpace:"nowrap"}}>BPM</span>
+          <input type="range" min="40" max="200" value={bpm} onChange={function(e){handleBpm(+e.target.value);}}
+            style={{flex:1,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
+          <span style={{fontSize:11,fontWeight:700,color:C.choco,minWidth:34}}>{bpm}</span>
+        </div>
+      </div>
+
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3",flexWrap:"wrap"}}>
+        {!canEdit&&scoreId==="iridescence"&&(
+          <div style={{display:"flex",alignItems:"center",gap:6,marginRight:8}}>
+            <span style={{fontSize:10,color:C.label,fontWeight:600}}>音階</span>
+            <button onClick={function(){setSoundType("enigma");actxRef.current=null;bufsRef.current={};}}
+              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+                background:soundType==="enigma"?"#708238":"#fff",color:soundType==="enigma"?"#fff":C.label,
+                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              秘ノ音
+            </button>
+            <button onClick={function(){setSoundType("arcane");actxRef.current=null;bufsRef.current={};}}
+              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+                background:soundType==="arcane"?"#708238":"#fff",color:soundType==="arcane"?"#fff":C.label,
+                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              響ノ音
+            </button>
+          </div>
+        )}
+        <span style={{fontSize:10,fontWeight:700,color:C.label}}>METRO</span>
+        <div onClick={function(){setMetroOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(metroOn)}<span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
+        </div>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+          {(subdiv==="16th"
+            ?[["4分",4],["8分",8],["裏","8u"]]
+            :[["4分",4],["三連",3]]
+          ).map(function(x){
+            return <button key={x[1]} onClick={function(){setMetroMode(x[1]);}}
+              style={{padding:"3px 7px",borderRadius:6,border:"0.5px solid #d0cec8",background:metroMode===x[1]?"#1a1a1a":"#fff",color:metroMode===x[1]?"#fff":"#666",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>♩ {x[0]}</button>;
+          })}
+        </div>
+        <div onClick={function(){setMetroAccent(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(metroAccent)}<span style={{fontSize:10,color:C.label}}>頭チーン</span>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:4}}>
+          <span style={{fontSize:10,color:C.label}}>音量</span>
+          <input type="range" min="0" max="100" value={Math.round(metroVol*100)} onChange={function(e){setMetroVol(e.target.value/100);}}
+            style={{width:60,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
+        </div>
+      </div>
+
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"5px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3"}}>
+        <span style={{fontSize:10,fontWeight:700,color:C.label}}>左右表示</span>
+        <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
+        </div>
+      </div>
+      </div>
+
+      {canEdit ? (
+        <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
+          {/* 左：イラスト固定カラム */}
+          {instrument2?(
+            <div style={{flexShrink:0,position:"sticky",top:8}}>
+              <div style={{textAlign:"center",marginBottom:8}}>
+                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>響ノ音</div>
+                <svg viewBox="0 0 140 166" width="80" height="95">
+                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  {(function(){
+                    var used2={};
+                    COLORS2.forEach(function(c){
+                      for(var i=0;i<numBars*SPB;i++){
+                        if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
+                      }
+                    });
+                    return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
+                      var pos=SCORE_DOTS_HIBIKI[color];
+                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
+                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        stroke="white" strokeWidth="1.5"/>;
+                    });
+                  })()}
+                </svg>
+              </div>
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>風ノ音</div>
+                <svg viewBox="0 0 140 166" width="80" height="95">
+                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
+                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  {(function(){
+                    var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                    return Object.keys(activeDots).map(function(color){
+                      var pos=activeDots[color];
+                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
+                        fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
+                    });
+                  })()}
+                </svg>
+              </div>
+            </div>
+          ):null}
+          {/* 右：再生コントロール＋グリッド */}
+          <div style={{flex:1,minWidth:0}}>
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:instrument2?0:8}}>
+          {instrument2?null:(
+            {/* 響ノ音を先に表示（instrument2なし時のみここで表示） */}
+            {false&&instrument2&&(
               <div style={{textAlign:"center"}}>
                 <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
                 <svg viewBox="0 0 140 166" width="140" height="166">
