@@ -1898,7 +1898,7 @@ function renderSideGrid2(barIdx, side){
   }
 
   return (
-    <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px"}}>
+    <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px",overflow:"visible"}}>
 
       {/* セクション情報 + 開始時間 */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:8,gap:2}}>
@@ -1951,6 +1951,9 @@ function renderSideGrid2(barIdx, side){
         </div>
       )}
 
+      <div style={{position:"sticky",top:0,zIndex:20,background:"rgba(245,245,243,0.97)",
+        backdropFilter:"blur(4px)",paddingTop:8,paddingBottom:4,marginBottom:4,
+        borderBottom:"1px solid #e8e8e8",marginLeft:-16,marginRight:-16,paddingLeft:16,paddingRight:16}}>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
         <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
           style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -2011,13 +2014,11 @@ function renderSideGrid2(barIdx, side){
           {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
         </div>
       </div>
+      </div>
 
       {canEdit ? (
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {/* イラストを固定 */}
-          <div style={{position:"sticky",top:0,zIndex:10,background:"#fff",paddingBottom:8,
-            display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",
-            borderBottom:"1px solid #e8e8e8"}}>
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8}}>
             {/* 響ノ音を先に表示 */}
             {instrument2&&(
               <div style={{textAlign:"center"}}>
@@ -3123,7 +3124,7 @@ function App() {
         iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
         iconBtn("ログアウト",()=>setPage("login")),
       ])}
-      <div style={{padding:"24px",maxWidth:scoreEditOpen?1200:720,margin:"0 auto",transition:"max-width 0.3s"}}>
+      <div style={{padding:"24px",maxWidth:scoreEditOpen?1200:720,margin:"0 auto",transition:"max-width 0.3s",overflow:"visible"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
           <p style={{fontSize:11,color:C.label}}>
             {isDemo?"📋 デモデータで表示中":"👥 登録メンバー："+members.length+"人"}
@@ -3181,7 +3182,7 @@ function App() {
           🎼 譜面編集 {scoreEditOpen?"▲":"▼"}
         </button>}
         {!isInstructor && scoreEditOpen && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px"}}>
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px",overflowY:"auto",maxHeight:"90vh",position:"relative"}}>
             <p style={{fontSize:13,fontWeight:700,color:"#3a6a7a",marginBottom:12}}>🎼 譜面データ編集</p>
             {/* 曲選択 + 印刷ボタン */}
             <div style={{marginBottom:10}}>
