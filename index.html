@@ -2079,8 +2079,8 @@ function renderSideGrid2(barIdx, side){
                 {Array.from({length:numBars},function(_,bi){
                   return (
                     <div key={bi} style={{display:"flex",gap:8,marginBottom:8,alignItems:"flex-start"}}>
-                      {renderBar(bi)}
                       {renderBar2Edit&&renderBar2Edit(bi)}
+                      {renderBar(bi)}
                     </div>
                   );
                 })}
