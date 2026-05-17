@@ -360,7 +360,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2 }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   console.log("ScorePlayer instrument2=", instrument2, "COLORS2=", COLORS2);
@@ -5192,6 +5192,7 @@ function App() {
                   onBpmChange={function(v){setSharedBpm(v);}}
                   sharedMetroOn={sharedMetroOn}
                   sharedMetroMode={sharedMetroMode}
+                  sharedHeadBell={sharedHeadBell||false}
                   onMetroChange={function(v){
                     if(v.metroOn!==undefined) setSharedMetroOn(v.metroOn);
                     if(v.metroMode!==undefined) setSharedMetroMode(v.metroMode);
