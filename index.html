@@ -412,6 +412,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var rightS=useState(function(){return initPat("right");}); var right=rightS[0]; var setRight=rightS[1];
   var playingS=useState(false); var playing=playingS[0]; var setPlaying=playingS[1];
   var bpmS=useState(sharedBpm||80);
+  var floatPosS=useState({x:16,y:60}); var floatPos=floatPosS[0]; var setFloatPos=floatPosS[1];
+  var isDraggingRef=React.useRef(false); var dragOffRef=React.useRef({x:0,y:0});
   var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
   var highlightColorS=useState(null); var highlightColor=highlightColorS[0]; var setHighlightColor=highlightColorS[1];
   var startBarS=useState(0); var startBar=startBarS[0]; var setStartBar=startBarS[1]; var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
@@ -1916,8 +1918,27 @@ function renderSideGrid2(barIdx, side){
         ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
       </div>
 
-      {/* 再生コントロール */}
-      <div>
+      {/* 再生コントロール（ドラッグ可能） */}
+      <div style={{
+        position:"fixed",left:floatPos.x,top:floatPos.y,zIndex:500,
+        background:"rgba(248,246,242,0.97)",backdropFilter:"blur(4px)",
+        border:"1px solid #d0cec8",borderRadius:12,
+        padding:"8px 12px",boxShadow:"0 4px 20px rgba(0,0,0,0.15)",
+        minWidth:260,cursor:"move",userSelect:"none"
+      }}
+        onMouseDown={function(e){
+          if(e.target.tagName==="BUTTON"||e.target.tagName==="INPUT") return;
+          isDraggingRef.current=true;
+          dragOffRef.current={x:e.clientX-floatPos.x,y:e.clientY-floatPos.y};
+          var mm=function(ev){
+            if(!isDraggingRef.current)return;
+            setFloatPos({x:ev.clientX-dragOffRef.current.x,y:ev.clientY-dragOffRef.current.y});
+          };
+          var mu=function(){isDraggingRef.current=false;window.removeEventListener("mousemove",mm);window.removeEventListener("mouseup",mu);};
+          window.addEventListener("mousemove",mm);window.addEventListener("mouseup",mu);
+        }}
+      >
+      <div style={{fontSize:9,color:"#bbb",textAlign:"center",marginBottom:2,letterSpacing:2}}>⠿ DRAG</div>
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
         <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
           style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
@@ -1984,8 +2005,8 @@ function renderSideGrid2(barIdx, side){
       {/* 小節数・繰り返し・拍子 */}
       {canEdit ? (
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          {/* イラスト横並び */}
-          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8}}>
+          {/* イラスト横並び（sticky固定） */}
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,background:"rgba(255,255,255,0.97)",paddingTop:8,paddingBottom:8,borderBottom:"1px solid #e8e8e8"}}>
             {/* 響ノ音イラスト（instrument2がある時） */}
             {instrument2&&(
               <div style={{textAlign:"center"}}>
