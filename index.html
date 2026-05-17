@@ -483,29 +483,35 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){
     if(!canEdit) return;
     function onKey(e){
-      console.log("key:", e.key, "meta:", e.metaKey, "ctrl:", e.ctrlKey, "selectedBar:", selectedBar, "copiedBar:", copiedBar);
+      var sb=selectedBarRef.current;
+      var cb=copiedBarRef.current;
+      console.log("key:", e.key, "meta:", e.metaKey, "selectedBarRef:", sb, "copiedBarRef:", cb);
       if(!(e.metaKey||e.ctrlKey)) return;
       if(e.key==='c'||e.key==='C'){
-        if(selectedBar===null) return;
+        if(sb===null) return;
         var barLeft={}, barRight={};
         COLORS.forEach(function(c){
-          barLeft[c]=(leftRef.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
-          barRight[c]=(rightRef.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
+          barLeft[c]=(leftRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+          barRight[c]=(rightRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
         });
-        setCopiedBar({left:barLeft,right:barRight});
+        var newCopied={left:barLeft,right:barRight};
+        copiedBarRef.current=newCopied;
+        setCopiedBar(newCopied);
         if(instrument2){
           var barLeft2={}, barRight2={};
           COLORS2.forEach(function(c){
-            barLeft2[c]=(left2Ref.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
-            barRight2[c]=(right2Ref.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
+            barLeft2[c]=(left2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+            barRight2[c]=(right2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
           });
-          setCopiedBar2({left:barLeft2,right:barRight2});
+          var newCopied2={left:barLeft2,right:barRight2};
+          copiedBar2Ref.current=newCopied2;
+          setCopiedBar2(newCopied2);
         }
         e.preventDefault();
       }
       if(e.key==='v'||e.key==='V'){
-        if(selectedBar===null||copiedBar===null) return;
-        var sb2=selectedBar; var cb=copiedBar;
+        if(sb===null||cb===null) return;
+        var sb2=sb; var cb2ref=copiedBar2Ref.current;
         setLeft(function(prev){
           var p=Object.assign({},prev);
           COLORS.forEach(function(c){
@@ -522,7 +528,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           });
           return p;
         });
-        var cb2=copiedBar2;
+        var cb2=cb2ref;
         if(instrument2&&cb2){
           setLeft2(function(prev){
             var p=Object.assign({},prev);
@@ -546,7 +552,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
     window.addEventListener('keydown', onKey);
     return function(){ window.removeEventListener('keydown', onKey); };
-  },[canEdit,selectedBar,copiedBar,copiedBar2]);
+  },[canEdit]);
 
   // コピペ用Ref同期
   useEffect(function(){copiedBarRef.current=copiedBar;},[copiedBar]);
