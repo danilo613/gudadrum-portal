@@ -3288,7 +3288,7 @@ function App() {
             {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
             {/* ScorePlayer（編集モード） */}
             <ScorePlayer
-              key={scoreEditId+"-"+scoreEditSec+"-"+((scorePatterns[scoreEditId]||{})[scoreEditSec]?"loaded":"empty")}
+              key={scoreEditId+"-"+scoreEditSec}
               scoreId={scoreEditId}
               sectionKey={scoreEditSec}
               sectionLabel={(function(){
