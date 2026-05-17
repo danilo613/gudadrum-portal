@@ -483,6 +483,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){
     if(!canEdit) return;
     function onKey(e){
+      console.log("key:", e.key, "meta:", e.metaKey, "ctrl:", e.ctrlKey, "selectedBar:", selectedBar, "copiedBar:", copiedBar);
       if(!(e.metaKey||e.ctrlKey)) return;
       if(e.key==='c'||e.key==='C'){
         if(selectedBar===null) return;
