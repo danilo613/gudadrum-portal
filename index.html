@@ -485,32 +485,26 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     function onKey(e){
       if(!(e.metaKey||e.ctrlKey)) return;
       if(e.key==='c'||e.key==='C'){
-        var sb=selectedBarRef.current;
-        if(sb===null) return;
+        if(selectedBar===null) return;
         var barLeft={}, barRight={};
         COLORS.forEach(function(c){
-          barLeft[c]=(leftRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
-          barRight[c]=(rightRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+          barLeft[c]=(leftRef.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
+          barRight[c]=(rightRef.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
         });
-        var copied={left:barLeft,right:barRight};
-        copiedBarRef.current=copied;
-        setCopiedBar(copied);
+        setCopiedBar({left:barLeft,right:barRight});
         if(instrument2){
           var barLeft2={}, barRight2={};
           COLORS2.forEach(function(c){
-            barLeft2[c]=(left2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
-            barRight2[c]=(right2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+            barLeft2[c]=(left2Ref.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
+            barRight2[c]=(right2Ref.current[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
           });
-          var copied2={left:barLeft2,right:barRight2};
-          copiedBar2Ref.current=copied2;
-          setCopiedBar2(copied2);
+          setCopiedBar2({left:barLeft2,right:barRight2});
         }
         e.preventDefault();
       }
       if(e.key==='v'||e.key==='V'){
-        var sb2=selectedBarRef.current;
-        var cb=copiedBarRef.current;
-        if(sb2===null||cb===null) return;
+        if(selectedBar===null||copiedBar===null) return;
+        var sb2=selectedBar; var cb=copiedBar;
         setLeft(function(prev){
           var p=Object.assign({},prev);
           COLORS.forEach(function(c){
@@ -527,7 +521,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           });
           return p;
         });
-        var cb2=copiedBar2Ref.current;
+        var cb2=copiedBar2;
         if(instrument2&&cb2){
           setLeft2(function(prev){
             var p=Object.assign({},prev);
@@ -551,7 +545,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
     window.addEventListener('keydown', onKey);
     return function(){ window.removeEventListener('keydown', onKey); };
-  },[canEdit]);
+  },[canEdit,selectedBar,copiedBar,copiedBar2]);
 
   // コピペ用Ref同期
   useEffect(function(){copiedBarRef.current=copiedBar;},[copiedBar]);
