@@ -1880,7 +1880,24 @@ function renderSideGrid2(barIdx, side){
             <div style={{position:"absolute",left:sideW2+beatW2,top:0,zIndex:1}}>
               {renderSideGrid2(barIdx,"right")}
             </div>
-     return (
+          </div>
+        </div>
+      );
+    };
+    grid2EditElement = (
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
+        {Array.from({length:numBars2},function(_,bi){
+          return (
+            <div key={bi} style={{display:"flex",gap:8,marginBottom:8,alignItems:"flex-start"}}>
+              {renderBar2Edit&&renderBar2Edit(bi)}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  return (
     <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px",overflow:"visible"}}>
 
       {/* セクション情報 + 開始時間 */}
@@ -1897,6 +1914,71 @@ function renderSideGrid2(barIdx, side){
               style={{width:60,padding:"2px 6px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,fontFamily:"inherit",color:C.choco}}/>
           </div>
         ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
+      </div>
+
+      {/* 再生コントロール */}
+      <div>
+      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
+        <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
+          style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+          {playing?"⏸":"▶"}
+        </button>
+        <div style={{display:"flex",alignItems:"center",gap:6,flex:1,minWidth:120}}>
+          <span style={{fontSize:10,color:C.label,whiteSpace:"nowrap"}}>BPM</span>
+          <input type="range" min="40" max="200" value={bpm} onChange={function(e){handleBpm(parseInt(e.target.value));}}
+            style={{flex:1,accentColor:"#708238"}}/>
+          <span style={{fontSize:12,fontWeight:700,color:C.label,minWidth:28,textAlign:"right"}}>{bpm}</span>
+        </div>
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"5px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3",flexWrap:"wrap"}}>
+        <span style={{fontSize:10,fontWeight:700,color:C.label}}>METRO</span>
+        <div onClick={function(){onMetroChange&&onMetroChange(!sharedMetroOn,sharedMetroMode);}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(sharedMetroOn)}<span style={{fontSize:10,color:C.label}}>{sharedMetroOn?"ON":"OFF"}</span>
+        </div>
+        {["4分","8分","裏"].map(function(label,i){
+          var mode=["quarter","eighth","offbeat"][i];
+          return <button key={mode} onClick={function(){onMetroChange&&onMetroChange(true,mode);}}
+            style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+              background:sharedMetroOn&&sharedMetroMode===mode?"#2C2A28":"#fff",
+              color:sharedMetroOn&&sharedMetroMode===mode?"#fff":C.label,fontSize:10,cursor:"pointer"}}>
+            ♩ {label}
+          </button>;
+        })}
+        <span style={{width:1,height:16,background:"#d0cec8",display:"inline-block",margin:"0 2px"}}/>
+        <div style={{display:"flex",alignItems:"center",gap:4}}>
+          <span style={{fontSize:10,color:C.label}}>頭チーン</span>
+          <div onClick={function(){onMetroChange&&onMetroChange(sharedMetroOn,sharedMetroMode,!sharedHeadBell);}} style={{cursor:"pointer"}}>{Sw(sharedHeadBell)}</div>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:4}}>
+          <span style={{fontSize:10,color:C.label}}>音量</span>
+          <input type="range" min="0" max="1" step="0.05" value={metroVol}
+            onChange={function(e){setMetroVol(parseFloat(e.target.value));}}
+            style={{width:60,accentColor:"#708238"}}/>
+        </div>
+        {!canEdit&&scoreId==="iridescence"&&(
+          <div style={{display:"flex",alignItems:"center",gap:6,marginLeft:8}}>
+            <span style={{fontSize:10,color:C.label,fontWeight:600}}>音階</span>
+            <button onClick={function(){setSoundType("enigma");actxRef.current=null;bufsRef.current={};}}
+              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+                background:soundType==="enigma"?"#708238":"#fff",color:soundType==="enigma"?"#fff":C.label,
+                fontSize:10,cursor:"pointer"}}>秘ノ音</button>
+            <button onClick={function(){setSoundType("arcane");actxRef.current=null;bufsRef.current={};}}
+              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
+                background:soundType==="arcane"?"#708238":"#fff",color:soundType==="arcane"?"#fff":C.label,
+                fontSize:10,cursor:"pointer"}}>響ノ音</button>
+          </div>
+        )}
+        <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:4,background:"#f5f5f3",borderRadius:8}}>
+          {curStep>=0&&<span style={{fontSize:10,color:C.label}}>🔴 {curStep+1}/{TOTAL}</span>}
+        </div>
+        {isQueuePlaying&&<span style={{fontSize:10,color:"#708238",fontWeight:600}}>通し再生中</span>}
+      </div>
+      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"5px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3"}}>
+        <span style={{fontSize:10,fontWeight:700,color:C.label}}>左右表示</span>
+        <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
+          {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
+        </div>
+      </div>
       </div>
 
       {/* 小節数・繰り返し・拍子 */}
