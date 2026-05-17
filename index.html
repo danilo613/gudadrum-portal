@@ -414,6 +414,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var bpmS=useState(sharedBpm||80);
   var copiedBarS=useState(null); var copiedBar=copiedBarS[0]; var setCopiedBar=copiedBarS[1];
   var selectedBarS=useState(null); var selectedBar=selectedBarS[0]; var setSelectedBar=selectedBarS[1];
+  // setSelectedBarをラップしてRefも同時更新
+  var setSelectedBarSync=function(b){ selectedBarRef.current=b; setSelectedBar(b); };
   var copiedBar2S=useState(null); var copiedBar2=copiedBar2S[0]; var setCopiedBar2=copiedBar2S[1];
   var copiedBarRef=React.useRef(null); var copiedBar2Ref=React.useRef(null); var selectedBarRef=React.useRef(null);
   var floatPosS=useState({x:16,y:60}); var floatPos=floatPosS[0]; var setFloatPos=floatPosS[1];
@@ -1205,7 +1207,7 @@ function renderSideGrid2(barIdx, side){
     }
 
     return (
-      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBar(b);selectedBarRef.current=b;};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBarSync(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
         {/* 小節番号 */}
         <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
           <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
@@ -1815,7 +1817,7 @@ function renderSideGrid2(barIdx, side){
     }
 
     return (
-      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBar(b);selectedBarRef.current=b;};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
+      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBarSync(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
         {/* 小節番号 */}
         <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
           <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
