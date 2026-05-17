@@ -1918,130 +1918,14 @@ function renderSideGrid2(barIdx, side){
 
       {/* 小節数・繰り返し・拍子 */}
       {canEdit ? (
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap",
-          padding:"6px 10px",background:"#f5f5f3",borderRadius:8,border:"0.5px solid #d0cec8"}}>
-          <span style={{fontSize:10,color:C.label,fontWeight:600}}>{subdiv==="16th"?"16分音符":"三連符"}</span>
-          <span style={{width:1,height:16,background:"#d0cec8",flexShrink:0}}/>
-          <span style={{fontSize:10,color:C.label,fontWeight:600}}>構成</span>
-          <input type="number" min="1" max="64" value={bars}
-            onChange={function(e){setBars(e.target.value);}}
-            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
-          <span style={{fontSize:10,color:C.label}}>小節</span>
-          <span style={{fontSize:10,color:C.label}}>×</span>
-          <input type="number" min="1" max="20" value={repeat}
-            onChange={function(e){setRepeat(e.target.value);}}
-            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
-          <span style={{fontSize:10,color:C.label}}>回</span>
-        </div>
-      ) : (
-        (bars||repeat) ? (
-          <p style={{fontSize:11,color:C.label,textAlign:"center",marginBottom:8}}>
-            {bars}小節 × {repeat}回
-          </p>
-        ) : null
-      )}
-
-      {canEdit&&(
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
-          <button onClick={handleSave} disabled={saving}
-            style={{padding:"6px 16px",borderRadius:8,border:"none",background:saving?"#aaa":"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-            {saving?"保存中…":"💾 保存"}
-          </button>
-          {saveMsg&&<span style={{fontSize:11,color:saveMsg.startsWith("✅")?C.olive:"#a04030"}}>{saveMsg}</span>}
-        </div>
-      )}
-
-      <div style={{
-        position:"fixed", left:floatPos.x, top:floatPos.y, zIndex:200,
-        background:"rgba(245,245,243,0.97)", backdropFilter:"blur(6px)",
-        border:"1px solid #d0cec8", borderRadius:12, padding:"8px 12px",
-        boxShadow:"0 4px 16px rgba(0,0,0,0.15)", minWidth:280, cursor:"default",
-        userSelect:"none"
-      }}
-        onMouseDown={function(e){
-          if(e.target.tagName==="BUTTON"||e.target.tagName==="INPUT"||e.target.closest("button")) return;
-          draggingRef.current=true;
-          dragOffRef.current={x:e.clientX-floatPos.x, y:e.clientY-floatPos.y};
-          var onMove=function(ev){
-            if(!draggingRef.current)return;
-            setFloatPos({x:ev.clientX-dragOffRef.current.x, y:ev.clientY-dragOffRef.current.y});
-          };
-          var onUp=function(){draggingRef.current=false; window.removeEventListener("mousemove",onMove); window.removeEventListener("mouseup",onUp);};
-          window.addEventListener("mousemove",onMove);
-          window.addEventListener("mouseup",onUp);
-        }}
-      >
-      <div style={{fontSize:9,color:"#aaa",textAlign:"center",marginBottom:4,cursor:"move"}}>⠿ ドラッグで移動</div>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
-        <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
-          style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-          {playing?"⏸":"▶"}
-        </button>
-        <div style={{display:"flex",alignItems:"center",gap:6,flex:1,minWidth:120}}>
-          <span style={{fontSize:10,color:C.label,whiteSpace:"nowrap"}}>BPM</span>
-          <input type="range" min="40" max="200" value={bpm} onChange={function(e){handleBpm(+e.target.value);}}
-            style={{flex:1,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
-          <span style={{fontSize:11,fontWeight:700,color:C.choco,minWidth:34}}>{bpm}</span>
-        </div>
-      </div>
-
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3",flexWrap:"wrap"}}>
-        {!canEdit&&scoreId==="iridescence"&&(
-          <div style={{display:"flex",alignItems:"center",gap:6,marginRight:8}}>
-            <span style={{fontSize:10,color:C.label,fontWeight:600}}>音階</span>
-            <button onClick={function(){setSoundType("enigma");actxRef.current=null;bufsRef.current={};}}
-              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
-                background:soundType==="enigma"?"#708238":"#fff",color:soundType==="enigma"?"#fff":C.label,
-                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-              秘ノ音
-            </button>
-            <button onClick={function(){setSoundType("arcane");actxRef.current=null;bufsRef.current={};}}
-              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
-                background:soundType==="arcane"?"#708238":"#fff",color:soundType==="arcane"?"#fff":C.label,
-                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-              響ノ音
-            </button>
-          </div>
-        )}
-        <span style={{fontSize:10,fontWeight:700,color:C.label}}>METRO</span>
-        <div onClick={function(){setMetroOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {Sw(metroOn)}<span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {(subdiv==="16th"
-            ?[["4分",4],["8分",8],["裏","8u"]]
-            :[["4分",4],["三連",3]]
-          ).map(function(x){
-            return <button key={x[1]} onClick={function(){setMetroMode(x[1]);}}
-              style={{padding:"3px 7px",borderRadius:6,border:"0.5px solid #d0cec8",background:metroMode===x[1]?"#1a1a1a":"#fff",color:metroMode===x[1]?"#fff":"#666",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>♩ {x[0]}</button>;
-          })}
-        </div>
-        <div onClick={function(){setMetroAccent(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {Sw(metroAccent)}<span style={{fontSize:10,color:C.label}}>頭チーン</span>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:4}}>
-          <span style={{fontSize:10,color:C.label}}>音量</span>
-          <input type="range" min="0" max="100" value={Math.round(metroVol*100)} onChange={function(e){setMetroVol(e.target.value/100);}}
-            style={{width:60,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
-        </div>
-      </div>
-
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"5px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3"}}>
-        <span style={{fontSize:10,fontWeight:700,color:C.label}}>左右表示</span>
-        <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
-        </div>
-      </div>
-      </div>
-
-      {canEdit ? (
-        <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
-          {/* 左：イラスト固定カラム */}
-          {instrument2?(
-            <div style={{flexShrink:0,position:"sticky",top:8}}>
-              <div style={{textAlign:"center",marginBottom:8}}>
-                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>響ノ音</div>
-                <svg viewBox="0 0 140 166" width="80" height="95">
+        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {/* イラスト横並び */}
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8}}>
+            {/* 響ノ音イラスト（instrument2がある時） */}
+            {instrument2&&(
+              <div style={{textAlign:"center"}}>
+                <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+                <svg viewBox="0 0 140 166" width="140" height="166">
                   <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
                   <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
                   <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
@@ -2054,65 +1938,20 @@ function renderSideGrid2(barIdx, side){
                     });
                     return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                       var pos=SCORE_DOTS_HIBIKI[color];
-                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                        stroke="white" strokeWidth="1.5"/>;
-                    });
-                  })()}
-                </svg>
-              </div>
-              <div style={{textAlign:"center"}}>
-                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>風ノ音</div>
-                <svg viewBox="0 0 140 166" width="80" height="95">
-                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                  {(function(){
-                    var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                    return Object.keys(activeDots).map(function(color){
-                      var pos=activeDots[color];
-                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                        fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
-                    });
-                  })()}
-                </svg>
-              </div>
-            </div>
-          ):null}
-          {/* 右：再生コントロール＋グリッド */}
-          <div style={{flex:1,minWidth:0}}>
-          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:instrument2?0:8}}>
-          {instrument2?null:(
-            {/* 響ノ音を先に表示（instrument2なし時のみここで表示） */}
-            {false&&instrument2&&(
-              <div style={{textAlign:"center"}}>
-                <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                <svg viewBox="0 0 140 166" width="140" height="166">
-                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                  {(function(){
-                    var used2e={};
-                    COLORS2.forEach(function(c){
-                      for(var i=0;i<numBars*SPB;i++){
-                        if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2e[c]=true; break; }
-                      }
-                    });
-                    return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
-                      var pos=SCORE_DOTS_HIBIKI[color];
                       return <circle key={color} cx={pos.cx} cy={pos.cy}
                         r={color===highlightColor?17:15}
-                        fill={used2e[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                        stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>;
+                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
+                        style={{transition:"all 0.15s"}}/>;
                     });
                   })()}
                 </svg>
               </div>
             )}
-            {/* 風ノ音 */}
+            {/* 風ノ音イラスト */}
             <div style={{textAlign:"center"}}>
               {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
-            <div style={{width:140}}>
+              <div style={{width:140}}>
               <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
               <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{scale==="dreamy"?"低音":"高音"}</text>
@@ -2130,18 +1969,20 @@ function renderSideGrid2(barIdx, side){
                         style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
+                          fontSize="7" fontWeight="700" fill="#fff" fontFamily="sans-serif" pointerEvents="none">
+                          {dotLabel[color]}
+                        </text>
                       )}
                     </g>
                   );
                 });
               })()}
-            </svg>
+              </svg>
+              </div>
             </div>
-            </div>
-
           </div>
-           <div style={{overflowX:"auto",width:"100%",marginTop:8}}>
+          {/* グリッド */}
+          <div style={{overflowX:"auto",width:"100%"}}>
             {instrument2?(
               <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
                 {Array.from({length:numBars},function(_,bi){
@@ -2165,9 +2006,7 @@ function renderSideGrid2(barIdx, side){
               </div>
             )}
           </div>
-          </div>
-        </div>
-      ) : (
+        </div>) : (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
           {/* イラスト横並び（上） */}
           <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
@@ -3809,357 +3648,6 @@ function renderSideGrid2(barIdx, side){
       </div>
     );
   }
-
-  return (
-    <div style={{fontFamily:"'Noto Sans JP',sans-serif",padding:"0 0 16px",overflow:"visible"}}>
-
-      {/* セクション情報 + 開始時間 */}
-      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:8,gap:2}}>
-        <p style={{fontSize:16,fontWeight:700,color:C.label,margin:0}}>{sectionLabel}</p>
-        {!canEdit&&secTime&&(
-          <p style={{fontSize:11,color:C.label,margin:0,opacity:0.7}}>{secTime}〜</p>
-        )}
-        {canEdit?(
-          <div style={{display:"flex",alignItems:"center",gap:4}}>
-            <span style={{fontSize:10,color:C.label}}>開始時間</span>
-            <input type="text" placeholder="0:05〜" value={secTime}
-              onChange={function(e){setSecTime(e.target.value);if(onStartTimeChange)onStartTimeChange(e.target.value);}}
-              style={{width:60,padding:"2px 6px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,fontFamily:"inherit",color:C.choco}}/>
-          </div>
-        ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
-      </div>
-
-      {/* 小節数・繰り返し・拍子 */}
-      {canEdit ? (
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap",
-          padding:"6px 10px",background:"#f5f5f3",borderRadius:8,border:"0.5px solid #d0cec8"}}>
-          <span style={{fontSize:10,color:C.label,fontWeight:600}}>{subdiv==="16th"?"16分音符":"三連符"}</span>
-          <span style={{width:1,height:16,background:"#d0cec8",flexShrink:0}}/>
-          <span style={{fontSize:10,color:C.label,fontWeight:600}}>構成</span>
-          <input type="number" min="1" max="64" value={bars}
-            onChange={function(e){setBars(e.target.value);}}
-            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
-          <span style={{fontSize:10,color:C.label}}>小節</span>
-          <span style={{fontSize:10,color:C.label}}>×</span>
-          <input type="number" min="1" max="20" value={repeat}
-            onChange={function(e){setRepeat(e.target.value);}}
-            style={{width:36,padding:"2px 4px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,textAlign:"center",fontFamily:"inherit",color:C.choco}}/>
-          <span style={{fontSize:10,color:C.label}}>回</span>
-        </div>
-      ) : (
-        (bars||repeat) ? (
-          <p style={{fontSize:11,color:C.label,textAlign:"center",marginBottom:8}}>
-            {bars}小節 × {repeat}回
-          </p>
-        ) : null
-      )}
-
-      {canEdit&&(
-        <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,flexWrap:"wrap"}}>
-          <button onClick={handleSave} disabled={saving}
-            style={{padding:"6px 16px",borderRadius:8,border:"none",background:saving?"#aaa":"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-            {saving?"保存中…":"💾 保存"}
-          </button>
-          {saveMsg&&<span style={{fontSize:11,color:saveMsg.startsWith("✅")?C.olive:"#a04030"}}>{saveMsg}</span>}
-        </div>
-      )}
-
-      <div>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
-        <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
-          style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-          {playing?"⏸":"▶"}
-        </button>
-        <div style={{display:"flex",alignItems:"center",gap:6,flex:1,minWidth:120}}>
-          <span style={{fontSize:10,color:C.label,whiteSpace:"nowrap"}}>BPM</span>
-          <input type="range" min="40" max="200" value={bpm} onChange={function(e){handleBpm(+e.target.value);}}
-            style={{flex:1,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
-          <span style={{fontSize:11,fontWeight:700,color:C.choco,minWidth:34}}>{bpm}</span>
-        </div>
-      </div>
-
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8,padding:"6px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3",flexWrap:"wrap"}}>
-        {!canEdit&&scoreId==="iridescence"&&(
-          <div style={{display:"flex",alignItems:"center",gap:6,marginRight:8}}>
-            <span style={{fontSize:10,color:C.label,fontWeight:600}}>音階</span>
-            <button onClick={function(){setSoundType("enigma");actxRef.current=null;bufsRef.current={};}}
-              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
-                background:soundType==="enigma"?"#708238":"#fff",color:soundType==="enigma"?"#fff":C.label,
-                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-              秘ノ音
-            </button>
-            <button onClick={function(){setSoundType("arcane");actxRef.current=null;bufsRef.current={};}}
-              style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
-                background:soundType==="arcane"?"#708238":"#fff",color:soundType==="arcane"?"#fff":C.label,
-                fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-              響ノ音
-            </button>
-          </div>
-        )}
-        <span style={{fontSize:10,fontWeight:700,color:C.label}}>METRO</span>
-        <div onClick={function(){setMetroOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {Sw(metroOn)}<span style={{fontSize:10,color:C.label}}>{metroOn?"ON":"OFF"}</span>
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          {(subdiv==="16th"
-            ?[["4分",4],["8分",8],["裏","8u"]]
-            :[["4分",4],["三連",3]]
-          ).map(function(x){
-            return <button key={x[1]} onClick={function(){setMetroMode(x[1]);}}
-              style={{padding:"3px 7px",borderRadius:6,border:"0.5px solid #d0cec8",background:metroMode===x[1]?"#1a1a1a":"#fff",color:metroMode===x[1]?"#fff":"#666",fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>♩ {x[0]}</button>;
-          })}
-        </div>
-        <div onClick={function(){setMetroAccent(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {Sw(metroAccent)}<span style={{fontSize:10,color:C.label}}>頭チーン</span>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:4}}>
-          <span style={{fontSize:10,color:C.label}}>音量</span>
-          <input type="range" min="0" max="100" value={Math.round(metroVol*100)} onChange={function(e){setMetroVol(e.target.value/100);}}
-            style={{width:60,WebkitAppearance:"none",appearance:"none",height:4,background:"#d0cec8",borderRadius:2}}/>
-        </div>
-      </div>
-
-      <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"5px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3"}}>
-        <span style={{fontSize:10,fontWeight:700,color:C.label}}>左右表示</span>
-        <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
-          {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
-        </div>
-      </div>
-      </div>
-
-      {canEdit ? (
-        <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
-          {/* 左：イラスト固定カラム */}
-          {instrument2?(
-            <div style={{flexShrink:0,position:"sticky",top:8}}>
-              <div style={{textAlign:"center",marginBottom:8}}>
-                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>響ノ音</div>
-                <svg viewBox="0 0 140 166" width="80" height="95">
-                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                  {(function(){
-                    var used2={};
-                    COLORS2.forEach(function(c){
-                      for(var i=0;i<numBars*SPB;i++){
-                        if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
-                      }
-                    });
-                    return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
-                      var pos=SCORE_DOTS_HIBIKI[color];
-                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                        stroke="white" strokeWidth="1.5"/>;
-                    });
-                  })()}
-                </svg>
-              </div>
-              <div style={{textAlign:"center"}}>
-                <div style={{fontSize:10,color:C.label,fontWeight:600,marginBottom:2}}>風ノ音</div>
-                <svg viewBox="0 0 140 166" width="80" height="95">
-                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                  {(function(){
-                    var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                    return Object.keys(activeDots).map(function(color){
-                      var pos=activeDots[color];
-                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                        fill={dotFills[color]||SCORE_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
-                    });
-                  })()}
-                </svg>
-              </div>
-            </div>
-          ):null}
-          {/* 右：再生コントロール＋グリッド */}
-          <div style={{flex:1,minWidth:0}}>
-          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:instrument2?0:8}}>
-          {instrument2?null:(
-            {/* 響ノ音を先に表示（instrument2なし時のみここで表示） */}
-            {false&&instrument2&&(
-              <div style={{textAlign:"center"}}>
-                <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                <svg viewBox="0 0 140 166" width="140" height="166">
-                  <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                  {(function(){
-                    var used2e={};
-                    COLORS2.forEach(function(c){
-                      for(var i=0;i<numBars*SPB;i++){
-                        if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2e[c]=true; break; }
-                      }
-                    });
-                    return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
-                      var pos=SCORE_DOTS_HIBIKI[color];
-                      return <circle key={color} cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor?17:15}
-                        fill={used2e[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                        stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>;
-                    });
-                  })()}
-                </svg>
-              </div>
-            )}
-            {/* 風ノ音 */}
-            <div style={{textAlign:"center"}}>
-              {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
-            <div style={{width:140}}>
-              <svg viewBox="0 0 140 166" width="140" height="166">
-              <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-              <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{scale==="dreamy"?"低音":"高音"}</text>
-              <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{scale==="dreamy"?"高音":"低音"}</text>
-              {(function(){
-                var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).filter(function(c){return true;}).map(function(color){
-                  var pos=activeDots[color];
-                  return (
-                    <g key={color}>
-                      <circle cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor?17:15}
-                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
-                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
-                        style={{transition:"all 0.15s"}}/>
-                      {lrOn&&dotLabel[color]&&(
-                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="11" fontWeight="bold" fontFamily="sans-serif" fill="#222">{dotLabel[color]}</text>
-                      )}
-                    </g>
-                  );
-                });
-              })()}
-            </svg>
-            </div>
-            </div>
-
-          </div>
-           <div style={{overflowX:"auto",width:"100%",marginTop:8}}>
-            {instrument2?(
-              <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
-                {Array.from({length:numBars},function(_,bi){
-                  return (
-                    <div key={bi} style={{display:"flex",gap:8,marginBottom:8,alignItems:"flex-start"}}>
-                      {renderBar2Edit&&renderBar2Edit(bi)}
-                      {renderBar(bi)}
-                    </div>
-                  );
-                })}
-              </div>
-            ):(
-              <div>
-                <div style={{display:"inline-flex",gap:4,marginBottom:10}}>
-                  {topBars.map(function(b){return renderBar(b);})}
-                </div>
-                <br/>
-                <div style={{display:"inline-flex",gap:4}}>
-                  {botBars.map(function(b){return renderBar(b);})}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
-          {/* イラスト横並び（上） */}
-          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:16,flexWrap:"wrap"}}>
-            {/* 1台目イラスト（instrument2がある時は響ノ音を先に） */}
-            {instrument2&&(function(){
-              var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
-              return (
-                <div style={{textAlign:"center"}}>
-                  <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                  <svg viewBox="0 0 140 166" width="120" height="142">
-                    <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                    {(function(){
-                      var used2={};
-                      COLORS2.forEach(function(c){
-                        for(var i=0;i<numBars*SPB;i++){
-                          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
-                        }
-                      });
-                      return Object.keys(DOTS_I).map(function(color){
-                        var pos=DOTS_I[color];
-                        return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                          fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                          stroke="white" strokeWidth="1.5"/>;
-                      });
-                    })()}
-                  </svg>
-                </div>
-              );
-            })()}
-            <div style={{textAlign:"center"}}>
-              {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
-              <svg viewBox="0 0 140 166" width="120" height="142">
-              <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-              <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"低音":"高音"}</text>
-              <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{scale==="dreamy"?"高音":"低音"}</text>
-              {(function(){
-                var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).map(function(color){
-                  var pos=activeDots[color];
-                  return (
-                    <g key={color}>
-                      <circle cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor?17:15}
-                        fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
-                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
-                        style={{transition:"all 0.15s"}}/>
-                    </g>
-                  );
-                });
-              })()}
-              </svg>
-            </div>
-            {/* 2台目イラスト */}
-            {instrument2&&(function(){
-              var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
-              return (
-                <div style={{textAlign:"center"}}>
-                  <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                  <svg viewBox="0 0 140 166" width="120" height="142">
-                    <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                    {Object.keys(DOTS_I).map(function(color){
-                      var pos=DOTS_I[color];
-                      var used2={};
-                      COLORS2.forEach(function(c){
-                        for(var i=0;i<numBars*SPB;i++){
-                          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
-                        }
-                      });
-                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="15"
-                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
-                    })}
-                  </svg>
-                </div>
-              );
-            })()}
-          </div>
-          {/* グリッド横並び（下） */}
-          <div style={{display:"flex",gap:instrument2?32:0,justifyContent:"center",alignItems:"flex-start",overflowX:"auto",width:"100%",flexWrap:"wrap"}}>
-            {/* 1台目グリッド */}
-            <div>
-              <div style={{display:"flex",gap:2,marginBottom:10}}>
-                {topBars.map(function(b){return renderBar(b);})}
-              </div>
-              <div style={{display:"flex",gap:2}}>
-                {botBars.map(function(b){return renderBar(b);})}
-              </div>
-            </div>
-            {/* 2台目グリッド */}
-            {grid2Element}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 
 function App() {
   const [members, setMembers] = useState([]);
