@@ -415,7 +415,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var copiedBarS=useState(null); var copiedBar=copiedBarS[0]; var setCopiedBar=copiedBarS[1];
   var selectedBarS=useState(null); var selectedBar=selectedBarS[0]; var setSelectedBar=selectedBarS[1];
   // setSelectedBarをラップしてRefも同時更新
-  var setSelectedBarSync=function(b){ selectedBarRef.current=b; setSelectedBar(b); };
+  var setSelectedBarSync=function(b){ console.log("setSelectedBarSync called:", b); selectedBarRef.current=b; setSelectedBar(b); };
   var copiedBar2S=useState(null); var copiedBar2=copiedBar2S[0]; var setCopiedBar2=copiedBar2S[1];
   var copiedBarRef=React.useRef(null); var copiedBar2Ref=React.useRef(null); var selectedBarRef=React.useRef(null);
   var floatPosS=useState({x:16,y:60}); var floatPos=floatPosS[0]; var setFloatPos=floatPosS[1];
