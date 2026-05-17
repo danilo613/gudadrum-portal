@@ -415,6 +415,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var copiedBarS=useState(null); var copiedBar=copiedBarS[0]; var setCopiedBar=copiedBarS[1];
   var selectedBarS=useState(null); var selectedBar=selectedBarS[0]; var setSelectedBar=selectedBarS[1];
   var copiedBar2S=useState(null); var copiedBar2=copiedBar2S[0]; var setCopiedBar2=copiedBar2S[1];
+  var copiedBarRef=React.useRef(null); var copiedBar2Ref=React.useRef(null); var selectedBarRef=React.useRef(null);
   var floatPosS=useState({x:16,y:60}); var floatPos=floatPosS[0]; var setFloatPos=floatPosS[1];
   var isDraggingRef=React.useRef(false); var dragOffRef=React.useRef({x:0,y:0});
   var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
@@ -484,60 +485,63 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     function onKey(e){
       if(!(e.metaKey||e.ctrlKey)) return;
       if(e.key==='c'||e.key==='C'){
-        if(selectedBar===null) return;
-        // 選択中の小節をコピー
+        var sb=selectedBarRef.current;
+        if(sb===null) return;
         var barLeft={}, barRight={};
         COLORS.forEach(function(c){
-          barLeft[c]=(left[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
-          barRight[c]=(right[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
+          barLeft[c]=(leftRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+          barRight[c]=(rightRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
         });
-        setCopiedBar({left:barLeft,right:barRight});
-        // 2台目
+        var copied={left:barLeft,right:barRight};
+        copiedBarRef.current=copied;
+        setCopiedBar(copied);
         if(instrument2){
           var barLeft2={}, barRight2={};
           COLORS2.forEach(function(c){
-            barLeft2[c]=(left2[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
-            barRight2[c]=(right2[c]||[]).slice(selectedBar*SPB,(selectedBar+1)*SPB);
+            barLeft2[c]=(left2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+            barRight2[c]=(right2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
           });
-          setCopiedBar2({left:barLeft2,right:barRight2});
+          var copied2={left:barLeft2,right:barRight2};
+          copiedBar2Ref.current=copied2;
+          setCopiedBar2(copied2);
         }
         e.preventDefault();
       }
       if(e.key==='v'||e.key==='V'){
-        if(selectedBar===null||copiedBar===null) return;
-        // ペースト
+        var sb2=selectedBarRef.current;
+        var cb=copiedBarRef.current;
+        if(sb2===null||cb===null) return;
         setLeft(function(prev){
           var p=Object.assign({},prev);
           COLORS.forEach(function(c){
-            p[c]=prev[c].slice();
-            for(var i=0;i<SPB;i++) p[c][selectedBar*SPB+i]=copiedBar.left[c]?copiedBar.left[c][i]||0:0;
+            p[c]=(prev[c]||[]).slice();
+            for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb.left[c]?cb.left[c][i]||0:0;
           });
           return p;
         });
         setRight(function(prev){
           var p=Object.assign({},prev);
           COLORS.forEach(function(c){
-            p[c]=prev[c].slice();
-            for(var i=0;i<SPB;i++) p[c][selectedBar*SPB+i]=copiedBar.right[c]?copiedBar.right[c][i]||0:0;
+            p[c]=(prev[c]||[]).slice();
+            for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb.right[c]?cb.right[c][i]||0:0;
           });
           return p;
         });
-        if(instrument2&&copiedBar2){
+        var cb2=copiedBar2Ref.current;
+        if(instrument2&&cb2){
           setLeft2(function(prev){
             var p=Object.assign({},prev);
             COLORS2.forEach(function(c){
-              if(!p[c]) p[c]=new Array(numBars*SPB).fill(0);
-              else p[c]=prev[c].slice();
-              for(var i=0;i<SPB;i++) p[c][selectedBar*SPB+i]=copiedBar2.left[c]?copiedBar2.left[c][i]||0:0;
+              p[c]=prev[c]?prev[c].slice():new Array(numBars*SPB).fill(0);
+              for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb2.left[c]?cb2.left[c][i]||0:0;
             });
             return p;
           });
           setRight2(function(prev){
             var p=Object.assign({},prev);
             COLORS2.forEach(function(c){
-              if(!p[c]) p[c]=new Array(numBars*SPB).fill(0);
-              else p[c]=prev[c].slice();
-              for(var i=0;i<SPB;i++) p[c][selectedBar*SPB+i]=copiedBar2.right[c]?copiedBar2.right[c][i]||0:0;
+              p[c]=prev[c]?prev[c].slice():new Array(numBars*SPB).fill(0);
+              for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb2.right[c]?cb2.right[c][i]||0:0;
             });
             return p;
           });
@@ -547,7 +551,12 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
     window.addEventListener('keydown', onKey);
     return function(){ window.removeEventListener('keydown', onKey); };
-  },[canEdit, selectedBar, copiedBar, copiedBar2, left, right, left2, right2, SPB, numBars]);
+  },[canEdit]);
+
+  // コピペ用Ref同期
+  useEffect(function(){copiedBarRef.current=copiedBar;},[copiedBar]);
+  useEffect(function(){copiedBar2Ref.current=copiedBar2;},[copiedBar2]);
+  useEffect(function(){selectedBarRef.current=selectedBar;},[selectedBar]);
 
   // onLoopCompleteをRefで管理
   var onLoopCompleteRef=React.useRef(onLoopComplete);
@@ -1195,7 +1204,7 @@ function renderSideGrid2(barIdx, side){
     }
 
     return (
-      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBar(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:selectedBar===barIdx?"2px solid #708238":"1px solid #e8e8e8"}}>
+      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBar(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
         {/* 小節番号 */}
         <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
           <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
@@ -1805,7 +1814,7 @@ function renderSideGrid2(barIdx, side){
     }
 
     return (
-      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBar(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:selectedBar===barIdx?"2px solid #708238":"1px solid #e8e8e8"}}>
+      <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBar(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
         {/* 小節番号 */}
         <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
           <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
