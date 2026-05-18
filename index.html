@@ -2082,7 +2082,7 @@ function renderSideGrid2(barIdx, side){
           </div>
         )}
         <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:4,background:"#f5f5f3",borderRadius:8}}>
-          {curStep>=0&&<span style={{fontSize:10,color:C.label}}>🔴 {curStep+1}/{TOTAL}</span>}
+          
         </div>
         {isQueuePlaying&&<span style={{fontSize:10,color:"#708238",fontWeight:600}}>通し再生中</span>}
       </div>
@@ -2239,31 +2239,6 @@ function renderSideGrid2(barIdx, side){
               })()}
               </svg>
             </div>
-            {/* 2台目イラスト */}
-            {instrument2&&(function(){
-              var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
-              return (
-                <div style={{textAlign:"center"}}>
-                  <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                  <svg viewBox="0 0 140 166" width="120" height="142">
-                    <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
-                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                    {Object.keys(DOTS_I).map(function(color){
-                      var pos=DOTS_I[color];
-                      var used2={};
-                      COLORS2.forEach(function(c){
-                        for(var i=0;i<numBars*SPB;i++){
-                          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
-                        }
-                      });
-                      return <circle key={color} cx={pos.cx} cy={pos.cy} r="15"
-                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]} stroke="white" strokeWidth="1.5"/>;
-                    })}
-                  </svg>
-                </div>
-              );
-            })()}
           </div>
           {/* グリッド横並び（下） */}
           <div style={{display:"flex",gap:instrument2?32:0,justifyContent:"center",alignItems:"flex-start",overflowX:"auto",width:"100%",flexWrap:"wrap"}}>
@@ -3310,6 +3285,16 @@ function App() {
               patternData2={scoreEditId==="megumi"?{left:((scorePatterns["megumi"]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns["megumi"]||{})[scoreEditSec]||{}).right2||{}}:null}
               subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               onSave={saveScorePattern}
+              sharedBpm={sharedBpm}
+              onBpmChange={function(v){setSharedBpm(v);}}
+              sharedMetroOn={sharedMetroOn}
+              sharedMetroMode={sharedMetroMode}
+              sharedHeadBell={sharedHeadBell}
+              onMetroChange={function(metroOn,metroMode,headBell){
+                if(metroOn!==undefined) setSharedMetroOn(metroOn);
+                if(metroMode!==undefined) setSharedMetroMode(metroMode);
+                if(headBell!==undefined) setSharedHeadBell(headBell);
+              }}
             />
           </div>
         )}
@@ -5308,9 +5293,10 @@ function App() {
                   sharedMetroOn={sharedMetroOn}
                   sharedMetroMode={sharedMetroMode}
                   sharedHeadBell={sharedHeadBell||false}
-                  onMetroChange={function(v){
-                    if(v.metroOn!==undefined) setSharedMetroOn(v.metroOn);
-                    if(v.metroMode!==undefined) setSharedMetroMode(v.metroMode);
+                  onMetroChange={function(metroOn, metroMode, headBell){
+                    if(metroOn!==undefined) setSharedMetroOn(metroOn);
+                    if(metroMode!==undefined) setSharedMetroMode(metroMode);
+                    if(headBell!==undefined) setSharedHeadBell(headBell);
                   }}
                   onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
                   onQueueStart={selectedSecs.length>0?function(){
