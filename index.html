@@ -922,7 +922,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handleSave(){
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime},instrument2?left2:null,instrument2?right2:null);
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -1021,8 +1021,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         </div>
       );
     } else {
-      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
-      if(!lrOn && side==="right") return null;
+      // 閲覧モード: 1列のみ
       var cells=[];
       for(var i=0;i<SPB;i++){
         var s=barIdx*SPB+i;
@@ -1100,8 +1099,7 @@ function renderSideGrid2(barIdx, side){
         </div>
       );
     } else {
-      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
-      if(!lrOn && side==="right") return null;
+      // 閲覧モード: 1列のみ
       var cells=[];
       for(var i=0;i<SPB;i++){
         var s=barIdx*SPB+i;
@@ -1140,8 +1138,8 @@ function renderSideGrid2(barIdx, side){
     var stepH=CELL+GAP;
     var nCols=canEdit?COLORS.length:1;
     var sideW=nCols*(CELL+GAP);
-    var beatW=lrOn?14:0;
-    var totalW=lrOn?sideW+beatW+sideW:sideW;
+    var beatW=14;
+    var totalW=sideW+beatW+sideW;
 
     // 帯リスト（後ろに配置）
     var bands=[];
@@ -1246,9 +1244,9 @@ function renderSideGrid2(barIdx, side){
             {beatCells}
           </div>
           {/* 右手 */}
-          {lrOn&&<div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
+          <div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
             {renderSideGrid(barIdx,"right")}
-          </div>}
+          </div>
         </div>
       </div>
     );
@@ -1533,7 +1531,7 @@ function renderSideGrid2(barIdx, side){
 
   function handleSave(){
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime});
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime},instrument2?left2:null,instrument2?right2:null);
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -1632,8 +1630,7 @@ function renderSideGrid2(barIdx, side){
         </div>
       );
     } else {
-      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
-      if(!lrOn && side==="right") return null;
+      // 閲覧モード: 1列のみ
       var cells=[];
       for(var i=0;i<SPB;i++){
         var s=barIdx*SPB+i;
@@ -1711,8 +1708,7 @@ function renderSideGrid2(barIdx, side){
         </div>
       );
     } else {
-      // 閲覧モード: 1列のみ（lrOnがOFFの場合は片手のみ）
-      if(!lrOn && side==="right") return null;
+      // 閲覧モード: 1列のみ
       var cells=[];
       for(var i=0;i<SPB;i++){
         var s=barIdx*SPB+i;
@@ -1751,8 +1747,8 @@ function renderSideGrid2(barIdx, side){
     var stepH=CELL+GAP;
     var nCols=canEdit?COLORS.length:1;
     var sideW=nCols*(CELL+GAP);
-    var beatW=lrOn?14:0;
-    var totalW=lrOn?sideW+beatW+sideW:sideW;
+    var beatW=14;
+    var totalW=sideW+beatW+sideW;
 
     // 帯リスト（後ろに配置）
     var bands=[];
@@ -1857,9 +1853,9 @@ function renderSideGrid2(barIdx, side){
             {beatCells}
           </div>
           {/* 右手 */}
-          {lrOn&&<div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
+          <div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
             {renderSideGrid(barIdx,"right")}
-          </div>}
+          </div>
         </div>
       </div>
     );
