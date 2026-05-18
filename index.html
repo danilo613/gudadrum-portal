@@ -1246,6 +1246,11 @@ function renderSideGrid2(barIdx, side){
             {beatCells}
           </div>
           {/* 右手 */}
+          {lrOn&&<div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"right")}
+          </div>}
+          </div>
+          {/* 右手 */}
           <div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
             {renderSideGrid(barIdx,"right")}
           </div>
@@ -1857,6 +1862,11 @@ function renderSideGrid2(barIdx, side){
             {beatCells}
           </div>
           {/* 右手 */}
+          {lrOn&&<div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
+            {renderSideGrid(barIdx,"right")}
+          </div>}
+          </div>
+          {/* 右手 */}
           <div style={{position:"absolute",left:sideW+beatW,top:0,zIndex:1}}>
             {renderSideGrid(barIdx,"right")}
           </div>
@@ -2098,6 +2108,16 @@ function renderSideGrid2(barIdx, side){
       {/* 小節数・繰り返し・拍子 */}
       {canEdit ? (
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
+          {/* 保存ボタン */}
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+            <button onClick={handleSave} disabled={saving}
+              style={{padding:"6px 16px",borderRadius:8,border:"none",
+                background:saving?"#aaa":"linear-gradient(135deg,#b8c86a,#8a9a3a)",
+                color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+              {saving?"保存中…":"💾 保存"}
+            </button>
+            {saveMsg&&<span style={{fontSize:11,color:saveMsg.includes("✅")?"#708238":"#e74c3c"}}>{saveMsg}</span>}
+          </div>
           {/* イラスト横並び（sticky固定） */}
           <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,background:"rgba(255,255,255,0.97)",paddingTop:8,paddingBottom:8,borderBottom:"1px solid #e8e8e8"}}>
             {/* 響ノ音イラスト（instrument2がある時） */}
@@ -2148,7 +2168,8 @@ function renderSideGrid2(barIdx, side){
                         style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="7" fontWeight="700" fill="#fff" fontFamily="sans-serif" pointerEvents="none">
+                          fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                          stroke="#fff" strokeWidth="2" paintOrder="stroke">
                           {dotLabel[color]}
                         </text>
                       )}
