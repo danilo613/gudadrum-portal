@@ -1210,7 +1210,8 @@ function renderSideGrid2(barIdx, side){
       <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBarSync(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
         {/* 小節番号 */}
         <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
-          <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+          <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBarSync(b);};}(barIdx)}
+            onMouseDown={function(b){return function(e){e.stopPropagation();setSelectedBarSync(b);};}(barIdx)}
             style={{width:18,height:18,borderRadius:"50%",flexShrink:0,
               background:isStart?"#E74C3C":"#a8a5a0",
               color:"#fff",fontSize:10,fontWeight:700,
@@ -1820,7 +1821,8 @@ function renderSideGrid2(barIdx, side){
       <div key={barIdx} onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBarSync(b);};}(barIdx)} style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",boxShadow:isStart?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
         {/* 小節番号 */}
         <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
-          <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);};}(barIdx)}
+          <div onClick={function(b){return function(){startStepRef.current=b*SPB;setStartBar(b);setCurStep(-1);setSelectedBarSync(b);};}(barIdx)}
+            onMouseDown={function(b){return function(e){e.stopPropagation();setSelectedBarSync(b);};}(barIdx)}
             style={{width:18,height:18,borderRadius:"50%",flexShrink:0,
               background:isStart?"#E74C3C":"#a8a5a0",
               color:"#fff",fontSize:10,fontWeight:700,
@@ -1909,7 +1911,8 @@ function renderSideGrid2(barIdx, side){
           style={{flexShrink:0,marginRight:6,background:"#fff",borderRadius:10,padding:"8px",cursor:"pointer",
             boxShadow:startBar===barIdx?"0 4px 16px rgba(0,0,0,0.25)":"0 1px 4px rgba(0,0,0,0.08)",border:"1px solid #e8e8e8"}}>
           <div style={{display:"flex",alignItems:"center",gap:4,marginBottom:2}}>
-            <div style={{width:18,height:18,borderRadius:"50%",background:startBar===barIdx?"#E74C3C":"#a8a5a0",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
+            <div onMouseDown={function(b){return function(e){e.stopPropagation();setSelectedBarSync(b);};}(barIdx)}
+              style={{width:18,height:18,borderRadius:"50%",background:startBar===barIdx?"#E74C3C":"#a8a5a0",color:"#fff",fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
           </div>
           {cells2}
         </div>
