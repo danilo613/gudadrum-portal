@@ -2899,7 +2899,8 @@ function App() {
       const rows = res.rows || [];
       const patterns = {};
       rows.forEach(function(r) {
-        if(!patterns[r.section]) patterns[r.section] = { left:{}, right:{}, meta:{} };
+        if(!patterns[r.section]) patterns[r.section] = { left:{}, right:{}, left2:{}, right2:{}, meta:{} };
+        if(!patterns[r.section][r.hand]) patterns[r.section][r.hand] = {};
         if(r.hand === "meta") {
           patterns[r.section].meta[r.color] = r.pattern;
         } else {
@@ -2960,11 +2961,19 @@ function App() {
     var updated = JSON.parse(JSON.stringify(existing));
     if(!updated.left) updated.left={};
     if(!updated.right) updated.right={};
+    if(!updated.left2) updated.left2={};
+    if(!updated.right2) updated.right2={};
     if(!updated.meta) updated.meta={};
     colors.forEach(function(color){
       updated.left[color]=(left[color]||[]).slice();
       updated.right[color]=(right[color]||[]).slice();
     });
+    if(left2&&right2){
+      colors2.forEach(function(color){
+        updated.left2[color]=(left2[color]||[]).slice();
+        updated.right2[color]=(right2[color]||[]).slice();
+      });
+    }
     if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;updated.meta.noteType=meta.noteType;updated.meta.subdiv=meta.noteType;}
     setScorePatterns(function(prev){var n=Object.assign({},prev);n[scoreId]=Object.assign({},prev[scoreId]);n[scoreId][section]=updated;return n;});
   }
