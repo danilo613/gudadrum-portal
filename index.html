@@ -2071,7 +2071,7 @@ function renderSideGrid2(barIdx, side){
         <div style={{display:"flex",justifyContent:"center",gap:16,marginBottom:6}}>
           <div style={{textAlign:"center"}}>
             <div style={{fontSize:9,color:"#888",marginBottom:2}}>響ノ音</div>
-            <svg viewBox="0 0 140 166" width="60" height="70">
+            <svg viewBox="0 0 140 166" width="100" height="118">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
               {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                 var pos=SCORE_DOTS_HIBIKI[color];
@@ -2083,7 +2083,7 @@ function renderSideGrid2(barIdx, side){
           </div>
           <div style={{textAlign:"center"}}>
             <div style={{fontSize:9,color:"#888",marginBottom:2}}>風ノ音</div>
-            <svg viewBox="0 0 140 166" width="60" height="70">
+            <svg viewBox="0 0 140 166" width="100" height="118">
               <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
               {(function(){
                 var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
@@ -2100,7 +2100,7 @@ function renderSideGrid2(barIdx, side){
       )}
       {canEdit&&!instrument2&&(
         <div style={{display:"flex",justifyContent:"center",marginBottom:6}}>
-          <svg viewBox="0 0 140 166" width="60" height="70">
+          <svg viewBox="0 0 140 166" width="100" height="118">
             <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
             {(function(){
               var activeDots=scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
