@@ -1920,6 +1920,7 @@ function renderSideGrid2(barIdx, side){
   if(instrument2) {
     var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
     var pat2={left:left2,right:right2};
+    console.log("pat2.left keys with data:", Object.keys(pat2.left).filter(function(k){return pat2.left[k]&&pat2.left[k].some(function(v){return v>0;});}));
     var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
     var topBars2=[],botBars2=[];
     for(var bi2=0;bi2<numBars2;bi2++){if(bi2%2===0)topBars2.push(bi2);else botBars2.push(bi2);}
@@ -2146,7 +2147,7 @@ function renderSideGrid2(barIdx, side){
             {saveMsg&&<span style={{fontSize:11,color:saveMsg.includes("✅")?"#708238":"#e74c3c"}}>{saveMsg}</span>}
           </div>
           {/* イラスト横並び（sticky固定） */}
-          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,background:"rgba(255,255,255,0.97)",paddingTop:8,paddingBottom:8,borderBottom:"1px solid #e8e8e8"}}>
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,paddingTop:8,paddingBottom:8}}>
             {/* 響ノ音イラスト（instrument2がある時） */}
             {instrument2&&(
               <div style={{textAlign:"center"}}>
@@ -2228,7 +2229,7 @@ function renderSideGrid2(barIdx, side){
         </div>) : (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
           {/* イラスト横並び（上） */}
-          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:8,flexWrap:"wrap",position:"sticky",top:56,zIndex:10,background:"rgba(240,235,224,0.97)",backdropFilter:"blur(4px)",paddingTop:8,paddingBottom:8,borderRadius:"0 0 12px 12px"}}>
+          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:8,flexWrap:"wrap",position:"sticky",top:56,zIndex:10,paddingTop:4,paddingBottom:4}}>
             {/* 1台目イラスト（instrument2がある時は響ノ音を先に） */}
             {instrument2&&(function(){
               var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
