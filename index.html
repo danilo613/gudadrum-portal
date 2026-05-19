@@ -635,7 +635,20 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     setLeft(lp); setRight(rp);
     leftRef.current=lp; rightRef.current=rp;
     if(startTime) setSecTime(startTime);
-  },[patternData,startTime,subdivProp,sectionKey]);
+    // patternData2（響ノ音）も再読込
+    if(instrument2 && patternData2){
+      var total2=nb*spb;
+      var lp2={}, rp2={};
+      COLORS2.forEach(function(c){
+        lp2[c]=new Array(total2).fill(0);
+        rp2[c]=new Array(total2).fill(0);
+        if(patternData2.left&&patternData2.left[c]){for(var i=0;i<Math.min(patternData2.left[c].length,total2);i++)lp2[c][i]=patternData2.left[c][i]||0;}
+        if(patternData2.right&&patternData2.right[c]){for(var i=0;i<Math.min(patternData2.right[c].length,total2);i++)rp2[c][i]=patternData2.right[c][i]||0;}
+      });
+      setLeft2(lp2); setRight2(rp2);
+      left2Ref.current=lp2; right2Ref.current=rp2;
+    }
+  },[patternData,patternData2,startTime,subdivProp,sectionKey]);
 
   useEffect(function(){return function(){doStop();};},[]);
 
@@ -2241,6 +2254,13 @@ function renderSideGrid2(barIdx, side){
                         fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
+                      {lrOn&&dotLabel[color]&&(
+                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                          stroke="#fff" strokeWidth="2" paintOrder="stroke">
+                          {dotLabel[color]}
+                        </text>
+                      )}
                     </g>
                   );
                 });
