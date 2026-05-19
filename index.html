@@ -652,6 +652,24 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   },[patternData,patternData2,startTime,subdivProp,sectionKey]);
 
+  // patternData2専用useEffect（非同期読み込み後に反映）
+  useEffect(function(){
+    if(!instrument2 || !patternData2) return;
+    var nb2=Math.max(2,Math.min(parseInt(bars)||8,32));
+    var spb2=subdivRef.current==="16th"?16:12;
+    var total2=nb2*spb2;
+    var lp2={}, rp2={};
+    COLORS2.forEach(function(c){
+      lp2[c]=new Array(total2).fill(0);
+      rp2[c]=new Array(total2).fill(0);
+      if(patternData2.left&&patternData2.left[c]){for(var i=0;i<Math.min(patternData2.left[c].length,total2);i++)lp2[c][i]=patternData2.left[c][i]||0;}
+      if(patternData2.right&&patternData2.right[c]){for(var i=0;i<Math.min(patternData2.right[c].length,total2);i++)rp2[c][i]=patternData2.right[c][i]||0;}
+    });
+    console.log("patternData2 updated:", Object.keys(lp2).some(function(c){return lp2[c].some(function(v){return v>0;})}));
+    setLeft2(lp2); setRight2(rp2);
+    left2Ref.current=lp2; right2Ref.current=rp2;
+  },[patternData2]);
+
   useEffect(function(){return function(){doStop();};},[]);
 
   // スペースキーで再生/停止
@@ -1126,8 +1144,8 @@ function renderSideGrid2(barIdx, side){
         var isStart=s===startStepRef.current;
         // その行に設定されてる色を探す（最大2色）
         var foundColors=[];
-        for(var ci=0;ci<COLORS.length;ci++){
-          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+        for(var ci=0;ci<COLORS2.length;ci++){
+          if(pat[COLORS2[ci]]&&pat[COLORS2[ci]][s]) foundColors.push(COLORS2[ci]);
           if(foundColors.length>=2) break;
         }
         var foundColor=foundColors[0]||null;
@@ -1138,7 +1156,7 @@ function renderSideGrid2(barIdx, side){
               width:CELL,height:CELL,
               marginBottom:GAP,
               borderRadius:2,
-              background:cur?"rgba(0,0,0,0.2)":foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              background:cur?"rgba(0,0,0,0.2)":foundColors.length===0?"#e8e6e2":foundColors.length===1?DOT_COLORS2[foundColors[0]]:"linear-gradient(to bottom, "+DOT_COLORS2[foundColors[0]]+" 50%, "+DOT_COLORS2[foundColors[1]]+" 50%)",
               cursor:"pointer",
               outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
               outlineOffset:"-1px",
