@@ -654,7 +654,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   // patternData2専用useEffect（非同期読み込み後に反映）
   useEffect(function(){
-    if(!instrument2 || !patternData2) return;
+    console.log("pd2 effect:", instrument2, patternData2&&Object.keys(patternData2.left||{}).length); if(!instrument2 || !patternData2) return;
     var nb2=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb2=subdivRef.current==="16th"?16:12;
     var total2=nb2*spb2;
@@ -2228,7 +2228,7 @@ function renderSideGrid2(barIdx, side){
         </div>) : (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
           {/* イラスト横並び（上） */}
-          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:16,flexWrap:"wrap",position:"sticky",top:0,zIndex:10,background:"transparent",paddingTop:4,paddingBottom:4}}>
+          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:8,flexWrap:"wrap",position:"sticky",top:56,zIndex:10,background:"rgba(240,235,224,0.97)",backdropFilter:"blur(4px)",paddingTop:8,paddingBottom:8,borderRadius:"0 0 12px 12px"}}>
             {/* 1台目イラスト（instrument2がある時は響ノ音を先に） */}
             {instrument2&&(function(){
               var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
@@ -2248,9 +2248,10 @@ function renderSideGrid2(barIdx, side){
                       });
                       return Object.keys(DOTS_I).map(function(color){
                         var pos=DOTS_I[color];
-                        return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                          fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                          stroke="white" strokeWidth="1.5"/>;
+                        return <circle key={color} cx={pos.cx} cy={pos.cy} r="15"
+                          fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                          stroke="white" strokeWidth="1.5"
+                          style={{transition:"all 0.15s"}}/>;
                       });
                     })()}
                   </svg>
