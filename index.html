@@ -1054,7 +1054,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
               width:CELL,height:CELL,
               marginBottom:GAP,
               borderRadius:2,
-              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              background:cur?"rgba(0,0,0,0.2)":foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
               cursor:"pointer",
               outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
               outlineOffset:"-1px",
@@ -1132,7 +1132,7 @@ function renderSideGrid2(barIdx, side){
               width:CELL,height:CELL,
               marginBottom:GAP,
               borderRadius:2,
-              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              background:cur?"rgba(0,0,0,0.2)":foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
               cursor:"pointer",
               outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
               outlineOffset:"-1px",
@@ -1663,7 +1663,7 @@ function renderSideGrid2(barIdx, side){
               width:CELL,height:CELL,
               marginBottom:GAP,
               borderRadius:2,
-              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              background:cur?"rgba(0,0,0,0.2)":foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
               cursor:"pointer",
               outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
               outlineOffset:"-1px",
@@ -1741,7 +1741,7 @@ function renderSideGrid2(barIdx, side){
               width:CELL,height:CELL,
               marginBottom:GAP,
               borderRadius:2,
-              background:foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
+              background:cur?"rgba(0,0,0,0.2)":foundColors.length===0?"#e8e6e2":foundColors.length===1?SCORE_DOT_COLORS[foundColors[0]]:"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)",
               cursor:"pointer",
               outline:cur?"2px solid #555":isStart?"2px solid #E74C3C":"none",
               outlineOffset:"-1px",
@@ -2138,7 +2138,7 @@ function renderSideGrid2(barIdx, side){
                       var pos=SCORE_DOTS_HIBIKI[color];
                       return <circle key={color} cx={pos.cx} cy={pos.cy}
                         r={color===highlightColor?17:15}
-                        fill={used2[color]?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        fill={color===highlightColor?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>;
                     });
@@ -2208,7 +2208,7 @@ function renderSideGrid2(barIdx, side){
         </div>) : (
         <div style={{display:"flex",flexDirection:"column",alignItems:"center"}}>
           {/* イラスト横並び（上） */}
-          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:16,flexWrap:"wrap",position:"sticky",top:0,zIndex:10,background:"rgba(245,243,238,0.97)",paddingTop:8,paddingBottom:8,backdropFilter:"blur(4px)"}}>
+          <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:16,flexWrap:"wrap",position:"sticky",top:0,zIndex:10,background:"transparent",paddingTop:4,paddingBottom:4}}>
             {/* 1台目イラスト（instrument2がある時は響ノ音を先に） */}
             {instrument2&&(function(){
               var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
