@@ -1920,7 +1920,7 @@ function renderSideGrid2(barIdx, side){
   if(instrument2) {
     var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="dreamy"?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
     var pat2={left:left2,right:right2};
-    console.log("pat2.left keys with data:", Object.keys(pat2.left).filter(function(k){return pat2.left[k]&&pat2.left[k].some(function(v){return v>0;});}));
+    console.log("pat2 render - left2 keys with data:", Object.keys(left2).filter(function(k){return left2[k]&&left2[k].some(function(v){return v>0;});}));
     var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
     var topBars2=[],botBars2=[];
     for(var bi2=0;bi2<numBars2;bi2++){if(bi2%2===0)topBars2.push(bi2);else botBars2.push(bi2);}
