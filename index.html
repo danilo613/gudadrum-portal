@@ -422,6 +422,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var isDraggingRef=React.useRef(false); var dragOffRef=React.useRef({x:0,y:0});
   var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
   var highlightColorS=useState(null); var highlightColor=highlightColorS[0]; var setHighlightColor=highlightColorS[1];
+  var highlightColor2S=useState(null); var highlightColor2=highlightColor2S[0]; var setHighlightColor2=highlightColor2S[1];
   var startBarS=useState(0); var startBar=startBarS[0]; var setStartBar=startBarS[1]; var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
   var setBpm=function(v){ setBpmLocal(typeof v==="function"?v(bpmS[0]):v); if(onBpmChange) onBpmChange(typeof v==="function"?v(bpmS[0]):v); };
   var curStepS=useState(-1); var curStep=curStepS[0]; var setCurStep=curStepS[1];
@@ -636,6 +637,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     leftRef.current=lp; rightRef.current=rp;
     if(startTime) setSecTime(startTime);
     // patternData2（響ノ音）も再読込
+    console.log("patternData2:", patternData2, "instrument2:", instrument2);
     if(instrument2 && patternData2){
       var total2=nb*spb;
       var lp2={}, rp2={};
@@ -909,7 +911,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       return p;
     });
     setTimeout(function(){
-      if(willBeOn) initAudio(function(){ playSound2(color); });
+      if(willBeOn){
+        setHighlightColor2(color);
+        setTimeout(function(){setHighlightColor2(null);},300);
+        initAudio(function(){ playSound2(color); });
+      }
     },0);
   }
 
@@ -1518,7 +1524,11 @@ function renderSideGrid2(barIdx, side){
       return p;
     });
     setTimeout(function(){
-      if(willBeOn) initAudio(function(){ playSound2(color); });
+      if(willBeOn){
+        setHighlightColor2(color);
+        setTimeout(function(){setHighlightColor2(null);},300);
+        initAudio(function(){ playSound2(color); });
+      }
     },0);
   }
 
@@ -2127,22 +2137,14 @@ function renderSideGrid2(barIdx, side){
                   <circle cx="70" cy="83" r="67" fill="#f8f8f8" stroke="#e8e8e8" strokeWidth="1"/>
                   <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
                   <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                  {(function(){
-                    var used2={};
-                    COLORS2.forEach(function(c){
-                      for(var i=0;i<numBars*SPB;i++){
-                        if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ used2[c]=true; break; }
-                      }
-                    });
-                    return Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
+                  {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                       var pos=SCORE_DOTS_HIBIKI[color];
                       return <circle key={color} cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor?17:15}
-                        fill={color===highlightColor?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                        stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
+                        r={color===highlightColor2?17:15}
+                        fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>;
-                    });
-                  })()}
+                    })}
                 </svg>
               </div>
             )}
