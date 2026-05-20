@@ -435,6 +435,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var lrOnS=useState(true); var lrOn=lrOnS[0]; var setLrOn=lrOnS[1];
   var dotFillsS=useState(function(){var d={};Object.keys(SCORE_DOTS).forEach(function(c){d[c]=SCORE_PALE_COLORS[c];});return d;}); var dotFills=dotFillsS[0]; var setDotFills=dotFillsS[1];
   var dotLabelS=useState({}); var dotLabel=dotLabelS[0]; var setDotLabel=dotLabelS[1];
+  var dotLabel2S=useState({}); var dotLabel2=dotLabel2S[0]; var setDotLabel2=dotLabel2S[1];
   var savingS=useState(false); var saving=savingS[0]; var setSaving=savingS[1];
   var saveMsgS=useState(""); var saveMsg=saveMsgS[0]; var setSaveMsg=saveMsgS[1];
   var secTimeS=useState(startTime||""); var secTime=secTimeS[0]; var setSecTime=secTimeS[1];
@@ -790,12 +791,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           var g=actxRef.current.createGain(); g.gain.value=0.492;
           src.connect(g); g.connect(actxRef.current.destination); src.start(0);
           setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
+          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]="左";return n;});
         }
         if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
           var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
           var g2=actxRef.current.createGain(); g2.gain.value=0.6;
           src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
           setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
+          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]=(p[c]==="左"?"両":"右");return n;});
         }
       });
     }
@@ -1427,12 +1430,14 @@ function renderSideGrid2(barIdx, side){
           var g=actxRef.current.createGain(); g.gain.value=0.492;
           src.connect(g); g.connect(actxRef.current.destination); src.start(0);
           setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
+          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]="左";return n;});
         }
         if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
           var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
           var g2=actxRef.current.createGain(); g2.gain.value=0.6;
           src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
           setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
+          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]=(p[c]==="左"?"両":"右");return n;});
         }
       });
     }
@@ -2241,11 +2246,22 @@ function renderSideGrid2(barIdx, side){
                   <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
                   {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                       var pos=SCORE_DOTS_HIBIKI[color];
-                      return <circle key={color} cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor2?17:15}
-                        fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                        stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
-                        style={{transition:"all 0.15s"}}/>;
+                      return (
+                        <g key={color}>
+                          <circle cx={pos.cx} cy={pos.cy}
+                            r={color===highlightColor2?17:15}
+                            fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                            stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
+                            style={{transition:"all 0.15s"}}/>
+                          {lrOn&&dotLabel2[color]&&(
+                            <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                              fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                              stroke="#fff" strokeWidth="2" paintOrder="stroke">
+                              {dotLabel2[color]}
+                            </text>
+                          )}
+                        </g>
+                      );
                     })}
                 </svg>
               </div>
@@ -2332,10 +2348,22 @@ function renderSideGrid2(barIdx, side){
                       });
                       return Object.keys(DOTS_I).map(function(color){
                         var pos=DOTS_I[color];
-                        return <circle key={color} cx={pos.cx} cy={pos.cy} r="15"
-                          fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                          stroke="white" strokeWidth="1.5"
-                          style={{transition:"all 0.15s"}}/>;
+                        return (
+                          <g key={color}>
+                            <circle cx={pos.cx} cy={pos.cy}
+                              r={color===highlightColor2?17:15}
+                              fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                              stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
+                              style={{transition:"all 0.15s"}}/>
+                            {lrOn&&dotLabel2[color]&&(
+                              <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                                fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                                stroke="#fff" strokeWidth="2" paintOrder="stroke">
+                                {dotLabel2[color]}
+                              </text>
+                            )}
+                          </g>
+                        );
                       });
                     })()}
                   </svg>
