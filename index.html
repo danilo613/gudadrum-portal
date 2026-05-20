@@ -2223,7 +2223,7 @@ function renderSideGrid2(barIdx, side){
 
       {/* 小節数・繰り返し・拍子 */}
       {canEdit ? (
-        <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        <div style={{display:"flex",flexDirection:"column",gap:8,height:"100vh",overflow:"auto"}}>
           {/* 保存ボタン */}
           <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
             <button onClick={handleSave} disabled={saving}
@@ -2234,8 +2234,8 @@ function renderSideGrid2(barIdx, side){
             </button>
             {saveMsg&&<span style={{fontSize:11,color:saveMsg.includes("✅")?"#708238":"#e74c3c"}}>{saveMsg}</span>}
           </div>
-          {/* イラスト横並び */}
-          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8}}>
+          {/* イラスト横並び（sticky固定） */}
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,background:"transparent",paddingBottom:4}}>
             {/* 響ノ音イラスト（instrument2がある時） */}
             {instrument2&&(
               <div style={{textAlign:"center"}}>
