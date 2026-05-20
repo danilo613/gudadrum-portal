@@ -575,6 +575,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){
     if(prevKeyRef.current !== sectionKey){
       prevKeyRef.current = sectionKey;
+      hasLoadedRef.current=false; // セクション切り替え時にリセット
       if(autoPlay){
         initAudio(function(){
           stepRef.current=0;
@@ -589,6 +590,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   useEffect(function(){
     subdivRef.current=subdiv;
+    // 編集中はsubdivが変わってもデータをリセットしない
+    if(canEdit) return;
     // subdivPropが変わった時にleft/rightを正しいサイズで再構築
     var total = SPB * 8;
     var lp={}, rp={};
@@ -607,10 +610,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   },[subdiv]);
 
   var justSavedRef=useRef(false);
+  var hasLoadedRef=useRef(false); // 初回ロード完了フラグ
   useEffect(function(){
     console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
     // 保存直後はスキップ（justSavedRefフラグ）
     if(canEdit && justSavedRef.current){ justSavedRef.current=false; return; }
+    // 編集モードで初回ロード済みならスキップ（5分ごとのautoFetchによる上書き防止）
+    if(canEdit && hasLoadedRef.current) return;
+    hasLoadedRef.current=true;
     // meta.barsが存在する時だけその値を使う。なければ常に8（デフォルト）
     var metaBars = (patternData&&patternData.meta&&patternData.meta.bars)?parseInt(patternData.meta.bars)||8:8;
     var nb = Math.max(2, Math.min(metaBars, 32));
