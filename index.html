@@ -2040,6 +2040,16 @@ function renderSideGrid2(barIdx, side){
               color:"#fff",fontSize:10,fontWeight:700,
               display:"flex",alignItems:"center",justifyContent:"center"}}>{barIdx+1}</div>
           </div>
+          {/* 色見本（風ノ音と高さを合わせる） */}
+          <div style={{display:"flex",gap:0,marginBottom:2}}>
+            <div style={{display:"flex"}}>
+              {COLORS2.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_HIBIKI_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+            <div style={{width:beatW2,flexShrink:0}}/>
+            <div style={{display:"flex"}}>
+              {COLORS2.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_HIBIKI_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+            </div>
+          </div>
           <div style={{position:"relative",width:totalW2,height:SPB*stepH2}}>
             {bands2}
             <div style={{position:"absolute",left:0,top:0,zIndex:1}}>
