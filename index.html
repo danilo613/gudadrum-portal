@@ -789,11 +789,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
           var g=actxRef.current.createGain(); g.gain.value=0.492;
           src.connect(g); g.connect(actxRef.current.destination); src.start(0);
+          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
         }
         if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
           var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
           var g2=actxRef.current.createGain(); g2.gain.value=0.6;
           src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
+          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
         }
       });
     }
@@ -1424,11 +1426,13 @@ function renderSideGrid2(barIdx, side){
           var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
           var g=actxRef.current.createGain(); g.gain.value=0.492;
           src.connect(g); g.connect(actxRef.current.destination); src.start(0);
+          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
         }
         if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
           var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
           var g2=actxRef.current.createGain(); g2.gain.value=0.6;
           src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
+          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
         }
       });
     }
