@@ -442,6 +442,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var subdivS=useState(subdivProp||"triplet"); var subdiv=subdivS[0]; var setSubdiv=subdivS[1];
   var barsS=useState("8"); var bars=barsS[0]; var setBars=barsS[1];
   var repeatS=useState("1"); var repeat=repeatS[0]; var setRepeat=repeatS[1];
+  var barLengthsS=useState(null); var barLengths=barLengthsS[0]; var setBarLengths=barLengthsS[1];
 
   var startStepRef=useRef(0);
   var iidRef=useRef(null); var stepRef=useRef(0); var dimRef=useRef(null);
@@ -455,6 +456,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
   var onSectionEndRef=useRef(onSectionEnd);
   var barsRef=useRef(parseInt(bars)||8);
+  var barLengthsRef=useRef(null); // 各小節のステップ数配列（nullなら全小節SPBで統一）
 
 
   useEffect(function(){leftRef.current=left;},[left]);
@@ -636,6 +638,12 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       }
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
       if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
+      if(patternData.meta.barLengths){
+        var bl=JSON.parse(patternData.meta.barLengths);
+        setBarLengths(bl); barLengthsRef.current=bl;
+      } else {
+        setBarLengths(null); barLengthsRef.current=null;
+      }
     }
     setLeft(lp); setRight(rp);
     leftRef.current=lp; rightRef.current=rp;
@@ -763,18 +771,54 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(lrOnRef.current)setDotLabel(function(p){var n=Object.assign({},p);n[color]=hand;return n;});
   }
 
+  function getBarLengthsTotal(){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return nb*spb;
+    return bl.reduce(function(a,b){return a+b;},0);
+  }
+  function getBarStart(barIdx){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return barIdx*spb;
+    var start=0;
+    for(var i=0;i<barIdx;i++) start+=bl[i];
+    return start;
+  }
+  function getBarSpb(barIdx){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return spb;
+    return bl[barIdx]||spb;
+  }
+  function stepToBar(s){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return Math.floor(s/spb);
+    var acc=0;
+    for(var i=0;i<nb;i++){acc+=bl[i];if(s<acc)return i;}
+    return nb-1;
+  }
+
   function tick(){
-    var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
+    var s=stepRef.current,L=leftRef.current,R=rightRef.current;
     var spbNow2=subdivRef.current==="16th"?16:12;
-    var totalNow2=barsRef.current*spbNow2;
+    var totalNow2=getBarLengthsTotal();
+    var curBar=stepToBar(s);
+    var barSpb=getBarSpb(curBar);
+    var barStart=getBarStart(curBar);
+    var s12=s-barStart; // 小節内のステップ位置
     if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
-    var spbNow = subdivRef.current==="16th"?16:12;
-    var totalNow = barsRef.current * spbNow;
+    var totalNow = totalNow2;
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
     // 1周完了
@@ -985,7 +1029,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handleSave(){ justSavedRef.current=true;
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime},instrument2?left2:null,instrument2?right2:null);
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime,barLengths:barLengths},instrument2?left2:null,instrument2?right2:null);
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -1042,6 +1086,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   // canEdit=false: 1列、設定色を表示、なければ薄いグレー
   function renderSideGrid(barIdx, side){
     var pat=side==="left"?left:right;
+    var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
+    var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
     if(canEdit){
       // 編集モード: 9色列
@@ -1049,8 +1095,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         <div style={{display:"flex",flexDirection:"row"}}>
           {COLORS.map(function(color){
             var cells=[];
-            for(var i=0;i<SPB;i++){
-              var s=barIdx*SPB+i;
+            for(var i=0;i<barSPB;i++){
+              var s=barOffset+i;
               var on=pat[color]&&pat[color][s];
               var cur=s===curStep;
               var ibs=i===0;
@@ -1087,8 +1133,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       // 閲覧モード: 1列のみ
       var cells=[];
       var pat2side=instrument2?(side==="left"?left2:right2):null;
-      for(var i=0;i<SPB;i++){
-        var s=barIdx*SPB+i;
+      for(var i=0;i<barSPB;i++){
+        var s=barOffset+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
         // 風ノ音の色を探す（最大1色）
@@ -1136,6 +1182,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   // 1小節ブロック
 function renderSideGrid2(barIdx, side){
     var pat=side==="left"?left2:right2;
+    var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
+    var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
     if(canEdit){
       // 編集モード: 9色列
@@ -1143,8 +1191,8 @@ function renderSideGrid2(barIdx, side){
         <div style={{display:"flex",flexDirection:"row"}}>
           {COLORS2.map(function(color){
             var cells=[];
-            for(var i=0;i<SPB;i++){
-              var s=barIdx*SPB+i;
+            for(var i=0;i<barSPB;i++){
+              var s=barOffset+i;
               var on=pat[color]&&pat[color][s];
               var cur=s===curStep;
               var ibs=i===0;
@@ -1180,8 +1228,8 @@ function renderSideGrid2(barIdx, side){
     } else {
       // 閲覧モード: 1列のみ
       var cells=[];
-      for(var i=0;i<SPB;i++){
-        var s=barIdx*SPB+i;
+      for(var i=0;i<barSPB;i++){
+        var s=barOffset+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
         // その行に設定されてる色を探す（最大2色）
@@ -1219,11 +1267,14 @@ function renderSideGrid2(barIdx, side){
     var sideW=nCols*(CELL+GAP);
     var beatW=14;
     var totalW=sideW+beatW+sideW;
+    // barLengths対応：この小節のSPBと開始オフセットを計算
+    var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
+    var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
     // 帯リスト（後ろに配置）
     var bands=[];
-    for(var i=0;i<SPB;i++){
-      var s=barIdx*SPB+i;
+    for(var i=0;i<barSPB;i++){
+      var s=barOffset+i;
       var ibs_b=i===0;
       var ib_b=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
       var i8_b=subdiv==="16th"&&i%2===0&&i%4!==0;
@@ -1262,8 +1313,8 @@ function renderSideGrid2(barIdx, side){
     }
     // 中央クリック列（拍区切り目印）
     var beatCells=[];
-    for(var j=0;j<SPB;j++){
-      var ss=barIdx*SPB+j;
+    for(var j=0;j<barSPB;j++){
+      var ss=barOffset+j;
       var jbs=j===0;
       var jb=(subdiv==="16th"?j%4===0:j%3===0)&&j!==0;
       var j8=subdiv==="16th"&&j%2===0&&j%4!==0;
@@ -1297,6 +1348,25 @@ function renderSideGrid2(barIdx, side){
             {barIdx+1}
           </div>
           <div style={{fontSize:8,color:"#888"}}>小節</div>
+          {canEdit&&subdiv==="16th"&&(
+            <div onClick={function(b){return function(e){e.stopPropagation();
+              setBarLengths(function(prev){
+                var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+                var arr=prev?prev.slice():new Array(nb).fill(16);
+                if(arr.length!==nb) arr=new Array(nb).fill(16);
+                arr[b]=arr[b]===12?16:12;
+                var next=arr.slice();
+                barLengthsRef.current=next;
+                return next;
+              });
+            };}(barIdx)}
+              style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d0cec8",
+                background:barSPB===12?"#708238":"#fff",
+                color:barSPB===12?"#fff":"#a0a0a0",
+                cursor:"pointer",userSelect:"none",flexShrink:0}}>
+              {barSPB===12?"3/4":"4/4"}
+            </div>
+          )}
         </div>
         {/* 色見本（編集モードのみ） */}
         {canEdit&&(
@@ -1311,7 +1381,7 @@ function renderSideGrid2(barIdx, side){
           </div>
         )}
         {/* グリッド本体: position:relativeで帯を後ろに */}
-        <div style={{position:"relative",width:totalW,height:SPB*stepH}}>
+        <div style={{position:"relative",width:totalW,height:barSPB*stepH}}>
           {/* 帯（後ろ） */}
           {bands}
           {/* 左手 */}
@@ -1418,18 +1488,54 @@ function renderSideGrid2(barIdx, side){
     if(lrOnRef.current)setDotLabel(function(p){var n=Object.assign({},p);n[color]=hand;return n;});
   }
 
+  function getBarLengthsTotal(){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return nb*spb;
+    return bl.reduce(function(a,b){return a+b;},0);
+  }
+  function getBarStart(barIdx){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return barIdx*spb;
+    var start=0;
+    for(var i=0;i<barIdx;i++) start+=bl[i];
+    return start;
+  }
+  function getBarSpb(barIdx){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return spb;
+    return bl[barIdx]||spb;
+  }
+  function stepToBar(s){
+    var bl=barLengthsRef.current;
+    var spb=subdivRef.current==="16th"?16:12;
+    var nb=barsRef.current;
+    if(!bl||bl.length!==nb) return Math.floor(s/spb);
+    var acc=0;
+    for(var i=0;i<nb;i++){acc+=bl[i];if(s<acc)return i;}
+    return nb-1;
+  }
+
   function tick(){
-    var s=stepRef.current,L=leftRef.current,R=rightRef.current,s12=s%SPB;
+    var s=stepRef.current,L=leftRef.current,R=rightRef.current;
     var spbNow2=subdivRef.current==="16th"?16:12;
-    var totalNow2=barsRef.current*spbNow2;
+    var totalNow2=getBarLengthsTotal();
+    var curBar=stepToBar(s);
+    var barSpb=getBarSpb(curBar);
+    var barStart=getBarStart(curBar);
+    var s12=s-barStart; // 小節内のステップ位置
     if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
-    var spbNow = subdivRef.current==="16th"?16:12;
-    var totalNow = barsRef.current * spbNow;
+    var totalNow = totalNow2;
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
     // 1周完了
@@ -1634,7 +1740,7 @@ function renderSideGrid2(barIdx, side){
 
   function handleSave(){ justSavedRef.current=true;
     setSaving(true);setSaveMsg("");
-    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime},instrument2?left2:null,instrument2?right2:null);
+    var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime,barLengths:barLengths},instrument2?left2:null,instrument2?right2:null);
     if(p&&p.then){
       p.then(function(){setSaveMsg("✅ 保存しました");setSaving(false);setTimeout(function(){setSaveMsg("");},3000);})
        .catch(function(){setSaveMsg("❌ 失敗しました");setSaving(false);});
@@ -1691,6 +1797,8 @@ function renderSideGrid2(barIdx, side){
   // canEdit=false: 1列、設定色を表示、なければ薄いグレー
   function renderSideGrid(barIdx, side){
     var pat=side==="left"?left:right;
+    var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
+    var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
     if(canEdit){
       // 編集モード: 9色列
@@ -1698,8 +1806,8 @@ function renderSideGrid2(barIdx, side){
         <div style={{display:"flex",flexDirection:"row"}}>
           {COLORS.map(function(color){
             var cells=[];
-            for(var i=0;i<SPB;i++){
-              var s=barIdx*SPB+i;
+            for(var i=0;i<barSPB;i++){
+              var s=barOffset+i;
               var on=pat[color]&&pat[color][s];
               var cur=s===curStep;
               var ibs=i===0;
@@ -1736,8 +1844,8 @@ function renderSideGrid2(barIdx, side){
       // 閲覧モード: 1列のみ
       var cells=[];
       var pat2side=instrument2?(side==="left"?left2:right2):null;
-      for(var i=0;i<SPB;i++){
-        var s=barIdx*SPB+i;
+      for(var i=0;i<barSPB;i++){
+        var s=barOffset+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
         // 風ノ音の色を探す（最大1色）
@@ -1785,6 +1893,8 @@ function renderSideGrid2(barIdx, side){
   // 1小節ブロック
 function renderSideGrid2(barIdx, side){
     var pat=side==="left"?left2:right2;
+    var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
+    var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
     if(canEdit){
       // 編集モード: 9色列
@@ -1792,8 +1902,8 @@ function renderSideGrid2(barIdx, side){
         <div style={{display:"flex",flexDirection:"row"}}>
           {COLORS2.map(function(color){
             var cells=[];
-            for(var i=0;i<SPB;i++){
-              var s=barIdx*SPB+i;
+            for(var i=0;i<barSPB;i++){
+              var s=barOffset+i;
               var on=pat[color]&&pat[color][s];
               var cur=s===curStep;
               var ibs=i===0;
@@ -1829,8 +1939,8 @@ function renderSideGrid2(barIdx, side){
     } else {
       // 閲覧モード: 1列のみ
       var cells=[];
-      for(var i=0;i<SPB;i++){
-        var s=barIdx*SPB+i;
+      for(var i=0;i<barSPB;i++){
+        var s=barOffset+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
         // その行に設定されてる色を探す（最大2色）
@@ -1868,11 +1978,14 @@ function renderSideGrid2(barIdx, side){
     var sideW=nCols*(CELL+GAP);
     var beatW=14;
     var totalW=sideW+beatW+sideW;
+    // barLengths対応：この小節のSPBと開始オフセットを計算
+    var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
+    var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
     // 帯リスト（後ろに配置）
     var bands=[];
-    for(var i=0;i<SPB;i++){
-      var s=barIdx*SPB+i;
+    for(var i=0;i<barSPB;i++){
+      var s=barOffset+i;
       var ibs_b=i===0;
       var ib_b=(subdiv==="16th"?i%4===0:i%3===0)&&i!==0;
       var i8_b=subdiv==="16th"&&i%2===0&&i%4!==0;
@@ -1911,8 +2024,8 @@ function renderSideGrid2(barIdx, side){
     }
     // 中央クリック列（拍区切り目印）
     var beatCells=[];
-    for(var j=0;j<SPB;j++){
-      var ss=barIdx*SPB+j;
+    for(var j=0;j<barSPB;j++){
+      var ss=barOffset+j;
       var jbs=j===0;
       var jb=(subdiv==="16th"?j%4===0:j%3===0)&&j!==0;
       var j8=subdiv==="16th"&&j%2===0&&j%4!==0;
@@ -1946,6 +2059,25 @@ function renderSideGrid2(barIdx, side){
             {barIdx+1}
           </div>
           <div style={{fontSize:8,color:"#888"}}>小節</div>
+          {canEdit&&subdiv==="16th"&&(
+            <div onClick={function(b){return function(e){e.stopPropagation();
+              setBarLengths(function(prev){
+                var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
+                var arr=prev?prev.slice():new Array(nb).fill(16);
+                if(arr.length!==nb) arr=new Array(nb).fill(16);
+                arr[b]=arr[b]===12?16:12;
+                var next=arr.slice();
+                barLengthsRef.current=next;
+                return next;
+              });
+            };}(barIdx)}
+              style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d0cec8",
+                background:barSPB===12?"#708238":"#fff",
+                color:barSPB===12?"#fff":"#a0a0a0",
+                cursor:"pointer",userSelect:"none",flexShrink:0}}>
+              {barSPB===12?"3/4":"4/4"}
+            </div>
+          )}
         </div>
         {/* 色見本（編集モードのみ） */}
         {canEdit&&(
@@ -1960,7 +2092,7 @@ function renderSideGrid2(barIdx, side){
           </div>
         )}
         {/* グリッド本体: position:relativeで帯を後ろに */}
-        <div style={{position:"relative",width:totalW,height:SPB*stepH}}>
+        <div style={{position:"relative",width:totalW,height:barSPB*stepH}}>
           {/* 帯（後ろ） */}
           {bands}
           {/* 左手 */}
@@ -3149,6 +3281,9 @@ function App() {
       if(String(meta.bars||"8") !== String(oldMeta.bars||"8")) calls.push({hand:"meta",color:"bars",pattern:String(meta.bars||"8")});
       if(String(meta.repeat||"1") !== String(oldMeta.repeat||"1")) calls.push({hand:"meta",color:"repeat",pattern:String(meta.repeat||"1")});
       if(String(meta.startTime||"") !== String(oldMeta.startTime||"")) calls.push({hand:"meta",color:"startTime",pattern:String(meta.startTime||"")});
+      var newBL=meta.barLengths?JSON.stringify(meta.barLengths):"null";
+      var oldBL=oldMeta.barLengths?oldMeta.barLengths:"null";
+      if(newBL !== oldBL) calls.push({hand:"meta",color:"barLengths",pattern:newBL});
     }
     console.log("保存する変更:", calls.length, "件");
     for(var i=0;i<calls.length;i++){
@@ -3172,7 +3307,7 @@ function App() {
         updated.right2[color]=(right2[color]||[]).slice();
       });
     }
-    if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;updated.meta.noteType=meta.noteType;updated.meta.subdiv=meta.noteType;}
+    if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;updated.meta.noteType=meta.noteType;updated.meta.subdiv=meta.noteType;updated.meta.barLengths=meta.barLengths||null;}
     setScorePatterns(function(prev){var n=Object.assign({},prev);n[scoreId]=Object.assign({},prev[scoreId]);n[scoreId][section]=updated;return n;});
   }
 
