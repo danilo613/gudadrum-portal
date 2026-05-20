@@ -607,9 +607,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var sectionKeyRef=useRef(sectionKey);
   useEffect(function(){
     console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
-    // 編集モード中はsectionKeyが変わった時だけ走らせる（保存後の上書き防止）
-    if(canEdit && sectionKeyRef.current===sectionKey && sectionKeyRef.current!==null) return;
+    // sectionKeyが変わった時だけ走らせる（保存後の上書き防止）
+    var prevKey=sectionKeyRef.current;
     sectionKeyRef.current=sectionKey;
+    if(canEdit && prevKey===sectionKey && prevKey!==null) return;
     // meta.barsが存在する時だけその値を使う。なければ常に8（デフォルト）
     var metaBars = (patternData&&patternData.meta&&patternData.meta.bars)?parseInt(patternData.meta.bars)||8:8;
     var nb = Math.max(2, Math.min(metaBars, 32));
@@ -660,7 +661,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   // patternData2専用useEffect（非同期読み込み後に反映）
   useEffect(function(){
     console.log("pd2 effect:", instrument2, patternData2&&Object.keys(patternData2.left||{}).length); if(!instrument2 || !patternData2) return;
-    // 編集モード中は上書きしない
+    // 編集モード中は上書きしない（保存後の誤上書き防止）
     if(canEdit) return;
     var nb2=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb2=subdivRef.current==="16th"?16:12;
