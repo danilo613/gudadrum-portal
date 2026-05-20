@@ -1061,6 +1061,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       // 閲覧モード: 1列のみ
       var cells=[];
       var pat2side=instrument2?(side==="left"?left2:right2):null;
+      if(barIdx===0&&side==="left") console.log("DEBUG pat2side:", pat2side, "left2:", left2, "instrument2:", instrument2);
       for(var i=0;i<SPB;i++){
         var s=barIdx*SPB+i;
         var cur=s===curStep;
