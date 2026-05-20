@@ -995,6 +995,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function toggleCell2(side,color,idx){
     if(!canEdit)return;
+    hasLoadedRef.current=true; // 編集開始フラグ
     var setter=side==="left"?setLeft2:setRight2;
     var willBeOn;
     var totalSteps2=Math.max(2,Math.min(parseInt(bars)||8,32))*SPB;
@@ -1017,6 +1018,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function toggleCell(side,color,idx){
     if(!canEdit)return;
+    hasLoadedRef.current=true; // 編集開始フラグ
     var setter=side==="left"?setLeft:setRight;
     var willBeOn;
     setter(function(prev){
@@ -1708,6 +1710,7 @@ function renderSideGrid2(barIdx, side){
 
   function toggleCell2(side,color,idx){
     if(!canEdit)return;
+    hasLoadedRef.current=true; // 編集開始フラグ
     var setter=side==="left"?setLeft2:setRight2;
     var willBeOn;
     var totalSteps2=Math.max(2,Math.min(parseInt(bars)||8,32))*SPB;
@@ -1730,6 +1733,7 @@ function renderSideGrid2(barIdx, side){
 
   function toggleCell(side,color,idx){
     if(!canEdit)return;
+    hasLoadedRef.current=true; // 編集開始フラグ
     var setter=side==="left"?setLeft:setRight;
     var willBeOn;
     setter(function(prev){
@@ -2427,6 +2431,11 @@ function renderSideGrid2(barIdx, side){
           }}
           style={{fontSize:11,padding:"2px 4px",borderRadius:4,border:"0.5px solid #d0cec8",background:"#fff",color:C.label}}>
           {[2,4,6,8,10,12,14,16].map(function(n){return <option key={n} value={String(n)}>{n}</option>;})}
+        </select>
+        <span style={{fontSize:10,fontWeight:700,color:C.label}}>繰返</span>
+        <select value={repeat} onChange={function(e){setRepeat(e.target.value);}}
+          style={{fontSize:11,padding:"2px 4px",borderRadius:4,border:"0.5px solid #d0cec8",background:"#fff",color:C.label}}>
+          {[1,2,3,4].map(function(n){return <option key={n} value={String(n)}>{n}回</option>;})}
         </select>
         <span style={{fontSize:10,fontWeight:700,color:C.label}}>左右表示</span>
         <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
