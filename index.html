@@ -2235,7 +2235,7 @@ function renderSideGrid2(barIdx, side){
             {saveMsg&&<span style={{fontSize:11,color:saveMsg.includes("✅")?"#708238":"#e74c3c"}}>{saveMsg}</span>}
           </div>
           {/* イラスト横並び（sticky固定） */}
-          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8}}>
+          <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,background:"transparent",paddingBottom:4}}>
             {/* 響ノ音イラスト（instrument2がある時） */}
             {instrument2&&(
               <div style={{textAlign:"center"}}>
@@ -2255,7 +2255,7 @@ function renderSideGrid2(barIdx, side){
                             style={{transition:"all 0.15s"}}/>
                           {lrOn&&dotLabel2[color]&&(
                             <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                              fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                              fontSize="13" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
                               stroke="#fff" strokeWidth="2" paintOrder="stroke">
                               {dotLabel2[color]}
                             </text>
@@ -2287,7 +2287,7 @@ function renderSideGrid2(barIdx, side){
                         style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                          fontSize="13" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
                           stroke="#fff" strokeWidth="2" paintOrder="stroke">
                           {dotLabel[color]}
                         </text>
@@ -2357,7 +2357,7 @@ function renderSideGrid2(barIdx, side){
                               style={{transition:"all 0.15s"}}/>
                             {lrOn&&dotLabel2[color]&&(
                               <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                                fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                                fontSize="13" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
                                 stroke="#fff" strokeWidth="2" paintOrder="stroke">
                                 {dotLabel2[color]}
                               </text>
@@ -2389,7 +2389,7 @@ function renderSideGrid2(barIdx, side){
                         style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel[color]&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="9" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                          fontSize="13" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
                           stroke="#fff" strokeWidth="2" paintOrder="stroke">
                           {dotLabel[color]}
                         </text>
