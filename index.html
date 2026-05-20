@@ -604,13 +604,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     leftRef.current=lp; rightRef.current=rp;
   },[subdiv]);
 
-  var sectionKeyRef=useRef(null);
+  var justSavedRef=useRef(false);
   useEffect(function(){
     console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
-    // sectionKeyが変わった時だけ走らせる（保存後の上書き防止）
-    var prevKey=sectionKeyRef.current;
-    sectionKeyRef.current=sectionKey;
-    if(canEdit && prevKey===sectionKey && prevKey!==null) return;
+    // 保存直後はスキップ（justSavedRefフラグ）
+    if(canEdit && justSavedRef.current){ justSavedRef.current=false; return; }
     // meta.barsが存在する時だけその値を使う。なければ常に8（デフォルト）
     var metaBars = (patternData&&patternData.meta&&patternData.meta.bars)?parseInt(patternData.meta.bars)||8:8;
     var nb = Math.max(2, Math.min(metaBars, 32));
@@ -985,7 +983,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }, 0);
   }
 
-  function handleSave(){
+  function handleSave(){ justSavedRef.current=true;
     setSaving(true);setSaveMsg("");
     var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime},instrument2?left2:null,instrument2?right2:null);
     if(p&&p.then){
@@ -1634,7 +1632,7 @@ function renderSideGrid2(barIdx, side){
     }, 0);
   }
 
-  function handleSave(){
+  function handleSave(){ justSavedRef.current=true;
     setSaving(true);setSaveMsg("");
     var p=onSave(scoreId,sectionKey,left,right,{bars:bars,repeat:repeat,startTime:secTime},instrument2?left2:null,instrument2?right2:null);
     if(p&&p.then){
