@@ -750,7 +750,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function dimAll(){
     var f={};Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
-    setDotFills(f);setDotLabel({});setDotLabel2({});
+    setDotFills(f);setDotLabel({});setDotLabel2({});setHighlightColor2(null);
   }
 
   function flashDot(color,hand){
@@ -803,7 +803,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(hl2!==null){
         setTimeout(function(cc,lArr,rArr){return function(){
           setHighlightColor2(cc);
-          setTimeout(function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});},300);
           if(lrOnRef.current) setDotLabel2(function(p){
             var n=Object.assign({},p);
             lArr.forEach(function(c){n[c]="左";});
@@ -1406,7 +1405,7 @@ function renderSideGrid2(barIdx, side){
 
   function dimAll(){
     var f={};Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
-    setDotFills(f);setDotLabel({});setDotLabel2({});
+    setDotFills(f);setDotLabel({});setDotLabel2({});setHighlightColor2(null);
   }
 
   function flashDot(color,hand){
@@ -1459,7 +1458,6 @@ function renderSideGrid2(barIdx, side){
       if(hl2!==null){
         setTimeout(function(cc,lArr,rArr){return function(){
           setHighlightColor2(cc);
-          setTimeout(function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});},300);
           if(lrOnRef.current) setDotLabel2(function(p){
             var n=Object.assign({},p);
             lArr.forEach(function(c){n[c]="左";});
