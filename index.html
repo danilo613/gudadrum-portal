@@ -785,22 +785,33 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     // 2台目の音を鳴らす
     if(instrument2){
       var L2=left2Ref?left2Ref.current:{}; var R2=right2Ref?right2Ref.current:{};
+      var hl2=null, dl2L=[], dl2R=[];
       COLORS2.forEach(function(c){
         if(L2[c]&&L2[c][s]&&bufs2Ref.current[c]){
           var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
           var g=actxRef.current.createGain(); g.gain.value=0.492;
           src.connect(g); g.connect(actxRef.current.destination); src.start(0);
-          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
-          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]="左";return n;});
+          hl2=c; dl2L.push(c);
         }
         if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
           var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
           var g2=actxRef.current.createGain(); g2.gain.value=0.6;
           src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
-          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
-          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]=(p[c]==="左"?"両":"右");return n;});
+          hl2=c; dl2R.push(c);
         }
       });
+      if(hl2!==null){
+        setTimeout(function(cc,lArr,rArr){return function(){
+          setHighlightColor2(cc);
+          setTimeout(function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});},300);
+          if(lrOnRef.current) setDotLabel2(function(p){
+            var n=Object.assign({},p);
+            lArr.forEach(function(c){n[c]="左";});
+            rArr.forEach(function(c){n[c]=n[c]==="左"?"両":"右";});
+            return n;
+          });
+        };}(hl2,dl2L,dl2R),0);
+      }
     }
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
@@ -1424,22 +1435,33 @@ function renderSideGrid2(barIdx, side){
     // 2台目の音を鳴らす
     if(instrument2){
       var L2=left2Ref?left2Ref.current:{}; var R2=right2Ref?right2Ref.current:{};
+      var hl2=null, dl2L=[], dl2R=[];
       COLORS2.forEach(function(c){
         if(L2[c]&&L2[c][s]&&bufs2Ref.current[c]){
           var src=actxRef.current.createBufferSource(); src.buffer=bufs2Ref.current[c];
           var g=actxRef.current.createGain(); g.gain.value=0.492;
           src.connect(g); g.connect(actxRef.current.destination); src.start(0);
-          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
-          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]="左";return n;});
+          hl2=c; dl2L.push(c);
         }
         if(R2[c]&&R2[c][s]&&bufs2Ref.current[c]){
           var src2=actxRef.current.createBufferSource(); src2.buffer=bufs2Ref.current[c];
           var g2=actxRef.current.createGain(); g2.gain.value=0.6;
           src2.connect(g2); g2.connect(actxRef.current.destination); src2.start(0);
-          setHighlightColor2(c); setTimeout(function(cc){return function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});};}(c),300);
-          if(lrOnRef.current) setDotLabel2(function(p){var n=Object.assign({},p);n[c]=(p[c]==="左"?"両":"右");return n;});
+          hl2=c; dl2R.push(c);
         }
       });
+      if(hl2!==null){
+        setTimeout(function(cc,lArr,rArr){return function(){
+          setHighlightColor2(cc);
+          setTimeout(function(){setHighlightColor2(function(cur){return cur===cc?null:cur;});},300);
+          if(lrOnRef.current) setDotLabel2(function(p){
+            var n=Object.assign({},p);
+            lArr.forEach(function(c){n[c]="左";});
+            rArr.forEach(function(c){n[c]=n[c]==="左"?"両":"右";});
+            return n;
+          });
+        };}(hl2,dl2L,dl2R),0);
+      }
     }
     COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
     COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
