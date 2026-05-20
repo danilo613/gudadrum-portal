@@ -604,7 +604,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     leftRef.current=lp; rightRef.current=rp;
   },[subdiv]);
 
-  var sectionKeyRef=useRef(sectionKey);
+  var sectionKeyRef=useRef(null);
   useEffect(function(){
     console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
     // sectionKeyが変わった時だけ走らせる（保存後の上書き防止）
