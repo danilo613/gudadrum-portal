@@ -430,7 +430,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var setMetroOn=function(v){ var val=typeof v==="function"?v(metroOnS[0]):v; setMetroOnLocal(val); if(onMetroChange) onMetroChange({metroOn:val}); };
   var metroModeS=useState(sharedMetroMode||4); var metroMode=metroModeS[0]; var setMetroModeLocal=metroModeS[1];
   var setMetroMode=function(v){ var val=typeof v==="function"?v(metroModeS[0]):v; setMetroModeLocal(val); if(onMetroChange) onMetroChange({metroMode:val}); };
-  var metroVolS=useState(0.6); var metroVol=metroVolS[0]; var setMetroVol=metroVolS[1];
+  var metroVolS=useState(0.3); var metroVol=metroVolS[0]; var setMetroVol=metroVolS[1];
   var metroAccentS=useState(true); var metroAccent=metroAccentS[0]; var setMetroAccent=metroAccentS[1];
   var lrOnS=useState(true); var lrOn=lrOnS[0]; var setLrOn=lrOnS[1];
   var dotFillsS=useState(function(){var d={};Object.keys(SCORE_DOTS).forEach(function(c){d[c]=SCORE_PALE_COLORS[c];});return d;}); var dotFills=dotFillsS[0]; var setDotFills=dotFillsS[1];
@@ -2432,6 +2432,14 @@ function renderSideGrid2(barIdx, side){
         <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
           {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
         </div>
+        {canEdit&&(
+          <button onClick={handleSave} disabled={saving}
+            style={{marginLeft:"auto",padding:"3px 12px",borderRadius:8,border:"none",
+              background:saving?"#aaa":"linear-gradient(135deg,#b8c26a,#8a9a3a)",
+              color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+            {saving?"保存中…":"💾 保存"}
+          </button>
+        )}
       </div>
       </div>
 
