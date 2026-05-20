@@ -813,13 +813,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         };}(hl2,dl2L,dl2R),0);
       }
     }
-    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
-    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
+    // メトロノームを最優先で鳴らす
     if(metroOnRef.current){
       var m=metroModeRef.current;
       var doAcc=s12===0&&metroAccentRef.current;
-      var spb=subdivRef.current==="16th"?16:12;
-      var s12b=stepRef.current===0?0:(stepRef.current-1)%spb; // 現在のs12
       if(subdivRef.current==="16th"){
         if(m===4&&s12%4===0)woodClick(doAcc);
         else if(m===8&&s12%2===0)woodClick(doAcc);
@@ -829,6 +826,15 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         else if(m===3)woodClick(doAcc);
       }
     }
+    // 音再生（WebAudio）は同期、state更新は非同期
+    var firedL={},firedR={};
+    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);firedL[c]=true;}});
+    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);firedR[c]=true;}});
+    setTimeout(function(){
+      var fd={};
+      Object.keys(firedL).forEach(function(c){flashDot(c,"左");fd[c]=true;});
+      Object.keys(firedR).forEach(function(c){flashDot(c,fd[c]?"両":"右");});
+    },0);
   }
 
   function doStart(){
@@ -1463,13 +1469,10 @@ function renderSideGrid2(barIdx, side){
         };}(hl2,dl2L,dl2R),0);
       }
     }
-    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);flashDot(c,"左");fired[c]=true;}});
-    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);flashDot(c,fired[c]?"両":"右");fired[c]=true;}});
+    // メトロノームを最優先で鳴らす
     if(metroOnRef.current){
       var m=metroModeRef.current;
       var doAcc=s12===0&&metroAccentRef.current;
-      var spb=subdivRef.current==="16th"?16:12;
-      var s12b=stepRef.current===0?0:(stepRef.current-1)%spb; // 現在のs12
       if(subdivRef.current==="16th"){
         if(m===4&&s12%4===0)woodClick(doAcc);
         else if(m===8&&s12%2===0)woodClick(doAcc);
@@ -1479,6 +1482,15 @@ function renderSideGrid2(barIdx, side){
         else if(m===3)woodClick(doAcc);
       }
     }
+    // 音再生（WebAudio）は同期、state更新は非同期
+    var firedL={},firedR={};
+    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);firedL[c]=true;}});
+    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);firedR[c]=true;}});
+    setTimeout(function(){
+      var fd={};
+      Object.keys(firedL).forEach(function(c){flashDot(c,"左");fd[c]=true;});
+      Object.keys(firedR).forEach(function(c){flashDot(c,fd[c]?"両":"右");});
+    },0);
   }
 
   function doStart(){
