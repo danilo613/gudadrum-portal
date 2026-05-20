@@ -750,7 +750,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function dimAll(){
     var f={};Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
-    setDotFills(f);setDotLabel({});
+    setDotFills(f);setDotLabel({});setDotLabel2({});
   }
 
   function flashDot(color,hand){
@@ -1389,7 +1389,7 @@ function renderSideGrid2(barIdx, side){
 
   function dimAll(){
     var f={};Object.keys(SCORE_DOTS).forEach(function(c){f[c]=SCORE_PALE_COLORS[c];});
-    setDotFills(f);setDotLabel({});
+    setDotFills(f);setDotLabel({});setDotLabel2({});
   }
 
   function flashDot(color,hand){
