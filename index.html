@@ -2401,6 +2401,25 @@ function renderSideGrid2(barIdx, side){
         {isQueuePlaying&&<span style={{fontSize:10,color:"#708238",fontWeight:600}}>通し再生中</span>}
       </div>
       <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,padding:"5px 8px",border:"0.5px solid #d0cec8",borderRadius:8,background:"#f5f5f3"}}>
+        <span style={{fontSize:10,fontWeight:700,color:C.label}}>小節</span>
+        <select value={bars} onChange={function(e){
+            var v=e.target.value;
+            setBars(v);
+            barsRef.current=Math.max(2,Math.min(parseInt(v)||8,32));
+            // barLengthsを新しい小節数に合わせてリサイズ
+            setBarLengths(function(prev){
+              var nb=Math.max(2,Math.min(parseInt(v)||8,32));
+              if(!prev) return null;
+              var arr=prev.slice();
+              while(arr.length<nb) arr.push(SPB);
+              arr=arr.slice(0,nb);
+              barLengthsRef.current=arr;
+              return arr;
+            });
+          }}
+          style={{fontSize:11,padding:"2px 4px",borderRadius:4,border:"0.5px solid #d0cec8",background:"#fff",color:C.label}}>
+          {[2,4,6,8,10,12,14,16].map(function(n){return <option key={n} value={String(n)}>{n}</option>;})}
+        </select>
         <span style={{fontSize:10,fontWeight:700,color:C.label}}>左右表示</span>
         <div onClick={function(){setLrOn(function(v){return !v;});}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
           {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
