@@ -2312,7 +2312,7 @@ function renderSideGrid2(barIdx, side){
         minWidth:260,cursor:"move",userSelect:"none"
       }}
         onMouseDown={function(e){
-          if(e.target.tagName==="BUTTON"||e.target.tagName==="INPUT") return;
+          if(e.target.tagName==="BUTTON"||e.target.tagName==="INPUT"||e.target.tagName==="SELECT") return;
           isDraggingRef.current=true;
           dragOffRef.current={x:e.clientX-floatPos.x,y:e.clientY-floatPos.y};
           var mm=function(ev){
@@ -2321,6 +2321,22 @@ function renderSideGrid2(barIdx, side){
           };
           var mu=function(){isDraggingRef.current=false;window.removeEventListener("mousemove",mm);window.removeEventListener("mouseup",mu);};
           window.addEventListener("mousemove",mm);window.addEventListener("mouseup",mu);
+        }}
+        onTouchStart={function(e){
+          if(e.target.tagName==="BUTTON"||e.target.tagName==="INPUT"||e.target.tagName==="SELECT") return;
+          e.preventDefault();
+          isDraggingRef.current=true;
+          var t=e.touches[0];
+          dragOffRef.current={x:t.clientX-floatPos.x,y:t.clientY-floatPos.y};
+          var tm=function(ev){
+            if(!isDraggingRef.current)return;
+            ev.preventDefault();
+            var tt=ev.touches[0];
+            setFloatPos({x:tt.clientX-dragOffRef.current.x,y:tt.clientY-dragOffRef.current.y});
+          };
+          var tu=function(){isDraggingRef.current=false;window.removeEventListener("touchmove",tm);window.removeEventListener("touchend",tu);};
+          window.addEventListener("touchmove",tm,{passive:false});
+          window.addEventListener("touchend",tu);
         }}
       >
       <div style={{fontSize:9,color:"#bbb",textAlign:"center",marginBottom:2,letterSpacing:2}}>⠿ DRAG</div>
@@ -3341,7 +3357,7 @@ function App() {
     // meta
     var oldMeta = existing.meta||{};
     if(meta) {
-      if(String(meta.bars||"8") !== String(oldMeta.bars||"8")) calls.push({hand:"meta",color:"bars",pattern:String(meta.bars||"8")});
+      if(String(meta.bars||"8") !== String(oldMeta.bars||"8") || !oldMeta.bars) calls.push({hand:"meta",color:"bars",pattern:String(meta.bars||"8")});
       if(String(meta.repeat||"1") !== String(oldMeta.repeat||"1")) calls.push({hand:"meta",color:"repeat",pattern:String(meta.repeat||"1")});
       if(String(meta.startTime||"") !== String(oldMeta.startTime||"")) calls.push({hand:"meta",color:"startTime",pattern:String(meta.startTime||"")});
       var newBL=meta.barLengths?JSON.stringify(meta.barLengths):"null";
@@ -3349,9 +3365,14 @@ function App() {
       if(newBL !== oldBL) calls.push({hand:"meta",color:"barLengths",pattern:newBL});
     }
     console.log("保存する変更:", calls.length, "件");
-    for(var i=0;i<calls.length;i++){
-      var c=calls[i];
-      await gasRead({action:"savescore",score_id:scoreId,section:section,hand:c.hand,color:c.color,pattern:c.pattern});
+    try {
+      for(var i=0;i<calls.length;i++){
+        var c=calls[i];
+        await gasRead({action:"savescore",score_id:scoreId,section:section,hand:c.hand,color:c.color,pattern:c.pattern});
+      }
+    } catch(e) {
+      console.error("GAS保存エラー:", e);
+      throw e; // handleSaveのcatchに伝える
     }
     // ローカルのscorePatternsも更新
     var updated = JSON.parse(JSON.stringify(existing));
