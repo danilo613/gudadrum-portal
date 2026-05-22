@@ -281,6 +281,7 @@ const SCORE_ID_TO_NAME = {
   aoi: "蒼〜aoi〜",
   iridescence: "iridescence",
   megumi: "めぐみの空",
+  inori: "祈音〜Inorion〜",
 };
 
 const SCORE_SECTIONS = {
@@ -304,6 +305,22 @@ const SCORE_SECTIONS = {
     ["outro3","アウトロ③","16th"],
     ["outro4","アウトロ④","16th"],
     ["sabiF","サビ","16th"],
+  ],
+  inori: [
+    ["intro","イントロ","16th"],
+    ["amelo","Aメロ","16th"],
+    ["sabiprelude","サビ序章","16th"],
+    ["amelo2","Aメロ","16th"],
+    ["sabi","サビ","16th"],
+    ["interlude1a","間奏①前半","16th"],
+    ["interlude1b","間奏①後半","16th"],
+    ["interlude2a","間奏②-1","16th"],
+    ["interlude2b","間奏②-2","16th"],
+    ["interlude2c","間奏②-3","16th"],
+    ["interlude2d","間奏②-4","16th"],
+    ["sabiPrime","サビ'","16th"],
+    ["sabi2","サビ②","16th"],
+    ["outro","アウトロ","16th"],
   ],
 };
 
@@ -3649,7 +3666,7 @@ function App() {
             <div style={{marginBottom:10}}>
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"]].map(([id,lbl])=>(
+                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
@@ -3682,9 +3699,9 @@ function App() {
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
               scoreLoading={scoreLoading}
-              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi")?"dreamy":"funenone"}
-              instrument2={scoreEditId==="megumi"?"arcane":null}
-              patternData2={scoreEditId==="megumi"?{left:((scorePatterns["megumi"]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns["megumi"]||{})[scoreEditSec]||{}).right2||{}}:null}
+              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori")?"dreamy":"funenone"}
+              instrument2={(scoreEditId==="megumi"||scoreEditId==="inori")?"arcane":null}
+              patternData2={(scoreEditId==="megumi"||scoreEditId==="inori")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
               subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               onSave={saveScorePattern}
               sharedBpm={sharedBpm}
@@ -4202,7 +4219,7 @@ function App() {
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>🎼 譜面購入設定</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:16}}>対象：<strong>{scoreModal.name}</strong></p>
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-              {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"]].map(([id,lbl]) => {
+              {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl]) => {
                 const isPurchased = scoreModal.purchased.includes(id);
                 return (
                   <div key={id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",borderRadius:10,background:isPurchased?"rgba(112,130,56,0.12)":"rgba(0,0,0,0.03)",border:"1px solid "+(isPurchased?C.olive:C.border)}}>
@@ -5672,9 +5689,9 @@ function App() {
                   patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
                   canEdit={false}
                   scoreLoading={scoreLoading}
-                  scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi"||currentScoreId==="megumi")?"dreamy":"funenone"}
-                  instrument2={currentScoreId==="megumi"?"arcane":null}
-                  patternData2={currentScoreId==="megumi"?{left:((scorePatterns["megumi"]||{})[scoreSection]||{}).left2||{},right:((scorePatterns["megumi"]||{})[scoreSection]||{}).right2||{}}:null}
+                  scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori")?"dreamy":"funenone"}
+                  instrument2={(currentScoreId==="megumi"||currentScoreId==="inori")?"arcane":null}
+                  patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
                   isQueuePlaying={isQueuePlay}
                   autoPlay={isQueuePlay}
                   onLoopComplete={isQueuePlay?function(){
