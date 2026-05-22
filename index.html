@@ -389,7 +389,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var SPB = subdiv==="16th" ? 16 : 12;
   // TOTALはnumBarsから計算（下で再定義）
   var TOTAL = SPB * 8;
-  var CELL = 18, GAP = 1;
+  var CELL = canEdit ? 54 : 18, GAP = canEdit ? 2 : 1;
   console.log("ScorePlayer:", scoreId, sectionKey, "subdivProp=", subdivProp, "SPB=", SPB);
 
   function emptyPat(total) {
@@ -2786,6 +2786,7 @@ function App() {
   const [scoreLoading,   setScoreLoading]   = useState(false);
   const [currentScoreId, setCurrentScoreId] = useState("waterlily");
   const [scoreEditOpen,  setScoreEditOpen]  = useState(false);
+  const [editFullscreen, setEditFullscreen] = useState(false);
   const [scoreModal,     setScoreModal]     = useState(null); // {name, purchased:[]}
   const [scoreModalMsg,  setScoreModalMsg]  = useState("");
   const [scoreEditSec,   setScoreEditSec]   = useState("intro");
@@ -3595,6 +3596,60 @@ function App() {
 
   const m = currentMember;
 
+  if (page === "admin" && editFullscreen && scoreEditOpen) return (
+    <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      {/* クリエイターツール終了バー */}
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px",background:"linear-gradient(135deg,#3a6a7a,#2a4a5a)",flexShrink:0}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <span style={{fontSize:16}}>🎼</span>
+          <span style={{fontSize:13,fontWeight:700,color:"#fff",letterSpacing:"0.08em"}}>クリエイターツール</span>
+          <span style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>／ {SCORE_ID_TO_NAME[scoreEditId]||scoreEditId} ／ {(SCORE_SECTIONS[scoreEditId]||[]).find(s=>s[0]===scoreEditSec)?.[1]||scoreEditSec}</span>
+        </div>
+        <button onClick={()=>{setEditFullscreen(false);setScoreEditOpen(false);}}
+          style={{padding:"6px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:"0.06em"}}>
+          クリエイターツールを終了する
+        </button>
+      </div>
+      {/* 曲・セクション選択 */}
+      <div style={{padding:"10px 20px",background:"rgba(255,255,255,0.6)",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",flexShrink:0}}>
+        {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
+          <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
+            style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+            {lbl}
+          </button>
+        ))}
+        <span style={{color:C.border,margin:"0 4px"}}>｜</span>
+        {(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
+          <button key={key} onClick={()=>{setScoreEditSec(key);}}
+            style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditSec===key?"#708238":"#fff",color:scoreEditSec===key?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+            {lbl}
+          </button>
+        ))}
+      </div>
+      {/* ScorePlayer */}
+      <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
+        <ScorePlayer
+          key={scoreEditId+"-"+scoreEditSec}
+          scoreId={scoreEditId}
+          sectionKey={scoreEditSec}
+          sectionLabel={(function(){var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});return sec?sec[1]:scoreEditSec;})()}
+          patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
+          canEdit={true}
+          onSave={saveScorePattern}
+          scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori")?"dreamy":"funenone"}
+          subdivProp={(function(){var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});return sec?sec[2]:"16th";})()}
+          sharedBpm={sharedBpm} onBpmChange={v=>{setSharedBpm(v);}}
+          sharedMetroOn={sharedMetroOn} sharedMetroMode={sharedMetroMode}
+          onMetroChange={(metroOn,metroMode,headBell)=>{setSharedMetroOn(metroOn);setSharedMetroMode(metroMode);if(headBell!==undefined)setSharedHeadBell(headBell);}}
+          instrument2={(scoreEditId==="megumi"||scoreEditId==="inori")?"arcane":null}
+          patternData2={(scoreEditId==="megumi"||scoreEditId==="inori")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
+          sharedHeadBell={sharedHeadBell}
+        />
+      </div>
+    </div>
+  );
+
   if (page === "admin") return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
@@ -3655,7 +3710,7 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
-        {!isInstructor && <button onClick={()=>{setScoreEditOpen(function(v){if(!v){loadScorePatterns(scoreEditId);}return !v;}); }}
+        {!isInstructor && <button onClick={()=>{setScoreEditOpen(function(v){if(!v){loadScorePatterns(scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:scoreEditOpen?"linear-gradient(135deg,#5a9aaa,#3a6a7a)":"rgba(58,106,122,0.1)",color:scoreEditOpen?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎼 譜面編集 {scoreEditOpen?"▲":"▼"}
         </button>}
