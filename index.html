@@ -2459,12 +2459,15 @@ function renderSideGrid2(barIdx, side){
           {Sw(lrOn)}<span style={{fontSize:10,color:C.label}}>{lrOn?"ON":"OFF"}</span>
         </div>
         {canEdit&&(
-          <button onClick={handleSave} disabled={saving}
-            style={{marginLeft:"auto",padding:"3px 12px",borderRadius:8,border:"none",
-              background:saving?"#aaa":"linear-gradient(135deg,#b8c26a,#8a9a3a)",
-              color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-            {saving?"保存中…":"💾 保存"}
-          </button>
+          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+            {saveMsg&&<span style={{fontSize:10,color:saveMsg.includes("✅")?"#708238":"#e74c3c",fontWeight:700}}>{saveMsg}</span>}
+            <button onClick={handleSave} disabled={saving}
+              style={{padding:"3px 12px",borderRadius:8,border:"none",
+                background:saving?"#aaa":"linear-gradient(135deg,#b8c26a,#8a9a3a)",
+                color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
+              {saving?"保存中…":"💾 保存"}
+            </button>
+          </div>
         )}
       </div>
       </div>
@@ -2472,16 +2475,6 @@ function renderSideGrid2(barIdx, side){
       {/* 小節数・繰り返し・拍子 */}
       {canEdit ? (
         <div style={{display:"flex",flexDirection:"column",gap:8,height:"100vh",overflow:"auto"}}>
-          {/* 保存ボタン */}
-          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-            <button onClick={handleSave} disabled={saving}
-              style={{padding:"6px 16px",borderRadius:8,border:"none",
-                background:saving?"#aaa":"linear-gradient(135deg,#b8c86a,#8a9a3a)",
-                color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>
-              {saving?"保存中…":"💾 保存"}
-            </button>
-            {saveMsg&&<span style={{fontSize:11,color:saveMsg.includes("✅")?"#708238":"#e74c3c"}}>{saveMsg}</span>}
-          </div>
           {/* イラスト横並び（sticky固定） */}
           <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,background:"transparent",paddingBottom:4}}>
             {/* 響ノ音イラスト（instrument2がある時） */}
@@ -3612,20 +3605,38 @@ function App() {
         </button>
       </div>
       {/* 曲・セクション選択 */}
-      <div style={{padding:"10px 20px",background:"rgba(255,255,255,0.6)",display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",flexShrink:0}}>
-        {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
-          <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
-            style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-            {lbl}
-          </button>
-        ))}
-        <span style={{color:C.border,margin:"0 4px"}}>｜</span>
-        {(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
-          <button key={key} onClick={()=>{setScoreEditSec(key);}}
-            style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditSec===key?"#708238":"#fff",color:scoreEditSec===key?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-            {lbl}
-          </button>
-        ))}
+      <div style={{padding:"12px 20px",background:"rgba(255,255,255,0.6)",flexShrink:0}}>
+        {/* 曲選択 */}
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
+          {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
+            <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
+              style={{padding:"8px 18px",borderRadius:10,border:"0.5px solid "+C.border,
+                background:scoreEditId===id?"#3a6a7a":"#fff",
+                color:scoreEditId===id?"#fff":C.label,
+                fontSize:14,fontWeight:700,cursor:"pointer",fontFamily:"inherit",
+                boxShadow:scoreEditId===id?"0 2px 8px rgba(58,106,122,0.3)":"none"}}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+        {/* セクション選択 */}
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"flex-start"}}>
+          {(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>{
+            var meta=(scorePatterns[scoreEditId]||{})[key]&&(scorePatterns[scoreEditId]||{})[key].meta;
+            var barCount=meta&&meta.bars?parseInt(meta.bars):null;
+            return (
+              <button key={key} onClick={()=>{setScoreEditSec(key);}}
+                style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,
+                  background:scoreEditSec===key?"#708238":"#fff",
+                  color:scoreEditSec===key?"#fff":C.label,
+                  fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",
+                  display:"flex",flexDirection:"column",alignItems:"center",gap:1}}>
+                <span>{lbl}</span>
+                {barCount&&<span style={{fontSize:9,opacity:0.75}}>{barCount}小節</span>}
+              </button>
+            );
+          })}
+        </div>
       </div>
       {/* ScorePlayer */}
       <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
