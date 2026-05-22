@@ -389,7 +389,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var SPB = subdiv==="16th" ? 16 : 12;
   // TOTALはnumBarsから計算（下で再定義）
   var TOTAL = SPB * 8;
-  var CELL = canEdit ? 54 : 18, GAP = canEdit ? 2 : 1;
+  var CELL = 18, GAP = 1;
   console.log("ScorePlayer:", scoreId, sectionKey, "subdivProp=", subdivProp, "SPB=", SPB);
 
   function emptyPat(total) {
