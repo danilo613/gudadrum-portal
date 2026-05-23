@@ -275,6 +275,20 @@ function getSoundUrls(scoreId, soundType) {
   if(scoreId==="aoi") return SCORE_SOUND_URLS.arcane;
   return SCORE_SOUND_URLS.default;
 }
+const SCORE_SHEET_MAP = {
+  // scoreId: GASのシート名（未定義の場合はデフォルトの"SCORE"シートを使用）
+  inori: "SCORE_inori",
+};
+
+const SCORE_DEFAULT_BPM = {
+  waterlily: 129,
+  dreamy: 99,
+  aoi: 140,
+  iridescence: 100,
+  megumi: 113,
+  inori: 113,
+};
+
 const SCORE_ID_TO_NAME = {
   waterlily: "water lily〜水面〜",
   dreamy: "dreamy EYES",
@@ -318,7 +332,8 @@ const SCORE_SECTIONS = {
     ["interlude2b","間奏②-2","16th"],
     ["interlude2c","間奏②-3","16th"],
     ["interlude2d","間奏②-4","16th"],
-    ["sabiPrime","サビ'","16th"],
+    ["sabiPrime1","サビ'前半","16th"],
+    ["sabiPrime2","サビ'後半","16th"],
     ["sabi2","サビ②","16th"],
     ["outro","アウトロ","16th"],
   ],
@@ -2699,6 +2714,7 @@ function App() {
   const [schedModal, setSchedModal] = useState(null);
   const [schedDate, setSchedDate] = useState("");
   const [schedTime, setSchedTime] = useState("");
+  const [schedAllDay, setSchedAllDay] = useState(false);
   const [schedType, setSchedType] = useState("個人レッスン:対面");
   const [schedNote, setSchedNote] = useState("");
   const [schedMsg, setSchedMsg] = useState("");
@@ -3001,10 +3017,10 @@ function App() {
     setSchedMsg("送信中...");
     try {
       const recorder = isInstructor ? (instructorName || "講師") : "DANiLO";
-      const data = await gasWrite({action:"addschedule", name:schedModal, date:schedDate, time:schedTime, type:schedType, note:schedNote, recorder:recorder});
+      const data = await gasWrite({action:"addschedule", name:schedModal, date:schedDate, time:schedAllDay?"終日":schedTime, type:schedType, note:schedNote, recorder:recorder});
       if (data.error) throw new Error(data.error);
       setSchedMsg("✅ 追加しました！");
-      setSchedDate(""); setSchedTime(""); setSchedNote("");
+      setSchedDate(""); setSchedTime(""); setSchedNote(""); setSchedAllDay(false);
       fetchSchedules();
       setTimeout(()=>{setSchedModal(null);setSchedMsg("");}, 1500);
     } catch(e) { setSchedMsg("❌ "+e.message); }
@@ -3304,7 +3320,8 @@ function App() {
     if(scorePatterns[scoreId] && Object.keys(scorePatterns[scoreId]).length > 0) return;
     setScoreLoading(true);
     try {
-      const res = await gasRead({ action:"getscores", score_id:scoreId });
+      const sheetName = SCORE_SHEET_MAP[scoreId]||"SCORE";
+      const res = await gasRead({ action:"getscores", score_id:scoreId, sheet_name:sheetName });
       const rows = res.rows || [];
       const patterns = {};
       rows.forEach(function(r) {
@@ -3368,7 +3385,8 @@ function App() {
     try {
       for(var i=0;i<calls.length;i++){
         var c=calls[i];
-        await gasRead({action:"savescore",score_id:scoreId,section:section,hand:c.hand,color:c.color,pattern:c.pattern});
+        var sn=SCORE_SHEET_MAP[scoreId]||"SCORE";
+        await gasRead({action:"savescore",score_id:scoreId,section:section,hand:c.hand,color:c.color,pattern:c.pattern,sheet_name:sn});
       }
     } catch(e) {
       console.error("GAS保存エラー:", e);
@@ -3630,7 +3648,7 @@ function App() {
         {/* 曲選択 */}
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
           {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
-            <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
+            <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
               style={{padding:"8px 18px",borderRadius:10,border:"0.5px solid "+C.border,
                 background:scoreEditId===id?"#3a6a7a":"#fff",
                 color:scoreEditId===id?"#fff":C.label,
@@ -3754,7 +3772,7 @@ function App() {
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
-                  <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);}}
+                  <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
                   </button>
@@ -4525,8 +4543,17 @@ function App() {
               </div>
               <div>
                 <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>時間</label>
-                <input type="time" value={schedTime} onChange={e=>setSchedTime(e.target.value)}
-                  style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6}}>
+                  <label style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",fontSize:12,color:C.choco}}>
+                    <input type="checkbox" checked={schedAllDay} onChange={e=>setSchedAllDay(e.target.checked)}
+                      style={{width:15,height:15,cursor:"pointer"}}/>
+                    終日
+                  </label>
+                </div>
+                {!schedAllDay&&(
+                  <input type="time" value={schedTime} onChange={e=>setSchedTime(e.target.value)}
+                    style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
+                )}
               </div>
               <div>
                 <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>種別</label>
@@ -5706,7 +5733,7 @@ function App() {
                 {/* 曲選択 */}
                 <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
                   {scoreList.map(id=>(
-                    <button key={id} onClick={()=>{setCurrentScoreId(id); loadScorePatterns(id);}}
+                    <button key={id} onClick={()=>{setCurrentScoreId(id); loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
                       style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:currentScoreId===id?"#4B3621":"#fff",color:currentScoreId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                       {SCORE_ID_TO_NAME[id]||id}
                     </button>
