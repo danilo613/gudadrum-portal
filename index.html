@@ -3976,7 +3976,7 @@ function App() {
           </div>
         )}
         {/* 全メンバースケジュール（DANiLOのみ表示） */}
-        {isFromAdmin && (()=>{
+        {(()=>{
           const sorted = memberSchedules.slice().sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
           return (
             <div style={{marginBottom:16}}>
@@ -5974,3 +5974,4 @@ function App() {
   </script>
 </body>
 </html>
+  
