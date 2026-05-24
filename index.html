@@ -3623,11 +3623,30 @@ function App() {
             </button>
           ))}
         </div>
+        <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:4}}>
+          <button onClick={()=>{var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(s=>s[0]);setSelectedSecs(all);setScoreSection(all[0]);}}
+            style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>全選択</button>
+          <button onClick={()=>{setSelectedSecs([]);setIsQueuePlay(false);isQueuePlayRef.current=false;}}
+            style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>解除</button>
+          <span style={{fontSize:10,color:C.label}}>｜ セクションを選択して再生</span>
+        </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"flex-start"}}>
           {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
-            <button key={key} onClick={()=>setScoreSection(key)}
-              style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,
-                background:scoreSection===key?"#708238":"#fff",
+            <button key={key} onClick={()=>{
+              setSelectedSecs(function(prev){
+                if(prev.includes(key)){
+                  var next=prev.filter(k=>k!==key);
+                  if(scoreSection===key && next.length>0) setScoreSection(next[next.length-1]);
+                  return next;
+                } else {
+                  setScoreSection(key);
+                  return [...prev, key];
+                }
+              });
+            }}
+              style={{padding:"5px 12px",borderRadius:8,
+                border:selectedSecs.includes(key)?"2px solid #708238":"0.5px solid "+C.border,
+                background:scoreSection===key?"#708238":selectedSecs.includes(key)?"rgba(112,130,56,0.15)":"#fff",
                 color:scoreSection===key?"#fff":C.label,
                 fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
               {lbl}
@@ -3655,6 +3674,32 @@ function App() {
           patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
           sharedHeadBell={sharedHeadBell||false}
           scoreLoading={scoreLoading}
+          isQueuePlaying={isQueuePlay}
+          autoPlay={isQueuePlay}
+          onQueueStart={selectedSecs.length>0?function(){
+            var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
+            var queue=sections.filter(s=>selectedSecs.includes(s[0])).map(s=>s[0]);
+            playQueueRef.current=queue;
+            playQueueIdxRef.current=0;
+            isQueuePlayRef.current=true;
+            setIsQueuePlay(true);
+            setScoreSection(queue[0]);
+          }:null}
+          onLoopComplete={selectedSecs.length===1?function(){
+            return true;
+          }:isQueuePlay?function(){
+            var nextIdx=playQueueIdxRef.current+1;
+            if(nextIdx<playQueueRef.current.length){
+              playQueueIdxRef.current=nextIdx;
+              setScoreSection(playQueueRef.current[nextIdx]);
+              return true;
+            } else {
+              playQueueIdxRef.current=0;
+              isQueuePlayRef.current=false;
+              setIsQueuePlay(false);
+              return false;
+            }
+          }:null}
         />
       </div>
     </div>
