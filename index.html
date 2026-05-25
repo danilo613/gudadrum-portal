@@ -2724,13 +2724,15 @@ function MapPage({ members, onClose, C }) {
   };
   const [mapScale, setMapScale] = React.useState("");
   const [mapPopup, setMapPopup] = React.useState(null);
+  const [debugMode, setDebugMode] = React.useState(false);
+  const [debugCoord, setDebugCoord] = React.useState(null);
 
   const filtered = mapScale ? members.filter(m=>m.scale===mapScale) : members;
   const groups = {};
   filtered.forEach(m=>{ if(!groups[m.pref]) groups[m.pref]=[]; groups[m.pref].push(m); });
 
   return (
-    <div style={{minHeight:"100vh",background:"#c8b882",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
+    <div style={{minHeight:"100vh",background:"#D6BF9D",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px",background:"linear-gradient(135deg,#708238,#4a5a28)",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -2744,6 +2746,10 @@ function MapPage({ members, onClose, C }) {
             <option value="">すべての音階</option>
             {Object.keys(SCALE_COLOR).map(s=><option key={s} value={s}>{s}</option>)}
           </select>
+          <button onClick={()=>setDebugMode(!debugMode)}
+            style={{padding:"6px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:debugMode?"rgba(255,200,0,0.3)":"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+            {debugMode?"📍 座標確認中":"📍 座標確認"}
+          </button>
           <button onClick={onClose}
             style={{padding:"6px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
             ← 戻る
@@ -2752,7 +2758,18 @@ function MapPage({ members, onClose, C }) {
       </div>
       <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center"}}>
         <div style={{position:"relative",width:"100%",maxWidth:800}}>
-          <img src="/hibikiai_map.png" alt="hibikiai MAP" style={{width:"100%",borderRadius:12,display:"block"}}/>
+          <img src="/hibikiai_map.png" alt="hibikiai MAP" style={{width:"100%",borderRadius:12,display:"block",cursor:debugMode?"crosshair":"default"}}
+            onClick={debugMode?function(e){
+              var rect=e.target.getBoundingClientRect();
+              var rx=((e.clientX-rect.left)/rect.width).toFixed(3);
+              var ry=((e.clientY-rect.top)/rect.height).toFixed(3);
+              setDebugCoord({rx,ry});
+            }:null}/>
+          {debugMode&&debugCoord&&(
+            <div style={{position:"absolute",top:8,left:8,background:"rgba(0,0,0,0.8)",color:"#fff",padding:"8px 12px",borderRadius:8,fontSize:12,zIndex:30,fontFamily:"monospace"}}>
+              クリック位置: rx={debugCoord.rx}, ry={debugCoord.ry}
+            </div>
+          )}
           {Object.entries(PREF_POS).map(([pref,pos])=>{
             const mems = groups[pref]||[];
             if(mems.length===0) return null;
