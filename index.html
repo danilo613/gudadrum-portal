@@ -2764,7 +2764,7 @@ function MapPage({ members, onClose, C }) {
           </button>
         </div>
       </div>
-      <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center"}}>
+      <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center",background:"#D6BF9D"}}>
         <div style={{position:"relative",width:"100%",maxWidth:800}}>
           <img src="/hibikiai_map.png" alt="hibikiai MAP" style={{width:"100%",borderRadius:12,display:"block",cursor:debugMode?"crosshair":"default"}}
             onClick={debugMode?function(e){
@@ -2803,7 +2803,7 @@ function MapPage({ members, onClose, C }) {
               left:mapPopup.pos.rx>0.6?"auto":(mapPopup.pos.rx*100+3)+"%",
               right:mapPopup.pos.rx>0.6?(100-mapPopup.pos.rx*100+3)+"%":"auto",
               top:Math.max(0,(mapPopup.pos.ry*100-5))+"%",
-              background:"rgba(255,255,255,0.97)",backdropFilter:"blur(8px)",
+              background:"rgba(214,191,157,0.97)",backdropFilter:"blur(8px)",
               border:"0.5px solid "+C.border,borderRadius:12,
               padding:"14px 16px",minWidth:200,maxWidth:260,zIndex:20,
               boxShadow:"0 4px 16px rgba(0,0,0,0.15)"}}>
