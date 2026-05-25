@@ -2764,7 +2764,7 @@ function MapPage({ members, onClose, C }) {
           </button>
         </div>
       </div>
-      <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center",background:"#D6BF9D"}}>
+      <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center",background:"#D6BF9D",minHeight:"100%"}}>
         <div style={{position:"relative",width:"100%",maxWidth:800}}>
           <img src="/hibikiai_map.png" alt="hibikiai MAP" style={{width:"100%",borderRadius:12,display:"block",cursor:debugMode?"crosshair":"default"}}
             onClick={debugMode?function(e){
@@ -2799,13 +2799,12 @@ function MapPage({ members, onClose, C }) {
             );
           })}
           {mapPopup&&(
-            <div style={{position:"absolute",
-              left:mapPopup.pos.rx>0.6?"auto":(mapPopup.pos.rx*100+3)+"%",
-              right:mapPopup.pos.rx>0.6?(100-mapPopup.pos.rx*100+3)+"%":"auto",
-              top:Math.max(0,(mapPopup.pos.ry*100-5))+"%",
+            <div style={{position:"fixed",
+              right:"20px",top:"70px",
               background:"rgba(214,191,157,0.97)",backdropFilter:"blur(8px)",
               border:"0.5px solid "+C.border,borderRadius:12,
-              padding:"14px 16px",minWidth:200,maxWidth:260,zIndex:20,
+              padding:"14px 16px",minWidth:220,maxWidth:300,zIndex:20,
+              maxHeight:"80vh",overflowY:"auto",
               boxShadow:"0 4px 16px rgba(0,0,0,0.15)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
                 <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{mapPopup.pref}（{mapPopup.members.length}人）</span>
