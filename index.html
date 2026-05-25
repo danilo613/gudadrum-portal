@@ -5865,7 +5865,7 @@ function App() {
         </div>
 
         {/* 譜面プレイヤー */}
-        {scoreList.length > 0 && (
+        {!isInstructor && scoreList.length > 0 && (
           <div style={{marginBottom:8}}>
             <button onClick={()=>{
               const id=scoreList.length>0?scoreList[0]:"waterlily";
