@@ -2771,6 +2771,8 @@ function App() {
   const [allPointHistory, setAllPointHistory] = useState([]);
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
+  const [mapPage, setMapPage] = useState(false);
+  const [mapMembers, setMapMembers] = useState([]);
   const [showPastScheds, setShowPastScheds] = useState(false);
   const [sharedFloatPos, setSharedFloatPos] = useState({x:16,y:60});
   const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
@@ -2962,6 +2964,13 @@ function App() {
         setFeedbackStatus("❌ " + (data.error||"エラーが発生しました"));
       }
     } catch(e) { setFeedbackStatus("❌ エラー: " + e.message); }
+  }
+
+  async function fetchMemberMap() {
+    try {
+      const res = await gasRead({ action: "getmembermap" });
+      if (res.members) setMapMembers(res.members);
+    } catch(e) {}
   }
 
   async function fetchSchedules() {
@@ -3750,6 +3759,115 @@ function App() {
 
   const m = currentMember;
 
+  if (page === "admin" && mapPage) {
+    const SCALE_COLOR = {
+      "響ノ音（アーケイン）":"#5845C0","光ノ音（イークィノックス）":"#2050C0",
+      "秘ノ音（エニグマ）":"#708238","風ノ音（トーナス）":"#00A8A0",
+      "和ノ音（アフリカン）":"#D4A020","秘ノ音＆和ノ音＋（エニグマ＆アフリカン）":"#B05080",
+      "和ノ音＆風ノ音（アフリカン＆トーナス）":"#50B080"
+    };
+    const PREF_POS = {
+      "北海道":{rx:0.72,ry:0.13},"青森県":{rx:0.68,ry:0.27},"岩手県":{rx:0.67,ry:0.33},
+      "宮城県":{rx:0.65,ry:0.38},"秋田県":{rx:0.63,ry:0.30},"山形県":{rx:0.62,ry:0.37},
+      "福島県":{rx:0.62,ry:0.43},"茨城県":{rx:0.63,ry:0.50},"栃木県":{rx:0.60,ry:0.48},
+      "群馬県":{rx:0.57,ry:0.47},"埼玉県":{rx:0.60,ry:0.51},"千葉県":{rx:0.63,ry:0.53},
+      "東京都":{rx:0.61,ry:0.53},"神奈川県":{rx:0.60,ry:0.55},"新潟県":{rx:0.56,ry:0.40},
+      "富山県":{rx:0.52,ry:0.44},"石川県":{rx:0.49,ry:0.42},"福井県":{rx:0.48,ry:0.47},
+      "山梨県":{rx:0.58,ry:0.51},"長野県":{rx:0.55,ry:0.48},"岐阜県":{rx:0.52,ry:0.50},
+      "静岡県":{rx:0.58,ry:0.55},"愛知県":{rx:0.53,ry:0.53},"三重県":{rx:0.50,ry:0.56},
+      "滋賀県":{rx:0.47,ry:0.51},"京都府":{rx:0.45,ry:0.51},"大阪府":{rx:0.44,ry:0.54},
+      "兵庫県":{rx:0.42,ry:0.52},"奈良県":{rx:0.47,ry:0.55},"和歌山県":{rx:0.45,ry:0.58},
+      "鳥取県":{rx:0.39,ry:0.49},"島根県":{rx:0.36,ry:0.51},"岡山県":{rx:0.41,ry:0.53},
+      "広島県":{rx:0.37,ry:0.54},"山口県":{rx:0.32,ry:0.57},"徳島県":{rx:0.46,ry:0.59},
+      "香川県":{rx:0.43,ry:0.57},"愛媛県":{rx:0.39,ry:0.60},"高知県":{rx:0.42,ry:0.63},
+      "福岡県":{rx:0.28,ry:0.59},"佐賀県":{rx:0.25,ry:0.62},"長崎県":{rx:0.21,ry:0.63},
+      "熊本県":{rx:0.28,ry:0.65},"大分県":{rx:0.31,ry:0.60},"宮崎県":{rx:0.31,ry:0.68},
+      "鹿児島県":{rx:0.27,ry:0.73},"沖縄県":{rx:0.20,ry:0.88},
+    };
+    const [mapScale, setMapScale] = React.useState("");
+    const [mapPopup, setMapPopup] = React.useState(null);
+    const mapRef = React.useRef(null);
+
+    const filtered = mapScale ? mapMembers.filter(m=>m.scale===mapScale) : mapMembers;
+    const groups = {};
+    filtered.forEach(m=>{ if(!groups[m.pref]) groups[m.pref]=[]; groups[m.pref].push(m); });
+
+    return (
+      <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
+        <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px",background:"linear-gradient(135deg,#708238,#4a5a28)",flexShrink:0}}>
+          <div style={{display:"flex",alignItems:"center",gap:12}}>
+            <span style={{fontSize:16}}>🗾</span>
+            <span style={{fontSize:13,fontWeight:700,color:"#fff",letterSpacing:"0.08em"}}>hibikiai MAP</span>
+            <span style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{filtered.length}人 / {Object.keys(groups).length}都道府県</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <select value={mapScale} onChange={e=>setMapScale(e.target.value)}
+              style={{fontSize:11,padding:"4px 8px",borderRadius:8,border:"none",background:"rgba(255,255,255,0.2)",color:"#fff"}}>
+              <option value="">すべての音階</option>
+              {Object.keys(SCALE_COLOR).map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+            <button onClick={()=>setMapPage(false)}
+              style={{padding:"6px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+              ← 戻る
+            </button>
+          </div>
+        </div>
+        <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center"}}>
+          <div ref={mapRef} style={{position:"relative",width:"100%",maxWidth:800}}>
+            <img src="/hibikiai_map.png" alt="hibikiai MAP" style={{width:"100%",borderRadius:12,display:"block"}}
+              onLoad={()=>{ if(mapRef.current) mapRef.current.style.minHeight=mapRef.current.offsetWidth*0.7+"px"; }}/>
+            {Object.entries(PREF_POS).map(([pref,pos])=>{
+              const members = groups[pref]||[];
+              if(members.length===0) return null;
+              const color = Object.entries(SCALE_COLOR).find(([k])=>members[0].scale===k)?.[1]||"#708238";
+              const r = Math.min(8+members.length*3,22);
+              return (
+                <div key={pref}
+                  onClick={()=>setMapPopup(mapPopup&&mapPopup.pref===pref?null:{pref,members,pos})}
+                  style={{position:"absolute",left:(pos.rx*100)+"%",top:(pos.ry*100)+"%",
+                    transform:"translate(-50%,-50%)",
+                    width:r*2,height:r*2,borderRadius:"50%",
+                    background:color,border:"2px solid white",
+                    display:"flex",alignItems:"center",justifyContent:"center",
+                    color:"white",fontSize:r>12?11:9,fontWeight:500,
+                    cursor:"pointer",zIndex:10,
+                    boxShadow:"0 2px 6px rgba(0,0,0,0.3)"}}>
+                  {members.length}
+                </div>
+              );
+            })}
+            {mapPopup&&(
+              <div style={{position:"absolute",
+                left:mapPopup.pos.rx>0.6?"auto":(mapPopup.pos.rx*100+3)+"%",
+                right:mapPopup.pos.rx>0.6?(100-mapPopup.pos.rx*100+3)+"%":"auto",
+                top:Math.max(0,(mapPopup.pos.ry*100-5))+"%",
+                background:"rgba(255,255,255,0.97)",backdropFilter:"blur(8px)",
+                border:"0.5px solid "+C.border,borderRadius:12,
+                padding:"14px 16px",minWidth:200,maxWidth:260,zIndex:20,
+                boxShadow:"0 4px 16px rgba(0,0,0,0.15)"}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+                  <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{mapPopup.pref}（{mapPopup.members.length}人）</span>
+                  <button onClick={()=>setMapPopup(null)} style={{background:"none",border:"none",cursor:"pointer",color:C.label,fontSize:14}}>✕</button>
+                </div>
+                {mapPopup.members.map((m,i)=>(
+                  <div key={i} style={{padding:"8px 0",borderTop:"0.5px solid "+C.border}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6}}>
+                      <span style={{width:8,height:8,borderRadius:"50%",background:Object.entries(SCALE_COLOR).find(([k])=>m.scale===k)?.[1]||"#888",display:"inline-block",flexShrink:0}}/>
+                      <span style={{fontSize:13,fontWeight:500,color:C.choco}}>{m.name}</span>
+                    </div>
+                    <p style={{fontSize:11,color:C.label,margin:"3px 0 2px 14px"}}>{m.scale}</p>
+                    {m.songs.length>0&&<p style={{fontSize:11,color:C.label,margin:"0 0 0 14px"}}>{m.songs.join("、")}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (page === "admin" && editFullscreen && scoreEditOpen) return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
@@ -3828,6 +3946,7 @@ function App() {
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("管理者ダッシュボード",[
+        iconBtn("🗾 MAP",()=>{ fetchMemberMap(); setMapPage(true); }),
         iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
         iconBtn("ログアウト",()=>setPage("login")),
       ])}
