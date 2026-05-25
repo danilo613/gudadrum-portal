@@ -393,7 +393,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell, floatPosInit, onFloatPosChange }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   console.log("ScorePlayer instrument2=", instrument2, "COLORS2=", COLORS2);
@@ -451,7 +451,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var setSelectedBarSync=function(b){ console.log("setSelectedBarSync called:", b); selectedBarRef.current=b; setSelectedBar(b); };
   var copiedBar2S=useState(null); var copiedBar2=copiedBar2S[0]; var setCopiedBar2=copiedBar2S[1];
   var copiedBarRef=React.useRef(null); var copiedBar2Ref=React.useRef(null); var selectedBarRef=React.useRef(null);
-  var floatPosS=useState({x:16,y:60}); var floatPos=floatPosS[0]; var setFloatPos=floatPosS[1];
+  var floatPosS=useState(floatPosInit||{x:16,y:60}); var floatPos=floatPosS[0]; var _setFloatPos=floatPosS[1];
+  var setFloatPos=function(pos){_setFloatPos(pos);if(onFloatPosChange)onFloatPosChange(pos);};
   var isDraggingRef=React.useRef(false); var dragOffRef=React.useRef({x:0,y:0});
   var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
   var highlightColorS=useState(null); var highlightColor=highlightColorS[0]; var setHighlightColor=highlightColorS[1];
@@ -2767,6 +2768,7 @@ function App() {
   const [allPointHistory, setAllPointHistory] = useState([]);
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
+  const [sharedFloatPos, setSharedFloatPos] = useState({x:16,y:60});
   const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
   const [pointNote, setPointNote] = useState("");
   const [adjustTargetPoints, setAdjustTargetPoints] = useState("");
@@ -3673,6 +3675,8 @@ function App() {
           instrument2={(currentScoreId==="megumi"||currentScoreId==="inori")?"arcane":null}
           patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
           sharedHeadBell={sharedHeadBell||false}
+          floatPosInit={sharedFloatPos}
+          onFloatPosChange={setSharedFloatPos}
           scoreLoading={scoreLoading}
           isQueuePlaying={isQueuePlay}
           autoPlay={isQueuePlay}
@@ -3809,6 +3813,8 @@ function App() {
           instrument2={(scoreEditId==="megumi"||scoreEditId==="inori")?"arcane":null}
           patternData2={(scoreEditId==="megumi"||scoreEditId==="inori")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
           sharedHeadBell={sharedHeadBell}
+          floatPosInit={sharedFloatPos}
+          onFloatPosChange={setSharedFloatPos}
         />
       </div>
     </div>
@@ -3926,6 +3932,8 @@ function App() {
               sharedBpm={sharedBpm}
               onBpmChange={function(v){setSharedBpm(v);}}
               sharedMetroOn={sharedMetroOn}
+              floatPosInit={sharedFloatPos}
+              onFloatPosChange={setSharedFloatPos}
               sharedMetroMode={sharedMetroMode}
               sharedHeadBell={sharedHeadBell}
               onMetroChange={function(metroOn,metroMode,headBell){
@@ -5857,7 +5865,7 @@ function App() {
         </div>
 
         {/* 譜面プレイヤー */}
-        {(isFromAdmin || scoreList.length > 0) && (
+        {scoreList.length > 0 && (
           <div style={{marginBottom:8}}>
             <button onClick={()=>{
               const id=scoreList.length>0?scoreList[0]:"waterlily";
@@ -5967,6 +5975,8 @@ function App() {
                     }
                   }:null}
                   sharedBpm={sharedBpm}
+                  floatPosInit={sharedFloatPos}
+                  onFloatPosChange={setSharedFloatPos}
                   onBpmChange={function(v){setSharedBpm(v);}}
                   sharedMetroOn={sharedMetroOn}
                   sharedMetroMode={sharedMetroMode}
@@ -5989,6 +5999,8 @@ function App() {
 
                   subdivProp={(function(){var s=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;});return s?s[2]:"triplet";})()}
                   onSave={saveScorePattern}
+                  floatPosInit={sharedFloatPos}
+                  onFloatPosChange={setSharedFloatPos}
                 />
               </div>
             )}
