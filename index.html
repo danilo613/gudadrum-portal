@@ -2746,7 +2746,7 @@ function MapPage({ members, onClose, C }) {
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <span style={{fontSize:16}}>🗾</span>
           <span style={{fontSize:13,fontWeight:700,color:"#fff",letterSpacing:"0.08em"}}>hibikiai MAP</span>
-          <span style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{filtered.length}人 / {Object.keys(groups).length}都道府県</span>
+          <span style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>グーダドラムポータルサイト登録者 {members.length}人</span>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <select value={mapScale} onChange={e=>setMapScale(e.target.value)}
