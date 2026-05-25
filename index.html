@@ -2768,6 +2768,7 @@ function App() {
   const [allPointHistory, setAllPointHistory] = useState([]);
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
+  const [showPastScheds, setShowPastScheds] = useState(false);
   const [sharedFloatPos, setSharedFloatPos] = useState({x:16,y:60});
   const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
   const [pointNote, setPointNote] = useState("");
@@ -5576,8 +5577,15 @@ function App() {
                   {upcoming.length === 0 && past.length === 0 && <p style={{fontSize:12,color:C.label,textAlign:"center"}}>予定はありません</p>}
                   {past.length > 0 && (
                     <div style={{marginTop:upcoming.length>0?12:0}}>
-                      <p style={{fontSize:10,color:C.label,marginBottom:6,letterSpacing:"0.05em"}}>── 過去の予定 ──</p>
-                      {past.map((s,i)=>renderSched(s, i, true, past.length))}
+                      <button onClick={()=>setShowPastScheds(!showPastScheds)}
+                        style={{width:"100%",padding:"6px 10px",borderRadius:8,border:"0.5px solid "+C.border,
+                          background:"rgba(0,0,0,0.04)",color:C.label,fontSize:11,fontWeight:600,
+                          cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",
+                          alignItems:"center",justifyContent:"space-between",marginBottom:showPastScheds?8:0}}>
+                        <span>📂 過去のスケジュール（{past.length}件）</span>
+                        <span>{showPastScheds?"▲":"▼"}</span>
+                      </button>
+                      {showPastScheds && past.map((s,i)=>renderSched(s, i, true, past.length))}
                     </div>
                   )}
                 </div>
