@@ -4099,17 +4099,10 @@ function App() {
                     const PLAN_POINTS={"蕾 気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":13500};
                     const PLAN_AMOUNT={"蕾 気軽サブスク":2400,"幹 ノーマル":6900,"幹 スペシャル":12900};
                     const PLAN_LABEL={"蕾 気軽サブスク":"蕾","幹 ノーマル":"幹ノーマル","幹 スペシャル":"幹スペシャル"};
-                    var nextPayDate="";
-                    if(s.startDate){
-                      var sd=new Date(s.startDate);
-                      var today=new Date();
-                      var next=new Date(sd);
-                      while(next<=today) next.setMonth(next.getMonth()+1);
-                      nextPayDate=next.getFullYear()+"/"+(next.getMonth()+1)+"/"+next.getDate();
-                    }
+                    var nextPayDate=s.nextPayDate||"";
                     var monthCount=0;
-                    if(s.startDate){
-                      var sd2=new Date(s.startDate);
+                    if(s.renewDate){
+                      var sd2=new Date(s.renewDate);
                       var now=new Date();
                       monthCount=Math.max(0,(now.getFullYear()-sd2.getFullYear())*12+(now.getMonth()-sd2.getMonth()));
                     }
@@ -4122,11 +4115,11 @@ function App() {
                           <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontWeight:600}}>{s.plan}</span>
                         </div>
                         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4}}>
-                          <span style={{fontSize:11,color:C.label}}>更新日：{s.startDate}</span>
-                          <span style={{fontSize:11,color:C.label}}>次回支払：{nextPayDate}</span>
+                          <span style={{fontSize:11,color:C.label}}>更新日：{s.renewDate||"-"}</span>
+                          <span style={{fontSize:11,color:C.label}}>次回支払：{nextPayDate||"-"}</span>
                         </div>
                         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6,alignItems:"center"}}>
-                          <span style={{fontSize:12,fontWeight:700,color:"#3a6a7a"}}>月額 ¥{(PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:"#3a6a7a"}}>月額 ¥{(s.amount||PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
                         </div>
                         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                           {PLAN_POINTS[s.plan]>0&&(
