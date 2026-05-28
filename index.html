@@ -2914,6 +2914,13 @@ function App() {
   const [allPointHistory, setAllPointHistory] = useState([]);
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [showSubs, setShowSubs] = useState(false);
+  const [subsLoaded, setSubsLoaded] = useState(false);
+  const [subsAddOpen, setSubsAddOpen] = useState(false);
+  const [subsAddName, setSubsAddName] = useState("");
+  const [subsAddPlan, setSubsAddPlan] = useState("蕾 気軽サブスク");
+  const [subsAddDate, setSubsAddDate] = useState("");
   const [mapPage, setMapPage] = useState(false);
   const [mapMembers, setMapMembers] = useState([]);
   const [showPastScheds, setShowPastScheds] = useState(false);
@@ -3025,7 +3032,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzQ6S3HLtRTvNgv4XBT07LHTkjEcGoXqvXmIGkmXV4IJhFYmU5dq5DLHWtQlh1aHQJoAg/exec?callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?callback=" + cbName;
       script.onerror = function() {
         setFetchMsg("✗ データ取得失敗");
         delete window[cbName];
@@ -3047,7 +3054,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzQ6S3HLtRTvNgv4XBT07LHTkjEcGoXqvXmIGkmXV4IJhFYmU5dq5DLHWtQlh1aHQJoAg/exec?action=notion&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=notion&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -3068,7 +3075,7 @@ function App() {
       };
       const script = document.createElement("script");
       script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzQ6S3HLtRTvNgv4XBT07LHTkjEcGoXqvXmIGkmXV4IJhFYmU5dq5DLHWtQlh1aHQJoAg/exec?action=faq&callback=" + cbName;
+      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=faq&callback=" + cbName;
       script.onerror = function() {
         delete window[cbName];
         resolve();
@@ -3107,6 +3114,13 @@ function App() {
         setFeedbackStatus("❌ " + (data.error||"エラーが発生しました"));
       }
     } catch(e) { setFeedbackStatus("❌ エラー: " + e.message); }
+  }
+
+  async function fetchSubscriptions() {
+    try {
+      const res = await gasRead({ action: "getsubscriptions" });
+      if (res.subscriptions) { setSubscriptions(res.subscriptions); setSubsLoaded(true); }
+    } catch(e) {}
   }
 
   async function fetchMemberMap() {
@@ -3344,7 +3358,7 @@ function App() {
       script.id = cbName;
       var urlParams = new URLSearchParams(params);
       urlParams.set("callback", cbName);
-      script.src = "https://script.google.com/macros/s/AKfycbzQ6S3HLtRTvNgv4XBT07LHTkjEcGoXqvXmIGkmXV4IJhFYmU5dq5DLHWtQlh1aHQJoAg/exec?" + urlParams.toString();
+      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?" + urlParams.toString();
       script.onerror = function() {
         delete window[cbName];
         script.remove();
@@ -3702,7 +3716,7 @@ function App() {
         <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:480,maxHeight:"80vh",overflowY:"auto"}}>
           <h3 style={{fontSize:16,fontWeight:700,color:C.choco,marginBottom:10}}>🔧 メンバーデータ更新</h3>
           <p style={{fontSize:12,color:C.label,marginBottom:16,lineHeight:1.8}}>GASのURLをブラウザで開き、出力されたJSONをここに貼り付けてください。</p>
-          <a href="https://script.google.com/macros/s/AKfycbzQ6S3HLtRTvNgv4XBT07LHTkjEcGoXqvXmIGkmXV4IJhFYmU5dq5DLHWtQlh1aHQJoAg/exec" target="_blank" rel="noreferrer"
+          <a href="https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec" target="_blank" rel="noreferrer"
             style={{display:"block",textAlign:"center",padding:"10px",margin:"0 0 14px",borderRadius:10,background:"rgba(112,130,56,0.12)",border:"1px solid "+C.border,color:C.olive,fontSize:13,fontWeight:600,textDecoration:"none"}}>
             🔗 GASを開く（新しいタブ）
           </a>
@@ -4036,6 +4050,111 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🧪 練習会データ {showWorkshop?"▲":"▼"}
         </button>
+        {/* サブスク管理（DANiLOのみ） */}
+        {isFromAdmin&&(
+          <>
+            <button onClick={()=>{setShowSubs(!showSubs);if(!subsLoaded)fetchSubscriptions();}}
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a8a9a",background:showSubs?"linear-gradient(135deg,#5a8a9a,#3a6a7a)":"rgba(58,106,122,0.1)",color:showSubs?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+              💳 サブスク管理 {showSubs?"▲":"▼"}
+            </button>
+            {showSubs&&(
+              <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+                {/* 新規追加フォーム */}
+                <button onClick={()=>setSubsAddOpen(!subsAddOpen)}
+                  style={{fontSize:11,padding:"4px 12px",borderRadius:8,border:"0.5px solid #3a6a7a",background:subsAddOpen?"#3a6a7a":"#fff",color:subsAddOpen?"#fff":"#3a6a7a",cursor:"pointer",fontFamily:"inherit",marginBottom:subsAddOpen?8:0}}>
+                  ＋ 新規登録
+                </button>
+                {subsAddOpen&&(
+                  <div style={{background:"rgba(58,106,122,0.05)",borderRadius:8,padding:"10px",marginBottom:10}}>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      <select value={subsAddName} onChange={e=>setSubsAddName(e.target.value)}
+                        style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}>
+                        <option value="">メンバーを選択</option>
+                        {members.map(m=><option key={m.name} value={m.name}>{m.name}</option>)}
+                      </select>
+                      <select value={subsAddPlan} onChange={e=>setSubsAddPlan(e.target.value)}
+                        style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}>
+                        <option value="蕾 気軽サブスク">蕾 気軽サブスク（¥2,400）</option>
+                        <option value="幹 ノーマル">幹 ノーマル（¥6,900）</option>
+                        <option value="幹 スペシャル">幹 スペシャル（¥12,900）</option>
+                      </select>
+                      <input type="date" value={subsAddDate} onChange={e=>setSubsAddDate(e.target.value)}
+                        style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
+                      <button onClick={async()=>{
+                        if(!subsAddName||!subsAddDate){alert("名前と契約日を入力してください");return;}
+                        await gasRead({action:"addsubscription",name:subsAddName,plan:subsAddPlan,startDate:subsAddDate});
+                        fetchSubscriptions();
+                        setSubsAddOpen(false);setSubsAddName("");setSubsAddDate("");
+                      }} style={{fontSize:12,padding:"6px",borderRadius:8,border:"none",background:"#3a6a7a",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
+                        登録
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {/* メンバーリスト */}
+                {subscriptions.length===0?(
+                  <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>登録者なし</p>
+                ):(
+                  subscriptions.map(function(s,i){
+                    const PLAN_POINTS={"蕾 気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":13500};
+                    const PLAN_AMOUNT={"蕾 気軽サブスク":2400,"幹 ノーマル":6900,"幹 スペシャル":12900};
+                    const PLAN_LABEL={"蕾 気軽サブスク":"蕾","幹 ノーマル":"幹ノーマル","幹 スペシャル":"幹スペシャル"};
+                    // 次回支払日を計算
+                    var nextPayDate="";
+                    if(s.startDate){
+                      var sd=new Date(s.startDate);
+                      var today=new Date();
+                      var next=new Date(sd);
+                      while(next<=today) next.setMonth(next.getMonth()+1);
+                      nextPayDate=next.getFullYear()+"/"+(next.getMonth()+1)+"/"+next.getDate();
+                    }
+                    // 契約からの経過月数（ポイント付与回数）
+                    var monthCount=0;
+                    if(s.startDate){
+                      var sd2=new Date(s.startDate);
+                      var now=new Date();
+                      monthCount=Math.max(0,(now.getFullYear()-sd2.getFullYear())*12+(now.getMonth()-sd2.getMonth()));
+                    }
+                    var nextMonthCount=monthCount+1;
+                    var planLabel=PLAN_LABEL[s.plan]||s.plan;
+                    var pointLabel=planLabel+"プランポイント"+["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"][monthCount]||"";
+                    return (
+                      <div key={i} style={{padding:"10px 0",borderTop:"0.5px solid "+C.border}}>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                          <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{s.name}</span>
+                          <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontWeight:600}}>{s.plan}</span>
+                        </div>
+                        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6}}>
+                          <span style={{fontSize:11,color:C.label}}>契約日：{s.startDate}</span>
+                          <span style={{fontSize:11,color:C.label}}>次回支払：{nextPayDate}</span>
+                          <span style={{fontSize:11,fontWeight:700,color:"#3a6a7a"}}>¥{(PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
+                        </div>
+                        <div style={{display:"flex",gap:6}}>
+                          {PLAN_POINTS[s.plan]>0&&(
+                            <button onClick={async()=>{
+                              var pts=PLAN_POINTS[s.plan];
+                              await gasRead({action:"addpoints",name:s.name,points:String(pts),reason:pointLabel,recorder:"DANiLO"});
+                              alert(s.name+"に"+pts+"pt付与しました（"+pointLabel+"）");
+                            }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #708238",background:"#fff",color:"#708238",cursor:"pointer",fontFamily:"inherit"}}>
+                              🎁 ポイント付与
+                            </button>
+                          )}
+                          <button onClick={async()=>{
+                            if(!confirm(s.name+"のサブスクをキャンセルしますか？")){return;}
+                            await gasRead({action:"cancelsubscription",name:s.name});
+                            fetchSubscriptions();
+                          }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #e74c3c",background:"#fff",color:"#e74c3c",cursor:"pointer",fontFamily:"inherit"}}>
+                            解約
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
+          </>
+        )}
         <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
