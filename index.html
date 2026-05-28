@@ -4115,6 +4115,7 @@ function App() {
                           <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontWeight:600}}>{s.plan}</span>
                         </div>
                         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                          <span style={{fontSize:11,color:C.label}}>契約日：{s.contractDate||"-"}</span>
                           <span style={{fontSize:11,color:C.label}}>更新日：{s.renewDate||"-"}</span>
                           <span style={{fontSize:11,color:C.label}}>次回支払：{nextPayDate||"-"}</span>
                         </div>
