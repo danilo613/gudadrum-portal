@@ -5191,11 +5191,18 @@ function App() {
                     <option value="講師">講師 → INSTRUCTOR</option>
                   </select>
                   <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>📅 次回更新日</label>
-                  <div style={{display:"flex",gap:8}}>
+                  <div style={{display:"flex",gap:8,marginBottom:12}}>
                     <input type="date" id="subscDateInput"
                       style={{flex:1,background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
                     <button onClick={()=>{ const v=document.getElementById("subscDateInput").value; if(!v){setLessonMsg("❌ 日付を選択してください");return;} gasWrite({action:"write", name:lessonModal, column:"次回更新日", value:v, overwrite:"true"}).then(d=>{ if(d.error){setLessonMsg("❌ "+d.error);}else{setLessonMsg("✅ 次回更新日を設定しました！");autoFetch();setTimeout(()=>setLessonMsg(""),2000);} }); }}
                       style={{padding:"8px 14px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>設定</button>
+                  </div>
+                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>📋 契約日</label>
+                  <div style={{display:"flex",gap:8}}>
+                    <input type="date" id="contractDateInput"
+                      style={{flex:1,background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"8px 10px",fontSize:13,color:C.choco}}/>
+                    <button onClick={()=>{ const v=document.getElementById("contractDateInput").value; if(!v){setLessonMsg("❌ 日付を選択してください");return;} gasWrite({action:"write", name:lessonModal, column:"契約日", value:v, overwrite:"true"}).then(d=>{ if(d.error){setLessonMsg("❌ "+d.error);}else{setLessonMsg("✅ 契約日を設定しました！");autoFetch();setTimeout(()=>setLessonMsg(""),2000);} }); }}
+                      style={{padding:"8px 14px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#5a8a9a,#3a6a7a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>設定</button>
                   </div>
                 </div>
                 <button onClick={()=>{setLessonModal(null);setLessonMsg("");}} style={{width:"100%",padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer",marginTop:16}}>閉じる</button>
