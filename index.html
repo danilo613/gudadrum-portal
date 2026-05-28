@@ -4059,7 +4059,7 @@ function App() {
             </button>
             {showSubs&&(
               <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
-                {/* 新規追加フォーム */}
+                {/* 新規追加 */}
                 <button onClick={()=>setSubsAddOpen(!subsAddOpen)}
                   style={{fontSize:11,padding:"4px 12px",borderRadius:8,border:"0.5px solid #3a6a7a",background:subsAddOpen?"#3a6a7a":"#fff",color:subsAddOpen?"#fff":"#3a6a7a",cursor:"pointer",fontFamily:"inherit",marginBottom:subsAddOpen?8:0}}>
                   ＋ 新規登録
@@ -4080,18 +4080,18 @@ function App() {
                       </select>
                       <input type="date" value={subsAddDate} onChange={e=>setSubsAddDate(e.target.value)}
                         style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
-                      <button onClick={async()=>{
+                      <button onClick={()=>{
                         if(!subsAddName||!subsAddDate){alert("名前と契約日を入力してください");return;}
-                        await gasRead({action:"addsubscription",name:subsAddName,plan:subsAddPlan,startDate:subsAddDate});
-                        fetchSubscriptions();
-                        setSubsAddOpen(false);setSubsAddName("");setSubsAddDate("");
+                        gasRead({action:"addsubscription",name:subsAddName,plan:subsAddPlan,startDate:subsAddDate}).then(function(){
+                          fetchSubscriptions();
+                          setSubsAddOpen(false);setSubsAddName("");setSubsAddDate("");
+                        });
                       }} style={{fontSize:12,padding:"6px",borderRadius:8,border:"none",background:"#3a6a7a",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
                         登録
                       </button>
                     </div>
                   </div>
                 )}
-                {/* メンバーリスト */}
                 {subscriptions.length===0?(
                   <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>登録者なし</p>
                 ):(
@@ -4099,7 +4099,6 @@ function App() {
                     const PLAN_POINTS={"蕾 気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":13500};
                     const PLAN_AMOUNT={"蕾 気軽サブスク":2400,"幹 ノーマル":6900,"幹 スペシャル":12900};
                     const PLAN_LABEL={"蕾 気軽サブスク":"蕾","幹 ノーマル":"幹ノーマル","幹 スペシャル":"幹スペシャル"};
-                    // 次回支払日を計算
                     var nextPayDate="";
                     if(s.startDate){
                       var sd=new Date(s.startDate);
@@ -4108,14 +4107,12 @@ function App() {
                       while(next<=today) next.setMonth(next.getMonth()+1);
                       nextPayDate=next.getFullYear()+"/"+(next.getMonth()+1)+"/"+next.getDate();
                     }
-                    // 契約からの経過月数（ポイント付与回数）
                     var monthCount=0;
                     if(s.startDate){
                       var sd2=new Date(s.startDate);
                       var now=new Date();
                       monthCount=Math.max(0,(now.getFullYear()-sd2.getFullYear())*12+(now.getMonth()-sd2.getMonth()));
                     }
-                    var nextMonthCount=monthCount+1;
                     var planLabel=PLAN_LABEL[s.plan]||s.plan;
                     var pointLabel=planLabel+"プランポイント"+["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"][monthCount]||"";
                     return (
@@ -4131,18 +4128,20 @@ function App() {
                         </div>
                         <div style={{display:"flex",gap:6}}>
                           {PLAN_POINTS[s.plan]>0&&(
-                            <button onClick={async()=>{
+                            <button onClick={()=>{
                               var pts=PLAN_POINTS[s.plan];
-                              await gasRead({action:"addpoints",name:s.name,points:String(pts),reason:pointLabel,recorder:"DANiLO"});
-                              alert(s.name+"に"+pts+"pt付与しました（"+pointLabel+"）");
+                              gasRead({action:"addpoints",name:s.name,points:String(pts),reason:pointLabel,recorder:"DANiLO"}).then(function(){
+                                alert(s.name+"に"+pts+"pt付与しました（"+pointLabel+"）");
+                              });
                             }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #708238",background:"#fff",color:"#708238",cursor:"pointer",fontFamily:"inherit"}}>
                               🎁 ポイント付与
                             </button>
                           )}
-                          <button onClick={async()=>{
+                          <button onClick={()=>{
                             if(!confirm(s.name+"のサブスクをキャンセルしますか？")){return;}
-                            await gasRead({action:"cancelsubscription",name:s.name});
-                            fetchSubscriptions();
+                            gasRead({action:"cancelsubscription",name:s.name}).then(function(){
+                              fetchSubscriptions();
+                            });
                           }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #e74c3c",background:"#fff",color:"#e74c3c",cursor:"pointer",fontFamily:"inherit"}}>
                             解約
                           </button>
