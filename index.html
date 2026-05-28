@@ -4148,6 +4148,7 @@ function App() {
                             if(!confirm(s.name+"のサブスクをキャンセルしますか？")){return;}
                             gasRead({action:"cancelsubscription",name:s.name}).then(function(){
                               fetchSubscriptions();
+                              autoFetch();
                             });
                           }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #e74c3c",background:"#fff",color:"#e74c3c",cursor:"pointer",fontFamily:"inherit"}}>
                             解約
