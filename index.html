@@ -4051,7 +4051,7 @@ function App() {
           🧪 練習会データ {showWorkshop?"▲":"▼"}
         </button>
         {/* サブスク管理（DANiLOのみ） */}
-        {isFromAdmin&&(
+        {page==="admin"&&!isInstructor&&(
           <>
             <button onClick={()=>{setShowSubs(!showSubs);if(!subsLoaded)fetchSubscriptions();}}
               style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a8a9a",background:showSubs?"linear-gradient(135deg,#5a8a9a,#3a6a7a)":"rgba(58,106,122,0.1)",color:showSubs?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
@@ -4121,12 +4121,14 @@ function App() {
                           <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{s.name}</span>
                           <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontWeight:600}}>{s.plan}</span>
                         </div>
-                        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6}}>
-                          <span style={{fontSize:11,color:C.label}}>契約日：{s.startDate}</span>
+                        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                          <span style={{fontSize:11,color:C.label}}>更新日：{s.startDate}</span>
                           <span style={{fontSize:11,color:C.label}}>次回支払：{nextPayDate}</span>
-                          <span style={{fontSize:11,fontWeight:700,color:"#3a6a7a"}}>¥{(PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
                         </div>
-                        <div style={{display:"flex",gap:6}}>
+                        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6,alignItems:"center"}}>
+                          <span style={{fontSize:12,fontWeight:700,color:"#3a6a7a"}}>月額 ¥{(PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
+                        </div>
+                        <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                           {PLAN_POINTS[s.plan]>0&&(
                             <button onClick={()=>{
                               var pts=PLAN_POINTS[s.plan];
@@ -4134,7 +4136,18 @@ function App() {
                                 alert(s.name+"に"+pts+"pt付与しました（"+pointLabel+"）");
                               });
                             }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #708238",background:"#fff",color:"#708238",cursor:"pointer",fontFamily:"inherit"}}>
-                              🎁 ポイント付与
+                              🎁 月次ポイント
+                            </button>
+                          )}
+                          {PLAN_POINTS[s.plan]>0&&(
+                            <button onClick={()=>{
+                              var pts=PLAN_POINTS[s.plan]*3;
+                              var label=planLabel+"プラン一括払いポイント";
+                              gasRead({action:"addpoints",name:s.name,points:String(pts),reason:label,recorder:"DANiLO"}).then(function(){
+                                alert(s.name+"に"+pts+"pt付与しました（"+label+"）");
+                              });
+                            }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #5a8a9a",background:"#fff",color:"#5a8a9a",cursor:"pointer",fontFamily:"inherit"}}>
+                              💰 一括払い（3ヶ月）
                             </button>
                           )}
                           <button onClick={()=>{
@@ -4150,6 +4163,20 @@ function App() {
                     );
                   })
                 )}
+              {/* 合計 */}
+              {subscriptions.length>0&&(
+                <div style={{padding:"10px 0",borderTop:"2px solid "+C.border,marginTop:4}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span style={{fontSize:12,fontWeight:700,color:C.choco}}>次回支払合計</span>
+                    <span style={{fontSize:14,fontWeight:700,color:"#3a6a7a"}}>
+                      ¥{subscriptions.reduce(function(sum,s){
+                        var PLAN_AMOUNT2={"蕾気軽サブスク":2400,"蕾 気軽サブスク":2400,"幹ノーマル":6900,"幹 ノーマル":6900,"幹スペシャル":12900,"幹 スペシャル":12900};
+                        return sum+(PLAN_AMOUNT2[s.plan]||0);
+                      },0).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )}
               </div>
             )}
           </>
