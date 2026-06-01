@@ -2924,6 +2924,11 @@ function App() {
   const [mapPage, setMapPage] = useState(false);
   const [mapMembers, setMapMembers] = useState([]);
   const [showPastScheds, setShowPastScheds] = useState(false);
+  const [audioPlaying, setAudioPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [audioDuration, setAudioDuration] = useState(0);
+  const [audioVolume, setAudioVolume] = useState(0.8);
+  const audioRef = React.useRef(null);
   const [sharedFloatPos, setSharedFloatPos] = useState({x:16,y:60});
   const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
   const [pointNote, setPointNote] = useState("");
@@ -5594,11 +5599,6 @@ function App() {
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
           {/* 限定音源プレイヤー */}
           {(()=>{
-            var audioRef = React.useRef(null);
-            var [audioPlaying, setAudioPlaying] = React.useState(false);
-            var [audioProgress, setAudioProgress] = React.useState(0);
-            var [audioDuration, setAudioDuration] = React.useState(0);
-            var [audioVolume, setAudioVolume] = React.useState(0.8);
             return (
               <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",padding:16,marginBottom:20,position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#1a4fa8,#0e7fa8,#00b8b8)"}}/>
