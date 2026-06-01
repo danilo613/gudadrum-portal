@@ -5598,7 +5598,7 @@ function App() {
         {/* 限定音源プレイヤー */}
         {(()=>{
             return (
-              <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",padding:16,marginBottom:20,position:"relative",overflow:"hidden"}}>
+              <div style={{background:"#ffffff",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",padding:16,marginBottom:20,position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#1a4fa8,#0e7fa8,#00b8b8)"}}/>
                 <div style={{display:"flex",gap:14,alignItems:"center"}}>
                   <div style={{flexShrink:0,width:80,height:80,borderRadius:"var(--border-radius-md)",background:"linear-gradient(135deg,#1a4fa8,#00b8b8)",border:"0.5px solid var(--color-border-tertiary)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
@@ -5611,7 +5611,8 @@ function App() {
                       <span style={{fontSize:10,fontWeight:500,color:"#0e7fa8",background:"rgba(14,127,168,0.12)",padding:"2px 7px",borderRadius:"var(--border-radius-md)"}}>MEMBERS ONLY</span>
                     </div>
                     <div style={{fontSize:9,color:"#0e7fa8",letterSpacing:"0.18em",fontWeight:500,marginBottom:3}}>GUDADRUM ORCHESTRA EXCLUSIVE</div>
-                    <p style={{fontSize:15,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 10px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>祈音〜Inorion〜</p>
+                    <p style={{fontSize:15,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>祈音〜Inorion〜</p>
+                    <p style={{fontSize:11,color:"var(--color-text-secondary)",margin:"0 0 10px"}}>作曲：DANiLO　　音階：響ノ音＆風ノ音</p>
                     <div style={{marginBottom:6}}>
                       <div style={{position:"relative",height:3,background:"var(--color-background-tertiary)",borderRadius:2,marginBottom:4}}>
                         <div style={{height:"100%",width:(audioDuration?(audioProgress/audioDuration*100):0)+"%",background:"linear-gradient(90deg,#1a4fa8,#00b8b8)",borderRadius:2}}/>
