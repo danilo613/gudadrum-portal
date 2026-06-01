@@ -5592,6 +5592,64 @@ function App() {
 
         {/* 演奏診断 */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
+          {/* 限定音源プレイヤー */}
+          {(()=>{
+            var audioRef = React.useRef(null);
+            var [audioPlaying, setAudioPlaying] = React.useState(false);
+            var [audioProgress, setAudioProgress] = React.useState(0);
+            var [audioDuration, setAudioDuration] = React.useState(0);
+            var [audioVolume, setAudioVolume] = React.useState(0.8);
+            return (
+              <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",padding:16,marginBottom:20,position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#1a4fa8,#0e7fa8,#00b8b8)"}}/>
+                <div style={{display:"flex",gap:14,alignItems:"center"}}>
+                  <div style={{flexShrink:0,width:80,height:80,borderRadius:"var(--border-radius-md)",background:"linear-gradient(135deg,#1a4fa8,#00b8b8)",border:"0.5px solid var(--color-border-tertiary)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
+                    <img src="/inorion.png" alt="祈音〜Inorion〜"
+                      style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0}}
+                      onError={function(e){e.target.style.display="none";}}/>
+                  </div>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
+                      <span style={{fontSize:10,fontWeight:500,color:"#0e7fa8",background:"rgba(14,127,168,0.12)",padding:"2px 7px",borderRadius:"var(--border-radius-md)"}}>MEMBERS ONLY</span>
+                    </div>
+                    <div style={{fontSize:9,color:"#0e7fa8",letterSpacing:"0.18em",fontWeight:500,marginBottom:3}}>GUDADRUM ORCHESTRA EXCLUSIVE</div>
+                    <p style={{fontSize:15,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 10px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>祈音〜Inorion〜</p>
+                    <div style={{marginBottom:6}}>
+                      <div style={{position:"relative",height:3,background:"var(--color-background-tertiary)",borderRadius:2,marginBottom:4}}>
+                        <div style={{height:"100%",width:(audioDuration?(audioProgress/audioDuration*100):0)+"%",background:"linear-gradient(90deg,#1a4fa8,#00b8b8)",borderRadius:2}}/>
+                      </div>
+                      <div style={{display:"flex",justifyContent:"space-between"}}>
+                        <span style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{Math.floor(audioProgress/60)+":"+(Math.floor(audioProgress%60)<10?"0":"")+Math.floor(audioProgress%60)}</span>
+                        <span style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{audioDuration?Math.floor(audioDuration/60)+":"+(Math.floor(audioDuration%60)<10?"0":"")+Math.floor(audioDuration%60):"−:−−"}</span>
+                      </div>
+                    </div>
+                    <div style={{display:"flex",alignItems:"center",gap:10}}>
+                      <button onClick={function(){
+                        if(!audioRef.current) return;
+                        if(audioPlaying){ audioRef.current.pause(); setAudioPlaying(false); }
+                        else { audioRef.current.play(); setAudioPlaying(true); }
+                      }} style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#1a4fa8,#00b8b8)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#fff",fontSize:14}}>
+                        {audioPlaying?"⏸":"▶"}
+                      </button>
+                      <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>🔊</span>
+                      <input type="range" min="0" max="1" step="0.05" value={audioVolume}
+                        onChange={function(e){
+                          var v=parseFloat(e.target.value);
+                          setAudioVolume(v);
+                          if(audioRef.current) audioRef.current.volume=v;
+                        }}
+                        style={{flex:1,height:3,accentColor:"#0e7fa8",cursor:"pointer"}}/>
+                    </div>
+                  </div>
+                </div>
+                <audio ref={audioRef} src="/inori_demo.mp3"
+                  onTimeUpdate={function(){if(audioRef.current)setAudioProgress(audioRef.current.currentTime);}}
+                  onLoadedMetadata={function(){if(audioRef.current){setAudioDuration(audioRef.current.duration);audioRef.current.volume=audioVolume;}}}
+                  onEnded={function(){setAudioPlaying(false);setAudioProgress(0);}}/>
+              </div>
+            );
+          })()}
+
           {(()=>{
             // 診断履歴があれば履歴を使用、なければメンバーデータを使用
             const hasDiagHistory = diagHistory.length > 0;
