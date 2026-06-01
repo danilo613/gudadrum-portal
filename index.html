@@ -4448,7 +4448,7 @@ function App() {
                 {loginData.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(l,i){
                   return (
                     <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 4px",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
-                      <span style={{fontSize:11,color:C.label,minWidth:130,flexShrink:0}}>{String(l.date).replace("T"," ").substring(0,16)}</span>
+                      <span style={{fontSize:11,color:C.label,minWidth:130,flexShrink:0}}>{String(l.date||"").substring(0,16)}</span>
                       <span style={{fontSize:12,fontWeight:500,color:C.choco}}>{l.name}</span>
                     </div>
                   );
