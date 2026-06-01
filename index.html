@@ -5595,10 +5595,8 @@ function App() {
           )}
         </div>
 
-        {/* 演奏診断 */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
-          {/* 限定音源プレイヤー */}
-          {(()=>{
+        {/* 限定音源プレイヤー */}
+        {(()=>{
             return (
               <div style={{background:"var(--color-background-primary)",border:"0.5px solid var(--color-border-tertiary)",borderRadius:"var(--border-radius-lg)",padding:16,marginBottom:20,position:"relative",overflow:"hidden"}}>
                 <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#1a4fa8,#0e7fa8,#00b8b8)"}}/>
@@ -5650,6 +5648,8 @@ function App() {
             );
           })()}
 
+        {/* 演奏診断 */}
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
           {(()=>{
             // 診断履歴があれば履歴を使用、なければメンバーデータを使用
             const hasDiagHistory = diagHistory.length > 0;
