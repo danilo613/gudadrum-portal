@@ -2914,6 +2914,7 @@ function App() {
   const [allPointHistory, setAllPointHistory] = useState([]);
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
+  const [showLogins, setShowLogins] = useState(false);
   const [subscriptions, setSubscriptions] = useState([]);
   const [showSubs, setShowSubs] = useState(false);
   const [subsLoaded, setSubsLoaded] = useState(false);
@@ -4433,6 +4434,29 @@ function App() {
             </div>
           );
         })()}
+        {/* ログイン履歴（DANiLOのみ） */}
+        <button onClick={()=>setShowLogins(!showLogins)}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a4a8a",background:showLogins?"linear-gradient(135deg,#7a6aaa,#5a4a8a)":"rgba(90,74,138,0.1)",color:showLogins?"#fff":"#5a4a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          🔐 ログイン履歴 {showLogins?"▲":"▼"}
+        </button>
+        {showLogins&&(
+          <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+            {loginData.length===0?(
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
+            ):(
+              <div style={{maxHeight:400,overflowY:"auto"}}>
+                {loginData.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(l,i){
+                  return (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 4px",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
+                      <span style={{fontSize:11,color:C.label,minWidth:130,flexShrink:0}}>{String(l.date).replace("T"," ").substring(0,16)}</span>
+                      <span style={{fontSize:12,fontWeight:500,color:C.choco}}>{l.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {showWorkshop && (
           <div style={{marginBottom:16}}>
             {!workshopLoaded ? (
