@@ -2762,7 +2762,7 @@ function PracticeCard({ sessions, initialAnswers, memberName, onAnswer, C }) {
   return (
     <div style={{padding:"0 16px 16px"}}>
       {futureSessions.length===0?(
-        <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>予定されている練習会はありません</p>
+        <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>{sessions.length===0?"データ取得中...":"予定されている練習会はありません"}</p>
       ):(
         futureSessions.map(function(session, si){
           var myAnswer = answers.find(function(a){ return a.name===memberName && a.date===session.date; });
