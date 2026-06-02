@@ -2312,17 +2312,18 @@ function renderSideGrid2(barIdx, side){
       {/* セクション情報 + 開始時間 */}
       <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:8,gap:2}}>
         <p style={{fontSize:16,fontWeight:700,color:C.label,margin:0}}>{sectionLabel}</p>
-        {!canEdit&&secTime&&(
-          <p style={{fontSize:11,color:C.label,margin:0,opacity:0.7}}>{secTime}〜</p>
-        )}
-        {canEdit?(
+        {!canEdit&&(()=>{
+          var totalBars=parseInt(bars||8)*parseInt(repeat||1);
+          return <p style={{fontSize:10,color:C.label,margin:0,opacity:0.7}}>{totalBars}小節{secTime?" / "+secTime+"〜":""}</p>;
+        })()}
+        {canEdit&&(
           <div style={{display:"flex",alignItems:"center",gap:4}}>
             <span style={{fontSize:10,color:C.label}}>開始時間</span>
             <input type="text" placeholder="0:05〜" value={secTime}
               onChange={function(e){setSecTime(e.target.value);if(onStartTimeChange)onStartTimeChange(e.target.value);}}
               style={{width:60,padding:"2px 6px",borderRadius:6,border:"0.5px solid #d0cec8",fontSize:11,fontFamily:"inherit",color:C.choco}}/>
           </div>
-        ):(secTime?<p style={{fontSize:10,color:C.label}}>{secTime}</p>:null)}
+        )}
       </div>
 
       {/* 再生コントロール（ドラッグ可能） */}
@@ -2433,7 +2434,7 @@ function renderSideGrid2(barIdx, side){
         {["4分","4分裏","8分","8分裏"].map(function(label,i){
           var mode=[4,"4u",8,"8u"][i];
           var noteIcon={"4分":"♩","4分裏":"♩","8分":"♪","8分裏":"♪"}[label]||"♩";
-          return <button key={mode} onClick={function(){setMetroMode(mode);if(!metroOn)setMetroOn(true);onMetroChange&&onMetroChange(true,mode);}}
+          return <button key={mode} onClick={function(){metroModeRef.current=mode;setMetroModeLocal(mode);metroOnRef.current=true;setMetroOnLocal(true);if(onMetroChange)onMetroChange(true,mode);}}
             style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
               background:sharedMetroOn&&sharedMetroMode===mode?"#2C2A28":"#fff",
               color:sharedMetroOn&&sharedMetroMode===mode?"#fff":C.label,fontSize:10,cursor:"pointer"}}>
