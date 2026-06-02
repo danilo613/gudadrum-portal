@@ -2433,7 +2433,7 @@ function renderSideGrid2(barIdx, side){
         {["4分","4分裏","8分","8分裏"].map(function(label,i){
           var mode=[4,"4u",8,"8u"][i];
           var noteIcon={"4分":"♩","4分裏":"♩","8分":"♪","8分裏":"♪"}[label]||"♩";
-          return <button key={mode} onClick={function(){onMetroChange&&onMetroChange(true,mode);}}
+          return <button key={mode} onClick={function(){setMetroMode(mode);if(!metroOn)setMetroOn(true);onMetroChange&&onMetroChange(true,mode);}}
             style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
               background:sharedMetroOn&&sharedMetroMode===mode?"#2C2A28":"#fff",
               color:sharedMetroOn&&sharedMetroMode===mode?"#fff":C.label,fontSize:10,cursor:"pointer"}}>
