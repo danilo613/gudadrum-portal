@@ -2780,7 +2780,7 @@ function PracticeCard({ sessions, answers, memberName, onSubmit, onRefresh, C })
                   var isSelected = myAnswer&&myAnswer.answer===ans;
                   var colors = {"○":"#3a7a3a","△":"#8a6a00","×":"#8a2a2a"};
                   return (
-                    <button key={ans} onClick={function(){ onSubmit(session.date, ans); }}
+                    <button key={ans} onClick={function(){ console.log("PracticeCard click:", session.date, ans); onSubmit(session.date, ans); }}
                       style={{padding:"4px 16px",borderRadius:8,border:"1.5px solid "+colors[ans],
                         background:isSelected?colors[ans]:"#fff",
                         color:isSelected?"#fff":colors[ans],
