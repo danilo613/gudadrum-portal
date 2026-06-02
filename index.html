@@ -958,7 +958,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
-    if(onLoopComplete){isQueuePlayRef&&(isQueuePlayRef.current=false);}
+    if(onLoopComplete){}
   }
 
   function handlePlay(){
@@ -1681,7 +1681,7 @@ function renderSideGrid2(barIdx, side){
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
-    if(onLoopComplete){isQueuePlayRef&&(isQueuePlayRef.current=false);}
+    if(onLoopComplete){}
   }
 
 
