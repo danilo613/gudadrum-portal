@@ -5490,10 +5490,8 @@ function App() {
             )}
           </div>
 
-          {/* ゲストミュージシャン情報 */}
+          {/* 練習会日程調整 */}
           <div style={boxStyle}>
-            {/* 練習会日程調整 */}
-            <div style={boxStyle}>
               {headerBtn("📅 練習会への参加確認", practiceOpen, ()=>{setPracticeOpen(!practiceOpen);if(!practiceLoaded)fetchPractice();})}
               {practiceOpen&&(()=>{
                 var futureSessions=practiceSessions.filter(function(s){return new Date(s.date)>=new Date(new Date().toDateString());});
@@ -5563,6 +5561,8 @@ function App() {
                 );
               })()}
             </div>
+          {/* ゲストミュージシャン情報 */}
+          <div style={boxStyle}>
             {headerBtn("🎶 壱祈音〜Inorion〜ゲストミュージシャン情報", inorionGuestOpen, ()=>setInorionGuestOpen(!inorionGuestOpen))}
             {inorionGuestOpen && (
               <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
