@@ -951,7 +951,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    // 最初のtickを即時実行してから定期実行
+    setTimeout(function(){
+      if(!iidRef.current&&!stepRef.current===undefined) return;
+      tick();
+      iidRef.current=setInterval(tick,ms);
+    },0);
   }
 
   function doStop(){
@@ -1674,7 +1680,13 @@ function renderSideGrid2(barIdx, side){
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    // 最初のtickを即時実行してから定期実行
+    setTimeout(function(){
+      if(!iidRef.current&&!stepRef.current===undefined) return;
+      tick();
+      iidRef.current=setInterval(tick,ms);
+    },0);
   }
 
   function doStop(){
