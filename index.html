@@ -945,6 +945,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
+    tick(); // 頭の音を即時再生
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
@@ -1667,6 +1668,7 @@ function renderSideGrid2(barIdx, side){
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
+    tick(); // 頭の音を即時再生
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
@@ -2943,7 +2945,8 @@ function App() {
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
   const [showLogins, setShowLogins] = useState(false);
-  const [playerMode, setPlayerMode] = useState("single"); // "single" or "queue"
+  const [playerMode, setPlayerMode] = useState("single");
+  const [iridescenceScale, setIridescenceScale] = useState("dreamy"); // "dreamy"=響ノ音 "funenone"=秘ノ音 // "single" or "queue"
   const [subscriptions, setSubscriptions] = useState([]);
   const [showSubs, setShowSubs] = useState(false);
   const [subsLoaded, setSubsLoaded] = useState(false);
@@ -3829,6 +3832,26 @@ function App() {
             </button>
           ))}
         </div>
+        {/* iridescenceスケール切り替え */}
+        {currentScoreId==="iridescence"&&(
+          <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center"}}>
+            <span style={{fontSize:11,color:C.label,fontWeight:600}}>音階：</span>
+            <button onClick={()=>setIridescenceScale("dreamy")}
+              style={{padding:"4px 12px",borderRadius:8,border:"none",
+                background:iridescenceScale==="dreamy"?"#5845C0":"rgba(88,69,192,0.12)",
+                color:iridescenceScale==="dreamy"?"#fff":"#5845C0",
+                fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              響ノ音
+            </button>
+            <button onClick={()=>setIridescenceScale("funenone")}
+              style={{padding:"4px 12px",borderRadius:8,border:"none",
+                background:iridescenceScale==="funenone"?"#708238":"rgba(112,130,56,0.12)",
+                color:iridescenceScale==="funenone"?"#fff":"#708238",
+                fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              秘ノ音
+            </button>
+          </div>
+        )}
         {/* モード切り替え */}
         <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center"}}>
           <button onClick={()=>{setPlayerMode("single");setSelectedSecs([]);}}
@@ -3894,7 +3917,7 @@ function App() {
           patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
           canEdit={false}
           onSave={saveScorePattern}
-          scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori")?"dreamy":"funenone"}
+          scale={(currentScoreId==="iridescence")?iridescenceScale:(currentScoreId==="dreamy"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori")?"dreamy":"funenone"}
           subdivProp={(function(){var sec=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreSection;});return sec?sec[2]:"16th";})()}
           sharedBpm={sharedBpm} onBpmChange={v=>{setSharedBpm(v);}}
           sharedMetroOn={sharedMetroOn} sharedMetroMode={sharedMetroMode}
