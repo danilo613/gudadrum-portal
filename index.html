@@ -466,7 +466,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroOnS=useState(sharedMetroOn||false); var metroOn=metroOnS[0]; var setMetroOnLocal=metroOnS[1];
   var setMetroOn=function(v){ var val=typeof v==="function"?v(metroOnS[0]):v; setMetroOnLocal(val); if(onMetroChange) onMetroChange({metroOn:val}); };
   var metroModeS=useState(sharedMetroMode||4); var metroMode=metroModeS[0]; var setMetroModeLocal=metroModeS[1];
-  var setMetroMode=function(v){ var val=typeof v==="function"?v(metroModeS[0]):v; setMetroModeLocal(val); if(onMetroChange) onMetroChange({metroMode:val}); };
+  var setMetroMode=function(v){ var val=typeof v==="function"?v(metroModeS[0]):v; setMetroModeLocal(val); metroModeRef.current=val; if(onMetroChange) onMetroChange({metroMode:val}); };
   var metroVolS=useState(0.3); var metroVol=metroVolS[0]; var setMetroVol=metroVolS[1];
   var metroAccentS=useState(true); var metroAccent=metroAccentS[0]; var setMetroAccent=metroAccentS[1];
   var lrOnS=useState(true); var lrOn=lrOnS[0]; var setLrOn=lrOnS[1];
