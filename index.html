@@ -2745,55 +2745,28 @@ function renderSideGrid2(barIdx, side){
 }
 
 
-function PracticeCard({ memberName, onAnswer, C }) {
-  var [sessions, setSessions] = React.useState([]);
-  var [answers, setAnswers] = React.useState([]);
-  var [loaded, setLoaded] = React.useState(false);
-
-  function loadData() {
-    Promise.all([
-      new Promise(function(resolve){
-        var cb="psCb_"+Date.now();
-        window[cb]=function(d){delete window[cb];resolve(d);};
-        var s=document.createElement("script");
-        s.src="https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=getpracticesessions&callback="+cb;
-        s.onerror=function(){delete window[cb];resolve({});};
-        document.body.appendChild(s);
-      }),
-      new Promise(function(resolve){
-        var cb="paCb_"+Date.now();
-        window[cb]=function(d){delete window[cb];resolve(d);};
-        var s=document.createElement("script");
-        s.src="https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=getpracticeanswers&callback="+cb;
-        s.onerror=function(){delete window[cb];resolve({});};
-        document.body.appendChild(s);
-      })
-    ]).then(function(results){
-      if(results[0].sessions) setSessions(results[0].sessions);
-      if(results[1].answers) setAnswers(results[1].answers);
-      setLoaded(true);
-    });
-  }
-
-  React.useEffect(function(){ loadData(); }, []);
-
+function PracticeCard({ sessions, answers, loaded, memberName, onAnswer, onRefresh, C }) {
+  var [localAnswers, setLocalAnswers] = React.useState(answers||[]);
+  React.useEffect(function(){ setLocalAnswers(answers||[]); }, [answers]);
   var today = new Date(new Date().toDateString());
   var futureSessions = sessions.filter(function(s){ return new Date(s.date) >= today; });
   function handleAnswer(date, ans) {
-    setAnswers(function(prev){
+    setLocalAnswers(function(prev){
       var next = prev.filter(function(a){ return !(a.name===memberName && a.date===date); });
       next.push({name:memberName, date:date, answer:ans});
       return next;
     });
     if(onAnswer) onAnswer(date, ans);
   }
+  var answers = localAnswers;
+  var loaded2 = loaded;
   return (
     <div style={{padding:"0 16px 16px"}}>
       <div style={{display:"flex",justifyContent:"flex-end",marginBottom:8}}>
-        <button onClick={loadData} style={{fontSize:10,color:"#3a6a7a",background:"none",border:"0.5px solid #3a6a7a",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>更新</button>
+        <button onClick={onRefresh} style={{fontSize:10,color:"#3a6a7a",background:"none",border:"0.5px solid #3a6a7a",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>更新</button>
       </div>
       {futureSessions.length===0?(
-        <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>{!loaded?"データ取得中...":"予定されている練習会はありません"}</p>
+        <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>{!loaded2?"データ取得中...":"予定されている練習会はありません"}</p>
       ):(
         futureSessions.map(function(session, si){
           var myAnswer = answers.find(function(a){ return a.name===memberName && a.date===session.date; });
@@ -5598,10 +5571,14 @@ function App() {
               {headerBtn("📅 練習会への参加確認", practiceOpen, ()=>{setPracticeOpen(!practiceOpen);if(!practiceLoaded)fetchPractice();})}
               {practiceOpen&&(
                 <PracticeCard
+                  sessions={practiceSessions}
+                  answers={practiceAnswers}
+                  loaded={practiceLoaded}
                   memberName={m.name}
                   onAnswer={function(date, ans){
-                    gasWrite({action:"submitpracticeanswer",name:m.name,date:date,answer:ans});
+                    gasWrite({action:"submitpracticeanswer",name:m.name,date:date,answer:ans}).then(function(){fetchPractice();});
                   }}
+                  onRefresh={fetchPractice}
                   C={C}
                 />
               )}
@@ -5996,7 +5973,7 @@ function App() {
 
         {/* 壱祈音専用ページボタン（出演者のみ） */}
         {inorionData.some(r=>r.name===m.name) && (
-          <button onClick={()=>{setInorionPage(true);window.scrollTo(0,0);}}
+          <button onClick={()=>{setInorionPage(true);window.scrollTo(0,0);fetchPractice();}}
             style={{...BTN_STYLE, padding:"12px", background:"linear-gradient(135deg,#c87aaa,#8a4a6a)", boxShadow:"0 4px 12px rgba(138,74,106,0.4)", border:"none", width:"100%", marginBottom:0}}>
             🎭 壱祈音〜Inorion〜 出演メンバー専用ページ
           </button>
