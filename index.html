@@ -2783,7 +2783,7 @@ function PracticeCard({ sessions, answers, loaded, memberName, onAnswer, onRefre
             <div key={si} style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"12px",marginBottom:8}}>
               <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
                 <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{dateStr}（{dayStr}）</span>
-                <span style={{fontSize:11,color:C.label}}>{session.time}</span>
+                <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{session.time}</span>
               </div>
               <p style={{fontSize:13,fontWeight:600,color:"#3a6a7a",marginBottom:6}}>{session.type}</p>
               {session.note&&<p style={{fontSize:11,color:C.label,marginBottom:8}}>{session.note}</p>}
