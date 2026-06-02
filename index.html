@@ -5493,7 +5493,7 @@ function App() {
           {/* ゲストミュージシャン情報 */}
           <div style={boxStyle}>
             {/* 練習会日程調整 */}
-            <div style={{marginBottom:4}}>
+            <div style={boxStyle}>
               <button onClick={()=>{setPracticeOpen(!practiceOpen);if(!practiceLoaded)fetchPractice();}}
                 style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
                 <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a",letterSpacing:"0.05em"}}>📅 練習会への参加確認</span>
