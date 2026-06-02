@@ -2964,7 +2964,10 @@ function App() {
   const [showAllScheds, setShowAllScheds] = useState(false);
   const [showLogins, setShowLogins] = useState(false);
   const [playerMode, setPlayerMode] = useState("single");
-  const [iridescenceScale, setIridescenceScale] = useState("arcane"); // "arcane"=響ノ音 "enigma"=秘ノ音 // "single" or "queue"
+  const [iridescenceScale, setIridescenceScale] = useState("arcane");
+  const [practiceSessions, setPracticeSessions] = useState([]);
+  const [practiceAnswers, setPracticeAnswers] = useState([]);
+  const [practiceLoaded, setPracticeLoaded] = useState(false); // "arcane"=響ノ音 "enigma"=秘ノ音 // "single" or "queue"
   const [subscriptions, setSubscriptions] = useState([]);
   const [showSubs, setShowSubs] = useState(false);
   const [subsLoaded, setSubsLoaded] = useState(false);
@@ -3176,6 +3179,18 @@ function App() {
     try {
       const res = await gasRead({ action: "getsubscriptions" });
       if (res.subscriptions) { setSubscriptions(res.subscriptions); setSubsLoaded(true); }
+    } catch(e) {}
+  }
+
+  async function fetchPractice() {
+    try {
+      const [s, a] = await Promise.all([
+        gasRead({ action: "getpracticesessions" }),
+        gasRead({ action: "getpracticeanswers" })
+      ]);
+      if (s.sessions) setPracticeSessions(s.sessions);
+      if (a.answers) setPracticeAnswers(a.answers);
+      setPracticeLoaded(true);
     } catch(e) {}
   }
 
@@ -5476,6 +5491,86 @@ function App() {
 
           {/* ゲストミュージシャン情報 */}
           <div style={boxStyle}>
+            {/* 練習会日程調整 */}
+            {(()=>{
+              var myEntries2 = inorionData.filter(r=>r.name===m.name);
+              var isInorionMember = myEntries2.length > 0;
+              if(!isInorionMember) return null;
+              var futureSessions = practiceSessions.filter(function(s){
+                return new Date(s.date) >= new Date(new Date().toDateString());
+              });
+              if(futureSessions.length===0 && !practiceLoaded) return (
+                <button onClick={()=>fetchPractice()}
+                  style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+                  📅 練習会日程を読み込む
+                </button>
+              );
+              return (
+                <div style={{marginBottom:12}}>
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                    <span style={{fontSize:13,fontWeight:700,color:"#3a6a7a"}}>📅 練習会への参加確認</span>
+                    <button onClick={()=>fetchPractice()} style={{fontSize:10,color:"#3a6a7a",background:"none",border:"0.5px solid #3a6a7a",borderRadius:6,padding:"2px 8px",cursor:"pointer"}}>更新</button>
+                  </div>
+                  {futureSessions.length===0?(
+                    <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>予定されている練習会はありません</p>
+                  ):(
+                    futureSessions.map(function(session, si){
+                      var myAnswer = practiceAnswers.find(function(a){ return a.name===m.name && a.date===session.date; });
+                      var answers = {
+                        "○": practiceAnswers.filter(function(a){ return a.date===session.date && a.answer==="○"; }).map(function(a){ return a.name; }),
+                        "△": practiceAnswers.filter(function(a){ return a.date===session.date && a.answer==="△"; }).map(function(a){ return a.name; }),
+                        "×": practiceAnswers.filter(function(a){ return a.date===session.date && a.answer==="×"; }).map(function(a){ return a.name; }),
+                      };
+                      var d = new Date(session.date);
+                      var dateStr = d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日";
+                      var weekDays = ["日","月","火","水","木","金","土"];
+                      var dayStr = weekDays[d.getDay()]+"曜日";
+                      return (
+                        <div key={si} style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"12px",marginBottom:8}}>
+                          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:8}}>
+                            <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{dateStr}（{dayStr}）</span>
+                            <span style={{fontSize:11,color:C.label}}>{session.time}</span>
+                            <span style={{fontSize:10,padding:"1px 6px",borderRadius:4,background:"rgba(58,106,122,0.12)",color:"#3a6a7a",fontWeight:600}}>{session.type}</span>
+                          </div>
+                          {session.note&&<p style={{fontSize:11,color:C.label,marginBottom:8}}>{session.note}</p>}
+                          {/* 回答ボタン */}
+                          <div style={{display:"flex",gap:6,marginBottom:10}}>
+                            {["○","△","×"].map(function(ans){
+                              var isSelected = myAnswer&&myAnswer.answer===ans;
+                              var colors = {"○":"#3a7a3a","△":"#8a6a00","×":"#8a2a2a"};
+                              return (
+                                <button key={ans} onClick={function(){
+                                  gasRead({action:"submitpracticeanswer",name:m.name,date:session.date,answer:ans}).then(function(){
+                                    fetchPractice();
+                                  });
+                                }} style={{
+                                  padding:"4px 16px",borderRadius:8,border:"1.5px solid "+colors[ans],
+                                  background:isSelected?colors[ans]:"#fff",
+                                  color:isSelected?"#fff":colors[ans],
+                                  fontSize:16,fontWeight:700,cursor:"pointer",fontFamily:"inherit"
+                                }}>{ans}</button>
+                              );
+                            })}
+                            {myAnswer&&<span style={{fontSize:11,color:C.label,alignSelf:"center"}}>回答済み</span>}
+                          </div>
+                          {/* 集計 */}
+                          {["○","△","×"].map(function(ans){
+                            if(answers[ans].length===0) return null;
+                            var colors = {"○":"#3a7a3a","△":"#8a6a00","×":"#8a2a2a"};
+                            return (
+                              <div key={ans} style={{display:"flex",alignItems:"flex-start",gap:6,marginBottom:4}}>
+                                <span style={{fontSize:13,fontWeight:700,color:colors[ans],minWidth:20}}>{ans}</span>
+                                <span style={{fontSize:11,color:C.label,flex:1}}>{answers[ans].join("・")}（{answers[ans].length}人）</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              );
+            })()}
             {headerBtn("🎶 壱祈音〜Inorion〜ゲストミュージシャン情報", inorionGuestOpen, ()=>setInorionGuestOpen(!inorionGuestOpen))}
             {inorionGuestOpen && (
               <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
