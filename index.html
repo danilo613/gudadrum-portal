@@ -2521,6 +2521,18 @@ function renderSideGrid2(barIdx, side){
             </button>
           </div>
         )}
+        {!canEdit&&(onPrintThis||onPrintAll)&&(
+          <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+            {onPrintThis&&<button onClick={onPrintThis}
+              style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              🖨 このセクション
+            </button>}
+            {onPrintAll&&<button onClick={onPrintAll}
+              style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+              🖨 全セクション
+            </button>}
+          </div>
+        )}
       </div>
       </div>
 
@@ -2931,6 +2943,7 @@ function App() {
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
   const [showLogins, setShowLogins] = useState(false);
+  const [playerMode, setPlayerMode] = useState("single"); // "single" or "queue"
   const [subscriptions, setSubscriptions] = useState([]);
   const [showSubs, setShowSubs] = useState(false);
   const [subsLoaded, setSubsLoaded] = useState(false);
@@ -3817,30 +3830,53 @@ function App() {
             </button>
           ))}
         </div>
-        <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"center",marginBottom:4}}>
-          <button onClick={()=>{var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(s=>s[0]);setSelectedSecs(all);setScoreSection(all[0]);}}
-            style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>全選択</button>
-          <button onClick={()=>{setSelectedSecs([]);setIsQueuePlay(false);isQueuePlayRef.current=false;}}
-            style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>解除</button>
-          <span style={{fontSize:10,color:C.label}}>｜ セクションを選択して再生</span>
+        {/* モード切り替え */}
+        <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center"}}>
+          <button onClick={()=>{setPlayerMode("single");setSelectedSecs([]);}}
+            style={{padding:"5px 14px",borderRadius:20,border:"none",
+              background:playerMode==="single"?"#3a6a7a":"rgba(58,106,122,0.12)",
+              color:playerMode==="single"?"#fff":"#3a6a7a",
+              fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+            🔁 単体再生
+          </button>
+          <button onClick={()=>{setPlayerMode("queue");setSelectedSecs([]);}}
+            style={{padding:"5px 14px",borderRadius:20,border:"none",
+              background:playerMode==="queue"?"#708238":"rgba(112,130,56,0.12)",
+              color:playerMode==="queue"?"#fff":"#708238",
+              fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+            ▶▶ 連続再生
+          </button>
+          {playerMode==="queue"&&(
+            <>
+              <button onClick={()=>{var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(s=>s[0]);setSelectedSecs(all);setScoreSection(all[0]);}}
+                style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>全選択</button>
+              <button onClick={()=>{setSelectedSecs([]);}}
+                style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>解除</button>
+            </>
+          )}
         </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"flex-start"}}>
           {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
             <button key={key} onClick={()=>{
-              setSelectedSecs(function(prev){
-                if(prev.includes(key)){
-                  var next=prev.filter(k=>k!==key);
-                  if(scoreSection===key && next.length>0) setScoreSection(next[next.length-1]);
-                  return next;
-                } else {
-                  setScoreSection(key);
-                  return [...prev, key];
-                }
-              });
+              if(playerMode==="single"){
+                setScoreSection(key);
+                setSelectedSecs([key]);
+              } else {
+                setSelectedSecs(function(prev){
+                  if(prev.includes(key)){
+                    var next=prev.filter(k=>k!==key);
+                    if(scoreSection===key && next.length>0) setScoreSection(next[next.length-1]);
+                    return next;
+                  } else {
+                    setScoreSection(key);
+                    return [...prev, key];
+                  }
+                });
+              }
             }}
               style={{padding:"5px 12px",borderRadius:8,
-                border:selectedSecs.includes(key)?"2px solid #708238":"0.5px solid "+C.border,
-                background:scoreSection===key?"#708238":selectedSecs.includes(key)?"rgba(112,130,56,0.15)":"#fff",
+                border:playerMode==="queue"&&selectedSecs.includes(key)?"2px solid #708238":"0.5px solid "+C.border,
+                background:scoreSection===key?"#708238":playerMode==="queue"&&selectedSecs.includes(key)?"rgba(112,130,56,0.15)":"#fff",
                 color:scoreSection===key?"#fff":C.label,
                 fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
               {lbl}
@@ -3880,7 +3916,7 @@ function App() {
           onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
           isQueuePlaying={isQueuePlay}
           autoPlay={isQueuePlay}
-          onQueueStart={selectedSecs.length>0?function(){
+          onQueueStart={playerMode==="queue"&&selectedSecs.length>0?function(){
             var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
             var queue=sections.filter(s=>selectedSecs.includes(s[0])).map(s=>s[0]);
             playQueueRef.current=queue;
@@ -3893,7 +3929,7 @@ function App() {
             // セクションが異なる場合のみsetScoreSectionを呼ぶ
             if(queue[startIdx]!==scoreSection) setScoreSection(queue[startIdx]);
           }:null}
-          onLoopComplete={selectedSecs.length===1?function(){
+          onLoopComplete={playerMode==="single"?function(){
             return true;
           }:isQueuePlay?function(){
             var nextIdx=playQueueIdxRef.current+1;
@@ -6414,7 +6450,7 @@ function App() {
                     if(headBell!==undefined) setSharedHeadBell(headBell);
                   }}
                   onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
-                  onQueueStart={selectedSecs.length>0?function(){
+                  onQueueStart={playerMode==="queue"&&selectedSecs.length>0?function(){
                     var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
                     var queue=sections.filter(function(s){return selectedSecs.includes(s[0]);}).map(function(s){return s[0];});
                     playQueueRef.current=queue;
