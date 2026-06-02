@@ -623,6 +623,18 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   },[sectionKey]);
 
+  // 再マウント時にautoPlayならば自動再生
+  useEffect(function(){
+    if(autoPlay){
+      initAudio(function(){
+        stepRef.current=0;
+        setPlaying(true);
+        doStart();
+      });
+    }
+    return function(){ if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;} };
+  },[]);
+
 
 
   useEffect(function(){
@@ -3864,10 +3876,14 @@ function App() {
             var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
             var queue=sections.filter(s=>selectedSecs.includes(s[0])).map(s=>s[0]);
             playQueueRef.current=queue;
-            playQueueIdxRef.current=0;
+            // 現在のセクションがキューに含まれていれば、そこから開始
+            var startIdx=queue.indexOf(scoreSection);
+            if(startIdx===-1) startIdx=0;
+            playQueueIdxRef.current=startIdx;
             isQueuePlayRef.current=true;
             setIsQueuePlay(true);
-            setScoreSection(queue[0]);
+            // セクションが異なる場合のみsetScoreSectionを呼ぶ
+            if(queue[startIdx]!==scoreSection) setScoreSection(queue[startIdx]);
           }:null}
           onLoopComplete={selectedSecs.length===1?function(){
             return true;
