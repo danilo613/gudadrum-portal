@@ -5560,6 +5560,7 @@ function App() {
               {headerBtn("📅 練習会への参加確認", practiceOpen, ()=>{setPracticeOpen(!practiceOpen);if(!practiceLoaded)fetchPractice();})}
               {practiceOpen&&(
                 <PracticeCard
+                  key={practiceAnswers.length}
                   sessions={practiceSessions}
                   answers={practiceAnswers}
                   memberName={m.name}
