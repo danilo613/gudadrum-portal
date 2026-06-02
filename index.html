@@ -3920,14 +3920,11 @@ function App() {
             var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
             var queue=sections.filter(s=>selectedSecs.includes(s[0])).map(s=>s[0]);
             playQueueRef.current=queue;
-            // 現在のセクションがキューに含まれていれば、そこから開始
-            var startIdx=queue.indexOf(scoreSection);
-            if(startIdx===-1) startIdx=0;
-            playQueueIdxRef.current=startIdx;
+            // 常にキューの先頭から開始
+            playQueueIdxRef.current=0;
             isQueuePlayRef.current=true;
             setIsQueuePlay(true);
-            // セクションが異なる場合のみsetScoreSectionを呼ぶ
-            if(queue[startIdx]!==scoreSection) setScoreSection(queue[startIdx]);
+            setScoreSection(queue[0]);
           }:null}
           onLoopComplete={playerMode==="single"?function(){
             return true;
