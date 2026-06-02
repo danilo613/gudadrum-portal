@@ -3253,10 +3253,11 @@ function App() {
         gasRead({ action: "getpracticesessions" }),
         gasRead({ action: "getpracticeanswers" })
       ]);
+      console.log("fetchPractice sessions:", s.sessions&&s.sessions.length, "answers:", a.answers&&a.answers.length);
       if (s.sessions) setPracticeSessions(s.sessions);
       if (a.answers) setPracticeAnswers(a.answers);
       setPracticeLoaded(true);
-    } catch(e) {}
+    } catch(e) { console.error("fetchPractice error:", e); }
   }
 
   async function fetchMemberMap() {
