@@ -889,9 +889,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(onLoopCompleteRef.current) {
         var cont=onLoopCompleteRef.current();
         if(!cont){ doStop(); return; }
-        // 次のセクションへ切り替える場合もdimAllでクリーンに止める
-        if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-        dimAll();
+
       } else if(onSectionEndRef.current) {
         onSectionEndRef.current();
       }
@@ -954,10 +952,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
-    tick();
-    iidRef.current=setInterval(tick,ms);
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
   function doStop(){
@@ -1618,9 +1613,7 @@ function renderSideGrid2(barIdx, side){
       if(onLoopCompleteRef.current) {
         var cont=onLoopCompleteRef.current();
         if(!cont){ doStop(); return; }
-        // 次のセクションへ切り替える場合もdimAllでクリーンに止める
-        if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-        dimAll();
+
       } else if(onSectionEndRef.current) {
         onSectionEndRef.current();
       }
@@ -1683,10 +1676,7 @@ function renderSideGrid2(barIdx, side){
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
-    tick();
-    iidRef.current=setInterval(tick,ms);
+    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
   function doStop(){
