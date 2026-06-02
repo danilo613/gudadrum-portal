@@ -1033,7 +1033,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       +svgHtml
       +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
       +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
-      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節 × '+repeat+'回 / '+(subdiv==="16th"?"16分":"三連")+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節</div>'
       +'</div></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
       +'</body></html>');
@@ -1749,7 +1749,7 @@ function renderSideGrid2(barIdx, side){
       +svgHtml
       +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
       +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
-      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節 × '+repeat+'回 / '+(subdiv==="16th"?"16分":"三連")+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節</div>'
       +'</div></div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
       +'</body></html>');
@@ -3489,8 +3489,7 @@ function App() {
       +'<div style="font-size:12px;color:#888;margin-bottom:8px">作曲：DANiLO</div>'
       +'<div style="margin-bottom:10px;line-height:2">'+flowHtml+'</div>'
       +'<div style="font-size:22px;font-weight:700;color:#333;margin-bottom:2px">'+secLabel+'</div>'
-      +(st?'<div style="font-size:13px;color:#888;margin-bottom:4px">'+st+'〜</div>':'')
-      +'<div style="font-size:11px;color:#aaa;margin-bottom:16px">'+nb+'小節 / '+(nt==="16th"?"16分":"三連")+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin-bottom:4px">'+nb+'小節</div>'+(st?'<div style="font-size:11px;color:#aaa;margin-bottom:16px">'+st+'〜</div>':'<div style="margin-bottom:16px"></div>')
       +'<div style="display:flex;justify-content:center;margin-bottom:16px">'+svgHtml+'</div>'
       +'<div style="display:flex;flex-wrap:wrap;justify-content:center;gap:2px;page-break-inside:avoid">'+barsHtml+'</div>'
       +footer
