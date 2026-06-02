@@ -912,6 +912,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       var doAcc=s12===0&&metroAccentRef.current;
       if(subdivRef.current==="16th"){
         if(m===4&&s12%4===0)woodClick(doAcc);
+        else if(m==="4u"&&s12%4===2)woodClick(doAcc);
         else if(m===8&&s12%2===0)woodClick(doAcc);
         else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
       } else {
@@ -1633,6 +1634,7 @@ function renderSideGrid2(barIdx, side){
       var doAcc=s12===0&&metroAccentRef.current;
       if(subdivRef.current==="16th"){
         if(m===4&&s12%4===0)woodClick(doAcc);
+        else if(m==="4u"&&s12%4===2)woodClick(doAcc);
         else if(m===8&&s12%2===0)woodClick(doAcc);
         else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
       } else {
@@ -2428,13 +2430,14 @@ function renderSideGrid2(barIdx, side){
         <div onClick={function(){onMetroChange&&onMetroChange(!sharedMetroOn,sharedMetroMode);}} style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",userSelect:"none"}}>
           {Sw(sharedMetroOn)}<span style={{fontSize:10,color:C.label}}>{sharedMetroOn?"ON":"OFF"}</span>
         </div>
-        {["4分","8分","裏"].map(function(label,i){
-          var mode=[4,8,"8u"][i];
+        {["4分","4分裏","8分","8分裏"].map(function(label,i){
+          var mode=[4,"4u",8,"8u"][i];
+          var noteIcon={"4分":"♩","4分裏":"♩","8分":"♪","8分裏":"♪"}[label]||"♩";
           return <button key={mode} onClick={function(){onMetroChange&&onMetroChange(true,mode);}}
             style={{padding:"2px 8px",borderRadius:6,border:"0.5px solid #d0cec8",
               background:sharedMetroOn&&sharedMetroMode===mode?"#2C2A28":"#fff",
               color:sharedMetroOn&&sharedMetroMode===mode?"#fff":C.label,fontSize:10,cursor:"pointer"}}>
-            ♩ {label}
+            {noteIcon} {label}
           </button>;
         })}
         <span style={{width:1,height:16,background:"#d0cec8",display:"inline-block",margin:"0 2px"}}/>
