@@ -5563,9 +5563,11 @@ function App() {
                   answers={practiceAnswers}
                   memberName={m.name}
                   onSubmit={function(date, ans){
-                    gasWrite({action:"submitpracticeanswer",name:m.name,date:date,answer:ans}).then(function(){
+                    console.log("onSubmit called:", m.name, date, ans);
+                    gasWrite({action:"submitpracticeanswer",name:m.name,date:date,answer:ans}).then(function(r){
+                      console.log("gasWrite result:", r);
                       fetchPractice();
-                    });
+                    }).catch(function(e){console.error("gasWrite error:", e);});
                   }}
                   onRefresh={fetchPractice}
                   C={C}
