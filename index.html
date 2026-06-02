@@ -3960,6 +3960,8 @@ function App() {
           {(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>{
             var meta=(scorePatterns[scoreEditId]||{})[key]&&(scorePatterns[scoreEditId]||{})[key].meta;
             var barCount=meta&&meta.bars?parseInt(meta.bars):null;
+            var repeatCount=meta&&meta.repeat?parseInt(meta.repeat)||1:1;
+            var totalBars=barCount?barCount*repeatCount:null;
             return (
               <button key={key} onClick={()=>{setScoreEditSec(key);}}
                 style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,
@@ -3968,7 +3970,7 @@ function App() {
                   fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"inherit",
                   display:"flex",flexDirection:"column",alignItems:"center",gap:1}}>
                 <span>{lbl}</span>
-                {barCount&&<span style={{fontSize:9,opacity:0.75}}>{barCount}小節</span>}
+                {totalBars&&<span style={{fontSize:9,opacity:0.75}}>{totalBars}小節</span>}
               </button>
             );
           })}
