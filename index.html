@@ -3870,6 +3870,14 @@ function App() {
           floatPosInit={sharedFloatPos}
           onFloatPosChange={setSharedFloatPos}
           scoreLoading={scoreLoading}
+          onPrintThis={function(){
+            var sec=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreSection;});
+            var lbl=sec?sec[1]:scoreSection;
+            var nt=sec?sec[2]:"16th";
+            var pd=(scorePatterns[currentScoreId]||{})[scoreSection];
+            printSection(currentScoreId,scoreSection,lbl,nt,pd,scorePatterns[currentScoreId]||{});
+          }}
+          onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
           isQueuePlaying={isQueuePlay}
           autoPlay={isQueuePlay}
           onQueueStart={selectedSecs.length>0?function(){
