@@ -623,17 +623,26 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   },[sectionKey]);
 
-  // 再マウント時にautoPlayならば自動再生
+  // autoPlay＆patternData読み込み後に自動再生（キュー再生用）
+  var autoStartedRef=React.useRef(false);
   useEffect(function(){
-    if(autoPlay){
+    if(autoPlay&&isQueuePlaying&&!autoStartedRef.current){
+      // patternDataが読み込まれていることを確認
+      if(!leftRef.current||Object.keys(leftRef.current).length===0) return;
+      autoStartedRef.current=true;
+      var cancelled=false;
       initAudio(function(){
+        if(cancelled) return;
         stepRef.current=0;
         setPlaying(true);
         doStart();
       });
+      return function(){
+        cancelled=true;
+        if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
+      };
     }
-    return function(){ if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;} };
-  },[]);
+  },[patternData]);
 
 
 
@@ -945,7 +954,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    tick(); // 頭の音を即時再生
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
@@ -953,6 +961,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
+    if(onLoopComplete){isQueuePlayRef&&(isQueuePlayRef.current=false);}
   }
 
   function handlePlay(){
@@ -1668,7 +1677,6 @@ function renderSideGrid2(barIdx, side){
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
-    tick(); // 頭の音を即時再生
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
@@ -1676,6 +1684,7 @@ function renderSideGrid2(barIdx, side){
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
+    if(onLoopComplete){isQueuePlayRef&&(isQueuePlayRef.current=false);}
   }
 
 
@@ -2429,7 +2438,7 @@ function renderSideGrid2(barIdx, side){
         {selectedBar+1}小節選択中{copiedBar?" ✅コピー済":""}　⌘C コピー　⌘V ペースト
       </div>}
       <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,flexWrap:"wrap"}}>
-        <button onClick={function(){ if(onQueueStart) onQueueStart(); handlePlay(); }}
+        <button onClick={function(){ if(!playing&&onQueueStart) onQueueStart(); handlePlay(); }}
           style={{width:36,height:36,borderRadius:"50%",border:"0.5px solid #d0cec8",background:"#fff",cursor:"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
           {playing?"⏸":"▶"}
         </button>
