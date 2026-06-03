@@ -661,7 +661,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var justSavedRef=useRef(false);
   var hasLoadedRef=useRef(false); // 初回ロード完了フラグ
   useEffect(function(){
-    console.log("patternData useEffect:", sectionKey, "meta.bars=", patternData&&patternData.meta&&patternData.meta.bars);
     // 保存直後はスキップ（justSavedRefフラグ）
     if(canEdit && justSavedRef.current){ justSavedRef.current=false; return; }
     // 編集モードで、データありで一度ロード済みならスキップ（autoFetchによる上書き防止）
@@ -706,7 +705,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     leftRef.current=lp; rightRef.current=rp;
     if(startTime) setSecTime(startTime);
     // patternData2（響ノ音）も再読込
-    console.log("patternData2:", patternData2, "instrument2:", instrument2);
     if(instrument2 && patternData2){
       var total2=nb*spb;
       var lp2={}, rp2={};
@@ -734,7 +732,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         setPlaying(true);
         doStart();
       });
-    }, 50);
+    }, 0);
     return function(){
       cancelled=true;
       clearTimeout(timer);
@@ -744,7 +742,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   // patternData2専用useEffect（非同期読み込み後に反映）
   useEffect(function(){
-    console.log("pd2 effect:", instrument2, patternData2&&Object.keys(patternData2.left||{}).length); if(!instrument2 || !patternData2) return;
+    if(!instrument2 || !patternData2) return;
     // 編集モード中は上書きしない（保存後の誤上書き防止）
     if(canEdit) return;
     var nb2=Math.max(2,Math.min(parseInt(bars)||8,32));
@@ -757,7 +755,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(patternData2.left&&patternData2.left[c]){for(var i=0;i<Math.min(patternData2.left[c].length,total2);i++)lp2[c][i]=patternData2.left[c][i]||0;}
       if(patternData2.right&&patternData2.right[c]){for(var i=0;i<Math.min(patternData2.right[c].length,total2);i++)rp2[c][i]=patternData2.right[c][i]||0;}
     });
-    console.log("patternData2 updated:", Object.keys(lp2).some(function(c){return lp2[c].some(function(v){return v>0;})}));
     setLeft2(lp2); setRight2(rp2);
     left2Ref.current=lp2; right2Ref.current=rp2;
   },[patternData2]);
@@ -968,7 +965,6 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    dimAll();
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
@@ -1694,7 +1690,6 @@ function renderSideGrid2(barIdx, side){
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    dimAll();
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
@@ -4067,7 +4062,7 @@ function App() {
           }}
           onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
           isQueuePlaying={isQueuePlay}
-          autoPlay={isQueuePlay||playerMode==="single"}
+          autoPlay={isQueuePlay}
           onQueueStart={playerMode==="queue"&&selectedSecs.length>0?function(){
             var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
             var queue=sections.filter(s=>selectedSecs.includes(s[0])).map(s=>s[0]);
@@ -6686,7 +6681,7 @@ function App() {
                   instrument2={(currentScoreId==="megumi"||currentScoreId==="inori")?"arcane":null}
                   patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
                   isQueuePlaying={isQueuePlay}
-                  autoPlay={isQueuePlay||playerMode==="single"}
+                  autoPlay={isQueuePlay}
                   onLoopComplete={isQueuePlay?function(){
                     var nextIdx=playQueueIdxRef.current+1;
                     if(nextIdx<playQueueRef.current.length){
