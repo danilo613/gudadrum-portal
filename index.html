@@ -2785,7 +2785,8 @@ function PracticeCard({ sessions, answers, loaded, memberName, onAnswer, onRefre
                 <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{dateStr}（{dayStr}）</span>
                 <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{session.time}</span>
               </div>
-              <p style={{fontSize:13,fontWeight:600,color:"#3a6a7a",marginBottom:6}}>{session.type}</p>
+              {session.title&&<p style={{fontSize:14,fontWeight:700,color:C.choco,marginBottom:4}}>{session.title}</p>}
+              <p style={{fontSize:12,color:"#3a6a7a",marginBottom:6}}>{session.type}</p>
               {session.note&&<p style={{fontSize:11,color:C.label,marginBottom:8}}>{session.note}</p>}
               <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center"}}>
                 {["○","△","×"].map(function(ans){
