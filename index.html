@@ -967,6 +967,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
+    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
+    dimAll();
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
@@ -1691,6 +1693,8 @@ function renderSideGrid2(barIdx, side){
 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
+    if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
+    dimAll();
     iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
   }
 
