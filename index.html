@@ -4063,7 +4063,7 @@ function App() {
           }}
           onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
           isQueuePlaying={isQueuePlay}
-          autoPlay={isQueuePlay||(playerMode==="single"&&playing)}
+          autoPlay={isQueuePlay||playerMode==="single"}
           onQueueStart={playerMode==="queue"&&selectedSecs.length>0?function(){
             var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
             var queue=sections.filter(s=>selectedSecs.includes(s[0])).map(s=>s[0]);
@@ -6682,7 +6682,7 @@ function App() {
                   instrument2={(currentScoreId==="megumi"||currentScoreId==="inori")?"arcane":null}
                   patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
                   isQueuePlaying={isQueuePlay}
-                  autoPlay={isQueuePlay||(playerMode==="single"&&playing)}
+                  autoPlay={isQueuePlay||playerMode==="single"}
                   onLoopComplete={isQueuePlay?function(){
                     var nextIdx=playQueueIdxRef.current+1;
                     if(nextIdx<playQueueRef.current.length){
