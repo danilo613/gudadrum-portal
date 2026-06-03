@@ -5603,11 +5603,18 @@ function App() {
                             <td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td>
                           </tr>
                         );
-                        // オーケストラ欄の⭕️をメンバー振り分けに変換
+                        // オーケストラ欄の⭕️をinorionDataのメンバーで振り分け
                         var orchCell = null;
-                        if(row["オーケストラ"]==="⭕️"||row["オーケストラ"]==="○"||row["オーケストラ"]) {
-                          var confirmed = members.filter(function(mb){ return mb.completedLevels>=3; }).map(function(mb){ return mb.name; });
-                          var pending = members.filter(function(mb){ return mb.completedLevels>0&&mb.completedLevels<3; }).map(function(mb){ return mb.name; });
+                        if(row["オーケストラ"]==="⭕️"||row["オーケストラ"]==="○") {
+                          var inorionNames = [...new Set(inorionData.map(function(r){return r.name;}))];
+                          var confirmed = inorionNames.filter(function(name){
+                            var mb = members.find(function(m){return m.name===name;});
+                            return mb && mb.completedLevels>=3;
+                          });
+                          var pending = inorionNames.filter(function(name){
+                            var mb = members.find(function(m){return m.name===name;});
+                            return mb && mb.completedLevels<3;
+                          });
                           orchCell = (
                             <div style={{fontSize:10,lineHeight:1.6}}>
                               {confirmed.length>0&&<div><span style={{color:"#3a7a3a",fontWeight:700}}>🔥確定：</span>{confirmed.join("・")}</div>}
