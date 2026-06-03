@@ -5581,7 +5581,7 @@ function App() {
           <div style={boxStyle}>
             {headerBtn("🎼 セットリスト", setlistOpen, ()=>{setSetlistOpen(!setlistOpen);if(!setlistLoaded)fetchSetlist();})}
             {setlistOpen&&(
-              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px",overflowX:"auto"}}>
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px",overflowX:"auto",margin:"0 -16px",background:"rgba(255,255,255,0.95)",borderRadius:"0 0 14px 14px"}}>
                 {!setlistLoaded?(
                   <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
                 ):(
@@ -5595,23 +5595,35 @@ function App() {
                     </thead>
                     <tbody>
                       {setlistRows.map(function(row,i){
-                        var isMC = row["演目"]==="MC"||row["演目"]==="MC（MC）"||(!row["番号"]&&!row["演目"]);
+                        var isMC = row["演目"]==="MC"||!row["番号"];
                         var isEmpty = !row["番号"]&&!row["演目"];
                         if(isEmpty) return null;
                         if(isMC) return (
                           <tr key={i}>
-                            <td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic"}}>— MC —</td>
+                            <td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td>
                           </tr>
                         );
+                        // オーケストラ欄の⭕️をメンバー振り分けに変換
+                        var orchCell = null;
+                        if(row["オーケストラ"]==="⭕️"||row["オーケストラ"]==="○"||row["オーケストラ"]) {
+                          var confirmed = members.filter(function(mb){ return mb.completedLevels>=3; }).map(function(mb){ return mb.name; });
+                          var pending = members.filter(function(mb){ return mb.completedLevels>0&&mb.completedLevels<3; }).map(function(mb){ return mb.name; });
+                          orchCell = (
+                            <div style={{fontSize:10,lineHeight:1.6}}>
+                              {confirmed.length>0&&<div><span style={{color:"#3a7a3a",fontWeight:700}}>🔥確定：</span>{confirmed.join("・")}</div>}
+                              {pending.length>0&&<div><span style={{color:"#8a6a00",fontWeight:700}}>⭕️予定：</span>{pending.join("・")}</div>}
+                            </div>
+                          );
+                        }
                         var isEven = i%2===0;
                         return (
                           <tr key={i} style={{background:isEven?"rgba(255,255,255,0.6)":"rgba(248,240,248,0.6)"}}>
                             <td style={{padding:"8px 10px",color:C.label,fontWeight:600,whiteSpace:"nowrap"}}>{row["番号"]}</td>
                             <td style={{padding:"8px 10px",color:C.choco,fontWeight:700,whiteSpace:"nowrap"}}>{row["演目"]}</td>
-                            <td style={{padding:"8px 10px",color:C.label,whiteSpace:"pre-wrap",lineHeight:1.4}}>{row["音階・楽器"]}</td>
+                            <td style={{padding:"8px 10px",color:C.label,whiteSpace:"pre-wrap",lineHeight:1.4,fontSize:11}}>{row["音階・楽器"]}</td>
                             <td style={{padding:"8px 10px",color:C.choco,whiteSpace:"nowrap"}}>{row["DANiLO"]}</td>
                             <td style={{padding:"8px 10px",color:"#5a4a8a",fontWeight:row["ゲスト"]?600:400,whiteSpace:"nowrap"}}>{row["ゲスト"]||"-"}</td>
-                            <td style={{padding:"8px 10px",textAlign:"center",fontSize:16}}>{row["オーケストラ"]}</td>
+                            <td style={{padding:"8px 10px",minWidth:120}}>{orchCell||row["オーケストラ"]||"-"}</td>
                             <td style={{padding:"8px 10px",color:C.choco,whiteSpace:"nowrap"}}>{row["りか"]||"-"}</td>
                             <td style={{padding:"8px 10px",color:C.choco,whiteSpace:"nowrap"}}>{row["優太"]||"-"}</td>
                           </tr>
