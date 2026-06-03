@@ -721,18 +721,23 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
   },[patternData,patternData2,startTime,subdivProp,sectionKey]);
 
-  // autoPlay＆patternData読み込み後に自動再生（キュー再生用・patternData useEffectの後に定義）
+  // autoPlay＆patternData読み込み後に自動再生（patternData useEffectの後に定義）
   useEffect(function(){
-    if(!autoPlay||!isQueuePlaying) return;
+    if(!autoPlay) return;
     var cancelled=false;
-    initAudio(function(){
+    // patternDataが読み込まれるまで少し待つ
+    var timer=setTimeout(function(){
       if(cancelled) return;
-      stepRef.current=0;
-      setPlaying(true);
-      doStart();
-    });
+      initAudio(function(){
+        if(cancelled) return;
+        stepRef.current=0;
+        setPlaying(true);
+        doStart();
+      });
+    }, 50);
     return function(){
       cancelled=true;
+      clearTimeout(timer);
       if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     };
   },[patternData]);
@@ -4058,7 +4063,7 @@ function App() {
           }}
           onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
           isQueuePlaying={isQueuePlay}
-          autoPlay={isQueuePlay}
+          autoPlay={isQueuePlay||(playerMode==="single"&&playing)}
           onQueueStart={playerMode==="queue"&&selectedSecs.length>0?function(){
             var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
             var queue=sections.filter(s=>selectedSecs.includes(s[0])).map(s=>s[0]);
@@ -6677,7 +6682,7 @@ function App() {
                   instrument2={(currentScoreId==="megumi"||currentScoreId==="inori")?"arcane":null}
                   patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
                   isQueuePlaying={isQueuePlay}
-                  autoPlay={isQueuePlay}
+                  autoPlay={isQueuePlay||(playerMode==="single"&&playing)}
                   onLoopComplete={isQueuePlay?function(){
                     var nextIdx=playQueueIdxRef.current+1;
                     if(nextIdx<playQueueRef.current.length){
