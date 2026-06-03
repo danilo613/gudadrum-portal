@@ -5603,18 +5603,24 @@ function App() {
                             <td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td>
                           </tr>
                         );
-                        // オーケストラ欄の⭕️をinorionDataのメンバーで振り分け
+                        // オーケストラ欄：その曲のinorionDataメンバーをstatusで振り分け
                         var orchCell = null;
                         if(row["オーケストラ"]==="⭕️"||row["オーケストラ"]==="○") {
-                          var inorionNames = [...new Set(inorionData.map(function(r){return r.name;}))];
-                          var confirmed = inorionNames.filter(function(name){
-                            var mb = members.find(function(m){return m.name===name;});
-                            return mb && mb.completedLevels>=3;
+                          var songName = row["演目"];
+                          // その曲に登録されているメンバーを取得
+                          var songEntries = inorionData.filter(function(r){
+                            return r.song===songName || r.song.startsWith(songName+"（") || r.song.startsWith(songName+" ");
                           });
-                          var pending = inorionNames.filter(function(name){
-                            var mb = members.find(function(m){return m.name===name;});
-                            return mb && mb.completedLevels<3;
-                          });
+                          // statusで振り分け（🔥第三段階以上=確定、それ以外=予定）
+                          var confirmed = songEntries.filter(function(r){
+                            return r.status&&(r.status.includes("🔥")||r.status.includes("⭐️")||r.status.includes("💮"));
+                          }).map(function(r){return r.name;});
+                          var pending = songEntries.filter(function(r){
+                            return !r.status||(!r.status.includes("🔥")&&!r.status.includes("⭐️")&&!r.status.includes("💮"));
+                          }).map(function(r){return r.name;});
+                          // 名前の重複を除去
+                          confirmed = [...new Set(confirmed)];
+                          pending = [...new Set(pending)];
                           orchCell = (
                             <div style={{fontSize:10,lineHeight:1.6}}>
                               {confirmed.length>0&&<div><span style={{color:"#3a7a3a",fontWeight:700}}>🔥確定：</span>{confirmed.join("・")}</div>}
