@@ -42,7 +42,7 @@ const LEVEL_ORDER = ["大黒柱","主柱","若柱","主幹","若幹","蕾","種"
 
 const CURRICULUM = [
   { title:"グーダドラムの基礎「響かせる」", url:"https://www.gudadrumjapan.com/kyzkmtm", password:"gdrmtd26" },
-  { title:"リズムの基礎⑴「リズムを知る」", url:"https://www.gudadrumjapan.com/kyzrhmtm", password:"rhtmgdrm#mtm26" },
+  { title:"リズムの基礎⑴「リズムを知る」", links:[{label:"座学編動画のまとめ",url:"https://www.gudadrumjapan.com/kyzrhmtm",password:"rhtmgdrm#mtm26"},{label:"実践編動画のまとめ",url:"https://www.gudadrumjapan.com/kyzrhmtmjs",password:"rhtmgdrm#mtm26"}] },
   { title:"リズムの基礎⑵「リズムを感じる」", url:"", password:"" },
   { title:"楽曲の基礎⑴「フレーズを覚える」", url:"", password:"" },
   { title:"楽曲の基礎⑵「フレーズを繋げる」", url:"", password:"" },
@@ -6434,7 +6434,22 @@ function App() {
                     <span style={{fontSize:16,flexShrink:0,marginTop:1}}>{done?"✅":"🔒"}</span>
                     <span style={{fontSize:13,color:done?C.choco:C.label,fontWeight:done?500:400,wordBreak:"keep-all",lineHeight:1.5}}>{item.title}</span>
                   </div>
-                  {done && item.url && (
+                  {done && item.links && item.links.map(function(link,li){
+                    return (
+                      <div key={li} style={{display:"flex",alignItems:"center",gap:8,marginTop:6,marginLeft:24}}>
+                        <a href={link.url} target="_blank" rel="noreferrer"
+                          style={{padding:"4px 10px",borderRadius:8,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>
+                          ▶ {link.label}
+                        </a>
+                        {link.password && (
+                          <span style={{fontSize:11,color:C.label,background:"rgba(112,130,56,0.1)",padding:"4px 8px",borderRadius:6}}>
+                            🔑 {link.password}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {done && item.url && !item.links && (
                     <div style={{display:"flex",alignItems:"center",gap:8,marginTop:8,marginLeft:24}}>
                       <a href={item.url} target="_blank" rel="noreferrer"
                         style={{padding:"4px 10px",borderRadius:8,background:"linear-gradient(135deg,#b8c86a,#8a9a3a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>
