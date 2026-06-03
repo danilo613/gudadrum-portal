@@ -3044,6 +3044,9 @@ function App() {
   const [iridescenceScale, setIridescenceScale] = useState("arcane");
   const [practiceSessions, setPracticeSessions] = useState([]);
   const [practiceOpen, setPracticeOpen] = useState(false);
+  const [setlistOpen, setSetlistOpen] = useState(false);
+  const [setlistRows, setSetlistRows] = useState([]);
+  const [setlistLoaded, setSetlistLoaded] = useState(false);
   const [practiceAnswers, setPracticeAnswers] = useState([]);
   const [practiceLoaded, setPracticeLoaded] = useState(false); // "arcane"=響ノ音 "enigma"=秘ノ音 // "single" or "queue"
   const [subscriptions, setSubscriptions] = useState([]);
@@ -3257,6 +3260,13 @@ function App() {
     try {
       const res = await gasRead({ action: "getsubscriptions" });
       if (res.subscriptions) { setSubscriptions(res.subscriptions); setSubsLoaded(true); }
+    } catch(e) {}
+  }
+
+  async function fetchSetlist() {
+    try {
+      const res = await gasRead({ action: "getsetlist" });
+      if (res.rows) { setSetlistRows(res.rows); setSetlistLoaded(true); }
     } catch(e) {}
   }
 
@@ -5567,9 +5577,56 @@ function App() {
             )}
           </div>
 
+          {/* セットリスト */}
+          <div style={boxStyle}>
+            {headerBtn("🎼 セットリスト", setlistOpen, ()=>{setSetlistOpen(!setlistOpen);if(!setlistLoaded)fetchSetlist();})}
+            {setlistOpen&&(
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px",overflowX:"auto"}}>
+                {!setlistLoaded?(
+                  <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
+                ):(
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:600}}>
+                    <thead>
+                      <tr style={{background:"linear-gradient(135deg,#c87aaa,#8a4a6a)"}}>
+                        {["#","演目","音階・楽器","DANiLO","ゲスト","オーケストラ","りか","優太"].map(function(h){
+                          return <th key={h} style={{color:"#fff",padding:"8px 10px",textAlign:"left",fontWeight:700,fontSize:11,whiteSpace:"nowrap"}}>{h}</th>;
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {setlistRows.map(function(row,i){
+                        var isMC = row["演目"]==="MC"||row["演目"]==="MC（MC）"||(!row["番号"]&&!row["演目"]);
+                        var isEmpty = !row["番号"]&&!row["演目"];
+                        if(isEmpty) return null;
+                        if(isMC) return (
+                          <tr key={i}>
+                            <td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic"}}>— MC —</td>
+                          </tr>
+                        );
+                        var isEven = i%2===0;
+                        return (
+                          <tr key={i} style={{background:isEven?"rgba(255,255,255,0.6)":"rgba(248,240,248,0.6)"}}>
+                            <td style={{padding:"8px 10px",color:C.label,fontWeight:600,whiteSpace:"nowrap"}}>{row["番号"]}</td>
+                            <td style={{padding:"8px 10px",color:C.choco,fontWeight:700,whiteSpace:"nowrap"}}>{row["演目"]}</td>
+                            <td style={{padding:"8px 10px",color:C.label,whiteSpace:"pre-wrap",lineHeight:1.4}}>{row["音階・楽器"]}</td>
+                            <td style={{padding:"8px 10px",color:C.choco,whiteSpace:"nowrap"}}>{row["DANiLO"]}</td>
+                            <td style={{padding:"8px 10px",color:"#5a4a8a",fontWeight:row["ゲスト"]?600:400,whiteSpace:"nowrap"}}>{row["ゲスト"]||"-"}</td>
+                            <td style={{padding:"8px 10px",textAlign:"center",fontSize:16}}>{row["オーケストラ"]}</td>
+                            <td style={{padding:"8px 10px",color:C.choco,whiteSpace:"nowrap"}}>{row["りか"]||"-"}</td>
+                            <td style={{padding:"8px 10px",color:C.choco,whiteSpace:"nowrap"}}>{row["優太"]||"-"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* 練習会日程調整 */}
           <div style={boxStyle}>
-              {headerBtn("📅 練習会への参加確認", practiceOpen, ()=>{setPracticeOpen(!practiceOpen);if(!practiceLoaded)fetchPractice();})}
+              {headerBtn("📅 参加確認", practiceOpen, ()=>{setPracticeOpen(!practiceOpen);if(!practiceLoaded)fetchPractice();})}
               {practiceOpen&&(
                 <PracticeCard
                   sessions={practiceSessions}
