@@ -4379,6 +4379,9 @@ function App() {
             )}
           </div>
         </div>
+      <img src="/danilo.PNG" alt=""
+        style={{position:"fixed",bottom:0,right:0,width:110,height:110,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:50}}
+        onError={function(e){e.target.style.display="none";}}/>
       </div>
     );
   }
@@ -6067,40 +6070,69 @@ function App() {
           today.setHours(0,0,0,0);
           var month = today.getMonth()+1;
           var year = today.getFullYear();
-          // 対象フィルタ
-          var myNotices = notices.filter(function(n){
-            return n.target==="全員" || n.target===m.name || n.target===m.subscType;
+          var weekDays=["日","月","火","水","木","金","土"];
+          // 種別別に分ける
+          var specialNotices = notices.filter(function(n){
+            return n.target===m.subscType && n.target!=="全員";
           });
-          // 今月のスケジュール（練習会・zoom）オーケストラスケジュールから
+          var generalNotices = notices.filter(function(n){
+            return n.target==="全員" || n.target===m.name;
+          });
+          // 今月のスケジュール
           var monthScheds = orchSchedules.filter(function(s){
             var d = new Date(s["日付"]);
             return d.getFullYear()===year && d.getMonth()+1===month &&
-              (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("zoom")||s["種別"].includes("交流")));
+              (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("交流")));
           }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
-          if(myNotices.length===0 && monthScheds.length===0) return null;
-          var weekDays=["日","月","火","水","木","金","土"];
+          if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0) return null;
+          var [noticeOpen, setNoticeOpen] = React.useState(true);
           return (
-            <div style={{background:"rgba(255,255,255,0.92)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px"}}>
-              <p style={{fontSize:12,fontWeight:700,color:C.choco,marginBottom:8}}>📢 今月のお知らせ</p>
-              {myNotices.map(function(n,i){
-                return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:600,marginBottom:6,lineHeight:1.6}}>💬 {n.message}</p>;
-              })}
-              {monthScheds.length>0&&(
-                <div style={{borderTop:myNotices.length>0?"1px solid rgba(0,0,0,0.07)":"none",paddingTop:myNotices.length>0?8:0}}>
-                  {monthScheds.map(function(s,i){
-                    var d=new Date(s["日付"]);
-                    var dateStr=(d.getMonth()+1)+"月"+d.getDate()+"日（"+weekDays[d.getDay()]+"）";
-                    var title=s["タイトル"]||s["種別"]||"";
-                    return (
-                      <div key={i} style={{marginBottom:6}}>
-                        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
-                          <span style={{fontSize:11,color:C.label,flexShrink:0}}>📅 {dateStr}</span>
-                          <span style={{fontSize:10,padding:"1px 6px",borderRadius:4,background:"rgba(112,130,56,0.1)",color:C.olive,fontWeight:600,flexShrink:0}}>{s["種別"]}</span>
-                        </div>
-                        {title&&<span style={{fontSize:11,color:C.choco,fontWeight:500,paddingLeft:20}}>{title}</span>}
-                      </div>
-                    );
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {/* スペシャルお知らせ */}
+              {specialNotices.length>0&&(
+                <div style={{background:"linear-gradient(135deg,#fff0f8,#ffe4f0)",border:"1.5px solid #e87aaa",borderRadius:14,padding:"14px 16px",position:"relative",overflow:"hidden"}}>
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#c87aaa,#e87aaa)"}}/>
+                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                    <span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontWeight:700,letterSpacing:"0.05em"}}>✨ {m.subscType}限定</span>
+                  </div>
+                  {specialNotices.map(function(n,i){
+                    return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,marginBottom:4,lineHeight:1.7}}>💬 {n.message}</p>;
                   })}
+                </div>
+              )}
+              {/* 通常お知らせ（開閉式） */}
+              {(generalNotices.length>0||monthScheds.length>0)&&(
+                <div style={{background:"rgba(255,255,255,0.92)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+                  <button onClick={()=>setNoticeOpen(!noticeOpen)}
+                    style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+                    <span style={{fontSize:12,fontWeight:700,color:C.choco}}>📢 今月のお知らせ</span>
+                    <span style={{fontSize:11,color:C.label,transform:noticeOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+                  </button>
+                  {noticeOpen&&(
+                    <div style={{borderTop:"1px solid rgba(0,0,0,0.06)",padding:"10px 16px 14px"}}>
+                      {generalNotices.map(function(n,i){
+                        return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:600,marginBottom:6,lineHeight:1.6}}>💬 {n.message}</p>;
+                      })}
+                      {monthScheds.length>0&&(
+                        <div style={{borderTop:generalNotices.length>0?"1px solid rgba(0,0,0,0.06)":"none",paddingTop:generalNotices.length>0?8:0}}>
+                          {monthScheds.map(function(s,i){
+                            var d=new Date(s["日付"]);
+                            var dateStr=(d.getMonth()+1)+"月"+d.getDate()+"日（"+weekDays[d.getDay()]+"）";
+                            var title=s["タイトル"]||"";
+                            return (
+                              <div key={i} style={{marginBottom:6}}>
+                                <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                                  <span style={{fontSize:11,color:C.label,flexShrink:0}}>📅 {dateStr}</span>
+                                  <span style={{fontSize:10,padding:"1px 6px",borderRadius:4,background:"rgba(112,130,56,0.1)",color:C.olive,fontWeight:600,flexShrink:0}}>{s["種別"]}</span>
+                                </div>
+                                {title&&<span style={{fontSize:11,color:C.choco,fontWeight:500,paddingLeft:20}}>{title}</span>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
