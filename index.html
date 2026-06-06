@@ -2891,10 +2891,10 @@ function MapPage({ members, onClose, C, currentMemberName }) {
             <option value="">すべての音階</option>
             {Object.keys(SCALE_COLOR).map(s=><option key={s} value={s}>{s}</option>)}
           </select>
-          <button onClick={()=>setDebugMode(!debugMode)}
+          {!currentMemberName&&<button onClick={()=>setDebugMode(!debugMode)}
             style={{padding:"6px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:debugMode?"rgba(255,200,0,0.3)":"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
             {debugMode?"📍 座標確認中":"📍 座標確認"}
-          </button>
+          </button>}
           <button onClick={onClose}
             style={{padding:"6px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
             ← 戻る
