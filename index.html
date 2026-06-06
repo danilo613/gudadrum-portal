@@ -2826,7 +2826,7 @@ function PracticeCard({ sessions, answers, loaded, memberName, onAnswer, onRefre
   );
 }
 
-function MapPage({ members, onClose, C }) {
+function MapPage({ members, onClose, C, currentMemberName }) {
   const SCALE_COLOR = {
     "響ノ音（アーケイン）":"#5845C0","光ノ音（イークィノックス）":"#2050C0",
     "秘ノ音（エニグマ）":"#708238","風ノ音（トーナス）":"#00A8A0",
@@ -2914,18 +2914,20 @@ function MapPage({ members, onClose, C }) {
             if(mems.length===0) return null;
             const color = Object.entries(SCALE_COLOR).find(([k])=>mems[0].scale===k)?.[1]||"#708238";
             const r = Math.min(8+mems.length*3,22);
+            const hasSelf = currentMemberName && mems.some(mb=>mb.name===currentMemberName);
             return (
               <div key={region}
                 onClick={()=>setMapPopup(mapPopup&&mapPopup.pref===region?null:{pref:region,members:mems,pos})}
                 style={{position:"absolute",left:(pos.rx*100)+"%",top:(pos.ry*100)+"%",
                   transform:"translate(-50%,-50%)",
-                  width:r*2,height:r*2,borderRadius:"50%",
-                  background:color,border:"2px solid white",
+                  width:hasSelf?(r+4)*2:r*2,height:hasSelf?(r+4)*2:r*2,borderRadius:"50%",
+                  background:hasSelf?"#e8a020":color,
+                  border:hasSelf?"3px solid #fff":"2px solid white",
                   display:"flex",alignItems:"center",justifyContent:"center",
-                  color:"white",fontSize:r>12?11:9,fontWeight:500,
-                  cursor:"pointer",zIndex:10,
-                  boxShadow:"0 2px 6px rgba(0,0,0,0.3)"}}>
-                {mems.length}
+                  color:"white",fontSize:r>12?11:9,fontWeight:hasSelf?700:500,
+                  cursor:"pointer",zIndex:hasSelf?20:10,
+                  boxShadow:hasSelf?"0 0 12px rgba(232,160,32,0.7)":"0 2px 6px rgba(0,0,0,0.3)"}}>
+                {hasSelf?"★":mems.length}
               </div>
             );
           })}
@@ -2945,7 +2947,7 @@ function MapPage({ members, onClose, C }) {
                 <div key={i} style={{padding:"8px 0",borderTop:"0.5px solid "+C.border}}>
                   <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                     <span style={{display:"flex",gap:2,flexShrink:0}}>{(m.scales&&m.scales.length>0?m.scales:[m.scale]).slice(0,3).map(function(sc,si){return <span key={si} style={{width:8,height:8,borderRadius:"50%",background:SCALE_COLOR[sc]||"#888",display:"inline-block"}}/>;})}</span>
-                    <span style={{fontSize:13,fontWeight:500,color:C.choco,flex:1}}>{m.name}<span style={{fontSize:10,color:C.label,fontWeight:400,marginLeft:6}}>{m.pref}</span></span>
+                    <span style={{fontSize:13,fontWeight:currentMemberName&&m.name===currentMemberName?700:500,color:currentMemberName&&m.name===currentMemberName?"#e8a020":C.choco,flex:1}}>{m.name}{currentMemberName&&m.name===currentMemberName?" ★":""}<span style={{fontSize:10,color:C.label,fontWeight:400,marginLeft:6}}>{m.pref}</span></span>
                     <button onClick={()=>setMapPopup(function(p){return Object.assign({},p,{openCard:p.openCard===i+"-scale"?null:i+"-scale"});})}
                       style={{fontSize:10,padding:"2px 7px",borderRadius:6,border:"0.5px solid "+C.border,background:mapPopup.openCard===i+"-scale"?"#708238":"#fff",color:mapPopup.openCard===i+"-scale"?"#fff":C.label,cursor:"pointer",fontFamily:"inherit"}}>音階</button>
                     {m.songs&&m.songs.length>0&&(
@@ -4132,7 +4134,7 @@ function App() {
 
   const m = currentMember;
 
-  if (page === "admin" && mapPage) return <MapPage members={mapMembers} onClose={()=>setMapPage(false)} C={C}/>;
+  if (mapPage) return <MapPage members={mapMembers} onClose={()=>setMapPage(false)} C={C} currentMemberName={currentMember?currentMember.name:null}/>;
 
 
   if (page === "admin" && editFullscreen && scoreEditOpen) return (
@@ -5998,6 +6000,12 @@ function App() {
               </div>
             );
           })()}
+
+        {/* MAPボタン */}
+        <button onClick={()=>{ fetchMemberMap(); setMapPage(true); }}
+          style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#3a8a6a,#2a6a4a)", boxShadow:"0 4px 12px rgba(42,106,74,0.4)", border:"none", width:"100%"}}>
+          🗾 全国のメンバーマップ
+        </button>
 
         {/* 壱祈音専用ページボタン（出演者のみ） */}
         {inorionData.some(r=>r.name===m.name) && (
