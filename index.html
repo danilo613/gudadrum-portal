@@ -3060,6 +3060,8 @@ function App() {
   const [practiceSessions, setPracticeSessions] = useState([]);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [setlistOpen, setSetlistOpen] = useState(false);
+  const [notices, setNotices] = useState([]);
+  const [noticesLoaded, setNoticesLoaded] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
   const [setlistRows, setSetlistRows] = useState([]);
   const [setlistLoaded, setSetlistLoaded] = useState(false);
@@ -3174,6 +3176,7 @@ function App() {
   }, [page, currentMember]);
 
   function autoFetch() {
+    fetchNotices();
     return new Promise((resolve) => {
       const cbName = "gasCb_" + Date.now();
       window[cbName] = function(data) {
@@ -3276,6 +3279,14 @@ function App() {
     try {
       const res = await gasRead({ action: "getsubscriptions" });
       if (res.subscriptions) { setSubscriptions(res.subscriptions); setSubsLoaded(true); }
+    } catch(e) {}
+  }
+
+  async function fetchNotices() {
+    try {
+      const res = await gasRead({ action: "getnotices" });
+      if (res.notices) setNotices(res.notices);
+      setNoticesLoaded(true);
     } catch(e) {}
   }
 
@@ -6049,6 +6060,49 @@ function App() {
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
       ])}
       <div style={{padding:"24px",maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}}>
+
+        {/* お知らせカード */}
+        {(()=>{
+          var today = new Date();
+          today.setHours(0,0,0,0);
+          var month = today.getMonth()+1;
+          var year = today.getFullYear();
+          // 対象フィルタ
+          var myNotices = notices.filter(function(n){
+            return n.target==="全員" || n.target===m.name || n.target===m.subscType;
+          });
+          // 今月のスケジュール（練習会・zoom）
+          var monthScheds = memberSchedules.filter(function(s){
+            var d = new Date(s["日付"]);
+            return d.getFullYear()===year && d.getMonth()+1===month &&
+              (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("zoom")||s["種別"].includes("交流")));
+          }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
+          if(myNotices.length===0 && monthScheds.length===0) return null;
+          var weekDays=["日","月","火","水","木","金","土"];
+          return (
+            <div style={{background:"rgba(255,255,255,0.92)",border:"1px solid "+C.border,borderRadius:14,padding:"14px 16px"}}>
+              <p style={{fontSize:12,fontWeight:700,color:C.choco,marginBottom:8}}>📢 今月のお知らせ</p>
+              {myNotices.map(function(n,i){
+                return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:600,marginBottom:6,lineHeight:1.6}}>💬 {n.message}</p>;
+              })}
+              {monthScheds.length>0&&(
+                <div style={{borderTop:myNotices.length>0?"1px solid rgba(0,0,0,0.07)":"none",paddingTop:myNotices.length>0?8:0}}>
+                  {monthScheds.map(function(s,i){
+                    var d=new Date(s["日付"]);
+                    var dateStr=(d.getMonth()+1)+"月"+d.getDate()+"日（"+weekDays[d.getDay()]+"）";
+                    var title=s["タイトル"]||s["種別"]||"";
+                    return (
+                      <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:4}}>
+                        <span style={{fontSize:11,color:C.label,flexShrink:0}}>📅 {dateStr}</span>
+                        <span style={{fontSize:11,color:C.choco,fontWeight:500}}>{title}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Hero */}
         <div style={{background:"linear-gradient(135deg,"+C.olive+","+C.choco+")",borderRadius:20,padding:"20px"}}>
