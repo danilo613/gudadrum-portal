@@ -3062,6 +3062,7 @@ function App() {
   const [setlistOpen, setSetlistOpen] = useState(false);
   const [notices, setNotices] = useState([]);
   const [noticesLoaded, setNoticesLoaded] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(true);
   const [diagOpen, setDiagOpen] = useState(false);
   const [setlistRows, setSetlistRows] = useState([]);
   const [setlistLoaded, setSetlistLoaded] = useState(false);
@@ -6085,7 +6086,6 @@ function App() {
               (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("交流")));
           }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
           if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0) return null;
-          var [noticeOpen, setNoticeOpen] = React.useState(true);
           return (
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {/* スペシャルお知らせ */}
