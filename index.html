@@ -3063,7 +3063,7 @@ function App() {
   const [notices, setNotices] = useState([]);
   const [noticesLoaded, setNoticesLoaded] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
-  const [specialNoticeOpen, setSpecialNoticeOpen] = useState(false);
+  const [specialNoticeOpen, setSpecialNoticeOpen] = useState(true);
   const [diagOpen, setDiagOpen] = useState(false);
   const [setlistRows, setSetlistRows] = useState([]);
   const [setlistLoaded, setSetlistLoaded] = useState(false);
@@ -4237,6 +4237,9 @@ function App() {
           onFloatPosChange={setSharedFloatPos}
         />
       </div>
+      <img src="/danilo.PNG" alt=""
+        style={{position:"fixed",bottom:0,right:0,width:110,height:110,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:50}}
+        onError={function(e){e.target.style.display="none";}}/>
     </div>
   );
 
@@ -4381,9 +4384,6 @@ function App() {
             )}
           </div>
         </div>
-      <img src="/danilo.PNG" alt=""
-        style={{position:"fixed",bottom:0,right:0,width:110,height:110,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:50}}
-        onError={function(e){e.target.style.display="none";}}/>
       <img src="/danilo.PNG" alt=""
         style={{position:"fixed",bottom:0,right:0,width:110,height:110,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:50}}
         onError={function(e){e.target.style.display="none";}}/>
