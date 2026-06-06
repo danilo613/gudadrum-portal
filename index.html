@@ -3049,6 +3049,7 @@ function App() {
   const [practiceSessions, setPracticeSessions] = useState([]);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [setlistOpen, setSetlistOpen] = useState(false);
+  const [diagOpen, setDiagOpen] = useState(false);
   const [setlistRows, setSetlistRows] = useState([]);
   const [setlistLoaded, setSetlistLoaded] = useState(false);
   const [practiceAnswers, setPracticeAnswers] = useState([]);
@@ -5981,92 +5982,6 @@ function App() {
             );
           })()}
 
-        {/* 演奏診断 */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,padding:"16px"}}>
-          {(()=>{
-            // 診断履歴があれば履歴を使用、なければメンバーデータを使用
-            const hasDiagHistory = diagHistory.length > 0;
-            const currentDiag = hasDiagHistory ? diagHistory[diagHistoryIndex] : null;
-            const diagM = currentDiag ? {
-              openness: parseInt(currentDiag["音の開放度"])||0,
-              quality:  parseInt(currentDiag["音質調整"])||0,
-              tempo:    parseInt(currentDiag["テンポキープ"])||0,
-              ghost:    parseInt(currentDiag["ゴースト"])||0,
-              groove:   parseInt(currentDiag["グルーヴ"])||0,
-              diagnosisDate: currentDiag["診断日"]||"",
-              diagnosisSong: currentDiag["診断楽曲"]||"",
-              diagnosisResult: currentDiag["メッセージ"]||"",
-            } : m;
-            const total = diagM.openness+diagM.quality+diagM.tempo+diagM.ghost+diagM.groove;
-            const avg = total > 0 ? (total/5).toFixed(1) : "−";
-            return (
-              <>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
-                  <p style={{fontSize:13,letterSpacing:"0.1em",color:C.label,fontWeight:500}}>
-                    🔍 演奏診断結果　<span style={{fontSize:10,fontWeight:400}}>診断日：{diagM.diagnosisDate||"未診断"}</span>
-                    {diagM.diagnosisSong && <span style={{fontSize:10,fontWeight:600,color:C.olive,marginLeft:8}}>🎵 {diagM.diagnosisSong}</span>}
-                  </p>
-                  {hasDiagHistory && (
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <button onClick={()=>setDiagHistoryIndex(i=>Math.min(i+1,diagHistory.length-1))}
-                        disabled={diagHistoryIndex>=diagHistory.length-1}
-                        style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:diagHistoryIndex>=diagHistory.length-1?C.label:C.olive,fontSize:12,cursor:diagHistoryIndex>=diagHistory.length-1?"default":"pointer"}}>◀ 前回</button>
-                      <span style={{fontSize:11,color:C.label}}>{diagHistory.length-diagHistoryIndex}/{diagHistory.length}</span>
-                      <button onClick={()=>setDiagHistoryIndex(i=>Math.max(i-1,0))}
-                        disabled={diagHistoryIndex<=0}
-                        style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:diagHistoryIndex<=0?C.label:C.olive,fontSize:12,cursor:diagHistoryIndex<=0?"default":"pointer"}}>次回 ▶</button>
-                    </div>
-                  )}
-                </div>
-                <div style={{display:"flex",gap:20,flexWrap:"wrap",marginBottom:14}}>
-                  <RadarChart m={diagM}/>
-                  <div style={{flex:1,minWidth:160,display:"flex",flexDirection:"column",gap:10}}>
-                    {[
-                      {l:"音の開放度", a:"精神性・タイミング・脱力", desc:"音がどれだけ自由に、解放されて、\n美しく響いているか。\n　＝ 脱力ができているか。\n　＝ 心と身体がどれだけ音に対して開いているか。"},
-                      {l:"音質調整", a:"身体の使い方の調整／自己価値感", desc:"自分の身体・自分の存在を、\nどれだけ繊細に扱えているか。\n　＝ 音の質を意図的に変化させられるか。"},
-                      {l:"テンポキープ", a:"技術向上・精神的安定・宇宙との同期", desc:"自分軸の安定性。テンポを一定に保ち続ける力。\n　＝ 自分の内側にリズムの軸があるか。"},
-                      {l:"ゴースト", a:"強弱・洗練されたリズム", desc:"総合的に細かなニュアンスをどれだけ美しく、\n意図を持って扱えているか。\n音楽の波、うねりが表現できているか。\n　＝ 繊細さ・間・安定感・余白の感覚"},
-                      {l:"グルーヴ", a:"音楽的なうねり・一体感", desc:"音楽全体の流れに乗り、\n身体でリズムを感じて表現する力。\n　＝ 聴く人を引き込む推進力。"},
-                    ].map((x,i)=>(
-                      <div key={i}>
-                        <p style={{fontSize:12,color:C.choco,fontWeight:600,marginBottom:2}}>
-                          ✅ {x.l}<span style={{fontSize:10,fontWeight:400,color:C.label}}> 👉 {x.a}</span>
-                        </p>
-                        {x.desc.split("\n").map((line,j)=>(
-                          <p key={j} style={{fontSize:11,color:C.label,lineHeight:1.7}}>{line}</p>
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* 合計・平均 */}
-                {total > 0 && (
-                  <div style={{display:"flex",gap:12,marginBottom:12,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 12px"}}>
-                    <p style={{fontSize:12,color:C.choco}}>合計：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{total}</span><span style={{fontSize:10,color:C.label}}> / 500</span></p>
-                    <p style={{fontSize:12,color:C.choco}}>平均：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{(total/5).toFixed(1)}</span><span style={{fontSize:10,color:C.label}}> / 100</span></p>
-                  </div>
-                )}
-                <div style={{borderTop:"1px solid "+C.border,paddingTop:12}}>
-                  <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:500}}>診断の結果 ～DANiLOよりメッセージ～</p>
-                  {diagM.diagnosisResult
-                    ? <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{diagM.diagnosisResult}</p>
-                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>未診断</p>
-                  }
-                </div>
-                {total === 0 && (
-                  <div style={{borderTop:"1px solid "+C.border,paddingTop:14,marginTop:4,textAlign:"center"}}>
-                    <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:6}}>🎵 演奏診断 未受講の方へ</p>
-                    <p style={{fontSize:13,color:C.label,lineHeight:1.8}}>
-                      演奏診断では、あなたの演奏の特徴を5つの項目で分析します。<br/>
-                      ぜひ下のボタンからお申し込みください！
-                    </p>
-                  </div>
-                )}
-              </>
-            );
-          })()}
-        </div>
-
         {/* 壱祈音専用ページボタン（出演者のみ） */}
         {inorionData.some(r=>r.name===m.name) && (
           <button onClick={()=>{setInorionPage(true);window.scrollTo(0,0);fetchPractice();}}
@@ -6127,6 +6042,98 @@ function App() {
             💬 個別相談（60分）申込み
           </a>
         )}
+        {/* 演奏診断 */}
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
+          <button onClick={()=>setDiagOpen(!diagOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,fontWeight:600,color:C.label}}>🎯 演奏診断</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:diagOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {diagOpen&&<div style={{borderTop:"1px solid "+C.border,padding:"16px"}}>
+          {(()=>{
+            // 診断履歴があれば履歴を使用、なければメンバーデータを使用
+            const hasDiagHistory = diagHistory.length > 0;
+            const currentDiag = hasDiagHistory ? diagHistory[diagHistoryIndex] : null;
+            const diagM = currentDiag ? {
+              openness: parseInt(currentDiag["音の開放度"])||0,
+              quality:  parseInt(currentDiag["音質調整"])||0,
+              tempo:    parseInt(currentDiag["テンポキープ"])||0,
+              ghost:    parseInt(currentDiag["ゴースト"])||0,
+              groove:   parseInt(currentDiag["グルーヴ"])||0,
+              diagnosisDate: currentDiag["診断日"]||"",
+              diagnosisSong: currentDiag["診断楽曲"]||"",
+              diagnosisResult: currentDiag["メッセージ"]||"",
+            } : m;
+            const total = diagM.openness+diagM.quality+diagM.tempo+diagM.ghost+diagM.groove;
+            const avg = total > 0 ? (total/5).toFixed(1) : "−";
+            return (
+              <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:14,flexWrap:"wrap",gap:8}}>
+                  <p style={{fontSize:13,letterSpacing:"0.1em",color:C.label,fontWeight:500}}>
+                    🔍 演奏診断結果　<span style={{fontSize:10,fontWeight:400}}>診断日：{diagM.diagnosisDate||"未診断"}</span>
+                    {diagM.diagnosisSong && <span style={{fontSize:10,fontWeight:600,color:C.olive,marginLeft:8}}>🎵 {diagM.diagnosisSong}</span>}
+                  </p>
+                  {hasDiagHistory && (
+                    <div style={{display:"flex",alignItems:"center",gap:8}}>
+                      <button onClick={()=>setDiagHistoryIndex(i=>Math.min(i+1,diagHistory.length-1))}
+                        disabled={diagHistoryIndex>=diagHistory.length-1}
+                        style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:diagHistoryIndex>=diagHistory.length-1?C.label:C.olive,fontSize:12,cursor:diagHistoryIndex>=diagHistory.length-1?"default":"pointer"}}>◀ 前回</button>
+                      <span style={{fontSize:11,color:C.label}}>{diagHistory.length-diagHistoryIndex}/{diagHistory.length}</span>
+                      <button onClick={()=>setDiagHistoryIndex(i=>Math.max(i-1,0))}
+                        disabled={diagHistoryIndex<=0}
+                        style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:diagHistoryIndex<=0?C.label:C.olive,fontSize:12,cursor:diagHistoryIndex<=0?"default":"pointer"}}>次回 ▶</button>
+                    </div>
+                  )}
+                </div>
+                <div style={{display:"flex",gap:20,flexWrap:"wrap",marginBottom:14}}>
+                  <RadarChart m={diagM}/>
+                  <div style={{flex:1,minWidth:160,display:"flex",flexDirection:"column",gap:10}}>
+                    {[
+                      {l:"音の開放度", desc:"音がどれだけ自由に、解放されて、\n美しく響いているか。\nメロディー音もアタック音も大きい状態。"},
+                      {l:"テンポキープ", desc:"自分軸の安定性。テンポを一定に保ち続ける力。\n＝ 自分の内側にリズムの軸があるか。"},
+                      {l:"音質調整", desc:"音の質を意図的に変化させられるか。\nアタック音を小さくして、メロディー音を大きく出来るか。\nまた、意図して音質を変えられるか。"},
+                      {l:"ゴースト", desc:"リズムと音質調整を総合的に細かなニュアンスをどれだけ美しく、\n意図を持って扱えているか。\n※中級者まではこの項目は保留とし、他の項目の平均値を適応。"},
+                      {l:"グルーヴ", desc:"音楽的なうねりやリズムとの一体感が体現できているか。\n音楽全体の流れに乗り、身体でリズムを感じて表現する力。\n＝ 聴く人を引き込む推進力。"},
+                    ].map((x,i)=>(
+                      <div key={i}>
+                        <p style={{fontSize:12,color:C.choco,fontWeight:600,marginBottom:2}}>
+                          ✅ {x.l}
+                        </p>
+                        {x.desc.split("\n").map((line,j)=>(
+                          <p key={j} style={{fontSize:11,color:C.label,lineHeight:1.7}}>{line}</p>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {/* 合計・平均 */}
+                {total > 0 && (
+                  <div style={{display:"flex",gap:12,marginBottom:12,background:"rgba(112,130,56,0.06)",borderRadius:8,padding:"8px 12px"}}>
+                    <p style={{fontSize:12,color:C.choco}}>合計：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{total}</span><span style={{fontSize:10,color:C.label}}> / 500</span></p>
+                    <p style={{fontSize:12,color:C.choco}}>平均：<span style={{fontSize:16,fontWeight:700,color:C.olive}}>{(total/5).toFixed(1)}</span><span style={{fontSize:10,color:C.label}}> / 100</span></p>
+                  </div>
+                )}
+                <div style={{borderTop:"1px solid "+C.border,paddingTop:12}}>
+                  <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:500}}>診断の結果 ～DANiLOよりメッセージ～</p>
+                  {diagM.diagnosisResult
+                    ? <p style={{fontSize:13,color:C.choco,lineHeight:1.8,whiteSpace:"pre-wrap"}}>{diagM.diagnosisResult}</p>
+                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>未診断</p>
+                  }
+                </div>
+                {total === 0 && (
+                  <div style={{borderTop:"1px solid "+C.border,paddingTop:14,marginTop:4,textAlign:"center"}}>
+                    <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:6}}>🎵 演奏診断 未受講の方へ</p>
+                    <p style={{fontSize:13,color:C.label,lineHeight:1.8}}>
+                      演奏診断では、あなたの演奏の特徴を5つの項目で分析します。<br/>
+                      ぜひ下のボタンからお申し込みください！
+                    </p>
+                  </div>
+                )}
+              </>
+            );
+          })()}
+          </div>}
+        </div>
+
 
         {/* マイメモ */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
@@ -6476,42 +6483,6 @@ function App() {
               </div>
             )}
           </div>}
-        </div>
-
-        {/* DANiLOコメント */}
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
-          <button onClick={()=>setCommentOpen(!commentOpen)} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,color:C.label,fontWeight:700}}>💬 DANiLO・講師陣からのコメント</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:commentOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {commentOpen && (
-            <div style={{borderTop:"1px solid "+C.border,padding:"12px 16px"}}>
-              <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 下にスクロールで過去のログも見られます</p>
-              <div style={{maxHeight:"8em",overflowY:"auto"}}>
-                {(()=>{
-                  const splitComment = (s) => String(s||"").trim() ? [String(s||"").trim()] : [];
-                  const all = [
-                    ...splitComment(m.challenge),
-                    ...splitComment(m.commentNoriko),
-                    ...splitComment(m.commentHiroko),
-                    ...splitComment(m.commentToon),
-                  ].filter(Boolean);
-                  // 日付で始まる行（例：2026/3/22）でソート
-                  all.sort((a,b)=>{
-                    const da = a.match(/^(\d{4}\/\d+\/\d+)/);
-                    const db = b.match(/^(\d{4}\/\d+\/\d+)/);
-                    if (!da && !db) return 0;
-                    if (!da) return 1;
-                    if (!db) return -1;
-                    return new Date(db[1]) - new Date(da[1]);
-                  });
-                  return all.length > 0
-                    ? all.map((line,i) => <p key={i} style={{fontSize:13,color:C.choco,lineHeight:1.6,marginBottom:4,whiteSpace:"pre-wrap"}}>{line}</p>)
-                    : <p style={{fontSize:13,color:"#a09080",fontStyle:"italic"}}>−</p>;
-                })()}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* メインカリキュラム */}
