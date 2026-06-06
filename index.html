@@ -3063,6 +3063,7 @@ function App() {
   const [notices, setNotices] = useState([]);
   const [noticesLoaded, setNoticesLoaded] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
+  const [specialNoticeOpen, setSpecialNoticeOpen] = useState(false);
   const [diagOpen, setDiagOpen] = useState(false);
   const [setlistRows, setSetlistRows] = useState([]);
   const [setlistLoaded, setSetlistLoaded] = useState(false);
@@ -4380,6 +4381,9 @@ function App() {
             )}
           </div>
         </div>
+      <img src="/danilo.PNG" alt=""
+        style={{position:"fixed",bottom:0,right:0,width:110,height:110,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:50}}
+        onError={function(e){e.target.style.display="none";}}/>
       <img src="/danilo.PNG" alt=""
         style={{position:"fixed",bottom:0,right:0,width:110,height:110,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:50}}
         onError={function(e){e.target.style.display="none";}}/>
@@ -6090,14 +6094,20 @@ function App() {
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {/* スペシャルお知らせ */}
               {specialNotices.length>0&&(
-                <div style={{background:"linear-gradient(135deg,#fff0f8,#ffe4f0)",border:"1.5px solid #e87aaa",borderRadius:14,padding:"14px 16px",position:"relative",overflow:"hidden"}}>
+                <div style={{background:"linear-gradient(135deg,#fff0f8,#ffe4f0)",border:"1.5px solid #e87aaa",borderRadius:14,overflow:"hidden",position:"relative"}}>
                   <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#c87aaa,#e87aaa)"}}/>
-                  <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                  <button onClick={()=>setSpecialNoticeOpen(!specialNoticeOpen)}
+                    style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"transparent",border:"none",cursor:"pointer",paddingTop:15}}>
                     <span style={{fontSize:10,padding:"2px 8px",borderRadius:10,background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontWeight:700,letterSpacing:"0.05em"}}>✨ {m.subscType}限定</span>
-                  </div>
-                  {specialNotices.map(function(n,i){
-                    return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,marginBottom:4,lineHeight:1.7}}>💬 {n.message}</p>;
-                  })}
+                    <span style={{fontSize:11,color:"#8a4a6a",transform:specialNoticeOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+                  </button>
+                  {specialNoticeOpen&&(
+                    <div style={{borderTop:"1px solid rgba(232,122,170,0.3)",padding:"10px 16px 14px"}}>
+                      {specialNotices.map(function(n,i){
+                        return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,marginBottom:4,lineHeight:1.7}}>💬 {n.message}</p>;
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
               {/* 通常お知らせ（開閉式） */}
