@@ -61,6 +61,12 @@ const BTN_STYLE = {
   fontSize:13, fontWeight:700, textDecoration:"none", letterSpacing:"0.05em",
   boxShadow:"0 4px 12px rgba(112,130,56,0.4)", cursor:"pointer",
 };
+const ROW_BTN = (accentColor) => ({
+  display:"flex", alignItems:"center", gap:12, padding:"13px 16px",
+  background:"rgba(255,255,255,0.9)", border:"0.5px solid rgba(0,0,0,0.08)",
+  borderLeft:"3px solid "+accentColor, borderRadius:"0 10px 10px 0",
+  textDecoration:"none", cursor:"pointer", width:"100%", boxSizing:"border-box",
+});
 
 function splitItems(str) {
   return String(str || "").split(/[|｜;；,，]/).map(s => s.trim()).filter(Boolean);
@@ -6002,69 +6008,78 @@ function App() {
           })()}
 
         {/* MAPボタン */}
-        <button onClick={()=>{ fetchMemberMap(); setMapPage(true); }}
-          style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#3a8a6a,#2a6a4a)", boxShadow:"0 4px 12px rgba(42,106,74,0.4)", border:"none", width:"100%"}}>
-          🗾 全国のメンバーマップ
+        <button onClick={()=>{ fetchMemberMap(); setMapPage(true); }} style={ROW_BTN("#c87aaa")}>
+          <span style={{fontSize:18,color:"#c87aaa"}}>🗾</span>
+          <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>全国のメンバーマップ</span>
+          <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>›</span>
         </button>
 
         {/* 壱祈音専用ページボタン（出演者のみ） */}
         {inorionData.some(r=>r.name===m.name) && (
-          <button onClick={()=>{setInorionPage(true);window.scrollTo(0,0);fetchPractice();}}
-            style={{...BTN_STYLE, padding:"12px", background:"linear-gradient(135deg,#c87aaa,#8a4a6a)", boxShadow:"0 4px 12px rgba(138,74,106,0.4)", border:"none", width:"100%", marginBottom:0}}>
-            🎭 壱祈音〜Inorion〜 出演メンバー専用ページ
+          <button onClick={()=>{setInorionPage(true);window.scrollTo(0,0);fetchPractice();}} style={ROW_BTN("#c87aaa")}>
+            <span style={{fontSize:18,color:"#c87aaa"}}>🎭</span>
+            <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>壱祈音〜Inorion〜 出演メンバー専用ページ</span>
+            <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>›</span>
           </button>
         )}
-        <a href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ3O5AWtl79MG7to8w6ClA_bMlY_DnD15p7n1VP6DrEKbQNnR9f0bZmqU3G1lwA5B8T6R7oPoybr?gv=true" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px"}}>
-          📈 グーダドラム5つ項目診断受付
+        <a href="https://calendar.google.com/calendar/u/0/appointments/schedules/AcZssZ3O5AWtl79MG7to8w6ClA_bMlY_DnD15p7n1VP6DrEKbQNnR9f0bZmqU3G1lwA5B8T6R7oPoybr?gv=true" target="_blank" rel="noreferrer" style={ROW_BTN("#7a9aba")}>
+          <span style={{fontSize:18,color:"#7a9aba"}}>📈</span>
+          <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>グーダドラム5つ項目診断受付</span>
+          <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>↗</span>
         </a>
 
         {/* サブスク申込みボタン */}
-        <a href="https://www.gudadrumjapan.com/sbs" target="_blank" rel="noreferrer" style={{...BTN_STYLE, padding:"10px"}}>
-          🌝 各種サブスク申込み
+        <a href="https://www.gudadrumjapan.com/sbs" target="_blank" rel="noreferrer" style={ROW_BTN("#7a9aba")}>
+          <span style={{fontSize:18,color:"#7a9aba"}}>🌝</span>
+          <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>各種サブスク申込み</span>
+          <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>↗</span>
         </a>
 
         {/* 付属品・教材ボタン */}
-        <div style={{display:"flex",gap:8}}>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8}}>
           {[
-            {label:"💿 付属品＆CD", url:"https://www.gudadrumjapan.com/shop"},
-            {label:"📝 各種教材", url:"https://www.gudadrumjapan.com/tchng"},
-          ].map(({label,url})=>(
-            <a key={label} href={url} target="_blank" rel="noreferrer"
-              style={{...BTN_STYLE, flex:1, padding:"10px", fontSize:12}}>
-              {label}
+            {label:"付属品＆CD", icon:"💿", url:"https://www.gudadrumjapan.com/shop"},
+            {label:"各種教材", icon:"📝", url:"https://www.gudadrumjapan.com/tchng"},
+          ].map(({label,icon,url})=>(
+            <a key={label} href={url} target="_blank" rel="noreferrer" style={ROW_BTN("#7a9aba")}>
+              <span style={{fontSize:16,color:"#7a9aba"}}>{icon}</span>
+              <span style={{fontSize:12,fontWeight:500,color:"var(--color-text-primary)"}}>{label}</span>
             </a>
           ))}
         </div>
 
         {/* 個人レッスン予約ボタン */}
-        <div style={{display:"flex",gap:8}}>
-          <a href="https://calendar.app.google/X8gnSZq8oy9RwG3Q8" target="_blank" rel="noreferrer"
-            style={{...BTN_STYLE, flex:1, padding:"10px", fontSize:11, background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
-            🎥 個人レッスン zoom（45分）
+        <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8}}>
+          <a href="https://calendar.app.google/X8gnSZq8oy9RwG3Q8" target="_blank" rel="noreferrer" style={ROW_BTN("#708238")}>
+            <span style={{fontSize:16,color:"#708238"}}>🎥</span>
+            <span style={{fontSize:12,fontWeight:500,color:"var(--color-text-primary)"}}>zoom（45分）</span>
           </a>
-          <a href="https://calendar.app.google/uaNUP47JcGCy6GZs8" target="_blank" rel="noreferrer"
-            style={{...BTN_STYLE, flex:1, padding:"10px", fontSize:11, background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
-            🏠 個人レッスン 対面（60分）
+          <a href="https://calendar.app.google/uaNUP47JcGCy6GZs8" target="_blank" rel="noreferrer" style={ROW_BTN("#708238")}>
+            <span style={{fontSize:16,color:"#708238"}}>🏠</span>
+            <span style={{fontSize:12,fontWeight:500,color:"var(--color-text-primary)"}}>対面（60分）</span>
           </a>
         </div>
 
         {/* 個別相談ボタン（サブスク種別によって表示） */}
         {m.subscType === "幹ノーマル" && (
-          <a href="https://calendar.app.google/ZzCWEo9KbXL29s2t9" target="_blank" rel="noreferrer"
-            style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
-            💬 個別相談（15分）申込み
+          <a href="https://calendar.app.google/ZzCWEo9KbXL29s2t9" target="_blank" rel="noreferrer" style={ROW_BTN("#708238")}>
+            <span style={{fontSize:18,color:"#708238"}}>💬</span>
+            <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>個別相談（15分）申込み</span>
+            <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>↗</span>
           </a>
         )}
         {(m.subscType === "幹スペシャル" || m.subscType === "柱") && (
-          <a href="https://calendar.app.google/LXdCQ4Zg4hAgnPyF7" target="_blank" rel="noreferrer"
-            style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
-            💬 個別相談（30分）申込み
+          <a href="https://calendar.app.google/LXdCQ4Zg4hAgnPyF7" target="_blank" rel="noreferrer" style={ROW_BTN("#708238")}>
+            <span style={{fontSize:18,color:"#708238"}}>💬</span>
+            <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>個別相談（30分）申込み</span>
+            <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>↗</span>
           </a>
         )}
         {m.subscType === "講師" && (
-          <a href="https://calendar.app.google/LXdCQ4Zg4hAgnPyF7" target="_blank" rel="noreferrer"
-            style={{...BTN_STYLE, padding:"10px", background:"linear-gradient(135deg,#7a9aba,#4a6a8a)", boxShadow:"0 4px 12px rgba(74,106,138,0.4)"}}>
-            💬 個別相談（60分）申込み
+          <a href="https://calendar.app.google/LXdCQ4Zg4hAgnPyF7" target="_blank" rel="noreferrer" style={ROW_BTN("#708238")}>
+            <span style={{fontSize:18,color:"#708238"}}>💬</span>
+            <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>個別相談（60分）申込み</span>
+            <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>↗</span>
           </a>
         )}
         {/* 演奏診断 */}
