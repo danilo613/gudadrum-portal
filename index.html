@@ -6071,8 +6071,8 @@ function App() {
           var myNotices = notices.filter(function(n){
             return n.target==="全員" || n.target===m.name || n.target===m.subscType;
           });
-          // 今月のスケジュール（練習会・zoom）
-          var monthScheds = memberSchedules.filter(function(s){
+          // 今月のスケジュール（練習会・zoom）オーケストラスケジュールから
+          var monthScheds = orchSchedules.filter(function(s){
             var d = new Date(s["日付"]);
             return d.getFullYear()===year && d.getMonth()+1===month &&
               (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("zoom")||s["種別"].includes("交流")));
