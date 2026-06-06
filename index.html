@@ -6092,9 +6092,12 @@ function App() {
                     var dateStr=(d.getMonth()+1)+"月"+d.getDate()+"日（"+weekDays[d.getDay()]+"）";
                     var title=s["タイトル"]||s["種別"]||"";
                     return (
-                      <div key={i} style={{display:"flex",gap:8,alignItems:"flex-start",marginBottom:4}}>
-                        <span style={{fontSize:11,color:C.label,flexShrink:0}}>📅 {dateStr}</span>
-                        <span style={{fontSize:11,color:C.choco,fontWeight:500}}>{title}</span>
+                      <div key={i} style={{marginBottom:6}}>
+                        <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                          <span style={{fontSize:11,color:C.label,flexShrink:0}}>📅 {dateStr}</span>
+                          <span style={{fontSize:10,padding:"1px 6px",borderRadius:4,background:"rgba(112,130,56,0.1)",color:C.olive,fontWeight:600,flexShrink:0}}>{s["種別"]}</span>
+                        </div>
+                        {title&&<span style={{fontSize:11,color:C.choco,fontWeight:500,paddingLeft:20}}>{title}</span>}
                       </div>
                     );
                   })}
