@@ -19,6 +19,7 @@
 
 const STORAGE_KEY = "guda_config_v3";
 const ADMIN_PASS = "1919";
+const GUEST_PASS = "1017";
 const INSTRUCTOR_PASS = "2525";
 const INSTRUCTORS = ["Yamashita Noriko", "hiroko", "灯音(to•o•n)"];
 const SONGS = ["蒼〜aoi〜","iridescence","艶麗〜enrei〜","NoStAlGiE","heart beat of L**E","dreamy EYES","春ノ舞","秋霖〜shuhrin〜","water lily〜水面〜","めぐみの空","holy child","water lily","Re:Grace","添音〜embrace〜","祈音〜Inorion〜","fare well"];
@@ -3019,6 +3020,7 @@ function App() {
   const [showSongFilter, setShowSongFilter] = useState(false);
   const [surveyModal, setSurveyModal] = useState(null);
   const [isFromAdmin, setIsFromAdmin] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
   const [myMemo, setMyMemo] = useState("");
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
@@ -3855,6 +3857,11 @@ function App() {
       else setLoginErr("パスワードが違います");
       return;
     }
+    if (selectedName === "__guest__") {
+      if (password === GUEST_PASS) { setIsGuest(true); setPage("guest"); setPassword(""); fetchInorion(); }
+      else setLoginErr("パスワードが違います");
+      return;
+    }
     const norm = s => s.replace(/\s/g,"");
     const m = members.find(m => norm(m.name) === norm(selectedName));
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
@@ -4120,6 +4127,7 @@ function App() {
           style={{width:"100%",background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:10,padding:"11px 14px",fontSize:14,color:C.choco,marginBottom:16,cursor:"pointer",boxSizing:"border-box"}}>
           <option value="">-- 名前を選択 --</option>
           <option value="__admin__">🔑 管理者・講師</option>
+          <option value="__guest__">🎭 ゲストミュージシャン</option>
           {members.map(m=><option key={m.name} value={m.name}>{m.name}</option>)}
         </select>
         <label style={{fontSize:11,letterSpacing:"0.15em",color:C.olive,display:"block",marginBottom:8,fontWeight:600}}>PASSWORD</label>
@@ -4218,6 +4226,151 @@ function App() {
       </div>
     </div>
   );
+
+  // ゲストページ（壱祈音専用）
+  if (page === "guest") {
+    const C2 = C;
+    return (
+      <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#f0e8f0,#e0d0e8)",fontFamily:"'Noto Sans JP',sans-serif",padding:16}}>
+        <div style={{maxWidth:480}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:20,paddingTop:8}}>
+            <div style={{display:"flex",alignItems:"center",gap:10}}>
+              <span style={{fontSize:20}}>🎭</span>
+              <div>
+                <p style={{fontSize:13,fontWeight:700,color:"#6a2a4a",margin:0}}>壱祈音〜Inorion〜</p>
+                <p style={{fontSize:10,color:"#8a4a6a",margin:0}}>ゲストミュージシャン専用ページ</p>
+              </div>
+            </div>
+            <button onClick={()=>{setPage("login");setIsGuest(false);}}
+              style={{padding:"6px 14px",borderRadius:20,border:"1px solid #d4a0c0",background:"rgba(255,255,255,0.8)",color:"#8a4a6a",fontSize:11,cursor:"pointer"}}>
+              ← 戻る
+            </button>
+          </div>
+
+          {/* カウントダウン */}
+          <div style={{textAlign:"center",marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,padding:"16px"}}>
+            <p style={{fontSize:11,color:"#8a4a6a",letterSpacing:"0.15em",marginBottom:2}}>2026年10月17日（土）</p>
+            <p style={{fontSize:16,fontWeight:700,color:"#6a2a4a",marginBottom:4}}>壱祈音〜Inorion〜</p>
+            <a href="https://lapis-hall.jp/facilities/" target="_blank" rel="noreferrer"
+              style={{fontSize:12,color:"#8a4a6a",textDecoration:"underline"}}>神戸ラピスホール</a>
+            {(()=>{
+              const today=new Date(); today.setHours(0,0,0,0);
+              const live=new Date("2026-10-17");
+              const diff=Math.ceil((live-today)/(1000*60*60*24));
+              return diff>0
+                ?<p style={{fontSize:13,fontWeight:700,color:"#8a4a6a",marginTop:8}}>🗓 開催まであと <span style={{fontSize:20,color:"#6a2a4a"}}>{diff}</span> 日</p>
+                :diff===0
+                ?<p style={{fontSize:13,fontWeight:700,color:"#c87aaa",marginTop:8}}>🎉 本日開催！</p>
+                :<p style={{fontSize:13,color:"#8a6a7a",marginTop:8}}>終了しました</p>;
+            })()}
+          </div>
+
+          {/* 前日当日リハ予定 */}
+          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,overflow:"hidden",marginBottom:12}}>
+            <button onClick={()=>setInorionRehaOpen(!inorionRehaOpen)}
+              style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+              <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a"}}>📋 前日＆当日リハ予定</span>
+              <span style={{fontSize:12,color:"#8a4a6a",transform:inorionRehaOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+            </button>
+            {inorionRehaOpen&&(
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
+                <div style={{marginBottom:20}}>
+                  <div style={{background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+                    <p style={{fontSize:13,fontWeight:700,color:"#fff"}}>10月16日（金）</p>
+                    <p style={{fontSize:12,color:"rgba(255,255,255,0.85)"}}>前夜祭「音浴と光の世界」</p>
+                  </div>
+                  {[
+                    {time:"15:00",label:"DANiLO 会場入り"},
+                    {time:"16:00",label:"前夜祭「音浴と光の世界」スタート"},
+                    {time:"17:15",label:"演奏会終了"},
+                    {time:"17:30",label:"オーケストラメンバー 会場入り",highlight:true},
+                    {time:"18:00",label:"リハスタート",highlight:true},
+                    {time:"21:00",label:"終了"},
+                  ].map(function(item,i){return(
+                    <div key={i} style={{display:"flex",gap:12,padding:"7px 0",borderBottom:"1px dashed rgba(138,74,106,0.15)"}}>
+                      <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",minWidth:46,flexShrink:0}}>{item.time}</p>
+                      <p style={{fontSize:12,color:item.highlight?"#6a2a4a":"#4a2a3a",fontWeight:item.highlight?700:400,lineHeight:1.6}}>{item.label}</p>
+                    </div>
+                  );})}
+                </div>
+                <div>
+                  <div style={{background:"linear-gradient(135deg,#7a9aba,#4a6a8a)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
+                    <p style={{fontSize:13,fontWeight:700,color:"#fff"}}>10月17日（土）</p>
+                    <p style={{fontSize:12,color:"rgba(255,255,255,0.85)"}}>〝壱祈音〜Inorion〜〟本番</p>
+                  </div>
+                  {[
+                    {time:"9:45",label:"オーケストラメンバー 入り",highlight:true},
+                    {time:"10:15",label:"リハ開始",highlight:true},
+                    {time:"11:00",label:"ゲストミュージシャン 入り"},
+                    {time:"12:00",label:"ゲスト交えてリハ開始",highlight:true},
+                    {time:"13:30",label:"休憩"},
+                    {time:"14:00",label:"通しリハ開始",highlight:true},
+                    {time:"17:00",label:"音止め"},
+                    {time:"17:30",label:"オープン"},
+                    {time:"18:00",label:"🎭 スタート",highlight:true},
+                    {time:"19:45",label:"終了 → 物販"},
+                    {time:"20:30",label:"客出し"},
+                    {time:"21:00",label:"完全終了"},
+                    {time:"21:20",label:"打ち上げ開始 🥂"},
+                  ].map(function(item,i){return(
+                    <div key={i} style={{display:"flex",gap:12,padding:"7px 0",borderBottom:"1px dashed rgba(74,106,138,0.15)"}}>
+                      <p style={{fontSize:12,fontWeight:700,color:"#7a9aba",minWidth:46,flexShrink:0}}>{item.time}</p>
+                      <p style={{fontSize:12,color:item.highlight?"#6a2a4a":"#4a2a3a",fontWeight:item.highlight?700:400,lineHeight:1.6}}>{item.label}</p>
+                    </div>
+                  );})}
+                </div>
+              </div>
+            )}
+          </div>
+          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,overflow:"hidden",marginBottom:12}}>
+            <button onClick={()=>{setSetlistOpen(!setlistOpen);if(!setlistLoaded)fetchSetlist();}}
+              style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+              <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a"}}>🎼 セットリスト</span>
+              <span style={{fontSize:12,color:"#8a4a6a",transform:setlistOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+            </button>
+            {setlistOpen&&(
+              <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:1000,background:"rgba(255,255,255,0.98)",overflowY:"auto",padding:16}}>
+                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,borderBottom:"2px solid rgba(138,74,106,0.2)",paddingBottom:10}}>
+                  <span style={{fontSize:15,fontWeight:700,color:"#6a2a4a"}}>🎼 セットリスト</span>
+                  <button onClick={()=>setSetlistOpen(false)} style={{padding:"6px 16px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>閉じる</button>
+                </div>
+                <div style={{overflowX:"auto"}}>
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:600}}>
+                    <thead>
+                      <tr style={{background:"linear-gradient(135deg,#c87aaa,#8a4a6a)"}}>
+                        {["#","演目","音階・楽器","DANiLO","ゲスト","オーケストラ","りか","優太"].map(function(h){
+                          return <th key={h} style={{color:"#fff",padding:"8px 10px",textAlign:"left",fontWeight:700,fontSize:11,whiteSpace:"nowrap"}}>{h}</th>;
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {setlistRows.map(function(row,i){
+                        var isMC=!row["番号"]&&!row["演目"]||row["演目"]==="MC";
+                        if(!row["番号"]&&!row["演目"]) return null;
+                        if(isMC) return <tr key={i}><td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td></tr>;
+                        return (
+                          <tr key={i} style={{background:i%2===0?"rgba(255,255,255,0.6)":"rgba(248,240,248,0.6)"}}>
+                            <td style={{padding:"8px 10px",color:C2.label,fontWeight:600}}>{row["番号"]}</td>
+                            <td style={{padding:"8px 10px",color:C2.choco,fontWeight:700,whiteSpace:"nowrap"}}>{row["演目"]}</td>
+                            <td style={{padding:"8px 10px",color:C2.label,whiteSpace:"pre-wrap",fontSize:11}}>{row["音階・楽器"]}</td>
+                            <td style={{padding:"8px 10px",color:C2.choco}}>{row["DANiLO"]}</td>
+                            <td style={{padding:"8px 10px",color:"#5a4a8a",fontWeight:row["ゲスト"]?600:400}}>{row["ゲスト"]||"-"}</td>
+                            <td style={{padding:"8px 10px",textAlign:"center"}}>{row["オーケストラ"]?"⭕️":"-"}</td>
+                            <td style={{padding:"8px 10px",color:C2.choco}}>{row["りか"]||"-"}</td>
+                            <td style={{padding:"8px 10px",color:C2.choco}}>{row["優太"]||"-"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (page === "admin") return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
