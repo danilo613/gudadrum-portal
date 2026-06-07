@@ -5944,10 +5944,10 @@ function App() {
           </div>
 
           {/* セットリスト */}
-          <div style={boxStyle}>
+          <div style={{...boxStyle,overflow:"visible"}}>
             {headerBtn("🎼 セットリスト", setlistOpen, ()=>{setSetlistOpen(!setlistOpen);fetchSetlist();})}
             {setlistOpen&&(
-              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px",margin:"0 -20px",width:"100vw",boxSizing:"border-box"}}>
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px",marginLeft:-20,marginRight:-20,overflowX:"auto"}}>
                 {setlistRows.length===0?(
                   <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
                 ):(
