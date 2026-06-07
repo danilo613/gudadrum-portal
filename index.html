@@ -3146,11 +3146,11 @@ function App() {
   // ログイン後にBGMを1回だけ再生
   useEffect(function(){
     if(page==="member" && !bgmPlayed){
-      var bgm = new Audio("/meguru.m4a");
-      bgm.volume = 0.4;
-      bgm.play().catch(function(){});
-      bgmRef.current = bgm;
-      setBgmPlayed(true);
+      if(bgmRef.current){
+        bgmRef.current.volume = 0.4;
+        bgmRef.current.play().catch(function(){});
+        setBgmPlayed(true);
+      }
     }
   }, [page]);
 
@@ -3986,21 +3986,27 @@ function App() {
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {/* ヘッダーバー */}
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px",background:"linear-gradient(135deg,#3a6a7a,#2a4a5a)",flexShrink:0}}>
-        <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <span style={{fontSize:16}}>🥁</span>
-          <span style={{fontSize:13,fontWeight:700,color:"#fff",letterSpacing:"0.08em"}}>譜面プレイヤー</span>
-          <span style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>／ {SCORE_ID_TO_NAME[currentScoreId]||currentScoreId} ／ {(SCORE_SECTIONS[currentScoreId]||[]).find(s=>s[0]===scoreSection)?.[1]||scoreSection}</span>
-        </div>
-        <div style={{display:"flex",gap:8,alignItems:"center"}}>
-          <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
-            style={{padding:"6px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
-            💬 フィードバック
-          </button>
-          <button onClick={()=>{setPlayerFullscreen(false);setScorePage(false);}}
-            style={{padding:"6px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:"0.06em"}}>
-            プレイヤーを終了する
-          </button>
+      <div style={{background:"linear-gradient(135deg,#3a6a7a,#2a4a5a)",flexShrink:0,padding:"8px 16px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
+            <span style={{fontSize:14,flexShrink:0}}>🎼</span>
+            <div style={{minWidth:0}}>
+              <div style={{fontSize:12,fontWeight:700,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+                {SCORE_ID_TO_NAME[currentScoreId]||currentScoreId}　{(SCORE_SECTIONS[currentScoreId]||[]).find(s=>s[0]===scoreSection)?.[1]||scoreSection}
+              </div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.6)"}}>譜面プレイヤー</div>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+            <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
+              style={{padding:"5px 10px",borderRadius:16,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:10,cursor:"pointer"}}>
+              💬
+            </button>
+            <button onClick={()=>{setPlayerFullscreen(false);setScorePage(false);}}
+              style={{padding:"5px 12px",borderRadius:16,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:10,cursor:"pointer"}}>
+              終了
+            </button>
+          </div>
         </div>
       </div>
       {/* フィードバックフォーム（譜面プレイヤー内） */}
@@ -4323,7 +4329,7 @@ function App() {
           onFloatPosChange={setSharedFloatPos}
         />
       </div>
-
+      <audio ref={bgmRef} src="/meguru.m4a" preload="auto" style={{display:"none"}}/>
     </div>
   );
 
