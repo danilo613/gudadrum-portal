@@ -3964,7 +3964,7 @@ function App() {
       return;
     }
     if (selectedName === "__guest__") {
-      if (password === GUEST_PASS) { setIsGuest(true); setPage("guest"); setPassword(""); fetchInorion(); }
+      if (password === GUEST_PASS) { setIsGuest(true); setPage("guest"); setPassword(""); fetchInorion(); setSetlistOpen(false); }
       else setLoginErr("パスワードが違います");
       return;
     }
