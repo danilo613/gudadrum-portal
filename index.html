@@ -3970,10 +3970,16 @@ function App() {
           <span style={{fontSize:13,fontWeight:700,color:"#fff",letterSpacing:"0.08em"}}>譜面プレイヤー</span>
           <span style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>／ {SCORE_ID_TO_NAME[currentScoreId]||currentScoreId} ／ {(SCORE_SECTIONS[currentScoreId]||[]).find(s=>s[0]===scoreSection)?.[1]||scoreSection}</span>
         </div>
-        <button onClick={()=>{setPlayerFullscreen(false);setScorePage(false);}}
-          style={{padding:"6px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:"0.06em"}}>
-          プレイヤーを終了する
-        </button>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
+            style={{padding:"6px 14px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+            💬 フィードバック
+          </button>
+          <button onClick={()=>{setPlayerFullscreen(false);setScorePage(false);}}
+            style={{padding:"6px 18px",borderRadius:20,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:"0.06em"}}>
+            プレイヤーを終了する
+          </button>
+        </div>
       </div>
       {/* 曲・セクション選択 */}
       <div style={{padding:"12px 20px",background:"rgba(255,255,255,0.6)",flexShrink:0}}>
