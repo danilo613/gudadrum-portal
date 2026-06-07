@@ -3025,6 +3025,7 @@ function App() {
   const [isFromAdmin, setIsFromAdmin] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [bgmPlayed, setBgmPlayed] = useState(false);
+  const bgmRef = React.useRef(null);
   const [myMemo, setMyMemo] = useState("");
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
@@ -3146,8 +3147,9 @@ function App() {
   useEffect(function(){
     if(page==="member" && !bgmPlayed){
       var bgm = new Audio("/meguru.m4a");
-      bgm.volume = 0.7;
+      bgm.volume = 0.4;
       bgm.play().catch(function(){});
+      bgmRef.current = bgm;
       setBgmPlayed(true);
     }
   }, [page]);
@@ -6310,7 +6312,10 @@ function App() {
                       <button onClick={function(){
                         if(!audioRef.current) return;
                         if(audioPlaying){ audioRef.current.pause(); setAudioPlaying(false); }
-                        else { audioRef.current.play(); setAudioPlaying(true); }
+                        else {
+                          if(bgmRef.current){ bgmRef.current.pause(); bgmRef.current.currentTime=0; }
+                          audioRef.current.play(); setAudioPlaying(true);
+                        }
                       }} style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#1a3a2a,#3a7a4a)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#fff",fontSize:14}}>
                         {audioPlaying?"⏸":"▶"}
                       </button>
