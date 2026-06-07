@@ -6091,9 +6091,14 @@ function App() {
           return (
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {/* スペシャルお知らせ */}
-              {specialNotices.map(function(n,i){
-                return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,marginBottom:4,lineHeight:1.7}}>💬 {n.message}</p>;
-              })}
+              {specialNotices.length>0&&(
+                <div style={{background:"linear-gradient(135deg,#fff0f8,#ffe4f0)",border:"1.5px solid #e87aaa",borderRadius:12,padding:"12px 16px",position:"relative",overflow:"hidden",marginBottom:4}}>
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#c87aaa,#e87aaa)"}}/>
+                  {specialNotices.map(function(n,i){
+                    return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,lineHeight:1.7,marginBottom:i<specialNotices.length-1?6:0}}>💬 {n.message}</p>;
+                  })}
+                </div>
+              )}
               {/* 通常お知らせ（開閉式） */}
               {(generalNotices.length>0||monthScheds.length>0)&&(
                 <div style={{background:"rgba(255,255,255,0.92)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
@@ -6245,6 +6250,24 @@ function App() {
               </div>
             );
           })()}
+
+        {/* 譜面プレイヤー */}
+        {!isInstructor && scoreList.length > 0 && (
+          <button onClick={()=>{
+              const id=scoreList.length>0?scoreList[0]:"waterlily";
+              setCurrentScoreId(id);
+              setScoreSection("intro");
+              setScorePage(true);
+              setPlayerFullscreen(true);
+              loadScorePatterns(id);
+              if(SCORE_DEFAULT_BPM[id]) setSharedBpm(SCORE_DEFAULT_BPM[id]);
+              window.scrollTo(0,0);
+            }} style={ROW_BTN("#3a6a7a")}>
+            <span style={{fontSize:18,color:"#3a6a7a"}}>🥁</span>
+            <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>譜面プレイヤー</span>
+            <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>›</span>
+          </button>
+        )}
 
         {/* MAPボタン */}
         <button onClick={()=>{ fetchMemberMap(); setMapPage(true); }} style={ROW_BTN("#c87aaa")}>
@@ -6835,161 +6858,22 @@ function App() {
           )}
         </div>
 
-        {/* 譜面プレイヤー */}
-        {!isInstructor && scoreList.length > 0 && (
-          <div style={{marginBottom:8}}>
-            <button onClick={()=>{
-              const id=scoreList.length>0?scoreList[0]:"waterlily";
-              setCurrentScoreId(id);
-              setScoreSection("intro");
-              setScorePage(true);
-              setPlayerFullscreen(true);
-              loadScorePatterns(id);
-              if(SCORE_DEFAULT_BPM[id]) setSharedBpm(SCORE_DEFAULT_BPM[id]);
-              window.scrollTo(0,0);
-            }}
-              style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#5a8a9a,#3a6a7a)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(58,106,122,0.4)",display:"block"}}>
-              🥁 譜面プレイヤー
-            </button>
-            {scorePage && (
-              <div style={{background:"rgba(255,255,255,0.95)",border:"1px solid "+C.border,borderRadius:14,padding:16,marginTop:8}}>
-                
-                {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
-                {/* 曲選択 */}
-                <div style={{display:"flex",gap:6,marginBottom:10,flexWrap:"wrap",alignItems:"center"}}>
-                  {scoreList.map(id=>(
-                    <button key={id} onClick={()=>{setCurrentScoreId(id); loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
-                      style={{padding:"4px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:currentScoreId===id?"#4B3621":"#fff",color:currentScoreId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                      {SCORE_ID_TO_NAME[id]||id}
-                    </button>
-                  ))}
-                  <div style={{marginLeft:"auto",display:"flex",gap:4,flexShrink:0}}>
-                    <button onClick={function(){
-                      var sections=SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
-                      var cur=sections.find(function(s){return s[0]===scoreSection;});
-                      var nt=cur?cur[2]:"triplet";
-                      var pd=(scorePatterns[currentScoreId]||{})[scoreSection];
-                      var lbl=cur?cur[1]:scoreSection;
-                      printSection(currentScoreId,scoreSection,lbl,nt,pd,scorePatterns[currentScoreId]||{});
-                    }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                      印刷（この）
-                    </button>
-                    <button onClick={function(){
-                      printAllSections(currentScoreId,scorePatterns[currentScoreId]||{});
-                    }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid #d0cec8",background:"#f5f5f3",color:"#555",fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                      印刷（全）
-                    </button>
-                  </div>
-                </div>
-                {/* セクション選択 */}
-                <div style={{display:"flex",gap:6,marginBottom:12,flexWrap:"wrap"}}>
-                  {/* 全選択ボタン */}
-                  <div style={{display:"flex",gap:6,marginBottom:6,flexWrap:"wrap"}}>
-                    <button onClick={function(){
-                      var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(function(s){return s[0];});
-                      setSelectedSecs(all);
-                    }} style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>全選択</button>
-                    <button onClick={function(){setSelectedSecs([]);}}
-                      style={{padding:"3px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>解除</button>
-                  </div>
-                  {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl])=>(
-                    <button key={key} onClick={function(){
-                      setSelectedSecs(function(prev){
-                        if(prev.includes(key)){
-                          // 解除：表示セクションを別のに切り替え
-                          var next=prev.filter(function(k){return k!==key;});
-                          if(scoreSection===key && next.length>0) setScoreSection(next[next.length-1]);
-                          return next;
-                        } else {
-                          setScoreSection(key);
-                          return [].concat(prev,[key]);
-                        }
-                      });
-                    }}
-                      style={{padding:"4px 12px",borderRadius:8,
-                        border:selectedSecs.includes(key)?"2px solid #708238":"0.5px solid "+C.border,
-                        background:scoreSection===key?"#708238":selectedSecs.includes(key)?"rgba(112,130,56,0.15)":"#fff",
-                        color:scoreSection===key?"#fff":C.label,
-                        fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                      {lbl}
-                    </button>
-                  ))}
-                </div>
-                <ScorePlayer
-                  key={(function(){
-                    var sec = SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
-                    var cur = sec.find(function(s){return s[0]===scoreSection;});
-                    var subdiv = cur?cur[2]:"triplet";
-                    return currentScoreId+"-"+scoreSection+"-"+subdiv;
-                  })()}
-                  scoreId={currentScoreId}
-                  sectionKey={scoreSection}
-                  sectionLabel={(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;})?.[1]||scoreSection}
-                  patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
-                  canEdit={false}
-                  scoreLoading={scoreLoading}
-                  scale={(currentScoreId==="dreamy"||currentScoreId==="iridescence"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori")?"dreamy":"funenone"}
-                  instrument2={(currentScoreId==="megumi"||currentScoreId==="inori")?"arcane":null}
-                  patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
-                  isQueuePlaying={isQueuePlay}
-                  autoPlay={isQueuePlay}
-                  onLoopComplete={isQueuePlay?function(){
-                    var nextIdx=playQueueIdxRef.current+1;
-                    if(nextIdx<playQueueRef.current.length){
-                      playQueueIdxRef.current=nextIdx;
-                      setScoreSection(playQueueRef.current[nextIdx]);
-                      return true;
-                    } else {
-                      playQueueIdxRef.current=0;
-                      isQueuePlayRef.current=false;
-                      setIsQueuePlay(false);
-                      return false;
-                    }
-                  }:null}
-                  sharedBpm={sharedBpm}
-                  floatPosInit={sharedFloatPos}
-                  onFloatPosChange={setSharedFloatPos}
-                  onBpmChange={function(v){setSharedBpm(v);}}
-                  sharedMetroOn={sharedMetroOn}
-                  sharedMetroMode={sharedMetroMode}
-                  sharedHeadBell={sharedHeadBell||false}
-                  onMetroChange={function(metroOn, metroMode, headBell){
-                    if(metroOn!==undefined) setSharedMetroOn(metroOn);
-                    if(metroMode!==undefined) setSharedMetroMode(metroMode);
-                    if(headBell!==undefined) setSharedHeadBell(headBell);
-                  }}
-                  onPrintAll={function(){printAllSections(currentScoreId, scorePatterns[currentScoreId]||{});}}
-                  onQueueStart={playerMode==="queue"&&selectedSecs.length>0?function(){
-                    var sections=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
-                    var queue=sections.filter(function(s){return selectedSecs.includes(s[0]);}).map(function(s){return s[0];});
-                    playQueueRef.current=queue;
-                    playQueueIdxRef.current=0;
-                    isQueuePlayRef.current=true;
-                    setIsQueuePlay(true);
-                    setScoreSection(queue[0]);
-                  }:null}
-
-                  subdivProp={(function(){var s=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreSection;});return s?s[2]:"triplet";})()}
-                  onSave={saveScorePattern}
-                  floatPosInit={sharedFloatPos}
-                  onFloatPosChange={setSharedFloatPos}
-                />
-              </div>
-            )}
-          </div>
-        )}
 
         {/* 開発支援ボタン */}
         <a href="https://www.gudadrumjapan.com/product-page/shien" target="_blank" rel="noreferrer"
-          style={{display:"block",textAlign:"center",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#e8a84a,#c87020)",color:"#fff",fontSize:14,fontWeight:700,textDecoration:"none",letterSpacing:"0.05em",boxShadow:"0 4px 12px rgba(200,112,32,0.4)",cursor:"pointer"}}>
-          🌈 ポータルサイト開発支援 🌈
+          style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:"linear-gradient(135deg,#fff8e8,#ffecc0)",border:"1.5px solid #e8a84a",borderLeft:"4px solid #e8a84a",borderRadius:"0 12px 12px 0",textDecoration:"none",cursor:"pointer"}}>
+          <span style={{fontSize:20}}>🌈</span>
+          <span style={{fontSize:13,fontWeight:700,color:"#8a5020",flex:1}}>ポータルサイト開発支援</span>
+          <span style={{fontSize:11,color:"#c87020"}}>↗</span>
         </a>
 
         {/* フィードバックボタン */}
         <div style={{marginBottom:8}}>
           <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
-            style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#7aaa3a,#4a7a1a)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(74,122,26,0.4)",display:"block"}}>
-            💬 アプリへのフィードバックを送る
+            style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:"linear-gradient(135deg,#f0fff0,#d8f0d8)",border:"1.5px solid #7aaa3a",borderLeft:"4px solid #7aaa3a",borderRadius:"0 12px 12px 0",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>
+            <span style={{fontSize:20}}>💬</span>
+            <span style={{fontSize:13,fontWeight:700,color:"#3a6a1a",flex:1,textAlign:"left"}}>アプリへのフィードバックを送る</span>
+            <span style={{fontSize:11,color:"#7aaa3a"}}>{feedbackOpen?"▲":"▼"}</span>
           </button>
           {feedbackOpen && (
             <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:16,marginTop:8,position:"relative",zIndex:10}}>
@@ -7025,8 +6909,10 @@ function App() {
           <div style={{marginBottom:16}}>
             {!cancelSubsConfirm ? (
               <button onClick={()=>setCancelSubsConfirm(true)}
-                style={{width:"100%",padding:"14px",borderRadius:12,border:"none",background:"linear-gradient(135deg,#888,#555)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",textAlign:"center",boxShadow:"0 4px 12px rgba(80,80,80,0.4)"}}>
-                サブスクを中止する
+                style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:"rgba(240,240,240,0.8)",border:"1.5px solid #aaa",borderLeft:"4px solid #888",borderRadius:"0 12px 12px 0",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>
+                <span style={{fontSize:18}}>⏹</span>
+                <span style={{fontSize:13,fontWeight:700,color:"#555",flex:1,textAlign:"left"}}>サブスクを中止する</span>
+                <span style={{fontSize:11,color:"#888"}}>›</span>
               </button>
             ) : (
               <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #ccc",borderRadius:12,padding:16}}>
