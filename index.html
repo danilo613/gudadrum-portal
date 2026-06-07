@@ -3146,16 +3146,13 @@ function App() {
   // ログイン後にBGMを1回だけ再生
   useEffect(function(){
     if(page==="member" && !bgmPlayed){
-      var timer = setTimeout(function(){
-        if(bgmRef.current){
-          bgmRef.current.volume = 0.4;
-          bgmRef.current.play().catch(function(){});
-          setBgmPlayed(true);
-        }
-      }, 500);
-      return function(){ clearTimeout(timer); };
+      var bgm = new Audio("/meguru.m4a");
+      bgm.volume = 0.4;
+      bgmRef.current = bgm;
+      bgm.play().catch(function(){});
+      setBgmPlayed(true);
     }
-  }, [page, bgmPlayed]);
+  }, [page]);
 
   useEffect(() => {
     autoFetch();
@@ -4223,7 +4220,6 @@ function App() {
         {fetchMsg && <p style={{fontSize:12,color:"#a04030",textAlign:"center",marginTop:8,lineHeight:1.6}}>{fetchMsg}</p>}
       </div>
       {showSettings && <SettingsModal/>}
-      <audio ref={bgmRef} src="/meguru.m4a" preload="auto" style={{display:"none"}}/>
     </div>
   );
 
