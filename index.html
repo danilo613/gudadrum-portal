@@ -67,6 +67,7 @@ const ROW_BTN = (accentColor) => ({
   background:"rgba(255,255,255,0.9)", border:"0.5px solid rgba(0,0,0,0.08)",
   borderLeft:"3px solid "+accentColor, borderRadius:"0 10px 10px 0",
   textDecoration:"none", cursor:"pointer", width:"100%", boxSizing:"border-box",
+  color:"#2a3a2a",
 });
 
 function splitItems(str) {
@@ -3023,6 +3024,7 @@ function App() {
   const [surveyModal, setSurveyModal] = useState(null);
   const [isFromAdmin, setIsFromAdmin] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
+  const [bgmPlayed, setBgmPlayed] = useState(false);
   const [myMemo, setMyMemo] = useState("");
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
@@ -3139,6 +3141,16 @@ function App() {
   const [scoreModalMsg,  setScoreModalMsg]  = useState("");
   const [scoreEditSec,   setScoreEditSec]   = useState("intro");
   const [scoreEditId,    setScoreEditId]    = useState("waterlily");
+
+  // ログイン後にBGMを1回だけ再生
+  useEffect(function(){
+    if(page==="member" && !bgmPlayed){
+      var bgm = new Audio("/meguru.m4a");
+      bgm.volume = 0.4;
+      bgm.play().catch(function(){});
+      setBgmPlayed(true);
+    }
+  }, [page]);
 
   useEffect(() => {
     autoFetch();
@@ -3928,12 +3940,19 @@ function App() {
   };
 
   const topbar = (title, actions) => (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 20px",background:"rgba(255,255,255,0.9)",borderBottom:"1px solid "+C.border,position:"sticky",top:0,zIndex:10}}>
-      <div style={{display:"flex",alignItems:"center",gap:10}}>
-        <span style={{fontSize:16}}>🌿</span>
-        <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.olive}}>{title}</span>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 20px",background:"rgba(255,255,255,0.85)",borderBottom:"1px solid rgba(0,0,0,0.06)",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)"}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
+        <span style={{fontSize:16,flexShrink:0}}>🌿</span>
+        <div style={{minWidth:0}}>
+          <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.choco,fontFamily:"'Noto Serif JP',serif"}}>{title}</span>
+          {title==="GUDADRUM ORCHESTRA"&&(
+            <div style={{fontSize:9,color:"#5a8a5a",letterSpacing:"0.03em",marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
+              BGM：環〜meguru〜　作曲：irooto（認定講師：やましたのりこ）　<a href="https://www.gudadrumjapan.com/product-page/minamoto" target="_blank" rel="noreferrer" style={{color:"#3a6a3a",textDecoration:"underline"}}>詳細はこちら</a>
+            </div>
+          )}
+        </div>
       </div>
-      <div style={{display:"flex",gap:8}}>{actions}</div>
+      <div style={{display:"flex",gap:8,flexShrink:0}}>{actions}</div>
     </div>
   );
 
@@ -6175,7 +6194,7 @@ function App() {
                         style={{position:"absolute",bottom:-8,right:-8,width:96,height:96,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:5}}
                         onError={function(e){e.target.style.display="none";}}/>
                       {generalNotices.map(function(n,i){
-                        return <p key={i} style={{fontSize:12,color:"#1a3a2a",fontWeight:600,marginBottom:6,lineHeight:1.6}}>💬 {n.message}</p>;
+                        return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:600,marginBottom:6,lineHeight:1.6}}>💬 {n.message}</p>;
                       })}
                       {monthScheds.length>0&&(
                         <div style={{borderTop:generalNotices.length>0?"1px solid rgba(0,0,0,0.06)":"none",paddingTop:generalNotices.length>0?8:0}}>
@@ -6275,7 +6294,7 @@ function App() {
                       <span style={{fontSize:10,fontWeight:500,color:"#2a5a3a",background:"rgba(42,90,58,0.12)",padding:"2px 7px",borderRadius:"var(--border-radius-md)"}}>MEMBERS ONLY</span>
                     </div>
                     <div style={{fontSize:9,color:"#2a5a3a",letterSpacing:"0.18em",fontWeight:500,marginBottom:3}}>GUDADRUM ORCHESTRA EXCLUSIVE</div>
-                    <p style={{fontSize:15,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>祈音〜Inorion〜</p>
+                    <p style={{fontSize:15,fontWeight:500,color:"#2a3a2a",margin:"0 0 3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>祈音〜Inorion〜</p>
                     <p style={{fontSize:11,color:"var(--color-text-secondary)",margin:"0 0 10px"}}>作曲：DANiLO　　音階：響ノ音＆風ノ音</p>
                     <div style={{marginBottom:6}}>
                       <div style={{position:"relative",height:3,background:"var(--color-background-tertiary)",borderRadius:2,marginBottom:4}}>
@@ -6367,7 +6386,7 @@ function App() {
           ].map(({label,icon,url})=>(
             <a key={label} href={url} target="_blank" rel="noreferrer" style={ROW_BTN("#7a9aba")}>
               <span style={{fontSize:16,color:"#7a9aba"}}>{icon}</span>
-              <span style={{fontSize:12,fontWeight:500,color:"var(--color-text-primary)"}}>{label}</span>
+              <span style={{fontSize:12,fontWeight:500,color:"#2a3a2a"}}>{label}</span>
             </a>
           ))}
         </div>
@@ -6376,11 +6395,11 @@ function App() {
         <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:8}}>
           <a href="https://calendar.app.google/X8gnSZq8oy9RwG3Q8" target="_blank" rel="noreferrer" style={ROW_BTN("#708238")}>
             <span style={{fontSize:16,color:"#708238"}}>🎥</span>
-            <span style={{fontSize:12,fontWeight:500,color:"var(--color-text-primary)"}}>個人レッスン zoom（45分）</span>
+            <span style={{fontSize:12,fontWeight:500,color:"#2a3a2a"}}>個人レッスン zoom（45分）</span>
           </a>
           <a href="https://calendar.app.google/uaNUP47JcGCy6GZs8" target="_blank" rel="noreferrer" style={ROW_BTN("#708238")}>
             <span style={{fontSize:16,color:"#708238"}}>🏠</span>
-            <span style={{fontSize:12,fontWeight:500,color:"var(--color-text-primary)"}}>個人レッスン 対面（60分）</span>
+            <span style={{fontSize:12,fontWeight:500,color:"#2a3a2a"}}>個人レッスン 対面（60分）</span>
           </a>
         </div>
 
