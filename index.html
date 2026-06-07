@@ -3146,13 +3146,16 @@ function App() {
   // ログイン後にBGMを1回だけ再生
   useEffect(function(){
     if(page==="member" && !bgmPlayed){
-      if(bgmRef.current){
-        bgmRef.current.volume = 0.4;
-        bgmRef.current.play().catch(function(){});
-        setBgmPlayed(true);
-      }
+      var timer = setTimeout(function(){
+        if(bgmRef.current){
+          bgmRef.current.volume = 0.4;
+          bgmRef.current.play().catch(function(){});
+          setBgmPlayed(true);
+        }
+      }, 500);
+      return function(){ clearTimeout(timer); };
     }
-  }, [page]);
+  }, [page, bgmPlayed]);
 
   useEffect(() => {
     autoFetch();
