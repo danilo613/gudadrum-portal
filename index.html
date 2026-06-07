@@ -2757,8 +2757,16 @@ function renderSideGrid2(barIdx, side){
 }
 
 
-function SetlistView({ rows, inorionData, onClose, C }) {
-  var weekDays=["日","月","火","水","木","金","土"];
+function SetlistView({ inorionData, onClose, C }) {
+  var [rows, setRows] = React.useState([]);
+  React.useEffect(function(){
+    var cb="slCb_"+Date.now();
+    window[cb]=function(d){delete window[cb];if(d.rows)setRows(d.rows);};
+    var s=document.createElement("script");
+    s.src="https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=getsetlist&callback="+cb;
+    s.onerror=function(){delete window[cb];};
+    document.body.appendChild(s);
+  },[]);
   return (
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:1000,background:"rgba(255,255,255,0.98)",overflowY:"auto",padding:"16px"}}>
       <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,borderBottom:"2px solid rgba(138,74,106,0.2)",paddingBottom:10}}>
@@ -5940,7 +5948,6 @@ function App() {
             {headerBtn("🎼 セットリスト", setlistOpen, ()=>{setSetlistOpen(!setlistOpen);fetchSetlist();})}
             {setlistOpen&&(
               <SetlistView
-                rows={setlistRows}
                 inorionData={inorionData}
                 onClose={()=>setSetlistOpen(false)}
                 C={C}
