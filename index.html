@@ -5947,11 +5947,51 @@ function App() {
           <div style={boxStyle}>
             {headerBtn("🎼 セットリスト", setlistOpen, ()=>{setSetlistOpen(!setlistOpen);fetchSetlist();})}
             {setlistOpen&&(
-              <SetlistView
-                inorionData={inorionData}
-                onClose={()=>setSetlistOpen(false)}
-                C={C}
-              />
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px",overflowX:"auto"}}>
+                {setlistRows.length===0?(
+                  <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
+                ):(
+                  <table style={{width:"100%",borderCollapse:"collapse",fontSize:12,minWidth:500}}>
+                    <thead>
+                      <tr style={{background:"linear-gradient(135deg,#c87aaa,#8a4a6a)"}}>
+                        {["#","演目","DANiLO","ゲスト","オーケストラ","りか","優太"].map(function(h){
+                          return <th key={h} style={{color:"#fff",padding:"8px 8px",textAlign:"left",fontWeight:700,fontSize:11,whiteSpace:"nowrap"}}>{h}</th>;
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {setlistRows.map(function(row,i){
+                        if(!row["番号"]&&!row["演目"]) return null;
+                        if(row["演目"]==="MC"||!row["番号"]) return (
+                          <tr key={i}><td colSpan={7} style={{padding:"6px 8px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td></tr>
+                        );
+                        var songName=row["演目"];
+                        var orchCell=null;
+                        if(row["オーケストラ"]==="⭕️"||row["オーケストラ"]==="○"){
+                          var entries=inorionData.filter(function(r){return r.song===songName||r.song.startsWith(songName+"（");});
+                          var confirmed=[...new Set(entries.filter(function(r){return r.status&&(r.status.includes("🔥")||r.status.includes("⭐️")||r.status.includes("💮"));}).map(function(r){return r.name;}))];
+                          var pending=[...new Set(entries.filter(function(r){return !r.status||(!r.status.includes("🔥")&&!r.status.includes("⭐️")&&!r.status.includes("💮"));}).map(function(r){return r.name;}))];
+                          orchCell=<div style={{fontSize:10,lineHeight:1.6}}>
+                            {confirmed.length>0&&<div><span style={{color:"#3a7a3a",fontWeight:700}}>🔥</span>{confirmed.join("・")}</div>}
+                            {pending.length>0&&<div><span style={{color:"#8a6a00",fontWeight:700}}>⭕️</span>{pending.join("・")}</div>}
+                          </div>;
+                        }
+                        return (
+                          <tr key={i} style={{background:i%2===0?"rgba(255,255,255,0.6)":"rgba(248,240,248,0.6)"}}>
+                            <td style={{padding:"6px 8px",color:C.label,fontWeight:600,fontSize:11}}>{row["番号"]}</td>
+                            <td style={{padding:"6px 8px",color:"#6a2a4a",fontWeight:700,fontSize:11,whiteSpace:"nowrap"}}>{row["演目"]}</td>
+                            <td style={{padding:"6px 8px",color:"#6a2a4a",fontSize:11}}>{row["DANiLO"]||"-"}</td>
+                            <td style={{padding:"6px 8px",color:"#5a4a8a",fontWeight:row["ゲスト"]?600:400,fontSize:11,whiteSpace:"nowrap"}}>{row["ゲスト"]||"-"}</td>
+                            <td style={{padding:"6px 8px",minWidth:80}}>{orchCell||row["オーケストラ"]||"-"}</td>
+                            <td style={{padding:"6px 8px",color:"#6a2a4a",fontSize:11}}>{row["りか"]||"-"}</td>
+                            <td style={{padding:"6px 8px",color:"#6a2a4a",fontSize:11}}>{row["優太"]||"-"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             )}
           </div>
 
