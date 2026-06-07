@@ -6127,7 +6127,7 @@ function App() {
       ] : [
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
       ])}
-      <div style={{flex:1,overflowY:"auto",padding:"16px 24px 24px"}}><div style={{maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}}>
+      <div style={{flex:1,overflowY:"auto",padding:"16px 24px 24px"}}><div style={{maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
 
         {/* お知らせカード */}
         {(()=>{
@@ -6325,7 +6325,7 @@ function App() {
               if(SCORE_DEFAULT_BPM[id]) setSharedBpm(SCORE_DEFAULT_BPM[id]);
               window.scrollTo(0,0);
             }} style={ROW_BTN("#3a6a7a")}>
-            <span style={{fontSize:18,color:"#3a6a7a"}}>🥁</span>
+            <span style={{fontSize:18,color:"#3a6a7a"}}>🎼</span>
             <span style={{fontSize:13,fontWeight:500,color:"var(--color-text-primary)",flex:1,textAlign:"left"}}>譜面プレイヤー</span>
             <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>›</span>
           </button>
@@ -6932,7 +6932,7 @@ function App() {
         {/* フィードバックボタン */}
         <div style={{marginBottom:8}}>
           <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
-            style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:"linear-gradient(135deg,#f0fff0,#d8f0d8)",border:"1.5px solid #7aaa3a",borderLeft:"4px solid #7aaa3a",borderRadius:"0 12px 12px 0",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>
+            style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:"linear-gradient(135deg,#f0fff0,#d8f0d8)",border:"1.5px solid #7aaa3a",borderLeft:"4px solid #7aaa3a",borderRadius:"0 12px 12px 0",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>
             <span style={{fontSize:20}}>💬</span>
             <span style={{fontSize:13,fontWeight:700,color:"#3a6a1a",flex:1,textAlign:"left"}}>アプリへのフィードバックを送る</span>
             <span style={{fontSize:11,color:"#7aaa3a"}}>{feedbackOpen?"▲":"▼"}</span>
@@ -6971,7 +6971,7 @@ function App() {
           <div style={{marginBottom:16}}>
             {!cancelSubsConfirm ? (
               <button onClick={()=>setCancelSubsConfirm(true)}
-                style={{display:"flex",alignItems:"center",gap:12,padding:"14px 16px",background:"rgba(240,240,240,0.8)",border:"1.5px solid #aaa",borderLeft:"4px solid #888",borderRadius:"0 12px 12px 0",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>
+                style={{display:"flex",alignItems:"center",gap:12,padding:"13px 16px",background:"rgba(240,240,240,0.8)",border:"1.5px solid #aaa",borderLeft:"4px solid #888",borderRadius:"0 12px 12px 0",cursor:"pointer",width:"100%",boxSizing:"border-box"}}>
                 <span style={{fontSize:18}}>⏹</span>
                 <span style={{fontSize:13,fontWeight:700,color:"#555",flex:1,textAlign:"left"}}>サブスクを中止する</span>
                 <span style={{fontSize:11,color:"#888"}}>›</span>
