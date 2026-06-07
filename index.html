@@ -3146,7 +3146,7 @@ function App() {
   useEffect(function(){
     if(page==="member" && !bgmPlayed){
       var bgm = new Audio("/meguru.m4a");
-      bgm.volume = 0.4;
+      bgm.volume = 0.7;
       bgm.play().catch(function(){});
       setBgmPlayed(true);
     }
@@ -3946,8 +3946,9 @@ function App() {
         <div style={{minWidth:0}}>
           <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.choco,fontFamily:"'Noto Serif JP',serif"}}>{title}</span>
           {title==="GUDADRUM ORCHESTRA"&&(
-            <div style={{fontSize:9,color:"#5a8a5a",letterSpacing:"0.03em",marginTop:1,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-              BGM：環〜meguru〜　作曲：irooto（認定講師：やましたのりこ）　<a href="https://www.gudadrumjapan.com/product-page/minamoto" target="_blank" rel="noreferrer" style={{color:"#3a6a3a",textDecoration:"underline"}}>詳細はこちら</a>
+            <div style={{fontSize:11,color:"#5a8a5a",letterSpacing:"0.03em",marginTop:2,lineHeight:1.5}}>
+              <div>BGM：環〜meguru〜　作曲：irooto</div>
+              <div>認定講師：やましたのりこ　<a href="https://www.gudadrumjapan.com/product-page/minamoto" target="_blank" rel="noreferrer" style={{color:"#3a6a3a",textDecoration:"underline"}}>詳細はこちら</a></div>
             </div>
           )}
         </div>
@@ -4181,9 +4182,9 @@ function App() {
   if (page === "login") return (
     <div style={{minHeight:"100vh",backgroundImage:"url(/back.png)",backgroundSize:"cover",backgroundPosition:"top left",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Noto Sans JP',sans-serif",padding:20}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
-      <div style={{fontSize:40,marginBottom:8}}>🌿</div>
-      <div style={{fontSize:22,fontWeight:700,letterSpacing:"0.12em",color:C.choco,marginBottom:6,fontFamily:"'Noto Serif JP',serif"}}>GUDADRUM ORCHESTRA</div>
-      <div style={{fontSize:12,color:C.moss,letterSpacing:"0.18em",marginBottom:16}}>MEMBER PORTAL</div>
+      <div style={{fontSize:40,marginBottom:8,filter:"drop-shadow(0 0 12px rgba(255,255,255,0.95))"}}>🌿</div>
+      <div style={{fontSize:22,fontWeight:700,letterSpacing:"0.12em",color:C.choco,marginBottom:6,fontFamily:"'Noto Serif JP',serif",textShadow:"0 0 20px rgba(255,255,255,0.9),0 0 40px rgba(255,255,255,0.7)"}}>GUDADRUM ORCHESTRA</div>
+      <div style={{fontSize:12,color:C.moss,letterSpacing:"0.18em",marginBottom:16,textShadow:"0 0 15px rgba(255,255,255,0.9)"}}>MEMBER PORTAL</div>
       <div style={{fontSize:11,color:C.label,marginBottom:24,textAlign:"center",lineHeight:1.8}}>
         {members.length === 0
           ? "⏳ 読み込み中です。名前が表示されるまでしばらくお待ちください..."
@@ -6176,7 +6177,7 @@ function App() {
                 <div style={{background:"linear-gradient(135deg,#fff0f8,#ffe4f0)",border:"1.5px solid #e87aaa",borderRadius:12,padding:"12px 16px",position:"relative",overflow:"hidden",marginBottom:4}}>
                   <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#c87aaa,#e87aaa)"}}/>
                   {specialNotices.map(function(n,i){
-                    return <p key={i} style={{fontSize:12,color:"#1a3a2a",fontWeight:700,lineHeight:1.7,marginBottom:i<specialNotices.length-1?6:0}}>💬 {n.message}</p>;
+                    return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,lineHeight:1.7,marginBottom:i<specialNotices.length-1?6:0}}>💬 {n.message}</p>;
                   })}
                 </div>
               )}
