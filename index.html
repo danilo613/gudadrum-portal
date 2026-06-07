@@ -4890,9 +4890,6 @@ function App() {
               const totalParticipants = workshopData.filter(r=>r["回答のタイミング"]==="練習前").length;
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8,position:"relative"}}>
-              <img src="/danilo.PNG" alt=""
-                style={{position:"absolute",bottom:-10,right:-10,width:80,height:80,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:5}}
-                onError={function(e){e.target.style.display="none";}}/>
                   <div style={{display:"flex",gap:8,marginBottom:4}}>
                     <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
                       <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>実施日数</p>
@@ -6092,7 +6089,10 @@ function App() {
           }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
           if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0) return null;
           return (
-            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+            <div style={{display:"flex",flexDirection:"column",gap:8,position:"relative"}}>
+              <img src="/danilo.PNG" alt=""
+                style={{position:"absolute",bottom:-10,right:-10,width:80,height:80,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:5}}
+                onError={function(e){e.target.style.display="none";}}/>
               {/* スペシャルお知らせ */}
               {specialNotices.map(function(n,i){
                 return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,marginBottom:4,lineHeight:1.7}}>💬 {n.message}</p>;
