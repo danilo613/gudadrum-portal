@@ -3311,8 +3311,9 @@ function App() {
   async function fetchSetlist() {
     try {
       const res = await gasRead({ action: "getsetlist" });
+      console.log("fetchSetlist:", res.rows&&res.rows.length);
       if (res.rows) { setSetlistRows(res.rows); setSetlistLoaded(true); }
-    } catch(e) {}
+    } catch(e) { console.error("fetchSetlist error:", e); }
   }
 
   async function fetchPractice() {
