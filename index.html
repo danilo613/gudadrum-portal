@@ -2879,7 +2879,7 @@ function MapPage({ members, onClose, C, currentMemberName }) {
 
   return (
     <div style={{height:"100vh",background:"#D6BF9D",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       <div style={{background:"linear-gradient(135deg,#708238,#4a5a28)",flexShrink:0,padding:"10px 16px"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
           <div style={{display:"flex",alignItems:"center",gap:8}}>
@@ -3962,7 +3962,7 @@ function App() {
 
   if (playerFullscreen && scorePage) return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {/* ヘッダーバー */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px",background:"linear-gradient(135deg,#3a6a7a,#2a4a5a)",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -4161,7 +4161,7 @@ function App() {
 
   if (page === "login") return (
     <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#e8e2d4,#d4ccb8)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",fontFamily:"'Noto Sans JP',sans-serif",padding:20}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       <div style={{fontSize:40,marginBottom:8}}>🌿</div>
       <div style={{fontSize:22,fontWeight:700,letterSpacing:"0.12em",color:C.choco,marginBottom:6}}>GUDADRUM ORCHESTRA</div>
       <div style={{fontSize:12,color:C.moss,letterSpacing:"0.18em",marginBottom:16}}>MEMBER PORTAL</div>
@@ -4202,7 +4202,7 @@ function App() {
 
   if (page === "admin" && editFullscreen && scoreEditOpen) return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {/* クリエイターツール終了バー */}
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 20px",background:"linear-gradient(135deg,#3a6a7a,#2a4a5a)",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
@@ -4453,7 +4453,7 @@ function App() {
 
   if (page === "admin") return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("管理者ダッシュボード",[
         iconBtn("🗾 MAP",()=>{ fetchMemberMap(); setMapPage(true); }),
         iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
@@ -5740,7 +5740,7 @@ function App() {
     );
     return (
       <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#f0e8f0,#e0d0e8)",fontFamily:"'Noto Sans JP',sans-serif"}}>
-        <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+        <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
         {topbar("壱祈音〜Inorion〜", [
           iconBtn("← メンバーページへ",()=>setInorionPage(false)),
         ])}
@@ -6120,7 +6120,7 @@ function App() {
 
   return (
     <div style={{height:"100vh",backgroundImage:"url(/back.png)",backgroundSize:"cover",backgroundPosition:"top left",backgroundAttachment:"fixed",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
         iconBtn("← 管理者に戻る",()=>setPage("admin")),
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
@@ -6219,14 +6219,14 @@ function App() {
                   };
                   return map[m.subscType] || "MEMBER";
                 })()}</p>
-                <p style={{fontSize:16,fontWeight:700,color:LEVEL_COLOR,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%"}}>{m.name}</p>
-                <p style={{fontSize:14,fontWeight:700,color:C.sand}}>{m.level||"−"}</p>
+                <p style={{fontSize:16,fontWeight:700,color:LEVEL_COLOR,marginBottom:4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis",maxWidth:"100%",fontFamily:"'Noto Serif JP',serif"}}>{m.name}</p>
+                <p style={{fontSize:14,fontWeight:700,color:C.sand,fontFamily:"'Noto Serif JP',serif"}}>{m.level||"−"}</p>
                 {m.subscNextDate && <p style={{fontSize:10,color:"rgba(255,255,255,0.6)",marginTop:2,whiteSpace:"nowrap"}}>次回更新日：{m.subscNextDate.replace(/-/g,"/")}</p>}
               </div>
             </div>
             <div style={{textAlign:"right",flexShrink:0}}>
               <p style={{fontSize:9,color:"#d4e8a0",marginBottom:2}}>保有ポイント</p>
-              <p style={{fontSize:22,fontWeight:700,color:"#fff",lineHeight:1,marginBottom:8}}>
+              <p style={{fontSize:22,fontWeight:700,color:"#fff",lineHeight:1,marginBottom:8,fontFamily:"'Noto Serif JP',serif"}}>
                 {(m.points||0).toLocaleString()}
                 <span style={{fontSize:11,color:"#d4e8a0",marginLeft:2}}>P</span>
               </p>
@@ -6263,23 +6263,23 @@ function App() {
         {(()=>{
             return (
               <div style={{background:"#ffffff",border:"0.5px solid var(--color-border-tertiary)",borderRadius:20,padding:16,marginBottom:20,position:"relative",overflow:"hidden",boxShadow:"0 4px 16px rgba(0,0,0,0.08)"}}>
-                <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#1a4fa8,#0e7fa8,#00b8b8)"}}/>
+                <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#1a3a2a,#2a5a3a,#3a7a4a)"}}/>
                 <div style={{display:"flex",gap:14,alignItems:"center"}}>
-                  <div style={{flexShrink:0,width:80,height:80,borderRadius:"var(--border-radius-md)",background:"linear-gradient(135deg,#1a4fa8,#00b8b8)",border:"0.5px solid var(--color-border-tertiary)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
+                  <div style={{flexShrink:0,width:80,height:80,borderRadius:"var(--border-radius-md)",background:"linear-gradient(135deg,#1a3a2a,#3a7a4a)",border:"0.5px solid var(--color-border-tertiary)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden",position:"relative"}}>
                     <img src="/inorion.png" alt="祈音〜Inorion〜"
                       style={{width:"100%",height:"100%",objectFit:"cover",position:"absolute",inset:0}}
                       onError={function(e){e.target.style.display="none";}}/>
                   </div>
                   <div style={{flex:1,minWidth:0}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:2}}>
-                      <span style={{fontSize:10,fontWeight:500,color:"#0e7fa8",background:"rgba(14,127,168,0.12)",padding:"2px 7px",borderRadius:"var(--border-radius-md)"}}>MEMBERS ONLY</span>
+                      <span style={{fontSize:10,fontWeight:500,color:"#2a5a3a",background:"rgba(42,90,58,0.12)",padding:"2px 7px",borderRadius:"var(--border-radius-md)"}}>MEMBERS ONLY</span>
                     </div>
-                    <div style={{fontSize:9,color:"#0e7fa8",letterSpacing:"0.18em",fontWeight:500,marginBottom:3}}>GUDADRUM ORCHESTRA EXCLUSIVE</div>
+                    <div style={{fontSize:9,color:"#2a5a3a",letterSpacing:"0.18em",fontWeight:500,marginBottom:3}}>GUDADRUM ORCHESTRA EXCLUSIVE</div>
                     <p style={{fontSize:15,fontWeight:500,color:"var(--color-text-primary)",margin:"0 0 3px",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>祈音〜Inorion〜</p>
                     <p style={{fontSize:11,color:"var(--color-text-secondary)",margin:"0 0 10px"}}>作曲：DANiLO　　音階：響ノ音＆風ノ音</p>
                     <div style={{marginBottom:6}}>
                       <div style={{position:"relative",height:3,background:"var(--color-background-tertiary)",borderRadius:2,marginBottom:4}}>
-                        <div style={{height:"100%",width:(audioDuration?(audioProgress/audioDuration*100):0)+"%",background:"linear-gradient(90deg,#1a4fa8,#00b8b8)",borderRadius:2}}/>
+                        <div style={{height:"100%",width:(audioDuration?(audioProgress/audioDuration*100):0)+"%",background:"linear-gradient(90deg,#1a3a2a,#3a7a4a)",borderRadius:2}}/>
                       </div>
                       <div style={{display:"flex",justifyContent:"space-between"}}>
                         <span style={{fontSize:10,color:"var(--color-text-tertiary)"}}>{Math.floor(audioProgress/60)+":"+(Math.floor(audioProgress%60)<10?"0":"")+Math.floor(audioProgress%60)}</span>
@@ -6291,7 +6291,7 @@ function App() {
                         if(!audioRef.current) return;
                         if(audioPlaying){ audioRef.current.pause(); setAudioPlaying(false); }
                         else { audioRef.current.play(); setAudioPlaying(true); }
-                      }} style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#1a4fa8,#00b8b8)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#fff",fontSize:14}}>
+                      }} style={{width:34,height:34,borderRadius:"50%",background:"linear-gradient(135deg,#1a3a2a,#3a7a4a)",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#fff",fontSize:14}}>
                         {audioPlaying?"⏸":"▶"}
                       </button>
                       <span style={{fontSize:12,color:"var(--color-text-tertiary)"}}>🔊</span>
@@ -6301,7 +6301,7 @@ function App() {
                           setAudioVolume(v);
                           if(audioRef.current) audioRef.current.volume=v;
                         }}
-                        style={{flex:1,height:3,accentColor:"#0e7fa8",cursor:"pointer"}}/>
+                        style={{flex:1,height:3,accentColor:"#2a5a3a",cursor:"pointer"}}/>
                     </div>
                   </div>
                 </div>
