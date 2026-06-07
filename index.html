@@ -4430,13 +4430,13 @@ function App() {
           <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,overflow:"hidden",marginBottom:12}}>
             <button onClick={()=>{setSetlistOpen(!setlistOpen);if(!setlistLoaded)fetchSetlist();}}
               style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-              <span style={{fontSize:13,fontWeight:700,color:"#1a3a2a"}}>🎼 セットリスト</span>
+              <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a"}}>🎼 セットリスト</span>
               <span style={{fontSize:12,color:"#2a5a3a",transform:setlistOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
             </button>
             {setlistOpen&&(
               <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:1000,background:"rgba(255,255,255,0.98)",overflowY:"auto",padding:16}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,borderBottom:"2px solid rgba(138,74,106,0.2)",paddingBottom:10}}>
-                  <span style={{fontSize:15,fontWeight:700,color:"#1a3a2a"}}>🎼 セットリスト</span>
+                  <span style={{fontSize:15,fontWeight:700,color:"#6a2a4a"}}>🎼 セットリスト</span>
                   <button onClick={()=>setSetlistOpen(false)} style={{padding:"6px 16px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>閉じる</button>
                 </div>
                 <div style={{overflowX:"auto"}}>
@@ -4452,7 +4452,7 @@ function App() {
                       {setlistRows.map(function(row,i){
                         var isMC=!row["番号"]&&!row["演目"]||row["演目"]==="MC";
                         if(!row["番号"]&&!row["演目"]) return null;
-                        if(isMC) return <tr key={i}><td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#2a5a3a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td></tr>;
+                        if(isMC) return <tr key={i}><td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td></tr>;
                         return (
                           <tr key={i} style={{background:i%2===0?"rgba(255,255,255,0.6)":"rgba(248,240,248,0.6)"}}>
                             <td style={{padding:"8px 10px",color:C2.label,fontWeight:600}}>{row["番号"]}</td>
@@ -5761,7 +5761,7 @@ function App() {
     const boxStyle = {background:"rgba(255,255,255,0.88)",border:"1px solid rgba(212,160,192,0.5)",borderRadius:14,overflow:"hidden",marginBottom:12,backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)"};
     const headerBtn = (label, isOpen, toggle) => (
       <button onClick={toggle} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-        <span style={{fontSize:13,fontWeight:700,color:"#1a3a2a",letterSpacing:"0.05em"}}>{label}</span>
+        <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a",letterSpacing:"0.05em"}}>{label}</span>
         <span style={{fontSize:12,color:"#2a5a3a",display:"inline-block",transform:isOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
       </button>
     );
@@ -5872,7 +5872,7 @@ function App() {
             {setlistOpen&&(
               <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:1000,background:"rgba(255,255,255,0.98)",overflowY:"auto",padding:"16px"}}>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12,borderBottom:"2px solid rgba(138,74,106,0.2)",paddingBottom:10}}>
-                  <span style={{fontSize:15,fontWeight:700,color:"#1a3a2a"}}>🎼 セットリスト</span>
+                  <span style={{fontSize:15,fontWeight:700,color:"#6a2a4a"}}>🎼 セットリスト</span>
                   <button onClick={()=>setSetlistOpen(false)}
                     style={{padding:"6px 16px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer"}}>
                     閉じる
@@ -5897,7 +5897,7 @@ function App() {
                         if(isEmpty) return null;
                         if(isMC) return (
                           <tr key={i}>
-                            <td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#2a5a3a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td>
+                            <td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td>
                           </tr>
                         );
                         // オーケストラ欄：その曲のinorionDataメンバーをstatusで振り分け
@@ -6370,7 +6370,7 @@ function App() {
 
         {/* 壱祈音専用ページボタン（出演者のみ） */}
         {inorionData.some(r=>r.name===m.name) && (
-          <button onClick={()=>{setInorionPage(true);window.scrollTo(0,0);fetchPractice();}} style={ROW_BTN("#c87aaa")}>
+          <button onClick={()=>{setInorionPage(true);window.scrollTo(0,0);fetchPractice();fetchSetlist();}} style={ROW_BTN("#c87aaa")}>
             <span style={{fontSize:18,color:"#c87aaa"}}>🎭</span>
             <span style={{fontSize:13,fontWeight:500,color:"#2a3a2a",flex:1,textAlign:"left"}}>壱祈音〜Inorion〜 出演メンバー専用ページ</span>
             <span style={{fontSize:12,color:"#6a8a6a"}}>›</span>
