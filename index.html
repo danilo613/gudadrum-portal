@@ -2878,7 +2878,7 @@ function MapPage({ members, onClose, C, currentMemberName }) {
   });
 
   return (
-    <div style={{minHeight:"100vh",background:"#D6BF9D",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
+    <div style={{height:"100vh",background:"#D6BF9D",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
       <div style={{background:"linear-gradient(135deg,#708238,#4a5a28)",flexShrink:0,padding:"10px 16px"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
@@ -2904,7 +2904,7 @@ function MapPage({ members, onClose, C, currentMemberName }) {
           {Object.keys(SCALE_COLOR).map(s=><option key={s} value={s}>{s}</option>)}
         </select>
       </div>
-      <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center",background:"#D6BF9D",minHeight:"100%"}}>
+      <div style={{flex:1,padding:"20px",display:"flex",flexDirection:"column",alignItems:"center",background:"#D6BF9D",overflowY:"auto"}}>
         <div style={{position:"relative",width:"100%",maxWidth:800}}>
           <img src="/hibikiai_map.png" alt="hibikiai MAP" style={{width:"100%",borderRadius:12,display:"block",cursor:debugMode?"crosshair":"default"}}
             onClick={debugMode?function(e){
@@ -6061,7 +6061,7 @@ function App() {
   }
 
   return (
-    <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
+    <div style={{height:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
         iconBtn("← 管理者に戻る",()=>setPage("admin")),
@@ -6069,7 +6069,7 @@ function App() {
       ] : [
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");}),
       ])}
-      <div style={{padding:"24px",maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}}>
+      <div style={{flex:1,overflowY:"auto",padding:"16px 24px 24px"}}><div style={{maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:14}}>
 
         {/* お知らせカード */}
         {(()=>{
@@ -7052,6 +7052,7 @@ function App() {
 
 
 
+      </div>
       </div>
     </div>
   );
