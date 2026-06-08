@@ -4422,8 +4422,9 @@ function App() {
           sharedBpm={sharedBpm} onBpmChange={v=>{setSharedBpm(v);}}
           sharedMetroOn={sharedMetroOn} sharedMetroMode={sharedMetroMode}
           onMetroChange={(metroOn,metroMode,headBell)=>{setSharedMetroOn(metroOn);setSharedMetroMode(metroMode);if(headBell!==undefined)setSharedHeadBell(headBell);}}
-          instrument2={(scoreEditId==="megumi"||scoreEditId==="inori")?"arcane":null}
-          patternData2={(scoreEditId==="megumi"||scoreEditId==="inori")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
+          instrument2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":null}
+          swapLR={scoreEditId==="regrace"}
+          patternData2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
           sharedHeadBell={sharedHeadBell}
           floatPosInit={sharedFloatPos}
           onFloatPosChange={setSharedFloatPos}
@@ -4810,8 +4811,8 @@ function App() {
               canEdit={true}
               scoreLoading={scoreLoading}
               scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"dreamy":"funenone"}
-              instrument2={(scoreEditId==="megumi"||scoreEditId==="inori")?"arcane":null}
-              patternData2={(scoreEditId==="megumi"||scoreEditId==="inori")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
+              instrument2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":null}
+              patternData2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
               subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
               onSave={saveScorePattern}
               sharedBpm={sharedBpm}
