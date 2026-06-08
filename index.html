@@ -294,6 +294,7 @@ const SCORE_DEFAULT_BPM = {
   aoi: 140,
   iridescence: 100,
   megumi: 113,
+  regrace: 119,
   inori: 113,
 };
 
@@ -303,6 +304,7 @@ const SCORE_ID_TO_NAME = {
   aoi: "蒼〜aoi〜",
   iridescence: "iridescence",
   megumi: "めぐみの空",
+  regrace: "Re:Grace",
   inori: "祈音〜Inorion〜",
 };
 
@@ -311,6 +313,26 @@ const SCORE_SECTIONS = {
   dreamy: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["ameloPrime","Aメロ'","16th"],["bmelo","Bメロ","16th"],["ameloPrime2","Aメロ'","16th"],["bmelo2","Bメロ","16th"],["cmelo","Cメロ","16th"],["cmeloPrime","Cメロ'","16th"],["sabi","サビ","16th"],["interlude1","間奏①","triplet"],["interlude1p","間奏①'","triplet"],["interlude2","間奏②","triplet"],["interlude2p","間奏②'","triplet"],["outro","アウトロ","16th"]],
   aoi: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
   iridescence: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["bmelo","Bメロ","16th"],["amelo2","Aメロ","16th"],["bmelo2","Bメロ","16th"],["introPrime","イントロ'","16th"],["sabi","サビ","16th"],["sabiPrime","サビ'","16th"],["maai","間合い","16th"],["intro2","イントロ","16th"],["amelo3","Aメロ","16th"],["bmelo3","Bメロ","16th"],["outro","アウトロ","16th"]],
+  regrace: [
+    ["intro","イントロ","16th"],
+    ["sabi","サビ","16th"],
+    ["amelo","Aメロ","16th"],
+    ["bmelo","Bメロ","16th"],
+    ["amelo2","Aメロ","16th"],
+    ["bmelo2","Bメロ","16th"],
+    ["sabi2","サビ","16th"],
+    ["sabi2b","サビ②","16th"],
+    ["interlude1","間奏①","16th"],
+    ["interlude2","間奏②","16th"],
+    ["interlude3","間奏③","16th"],
+    ["sabi3","サビ","16th"],
+    ["interlude4","間奏④","16th"],
+    ["interlude5","間奏⑤","16th"],
+    ["ma","間","16th"],
+    ["tsunagi","ツナギ","16th"],
+    ["sabi4","サビ②","16th"],
+    ["outro","アウトロ","16th"],
+  ],
   megumi: [
     ["intro","イントロ","16th"],
     ["amelo","Aメロ","16th"],
@@ -404,7 +426,7 @@ function makeEmptyPat() {
   return p;
 }
 
-function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell, floatPosInit, onFloatPosChange }) {
+function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell, floatPosInit, onFloatPosChange, swapLR }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   console.log("ScorePlayer instrument2=", instrument2, "COLORS2=", COLORS2);
@@ -2409,9 +2431,9 @@ function renderSideGrid2(barIdx, side){
       >
       <div style={{fontSize:9,color:"#bbb",textAlign:"center",marginBottom:2,letterSpacing:2}}>⠿ DRAG</div>
       {canEdit&&instrument2&&(
-        <div style={{display:"flex",justifyContent:"center",gap:16,marginBottom:6}}>
+        <div style={{display:"flex",justifyContent:"center",gap:16,marginBottom:6,flexDirection:swapLR?"row-reverse":"row"}}>
           <div style={{textAlign:"center"}}>
-            <div style={{fontSize:9,color:"#888",marginBottom:2}}>響ノ音</div>
+            <div style={{fontSize:9,color:"#888",marginBottom:2}}>{swapLR?"風ノ音":"響ノ音"}</div>
             <svg viewBox="0 0 140 166" width="100" height="118">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
@@ -2423,7 +2445,7 @@ function renderSideGrid2(barIdx, side){
             </svg>
           </div>
           <div style={{textAlign:"center"}}>
-            <div style={{fontSize:9,color:"#888",marginBottom:2}}>風ノ音</div>
+            <div style={{fontSize:9,color:"#888",marginBottom:2}}>{swapLR?"響ノ音":"風ノ音"}</div>
             <svg viewBox="0 0 140 166" width="100" height="118">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {(function(){
@@ -3671,7 +3693,7 @@ function App() {
   }
 
   function buildSectionHtml(scoreId, secKey, secLabel, nt, pd, allPatterns) {
-    var DOTS_P = (scoreId==="dreamy"||scoreId==="iridescence"||scoreId==="aoi"||scoreId==="megumi")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS_P = (scoreId==="dreamy"||scoreId==="iridescence"||scoreId==="aoi"||scoreId==="megumi"||scoreId==="regrace")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
     var scoreTitle = SCORE_ID_TO_NAME[scoreId]||scoreId;
     var sections = SCORE_SECTIONS[scoreId]||SCORE_SECTIONS.waterlily;
     var spb = nt==="16th"?16:12;
@@ -4213,13 +4235,14 @@ function App() {
           patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
           canEdit={false}
           onSave={saveScorePattern}
-          scale={(currentScoreId==="iridescence")?iridescenceScale:(currentScoreId==="dreamy"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori")?"dreamy":"funenone"}
+          scale={(currentScoreId==="iridescence")?iridescenceScale:(currentScoreId==="dreamy"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori"||currentScoreId==="regrace")?"dreamy":"funenone"}
           subdivProp={(function(){var sec=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreSection;});return sec?sec[2]:"16th";})()}
           sharedBpm={sharedBpm} onBpmChange={v=>{setSharedBpm(v);}}
           sharedMetroOn={sharedMetroOn} sharedMetroMode={sharedMetroMode}
           onMetroChange={(metroOn,metroMode,headBell)=>{setSharedMetroOn(metroOn);setSharedMetroMode(metroMode);if(headBell!==undefined)setSharedHeadBell(headBell);}}
-          instrument2={(currentScoreId==="megumi"||currentScoreId==="inori")?"arcane":null}
-          patternData2={(currentScoreId==="megumi"||currentScoreId==="inori")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
+          instrument2={(currentScoreId==="megumi"||currentScoreId==="inori"||currentScoreId==="regrace")?"arcane":null}
+          swapLR={currentScoreId==="regrace"}
+          patternData2={(currentScoreId==="megumi"||currentScoreId==="inori"||currentScoreId==="regrace")?{left:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).left2||{},right:((scorePatterns[currentScoreId]||{})[scoreSection]||{}).right2||{}}:null}
           sharedHeadBell={sharedHeadBell||false}
           floatPosInit={sharedFloatPos}
           onFloatPosChange={setSharedFloatPos}
@@ -4352,7 +4375,7 @@ function App() {
       <div style={{padding:"12px 20px",background:"rgba(255,255,255,0.6)",flexShrink:0}}>
         {/* 曲選択 */}
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
-          {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
+          {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl])=>(
             <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
               style={{padding:"8px 18px",borderRadius:10,border:"0.5px solid "+C.border,
                 background:scoreEditId===id?"#3a6a7a":"#fff",
@@ -4394,7 +4417,7 @@ function App() {
           patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
           canEdit={true}
           onSave={saveScorePattern}
-          scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori")?"dreamy":"funenone"}
+          scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"dreamy":"funenone"}
           subdivProp={(function(){var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});return sec?sec[2]:"16th";})()}
           sharedBpm={sharedBpm} onBpmChange={v=>{setSharedBpm(v);}}
           sharedMetroOn={sharedMetroOn} sharedMetroMode={sharedMetroMode}
@@ -4753,7 +4776,7 @@ function App() {
             <div style={{marginBottom:10}}>
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl])=>(
+                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
@@ -4786,7 +4809,7 @@ function App() {
               patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
               canEdit={true}
               scoreLoading={scoreLoading}
-              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori")?"dreamy":"funenone"}
+              scale={(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"dreamy":"funenone"}
               instrument2={(scoreEditId==="megumi"||scoreEditId==="inori")?"arcane":null}
               patternData2={(scoreEditId==="megumi"||scoreEditId==="inori")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
               subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
@@ -5380,7 +5403,7 @@ function App() {
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>🎼 譜面購入設定</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:16}}>対象：<strong>{scoreModal.name}</strong></p>
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-              {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"]].map(([id,lbl]) => {
+              {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl]) => {
                 const isPurchased = scoreModal.purchased.includes(id);
                 return (
                   <div key={id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",borderRadius:10,background:isPurchased?"rgba(112,130,56,0.12)":"rgba(0,0,0,0.03)",border:"1px solid "+(isPurchased?C.olive:C.border)}}>
