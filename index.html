@@ -490,7 +490,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
   var highlightColorS=useState(null); var highlightColor=highlightColorS[0]; var setHighlightColor=highlightColorS[1];
   var highlightColor2S=useState(null); var highlightColor2=highlightColor2S[0]; var setHighlightColor2=highlightColor2S[1];
-  var isHL2=function(color){ return Array.isArray(highlightColor2)?highlightColor2.indexOf(color)!==-1:isHL2(color); };
+  var isHL2=function(color){ return Array.isArray(highlightColor2)?highlightColor2.indexOf(color)!==-1:color===highlightColor2; };
   var startBarS=useState(0); var startBar=startBarS[0]; var setStartBar=startBarS[1]; var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
   var setBpm=function(v){ setBpmLocal(typeof v==="function"?v(bpmS[0]):v); if(onBpmChange) onBpmChange(typeof v==="function"?v(bpmS[0]):v); };
   var curStepS=useState(-1); var curStep=curStepS[0]; var setCurStep=curStepS[1];
