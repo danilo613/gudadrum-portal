@@ -1251,18 +1251,18 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         var s=barOffset+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
-        // 風ノ音の色を探す（最大1色）
+        // 風ノ音の色を探す（最大2色）
         var foundColors=[];
         for(var ci=0;ci<COLORS.length;ci++){
           if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
-          if(foundColors.length>=1) break;
+          if(foundColors.length>=2) break;
         }
-        // 響ノ音の色を探す（instrument2がある時のみ、最大1色）
+        // 響ノ音の色を探す（instrument2がある時のみ、最大2色）
         var foundColors2=[];
         if(pat2side){
           for(var ci2=0;ci2<COLORS2.length;ci2++){
             if(pat2side[COLORS2[ci2]]&&pat2side[COLORS2[ci2]][s]) foundColors2.push(COLORS2[ci2]);
-            if(foundColors2.length>=1) break;
+            if(foundColors2.length>=2) break;
           }
         }
         var haFu=foundColors.length>0;
@@ -1270,8 +1270,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         var bg;
         if(cur) bg="rgba(0,0,0,0.2)";
         else if(haHi&&haFu) bg="linear-gradient(to bottom, "+DOT_COLORS2[foundColors2[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%)";
-        else if(haHi) bg=DOT_COLORS2[foundColors2[0]];
-        else if(haFu) bg=SCORE_DOT_COLORS[foundColors[0]];
+        else if(haHi) bg=foundColors2.length>=2?"linear-gradient(to bottom, "+DOT_COLORS2[foundColors2[0]]+" 50%, "+DOT_COLORS2[foundColors2[1]]+" 50%)":DOT_COLORS2[foundColors2[0]];
+        else if(haFu) bg=foundColors.length>=2?"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)":SCORE_DOT_COLORS[foundColors[0]];
         else bg="#e8e6e2";
         cells.push(
           <div key={i}
@@ -1971,18 +1971,18 @@ function renderSideGrid2(barIdx, side){
         var s=barOffset+i;
         var cur=s===curStep;
         var isStart=s===startStepRef.current;
-        // 風ノ音の色を探す（最大1色）
+        // 風ノ音の色を探す（最大2色）
         var foundColors=[];
         for(var ci=0;ci<COLORS.length;ci++){
           if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
-          if(foundColors.length>=1) break;
+          if(foundColors.length>=2) break;
         }
-        // 響ノ音の色を探す（instrument2がある時のみ、最大1色）
+        // 響ノ音の色を探す（instrument2がある時のみ、最大2色）
         var foundColors2=[];
         if(pat2side){
           for(var ci2=0;ci2<COLORS2.length;ci2++){
             if(pat2side[COLORS2[ci2]]&&pat2side[COLORS2[ci2]][s]) foundColors2.push(COLORS2[ci2]);
-            if(foundColors2.length>=1) break;
+            if(foundColors2.length>=2) break;
           }
         }
         var haFu=foundColors.length>0;
@@ -1990,8 +1990,8 @@ function renderSideGrid2(barIdx, side){
         var bg;
         if(cur) bg="rgba(0,0,0,0.2)";
         else if(haHi&&haFu) bg="linear-gradient(to bottom, "+DOT_COLORS2[foundColors2[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%)";
-        else if(haHi) bg=DOT_COLORS2[foundColors2[0]];
-        else if(haFu) bg=SCORE_DOT_COLORS[foundColors[0]];
+        else if(haHi) bg=foundColors2.length>=2?"linear-gradient(to bottom, "+DOT_COLORS2[foundColors2[0]]+" 50%, "+DOT_COLORS2[foundColors2[1]]+" 50%)":DOT_COLORS2[foundColors2[0]];
+        else if(haFu) bg=foundColors.length>=2?"linear-gradient(to bottom, "+SCORE_DOT_COLORS[foundColors[0]]+" 50%, "+SCORE_DOT_COLORS[foundColors[1]]+" 50%)":SCORE_DOT_COLORS[foundColors[0]];
         else bg="#e8e6e2";
         cells.push(
           <div key={i}
