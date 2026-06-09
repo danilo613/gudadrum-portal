@@ -2707,8 +2707,8 @@ function renderSideGrid2(barIdx, side){
                 {Array.from({length:numBars},function(_,bi){
                   return (
                     <div key={bi} onClick={function(b){return function(){setSelectedBarSync(b);};}(bi)} style={{display:"flex",gap:8,marginBottom:8,alignItems:"flex-start"}}>
-                      {renderBar2Edit&&renderBar2Edit(bi)}
-                      {renderBar(bi)}
+                      {swapLR?renderBar(bi):(renderBar2Edit&&renderBar2Edit(bi))}
+                      {swapLR?(renderBar2Edit&&renderBar2Edit(bi)):renderBar(bi)}
                     </div>
                   );
                 })}
