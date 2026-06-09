@@ -2608,7 +2608,7 @@ function renderSideGrid2(barIdx, side){
           {/* イラスト横並び（sticky固定） */}
           <div style={{display:"flex",justifyContent:"center",gap:32,alignItems:"flex-start",marginBottom:8,position:"sticky",top:0,zIndex:10,background:"transparent",paddingBottom:4}}>
             {/* 響ノ音イラスト（instrument2がある時） */}
-            {instrument2&&(
+            {instrument2&&!swapLR&&(
               <div style={{textAlign:"center"}}>
                 <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
                 <svg viewBox="0 0 140 166" width="140" height="166">
@@ -2639,7 +2639,7 @@ function renderSideGrid2(barIdx, side){
             )}
             {/* 風ノ音イラスト */}
             <div style={{textAlign:"center"}}>
-              {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
+              {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>{swapLR?"響ノ音":"風ノ音"}</div>}
               <div style={{width:140}}>
               <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
@@ -2670,6 +2670,35 @@ function renderSideGrid2(barIdx, side){
               </svg>
               </div>
             </div>
+          {instrument2&&swapLR&&(
+            <div style={{textAlign:"center"}}>
+              <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+              <svg viewBox="0 0 140 166" width="140" height="166">
+                <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
+                <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
+                  var pos=SCORE_DOTS_HIBIKI[color];
+                  return (
+                    <g key={color}>
+                      <circle cx={pos.cx} cy={pos.cy}
+                        r={color===highlightColor2?17:15}
+                        fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
+                        style={{transition:"all 0.15s"}}/>
+                      {lrOn&&dotLabel2[color]&&(
+                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="13" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                          stroke="#fff" strokeWidth="2" paintOrder="stroke">
+                          {dotLabel2[color]}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
+              </svg>
+            </div>
+          )}
           </div>
           {/* グリッド */}
           <div style={{overflowX:"auto",width:"100%"}}>
@@ -4053,19 +4082,19 @@ function App() {
   };
 
   const topbar = (title, actions) => (
-    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 20px",background:"rgba(255,255,255,0.85)",borderBottom:"1px solid rgba(0,0,0,0.06)",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)"}}>
-      <div style={{display:"flex",alignItems:"center",gap:10,flex:1,minWidth:0}}>
-        <span style={{fontSize:16,flexShrink:0}}>🌿</span>
-        <div style={{minWidth:0}}>
+    <div style={{background:"rgba(255,255,255,0.85)",borderBottom:"1px solid rgba(0,0,0,0.06)",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 16px"}}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:16}}>🌿</span>
           <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.choco,fontFamily:"'Noto Serif JP',serif"}}>{title}</span>
-          {title==="GUDADRUM ORCHESTRA"&&(
-            <div style={{fontSize:10,color:"#5a8a5a",marginTop:1,lineHeight:1.4,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
-              BGM：環〜meguru〜　作曲：irooto（やましたのりこ）　<a href="https://www.gudadrumjapan.com/product-page/minamoto" target="_blank" rel="noreferrer" style={{color:"#3a6a3a",textDecoration:"underline"}}>詳細</a>
-            </div>
-          )}
         </div>
+        <div style={{display:"flex",gap:8,flexShrink:0}}>{actions}</div>
       </div>
-      <div style={{display:"flex",gap:8,flexShrink:0}}>{actions}</div>
+      {title==="GUDADRUM ORCHESTRA"&&(
+        <div style={{fontSize:10,color:"#5a8a5a",padding:"0 16px 8px",lineHeight:1.4}}>
+          BGM：環〜meguru〜　作曲：irooto（やましたのりこ）　<a href="https://www.gudadrumjapan.com/product-page/minamoto" target="_blank" rel="noreferrer" style={{color:"#3a6a3a",textDecoration:"underline"}}>詳細</a>
+        </div>
+      )}
     </div>
   );
 
