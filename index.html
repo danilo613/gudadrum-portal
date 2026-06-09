@@ -490,6 +490,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
   var highlightColorS=useState(null); var highlightColor=highlightColorS[0]; var setHighlightColor=highlightColorS[1];
   var highlightColor2S=useState(null); var highlightColor2=highlightColor2S[0]; var setHighlightColor2=highlightColor2S[1];
+  var isHL2=function(color){ return Array.isArray(highlightColor2)?highlightColor2.indexOf(color)!==-1:isHL2(color); };
   var startBarS=useState(0); var startBar=startBarS[0]; var setStartBar=startBarS[1]; var bpm=bpmS[0]; var setBpmLocal=bpmS[1];
   var setBpm=function(v){ setBpmLocal(typeof v==="function"?v(bpmS[0]):v); if(onBpmChange) onBpmChange(typeof v==="function"?v(bpmS[0]):v); };
   var curStepS=useState(-1); var curStep=curStepS[0]; var setCurStep=curStepS[1];
@@ -955,16 +956,17 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           hl2=c; dl2R.push(c);
         }
       });
-      if(hl2!==null){
-        setTimeout(function(cc,lArr,rArr){return function(){
-          setHighlightColor2(cc);
+      var allFired2=dl2L.concat(dl2R);
+      if(allFired2.length>0){
+        setTimeout(function(arr,lArr,rArr){return function(){
+          setHighlightColor2(arr.slice());
           if(lrOnRef.current) setDotLabel2(function(p){
             var n=Object.assign({},p);
             lArr.forEach(function(c){n[c]="左";});
             rArr.forEach(function(c){n[c]=n[c]==="左"?"両":"右";});
             return n;
           });
-        };}(hl2,dl2L,dl2R),0);
+        };}(allFired2,dl2L,dl2R),0);
       }
     }
     // メトロノームを最優先で鳴らす
@@ -1680,16 +1682,17 @@ function renderSideGrid2(barIdx, side){
           hl2=c; dl2R.push(c);
         }
       });
-      if(hl2!==null){
-        setTimeout(function(cc,lArr,rArr){return function(){
-          setHighlightColor2(cc);
+      var allFired2=dl2L.concat(dl2R);
+      if(allFired2.length>0){
+        setTimeout(function(arr,lArr,rArr){return function(){
+          setHighlightColor2(arr.slice());
           if(lrOnRef.current) setDotLabel2(function(p){
             var n=Object.assign({},p);
             lArr.forEach(function(c){n[c]="左";});
             rArr.forEach(function(c){n[c]=n[c]==="左"?"両":"右";});
             return n;
           });
-        };}(hl2,dl2L,dl2R),0);
+        };}(allFired2,dl2L,dl2R),0);
       }
     }
     // メトロノームを最優先で鳴らす
@@ -2439,7 +2442,7 @@ function renderSideGrid2(barIdx, side){
               {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                 var pos=SCORE_DOTS_HIBIKI[color];
                 return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                  fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                  fill={isHL2(color)?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
                   stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>;
               })}
             </svg>
@@ -2466,7 +2469,7 @@ function renderSideGrid2(barIdx, side){
               {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                 var pos=SCORE_DOTS_HIBIKI[color];
                 return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
-                  fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                  fill={isHL2(color)?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
                   stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>;
               })}
             </svg>
@@ -2620,9 +2623,9 @@ function renderSideGrid2(barIdx, side){
                       return (
                         <g key={color}>
                           <circle cx={pos.cx} cy={pos.cy}
-                            r={color===highlightColor2?17:15}
-                            fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                            stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
+                            r={isHL2(color)?17:15}
+                            fill={isHL2(color)?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                            stroke="white" strokeWidth={isHL2(color)?"3":"1.5"}
                             style={{transition:"all 0.15s"}}/>
                           {lrOn&&dotLabel2[color]&&(
                             <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
@@ -2682,9 +2685,9 @@ function renderSideGrid2(barIdx, side){
                   return (
                     <g key={color}>
                       <circle cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor2?17:15}
-                        fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                        stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
+                        r={isHL2(color)?17:15}
+                        fill={isHL2(color)?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                        stroke="white" strokeWidth={isHL2(color)?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
                       {lrOn&&dotLabel2[color]&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
@@ -2729,8 +2732,8 @@ function renderSideGrid2(barIdx, side){
         <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:8,height:"80vh",overflow:"auto"}}>
           {/* イラスト横並び（上、sticky固定） */}
           <div style={{display:"flex",gap:instrument2?48:0,justifyContent:"center",marginBottom:8,flexWrap:"wrap",position:"sticky",top:0,zIndex:10,background:"transparent",paddingBottom:4}}>
-            {/* 1台目イラスト（instrument2がある時は響ノ音を先に） */}
-            {instrument2&&(function(){
+            {/* 1台目イラスト（instrument2がある時は響ノ音を先に。swapLRの時は風ノ音を先に） */}
+            {instrument2&&!swapLR&&(function(){
               var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
               return (
                 <div style={{textAlign:"center"}}>
@@ -2751,9 +2754,9 @@ function renderSideGrid2(barIdx, side){
                         return (
                           <g key={color}>
                             <circle cx={pos.cx} cy={pos.cy}
-                              r={color===highlightColor2?17:15}
-                              fill={color===highlightColor2?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
-                              stroke="white" strokeWidth={color===highlightColor2?"3":"1.5"}
+                              r={isHL2(color)?17:15}
+                              fill={isHL2(color)?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                              stroke="white" strokeWidth={isHL2(color)?"3":"1.5"}
                               style={{transition:"all 0.15s"}}/>
                             {lrOn&&dotLabel2[color]&&(
                               <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
@@ -2800,11 +2803,44 @@ function renderSideGrid2(barIdx, side){
               })()}
               </svg>
             </div>
+            {/* swapLRの時：響ノ音を風ノ音の後（右）に表示 */}
+            {instrument2&&swapLR&&(function(){
+              var DOTS_I=instrument2==="arcane"?SCORE_DOTS_HIBIKI:SCORE_DOTS_DREAMY;
+              return (
+                <div style={{textAlign:"center"}}>
+                  <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
+                  <svg viewBox="0 0 140 166" width="120" height="142">
+                    <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
+                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                    {Object.keys(DOTS_I).map(function(color){
+                      var pos=DOTS_I[color];
+                      return (
+                        <g key={color}>
+                          <circle cx={pos.cx} cy={pos.cy}
+                            r={isHL2(color)?17:15}
+                            fill={isHL2(color)?SCORE_HIBIKI_COLORS[color]:SCORE_HIBIKI_PALE_COLORS[color]}
+                            stroke="white" strokeWidth={isHL2(color)?"3":"1.5"}
+                            style={{transition:"all 0.15s"}}/>
+                          {lrOn&&dotLabel2[color]&&(
+                            <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                              fontSize="13" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
+                              stroke="#fff" strokeWidth="2" paintOrder="stroke">
+                              {dotLabel2[color]}
+                            </text>
+                          )}
+                        </g>
+                      );
+                    })}
+                  </svg>
+                </div>
+              );
+            })()}
           </div>
-          {/* グリッド横並び（下） */}
           <div style={{display:"flex",gap:0,justifyContent:"center",alignItems:"flex-start",overflowX:"auto",width:"100%",flexWrap:"wrap"}}>
-            {/* 1台目グリッド */}
-            <div>
+            {/* swapLR=false: 響ノ音→風ノ音 / swapLR=true: 風ノ音→響ノ音 */}
+            {instrument2&&!swapLR&&<div style={{marginRight:24}}>{grid2Element}</div>}
+            <div style={instrument2?{marginRight:24}:{}}>
               <div style={{display:"flex",gap:2,marginBottom:10}}>
                 {topBars.map(function(b){return renderBar(b);})}
               </div>
@@ -2812,6 +2848,7 @@ function renderSideGrid2(barIdx, side){
                 {botBars.map(function(b){return renderBar(b);})}
               </div>
             </div>
+            {instrument2&&swapLR&&<div>{grid2Element}</div>}
           </div>
         </div>
       )}
