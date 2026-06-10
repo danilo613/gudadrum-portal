@@ -2382,7 +2382,7 @@ function renderSideGrid2(barIdx, side){
         <p style={{fontSize:16,fontWeight:700,color:C.label,margin:0}}>{sectionLabel}</p>
         {!canEdit&&(()=>{
           var totalBars=parseInt(bars||8)*parseInt(repeat||1);
-          return <p style={{fontSize:10,color:C.label,margin:0,opacity:0.7}}>{totalBars}小節{secTime?" / "+secTime+"〜":""}</p>;
+          return <p style={{fontSize:10,color:C.label,margin:0,opacity:0.7}}>{totalBars}小節{secTime&&!secTime.includes("GMT")&&!secTime.includes("1899")?" / "+secTime+"〜":""}</p>;
         })()}
         {canEdit&&(
           <div style={{display:"flex",alignItems:"center",gap:4}}>
