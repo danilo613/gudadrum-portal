@@ -3845,7 +3845,7 @@ function App() {
   }
 
   function buildSectionHtml(scoreId, secKey, secLabel, nt, pd, allPatterns) {
-    var DOTS_P = (scoreId==="dreamy"||scoreId==="iridescence"||scoreId==="aoi"||scoreId==="megumi"||scoreId==="regrace")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS_P = scoreId==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scoreId==="dreamy"||scoreId==="iridescence"||scoreId==="aoi"||scoreId==="megumi"||scoreId==="regrace")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
     var scoreTitle = SCORE_ID_TO_NAME[scoreId]||scoreId;
     var sections = SCORE_SECTIONS[scoreId]||SCORE_SECTIONS.waterlily;
     var spb = nt==="16th"?16:12;
