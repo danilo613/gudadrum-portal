@@ -2382,7 +2382,15 @@ function renderSideGrid2(barIdx, side){
         <p style={{fontSize:16,fontWeight:700,color:C.label,margin:0}}>{sectionLabel}</p>
         {!canEdit&&(()=>{
           var totalBars=parseInt(bars||8)*parseInt(repeat||1);
-          return <p style={{fontSize:10,color:C.label,margin:0,opacity:0.7}}>{totalBars}小節{secTime&&!secTime.includes("GMT")&&!secTime.includes("1899")?" / "+secTime+"〜":""}</p>;
+          var displayTime = secTime;
+          if(secTime&&secTime.includes("GMT")){
+            var d=new Date(secTime);
+            if(!isNaN(d)){
+              var h=d.getHours();var m=d.getMinutes();var s2=d.getSeconds();
+              displayTime=h+":"+(m<10?"0"+m:m)+(s2>0?":"+(s2<10?"0"+s2:s2):"");
+            } else { displayTime=""; }
+          }
+          return <p style={{fontSize:10,color:C.label,margin:0,opacity:0.7}}>{totalBars}小節{displayTime?" / "+displayTime+"〜":""}</p>;
         })()}
         {canEdit&&(
           <div style={{display:"flex",alignItems:"center",gap:4}}>
