@@ -917,7 +917,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
     var s=actx.createBufferSource();s.buffer=bufs[c];
-    var g=actx.createGain();g.gain.value=0.492;
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.590:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
@@ -1643,7 +1643,7 @@ function renderSideGrid2(barIdx, side){
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
     var s=actx.createBufferSource();s.buffer=bufs[c];
-    var g=actx.createGain();g.gain.value=0.492;
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.590:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
@@ -2531,7 +2531,7 @@ function renderSideGrid2(barIdx, side){
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {(function(){
                 var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).map(function(color){
+                return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
                     fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
@@ -2560,7 +2560,7 @@ function renderSideGrid2(barIdx, side){
             <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
             {(function(){
               var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-              return Object.keys(activeDots).map(function(color){
+              return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                 var pos=activeDots[color];
                 return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
                   fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
@@ -2728,7 +2728,7 @@ function renderSideGrid2(barIdx, side){
               <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
               {(function(){
                 var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).filter(function(c){return true;}).map(function(color){
+                return Object.keys(activeDots).filter(function(c){return !(scale==="nostalgic"&&c==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
@@ -2859,7 +2859,7 @@ function renderSideGrid2(barIdx, side){
               <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
               {(function(){
                 var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
-                return Object.keys(activeDots).map(function(color){
+                return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
@@ -3866,6 +3866,7 @@ function App() {
     // SVGドット
     var svgD = "";
     Object.keys(DOTS_P).forEach(function(color){
+      if(scoreId==="nostalgic"&&color==="pink") return;
       var pos=DOTS_P[color];
       var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
       svgD+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="14" fill="'+fill+'" stroke="white" stroke-width="2"/>';
