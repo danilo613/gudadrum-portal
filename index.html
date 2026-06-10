@@ -917,7 +917,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
     var s=actx.createBufferSource();s.buffer=bufs[c];
-    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.590:0.492;
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.7:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
@@ -1643,7 +1643,7 @@ function renderSideGrid2(barIdx, side){
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
     var s=actx.createBufferSource();s.buffer=bufs[c];
-    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.590:0.492;
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.7:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
