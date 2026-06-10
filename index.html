@@ -290,6 +290,7 @@ const SCORE_SHEET_MAP = {
 
 const SCORE_DEFAULT_BPM = {
   waterlily: 97,
+  waterlily2: 129,
   dreamy: 99,
   aoi: 140,
   iridescence: 100,
@@ -300,6 +301,7 @@ const SCORE_DEFAULT_BPM = {
 
 const SCORE_ID_TO_NAME = {
   waterlily: "water lily〜水面〜",
+  waterlily2: "water lily",
   dreamy: "dreamy EYES",
   aoi: "蒼〜aoi〜",
   iridescence: "iridescence",
@@ -310,6 +312,23 @@ const SCORE_ID_TO_NAME = {
 
 const SCORE_SECTIONS = {
   waterlily: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
+  waterlily2: [
+    ["intro","イントロ","triplet"],
+    ["amelo","Aメロ","triplet"],
+    ["bmelo","Bメロ","triplet"],
+    ["amelo2","Aメロ","triplet"],
+    ["bmelo2","Bメロ","triplet"],
+    ["sabi","サビ","triplet"],
+    ["bmelo3","Bメロ","triplet"],
+    ["sabi2","サビ","triplet"],
+    ["cmelo","Cメロ","triplet"],
+    ["bmelo4","Bメロ","triplet"],
+    ["tsunagi","繋ぎ","triplet"],
+    ["sabi3","サビ","triplet"],
+    ["cmelo2","Cメロ","triplet"],
+    ["outro","アウトロ","triplet"],
+    ["amelo3","Aメロ","triplet"],
+  ],
   dreamy: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["ameloPrime","Aメロ'","16th"],["bmelo","Bメロ","16th"],["ameloPrime2","Aメロ'","16th"],["bmelo2","Bメロ","16th"],["cmelo","Cメロ","16th"],["cmeloPrime","Cメロ'","16th"],["sabi","サビ","16th"],["interlude1","間奏①","triplet"],["interlude1p","間奏①'","triplet"],["interlude2","間奏②","triplet"],["interlude2p","間奏②'","triplet"],["outro","アウトロ","16th"]],
   aoi: [["intro","イントロ","triplet"],["amelo","Aメロ","triplet"],["bmelo","Bメロ","triplet"],["between","間","triplet"],["introPrime","イントロ'","triplet"]],
   iridescence: [["intro","イントロ","16th"],["amelo","Aメロ","16th"],["bmelo","Bメロ","16th"],["amelo2","Aメロ","16th"],["bmelo2","Bメロ","16th"],["introPrime","イントロ'","16th"],["sabi","サビ","16th"],["sabiPrime","サビ'","16th"],["maai","間合い","16th"],["intro2","イントロ","16th"],["amelo3","Aメロ","16th"],["bmelo3","Bメロ","16th"],["outro","アウトロ","16th"]],
@@ -4464,7 +4483,7 @@ function App() {
       <div style={{padding:"12px 20px",background:"rgba(255,255,255,0.6)",flexShrink:0}}>
         {/* 曲選択 */}
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
-          {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl])=>(
+          {[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl])=>(
             <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
               style={{padding:"8px 18px",borderRadius:10,border:"0.5px solid "+C.border,
                 background:scoreEditId===id?"#3a6a7a":"#fff",
@@ -4866,7 +4885,7 @@ function App() {
             <div style={{marginBottom:10}}>
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl])=>(
+                {[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl])=>(
                   <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
@@ -5493,7 +5512,7 @@ function App() {
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>🎼 譜面購入設定</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:16}}>対象：<strong>{scoreModal.name}</strong></p>
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-              {[["waterlily","water lily〜水面〜"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl]) => {
+              {[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl]) => {
                 const isPurchased = scoreModal.purchased.includes(id);
                 return (
                   <div key={id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",borderRadius:10,background:isPurchased?"rgba(112,130,56,0.12)":"rgba(0,0,0,0.03)",border:"1px solid "+(isPurchased?C.olive:C.border)}}>
