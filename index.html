@@ -724,7 +724,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         barsRef.current=8;
       }
       if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
-      if(patternData.meta.startTime) setSecTime(patternData.meta.startTime);
+      if(patternData.meta.startTime){
+        var st=patternData.meta.startTime;
+        if(typeof st==="string"&&st.includes("GMT")){var d=new Date(st);if(!isNaN(d)){var h=d.getHours();var m=d.getMinutes();var s2=d.getSeconds();st=h+":"+(m<10?"0"+m:m)+(s2>0?":"+(s2<10?"0"+s2:s2):"");} else{st="";}}
+        setSecTime(st);
+      }
       if(patternData.meta.barLengths){
         var bl=JSON.parse(patternData.meta.barLengths);
         setBarLengths(bl); barLengthsRef.current=bl;
@@ -734,7 +738,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
     setLeft(lp); setRight(rp);
     leftRef.current=lp; rightRef.current=rp;
-    if(startTime) setSecTime(startTime);
+    if(startTime){
+      var st2=startTime;
+      if(typeof st2==="string"&&st2.includes("GMT")){var d2=new Date(st2);if(!isNaN(d2)){var h2=d2.getHours();var m2=d2.getMinutes();var s22=d2.getSeconds();st2=h2+":"+(m2<10?"0"+m2:m2)+(s22>0?":"+(s22<10?"0"+s22:s22):"");} else{st2="";}}
+      setSecTime(st2);
+    }
     // patternData2（響ノ音）も再読込
     if(instrument2 && patternData2){
       var total2=nb*spb;
