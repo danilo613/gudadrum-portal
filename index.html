@@ -917,7 +917,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
     var s=actx.createBufferSource();s.buffer=bufs[c];
-    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.7:0.492;
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
@@ -1643,7 +1643,7 @@ function renderSideGrid2(barIdx, side){
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
     var s=actx.createBufferSource();s.buffer=bufs[c];
-    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?0.7:0.492;
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
@@ -3395,16 +3395,6 @@ function App() {
   const [scoreEditSec,   setScoreEditSec]   = useState("intro");
   const [scoreEditId,    setScoreEditId]    = useState("waterlily");
 
-  // ログイン後にBGMを1回だけ再生
-  useEffect(function(){
-    if(page==="member" && !bgmPlayed){
-      var bgm = new Audio("/meguru.m4a");
-      bgm.volume = 0.4;
-      bgmRef.current = bgm;
-      bgm.play().catch(function(){});
-      setBgmPlayed(true);
-    }
-  }, [page]);
 
   useEffect(() => {
     autoFetch();
@@ -4149,7 +4139,7 @@ function App() {
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
     const normPass = s => String(s||"").replace(/[０-９]/g, c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\s/g,"");
     if (m.password && normPass(String(m.password)) !== normPass(password)) { setLoginErr("パスワードが違います"); return; }
-    setCurrentMember(m); setIsFromAdmin(false); setIsInstructor(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false); loadPurchasedScores(m.name); window.scrollTo(0,0);
+    setCurrentMember(m); setIsFromAdmin(false); setIsInstructor(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false); loadPurchasedScores(m.name); window.scrollTo(0,0); if(!bgmRef.current){var bgm=new Audio("/meguru.m4a");bgm.volume=0.4;bgmRef.current=bgm;bgm.play().catch(function(){});}
     recordLogin(m.name);
   }
 
