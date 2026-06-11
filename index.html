@@ -1149,8 +1149,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         +rows+'</div>';
     }
 
-    var barsHtml="";
-    for(var bi=0;bi<nb;bi++) barsHtml+=barHtml(bi);
+    var barsHtml=[];
+    for(var bi=0;bi<nb;bi++) barsHtml.push(barHtml(bi));
 
     // SVGイラスト
     var svgDots="";
@@ -1171,16 +1171,24 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
       +'<title>'+sectionLabel+'</title>'
       +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
-      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}.section-block{break-inside:avoid;page-break-inside:avoid}'
       +'</style></head><body>'
-      +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
+      +'<div class="section-block"><div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
       +svgHtml
       +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
       +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
       +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節</div>'
       +'</div></div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
-      +'</body></html>');
+      +(function(){
+        var rowsHtml="";
+        for(var rr=0;rr<Math.ceil(nb/8);rr++){
+          rowsHtml+='<div style="display:flex;flex-wrap:nowrap;gap:2px;margin-bottom:6px">';
+          for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) rowsHtml+=barsHtml[bb]||"";
+          rowsHtml+='</div>';
+        }
+        return rowsHtml;
+      })()
+      +'</div></body></html>');
     win.document.close();
     setTimeout(function(){win.print();},300);
   }
@@ -1873,8 +1881,8 @@ function renderSideGrid2(barIdx, side){
         +rows+'</div>';
     }
 
-    var barsHtml="";
-    for(var bi=0;bi<nb;bi++) barsHtml+=barHtml(bi);
+    var barsHtml=[];
+    for(var bi=0;bi<nb;bi++) barsHtml.push(barHtml(bi));
 
     // SVGイラスト
     var svgDots="";
@@ -1895,16 +1903,24 @@ function renderSideGrid2(barIdx, side){
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
       +'<title>'+sectionLabel+'</title>'
       +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
-      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}'
+      +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}.section-block{break-inside:avoid;page-break-inside:avoid}'
       +'</style></head><body>'
-      +'<div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
+      +'<div class="section-block"><div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
       +svgHtml
       +'<div><div style="font-size:22px;font-weight:700;color:#333">'+sectionLabel+'</div>'
       +(secTime?'<div style="font-size:13px;color:#888;margin-top:4px">'+secTime+'〜</div>':'')
       +'<div style="font-size:11px;color:#aaa;margin-top:2px">'+nb+'小節</div>'
       +'</div></div>'
-      +'<div style="display:flex;flex-wrap:wrap;gap:2px">'+barsHtml+'</div>'
-      +'</body></html>');
+      +(function(){
+        var rowsHtml="";
+        for(var rr=0;rr<Math.ceil(nb/8);rr++){
+          rowsHtml+='<div style="display:flex;flex-wrap:nowrap;gap:2px;margin-bottom:6px">';
+          for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) rowsHtml+=barsHtml[bb]||"";
+          rowsHtml+='</div>';
+        }
+        return rowsHtml;
+      })()
+      +'</div></body></html>');
     win.document.close();
     setTimeout(function(){win.print();},300);
   }
@@ -3942,7 +3958,7 @@ function App() {
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+secLabel+'</title>'
       +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
       +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>'
-      +'</head><body>'+body+'</body></html>');
+      +'</head><body>'+body+'</div></body></html>');
     win.document.close();
     setTimeout(function(){win.print();},300);
   }
@@ -3959,7 +3975,7 @@ function App() {
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+title+'</title>'
       +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
       +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>'
-      +'</head><body>'+pages+'</body></html>');
+      +'</head><body>'+pages+'</div></body></html>');
     win.document.close();
     setTimeout(function(){win.print();},300);
   }
