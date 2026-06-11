@@ -1559,20 +1559,22 @@ function renderSideGrid2(barIdx, side){
               setBarLengths(function(prev){
                 var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
                 var defaultSPB=subdivRef.current==="16th"?16:12;
+                var spb34=subdivRef.current==="16th"?12:9;
+                var spb24=subdivRef.current==="16th"?8:6;
                 var arr=prev?prev.slice():new Array(nb).fill(defaultSPB);
                 if(arr.length!==nb) arr=new Array(nb).fill(defaultSPB);
-                var altSPB=subdivRef.current==="16th"?12:9;
-                arr[b]=arr[b]===altSPB?defaultSPB:altSPB;
+                var cur=arr[b]||defaultSPB;
+                arr[b]=cur===defaultSPB?spb34:cur===spb34?spb24:defaultSPB;
                 var next=arr.slice();
                 barLengthsRef.current=next;
                 return next;
               });
             };}(barIdx)}
               style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d0cec8",
-                background:(subdiv==="16th"?barSPB===12:barSPB===9)?"#708238":"#fff",
-                color:(subdiv==="16th"?barSPB===12:barSPB===9)?"#fff":"#a0a0a0",
+                background:(subdiv==="16th"?barSPB===12:barSPB===9)?"#708238":(subdiv==="16th"?barSPB===8:barSPB===6)?"#c87020":"#fff",
+                color:((subdiv==="16th"?barSPB===12:barSPB===9)||(subdiv==="16th"?barSPB===8:barSPB===6))?"#fff":"#a0a0a0",
                 cursor:"pointer",userSelect:"none",flexShrink:0}}>
-              {(subdiv==="16th"?barSPB===12:barSPB===9)?"3/4":"4/4"}
+              {(subdiv==="16th"?barSPB===12:barSPB===9)?"3/4":(subdiv==="16th"?barSPB===8:barSPB===6)?"2/4":"4/4"}
             </div>
           )}
         </div>
@@ -2281,20 +2283,22 @@ function renderSideGrid2(barIdx, side){
               setBarLengths(function(prev){
                 var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
                 var defaultSPB=subdivRef.current==="16th"?16:12;
+                var spb34=subdivRef.current==="16th"?12:9;
+                var spb24=subdivRef.current==="16th"?8:6;
                 var arr=prev?prev.slice():new Array(nb).fill(defaultSPB);
                 if(arr.length!==nb) arr=new Array(nb).fill(defaultSPB);
-                var altSPB=subdivRef.current==="16th"?12:9;
-                arr[b]=arr[b]===altSPB?defaultSPB:altSPB;
+                var cur=arr[b]||defaultSPB;
+                arr[b]=cur===defaultSPB?spb34:cur===spb34?spb24:defaultSPB;
                 var next=arr.slice();
                 barLengthsRef.current=next;
                 return next;
               });
             };}(barIdx)}
               style={{fontSize:9,padding:"1px 5px",borderRadius:4,border:"0.5px solid #d0cec8",
-                background:(subdiv==="16th"?barSPB===12:barSPB===9)?"#708238":"#fff",
-                color:(subdiv==="16th"?barSPB===12:barSPB===9)?"#fff":"#a0a0a0",
+                background:(subdiv==="16th"?barSPB===12:barSPB===9)?"#708238":(subdiv==="16th"?barSPB===8:barSPB===6)?"#c87020":"#fff",
+                color:((subdiv==="16th"?barSPB===12:barSPB===9)||(subdiv==="16th"?barSPB===8:barSPB===6))?"#fff":"#a0a0a0",
                 cursor:"pointer",userSelect:"none",flexShrink:0}}>
-              {(subdiv==="16th"?barSPB===12:barSPB===9)?"3/4":"4/4"}
+              {(subdiv==="16th"?barSPB===12:barSPB===9)?"3/4":(subdiv==="16th"?barSPB===8:barSPB===6)?"2/4":"4/4"}
             </div>
           )}
         </div>
