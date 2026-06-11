@@ -1553,7 +1553,7 @@ function renderSideGrid2(barIdx, side){
             {barIdx+1}
           </div>
           <div style={{fontSize:8,color:"#888"}}>小節</div>
-          {canEdit&&subdiv==="16th"&&(
+          {canEdit&&(
             <div onClick={function(b){return function(e){e.stopPropagation();
               setBarLengths(function(prev){
                 var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
@@ -2275,7 +2275,7 @@ function renderSideGrid2(barIdx, side){
             {barIdx+1}
           </div>
           <div style={{fontSize:8,color:"#888"}}>小節</div>
-          {canEdit&&subdiv==="16th"&&(
+          {canEdit&&(
             <div onClick={function(b){return function(e){e.stopPropagation();
               setBarLengths(function(prev){
                 var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
