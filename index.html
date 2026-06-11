@@ -560,7 +560,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var setSelectedBarSync=function(b){ console.log("setSelectedBarSync called:", b); selectedBarRef.current=b; setSelectedBar(b); };
   var copiedBar2S=useState(null); var copiedBar2=copiedBar2S[0]; var setCopiedBar2=copiedBar2S[1];
   var copiedBarRef=React.useRef(null); var copiedBar2Ref=React.useRef(null); var selectedBarRef=React.useRef(null);
-  var floatPosS=useState(floatPosInit||{x:16,y:60}); var floatPos=floatPosS[0]; var _setFloatPos=floatPosS[1];
+  var floatPosS=useState(floatPosInit||{x:Math.max(300,window.innerWidth-340),y:60}); var floatPos=floatPosS[0]; var _setFloatPos=floatPosS[1];
   var setFloatPos=function(pos){_setFloatPos(pos);if(onFloatPosChange)onFloatPosChange(pos);};
   var isDraggingRef=React.useRef(false); var dragOffRef=React.useRef({x:0,y:0});
   var soundTypeS=useState("enigma"); var soundType=soundTypeS[0]; var setSoundType=soundTypeS[1];
