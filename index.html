@@ -1170,7 +1170,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var win=window.open("","_blank");
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
       +'<title>'+sectionLabel+'</title>'
-      +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
+      +'<style>@page{size:A4 landscape;margin:10mm}body{font-family:sans-serif;margin:0}'
       +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}.section-block{break-inside:avoid;page-break-inside:avoid}'
       +'</style></head><body>'
       +'<div class="section-block"><div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
@@ -1902,7 +1902,7 @@ function renderSideGrid2(barIdx, side){
     var win=window.open("","_blank");
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
       +'<title>'+sectionLabel+'</title>'
-      +'<style>@page{size:A4 portrait;margin:15mm}body{font-family:sans-serif;margin:0}'
+      +'<style>@page{size:A4 landscape;margin:10mm}body{font-family:sans-serif;margin:0}'
       +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}.section-block{break-inside:avoid;page-break-inside:avoid}'
       +'</style></head><body>'
       +'<div class="section-block"><div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;border-bottom:1px solid #e8e8e8;padding-bottom:8px">'
@@ -3956,7 +3956,7 @@ function App() {
     var body = buildSectionHtml(scoreId, secKey, secLabel, nt, pd, allPatterns);
     var win = window.open("","_blank");
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+secLabel+'</title>'
-      +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
+      +'<style>@page{size:A4 landscape;margin:10mm}body{font-family:sans-serif;margin:0}'
       +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>'
       +'</head><body>'+body+'</div></body></html>');
     win.document.close();
@@ -3973,7 +3973,7 @@ function App() {
     var title = SCORE_ID_TO_NAME[scoreId]||scoreId;
     var win = window.open("","_blank");
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+title+'</title>'
-      +'<style>@page{size:A4 portrait;margin:10mm}body{font-family:sans-serif;margin:0}'
+      +'<style>@page{size:A4 landscape;margin:10mm}body{font-family:sans-serif;margin:0}'
       +'@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style>'
       +'</head><body>'+pages+'</div></body></html>');
     win.document.close();
