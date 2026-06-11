@@ -650,21 +650,22 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(!(e.metaKey||e.ctrlKey)) return;
       if(e.key==='c'||e.key==='C'){
         if(sb===null) return;
+        var cBarStart=getBarStart(sb); var cBarSpb=getBarSpb(sb);
         var barLeft={}, barRight={};
         COLORS.forEach(function(c){
-          barLeft[c]=(leftRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
-          barRight[c]=(rightRef.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+          barLeft[c]=(leftRef.current[c]||[]).slice(cBarStart,cBarStart+cBarSpb);
+          barRight[c]=(rightRef.current[c]||[]).slice(cBarStart,cBarStart+cBarSpb);
         });
-        var newCopied={left:barLeft,right:barRight};
+        var newCopied={left:barLeft,right:barRight,spb:cBarSpb};
         copiedBarRef.current=newCopied;
         setCopiedBar(newCopied);
         if(instrument2){
           var barLeft2={}, barRight2={};
           COLORS2.forEach(function(c){
-            barLeft2[c]=(left2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
-            barRight2[c]=(right2Ref.current[c]||[]).slice(sb*SPB,(sb+1)*SPB);
+            barLeft2[c]=(left2Ref.current[c]||[]).slice(cBarStart,cBarStart+cBarSpb);
+            barRight2[c]=(right2Ref.current[c]||[]).slice(cBarStart,cBarStart+cBarSpb);
           });
-          var newCopied2={left:barLeft2,right:barRight2};
+          var newCopied2={left:barLeft2,right:barRight2,spb:cBarSpb};
           copiedBar2Ref.current=newCopied2;
           setCopiedBar2(newCopied2);
         }
@@ -673,11 +674,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       if(e.key==='v'||e.key==='V'){
         if(sb===null||cb===null) return;
         var sb2=sb; var cb2ref=copiedBar2Ref.current;
+        var pBarStart=getBarStart(sb2); var pBarSpb=getBarSpb(sb2);
+        var cbSpb=cb.spb||SPB;
+        var copyLen=Math.min(cbSpb,pBarSpb);
         setLeft(function(prev){
           var p=Object.assign({},prev);
           COLORS.forEach(function(c){
             p[c]=(prev[c]||[]).slice();
-            for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb.left[c]?cb.left[c][i]||0:0;
+            for(var i=0;i<pBarSpb;i++) p[c][pBarStart+i]=i<copyLen?(cb.left[c]?cb.left[c][i]||0:0):0;
           });
           return p;
         });
@@ -685,17 +689,19 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
           var p=Object.assign({},prev);
           COLORS.forEach(function(c){
             p[c]=(prev[c]||[]).slice();
-            for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb.right[c]?cb.right[c][i]||0:0;
+            for(var i=0;i<pBarSpb;i++) p[c][pBarStart+i]=i<copyLen?(cb.right[c]?cb.right[c][i]||0:0):0;
           });
           return p;
         });
         var cb2=cb2ref;
         if(instrument2&&cb2){
+          var cb2Spb=cb2.spb||SPB;
+          var copyLen2=Math.min(cb2Spb,pBarSpb);
           setLeft2(function(prev){
             var p=Object.assign({},prev);
             COLORS2.forEach(function(c){
               p[c]=prev[c]?prev[c].slice():new Array(numBars*SPB).fill(0);
-              for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb2.left[c]?cb2.left[c][i]||0:0;
+              for(var i=0;i<pBarSpb;i++) p[c][pBarStart+i]=i<copyLen2?(cb2.left[c]?cb2.left[c][i]||0:0):0;
             });
             return p;
           });
@@ -703,7 +709,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
             var p=Object.assign({},prev);
             COLORS2.forEach(function(c){
               p[c]=prev[c]?prev[c].slice():new Array(numBars*SPB).fill(0);
-              for(var i=0;i<SPB;i++) p[c][sb2*SPB+i]=cb2.right[c]?cb2.right[c][i]||0:0;
+              for(var i=0;i<pBarSpb;i++) p[c][pBarStart+i]=i<copyLen2?(cb2.right[c]?cb2.right[c][i]||0:0):0;
             });
             return p;
           });
