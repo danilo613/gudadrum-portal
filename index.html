@@ -3973,8 +3973,7 @@ function App() {
       for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) gridHtml+=barsArr[bb]||"";
       gridHtml+='</div>';
     }
-    var footer='<div style="margin-top:8px;font-size:8px;color:#bbb;text-align:center">© DANiLO / グーダドラムオーケストラ 響合〜hibikiai〜 All Rights Reserved.</div>';
-    // 大きいイラスト（グリッド左用）
+        // 大きいイラスト（グリッド左用）
     var svgDLarge="";
     Object.keys(DOTS_P).forEach(function(color){
       if((scoreId==="nostalgic"||scoreId==="holychild")&&color==="pink") return;
@@ -3987,20 +3986,18 @@ function App() {
       +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
       +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>'
       +svgDLarge+'</svg>';
-    return '<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'
-      +'<div style="flex:1;min-width:0">'
+    return '<div style="font-size:8px;color:#ccc;margin-bottom:4px">© DANiLO / グーダドラムオーケストラ 響合〜hibikiai〜 All Rights Reserved.</div>'
+      +'<div style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'
         +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+scoreTitle+'</div>'
         +'<div style="font-size:11px;color:#666;margin-bottom:6px">Composed by DANiLO</div>'
         +'<div style="margin-bottom:8px;line-height:1.8">'+secListHtml+'</div>'
         +'<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:2px">'+secLabel+'</div>'
         +'<div style="font-size:11px;color:#888">'+nb+'小節'+(st?' ／ '+st+'〜':'')+'</div>'
       +'</div>'
-      +'</div>'
       +'<div style="display:flex;gap:16px;align-items:flex-start">'
         +svgLarge
-        +'<div>'+gridHtml+'</div>'
-      +'</div>'
-      +footer;
+        +'<div style="border-left:1px solid #e0e0e0;padding-left:16px">'+gridHtml+'</div>'
+      +'</div>';
   }
 
   function printSection(scoreId, secKey, secLabel, nt, pd, allPatterns) {
