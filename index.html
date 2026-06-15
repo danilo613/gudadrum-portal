@@ -509,7 +509,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
   var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
-  var DOTS2 = instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+  var DOTS2 = instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
   var SPB = subdiv==="16th" ? 16 : 12;
@@ -1109,7 +1109,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function handlePrint(){
-    var DOTS=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb=subdiv==="16th"?16:12;
     var CELL_P=20, GAP_P=1;
@@ -1853,7 +1853,7 @@ function renderSideGrid2(barIdx, side){
 
 
   function handlePrint(){
-    var DOTS=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb=subdiv==="16th"?16:12;
     var CELL_P=20, GAP_P=1;
@@ -2391,7 +2391,7 @@ function renderSideGrid2(barIdx, side){
   var grid2EditElement = null;
   var renderBar2Edit = null;
   if(instrument2) {
-    var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+    var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
     var pat2={left:left2,right:right2};
     var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
     var topBars2=[],botBars2=[];
@@ -2598,7 +2598,7 @@ function renderSideGrid2(barIdx, side){
             <svg viewBox="0 0 140 166" width="100" height="118">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {(function(){
-                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
@@ -2627,7 +2627,7 @@ function renderSideGrid2(barIdx, side){
           <svg viewBox="0 0 140 166" width="100" height="118">
             <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
             {(function(){
-              var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+              var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
               return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                 var pos=activeDots[color];
                 return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
@@ -2795,7 +2795,7 @@ function renderSideGrid2(barIdx, side){
               <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
               <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
               {(function(){
-                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
                 return Object.keys(activeDots).filter(function(c){return !(scale==="nostalgic"&&c==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
@@ -2926,7 +2926,7 @@ function renderSideGrid2(barIdx, side){
               <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
               <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
               {(function(){
-                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
