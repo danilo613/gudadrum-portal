@@ -4466,6 +4466,15 @@ function App() {
           ))}
         </div>
       </div>
+      {/* 注意事項 */}
+      <div style={{padding:"6px 20px 10px",borderTop:"1px solid rgba(0,0,0,0.05)"}}>
+        <p style={{fontSize:9,color:"#aaa",margin:0,lineHeight:1.8}}>
+          ※通信速度によって表示に時間がかかったり、テンポが不安定になることがありますので、ご了承願います。<br/>
+          ※譜面プレイヤーのバグ（不良）を発見した場合、右上の「フィードバック」ボタンより報告していただけると助かります。改善できることなら、改善してブラッシュアップさせていただきます。<br/>
+          ※画面の明るさやデバイスの設定によって、色の見え方が異なる場合があります。<br/>
+          ※譜面の内容は予告なく修正・改善されることがあります。
+        </p>
+      </div>
       {/* ScorePlayer */}
       <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
         {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
