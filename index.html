@@ -4335,7 +4335,13 @@ function App() {
               <div style={{fontSize:12,fontWeight:700,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
                 {SCORE_ID_TO_NAME[currentScoreId]||currentScoreId}　{(SCORE_SECTIONS[currentScoreId]||[]).find(s=>s[0]===scoreSection)?.[1]||scoreSection}
               </div>
-              <div style={{fontSize:10,color:"rgba(255,255,255,0.6)"}}>譜面プレイヤー</div>
+              <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.6)"}}>譜面プレイヤー</div>
+              <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",marginTop:2,lineHeight:1.6}}>
+                ※通信速度によって表示に時間がかかったり、テンポが不安定になることがあります。<br/>
+                ※バグ発見時は「フィードバック」ボタンより報告をお願いします。<br/>
+                ※画面の明るさ・設定によって色の見え方が異なる場合があります。<br/>
+                ※譜面の内容は予告なく修正・改善されることがあります。
+              </div>
             </div>
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
@@ -4465,15 +4471,6 @@ function App() {
             </button>
           ))}
         </div>
-      </div>
-      {/* 注意事項 */}
-      <div style={{padding:"6px 20px 10px",borderTop:"1px solid rgba(0,0,0,0.05)"}}>
-        <p style={{fontSize:10,color:"#888",margin:0,lineHeight:1.8}}>
-          ※通信速度によって表示に時間がかかったり、テンポが不安定になることがありますので、ご了承願います。<br/>
-          ※譜面プレイヤーのバグ（不良）を発見した場合、右上の「フィードバック」ボタンより報告していただけると助かります。改善できることなら、改善してブラッシュアップさせていただきます。<br/>
-          ※画面の明るさやデバイスの設定によって、色の見え方が異なる場合があります。<br/>
-          ※譜面の内容は予告なく修正・改善されることがあります。
-        </p>
       </div>
       {/* ScorePlayer */}
       <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
