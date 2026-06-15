@@ -1071,6 +1071,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
       } else {
         if(m===4&&s12%3===0)woodClick(doAcc);
+        else if(m==="4u"&&s12%3===1)woodClick(doAcc);
+        else if(m===8)woodClick(doAcc);
         else if(m===3)woodClick(doAcc);
       }
     }
@@ -1819,6 +1821,8 @@ function renderSideGrid2(barIdx, side){
         else if(m==="8u"&&s12%2!==0)woodClick(doAcc);
       } else {
         if(m===4&&s12%3===0)woodClick(doAcc);
+        else if(m==="4u"&&s12%3===1)woodClick(doAcc);
+        else if(m===8)woodClick(doAcc);
         else if(m===3)woodClick(doAcc);
       }
     }
