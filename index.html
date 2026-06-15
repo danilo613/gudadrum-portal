@@ -4336,12 +4336,6 @@ function App() {
                 {SCORE_ID_TO_NAME[currentScoreId]||currentScoreId}　{(SCORE_SECTIONS[currentScoreId]||[]).find(s=>s[0]===scoreSection)?.[1]||scoreSection}
               </div>
               <div style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.6)"}}>譜面プレイヤー</div>
-              <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",marginTop:2,lineHeight:1.6}}>
-                ※通信速度によって表示に時間がかかったり、テンポが不安定になることがあります。<br/>
-                ※バグ発見時は「フィードバック」ボタンより報告をお願いします。<br/>
-                ※画面の明るさ・設定によって色の見え方が異なる場合があります。<br/>
-                ※譜面の内容は予告なく修正・改善されることがあります。
-              </div>
             </div>
           </div>
           <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,marginLeft:8}}>
@@ -4354,6 +4348,12 @@ function App() {
               終了
             </button>
           </div>
+        </div>
+        <div style={{fontSize:10,color:"rgba(255,255,255,0.5)",marginTop:4,lineHeight:1.6}}>
+          ※通信速度によって表示に時間がかかったり、テンポが不安定になることがあります。
+          ※バグ発見時は「フィードバック」ボタンより報告をお願いします。
+          ※画面の明るさ・設定によって色の見え方が異なる場合があります。
+          ※譜面の内容は予告なく修正・改善されることがあります。
         </div>
       </div>
       {/* フィードバックフォーム（譜面プレイヤー内） */}
