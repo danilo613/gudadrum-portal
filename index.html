@@ -4328,9 +4328,9 @@ function App() {
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {/* ヘッダーバー */}
       <div style={{background:"linear-gradient(135deg,#3a6a7a,#2a4a5a)",flexShrink:0,padding:"8px 16px"}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-          <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flex:1}}>
-            <span style={{fontSize:14,flexShrink:0}}>🎼</span>
+        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between"}}>
+          <div style={{display:"flex",alignItems:"flex-start",gap:8,minWidth:0,flex:1}}>
+            <span style={{fontSize:14,flexShrink:0,marginTop:2}}>🎼</span>
             <div style={{minWidth:0}}>
               <div style={{fontSize:12,fontWeight:700,color:"#fff",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>
                 {SCORE_ID_TO_NAME[currentScoreId]||currentScoreId}　{(SCORE_SECTIONS[currentScoreId]||[]).find(s=>s[0]===scoreSection)?.[1]||scoreSection}
@@ -4344,7 +4344,7 @@ function App() {
               </div>
             </div>
           </div>
-          <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0}}>
+          <div style={{display:"flex",gap:6,alignItems:"center",flexShrink:0,marginLeft:8}}>
             <button onClick={()=>setFeedbackOpen(!feedbackOpen)}
               style={{padding:"5px 10px",borderRadius:16,border:"1px solid rgba(255,255,255,0.4)",background:"rgba(255,255,255,0.12)",color:"#fff",fontSize:10,cursor:"pointer"}}>
               💬 フィードバック
