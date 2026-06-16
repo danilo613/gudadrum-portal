@@ -3446,6 +3446,88 @@ function App() {
   const [playerFullscreen, setPlayerFullscreen] = useState(false);
   const [scoreList,      setScoreList]      = useState([]);
   const [scoreSection,   setScoreSection]   = useState("intro");
+
+  // === メトロノーム単体機能 ===
+  const [metroOpen, setMetroOpen] = useState(false);
+  const [metroBpm, setMetroBpm] = useState(80);
+  const [metroPlaying, setMetroPlaying] = useState(false);
+  const [metroMode, setMetroMode] = useState(4); // 4, "4u", 8, "8u", 3
+  const [metroAccent, setMetroAccent] = useState(true);
+  const [metroVol, setMetroVol] = useState(0.5);
+  const metroActxRef = React.useRef(null);
+  const metroBufRef = React.useRef({});
+  const metroIidRef = React.useRef(null);
+  const metroStepRef = React.useRef(0);
+  const metroBpmRef = React.useRef(80);
+  const metroModeRef = React.useRef(4);
+  const metroVolRef = React.useRef(0.5);
+  const metroAccentRef = React.useRef(true);
+  React.useEffect(()=>{metroBpmRef.current=metroBpm;},[metroBpm]);
+  React.useEffect(()=>{metroModeRef.current=metroMode;},[metroMode]);
+  React.useEffect(()=>{metroVolRef.current=metroVol;},[metroVol]);
+  React.useEffect(()=>{metroAccentRef.current=metroAccent;},[metroAccent]);
+
+  async function metroInit() {
+    if (metroActxRef.current) return;
+    const actx = new (window.AudioContext||window.webkitAudioContext)();
+    metroActxRef.current = actx;
+    try {
+      const urls = {click:"/sounds/wood.mp3", accent:"/sounds/wood_accent.mp3"};
+      const keys = Object.keys(urls);
+      for (const k of keys) {
+        const r = await fetch(urls[k]);
+        const ab = await r.arrayBuffer();
+        metroBufRef.current[k] = await actx.decodeAudioData(ab);
+      }
+    } catch(e) {}
+  }
+  function metroClick(accent) {
+    const actx = metroActxRef.current;
+    if (!actx) return;
+    if (actx.state==="suspended") actx.resume();
+    const key = accent ? "accent" : "click";
+    const buf = metroBufRef.current[key]||metroBufRef.current.click;
+    if (!buf) return;
+    const s = actx.createBufferSource(); s.buffer = buf;
+    const g = actx.createGain(); g.gain.value = metroVolRef.current;
+    s.connect(g); g.connect(actx.destination); s.start(0);
+  }
+  function metroTick() {
+    const s12 = metroStepRef.current % 12;
+    const m = metroModeRef.current;
+    const doAcc = s12===0 && metroAccentRef.current;
+    // 16分系（12ステップ = 4拍×3 or 3ステップ/拍）→ 16ステップで4拍と扱うか、12で扱うか
+    // シンプルに：1ステップ=16分とし、12ステップで3拍...複雑なので
+    // 別方式：1ステップ=16分音符、1拍=4ステップ（4分系）または1拍=3ステップ（三連符系）
+    // ここでは三連符系も対応するため12分割で固定
+    if (m===4 && s12%3===0) metroClick(doAcc);
+    else if (m==="4u" && s12%3===1) metroClick(doAcc);
+    else if (m===8 && (s12===0 || s12===2 || s12===3 || s12===5 || s12===6 || s12===8 || s12===9 || s12===11)) metroClick(false);
+    else if (m==="8u" && (s12===1 || s12===4 || s12===7 || s12===10)) metroClick(false);
+    else if (m===3) metroClick(s12===0 && metroAccentRef.current);
+    metroStepRef.current++;
+  }
+  async function metroStart() {
+    await metroInit();
+    metroStepRef.current = 0;
+    setMetroPlaying(true);
+    // 1拍 = 60/BPM秒、3分割なので 1ステップ = 60/BPM/3 秒
+    const interval = Math.round((60/metroBpmRef.current/3)*1000);
+    metroIidRef.current = setInterval(metroTick, interval);
+  }
+  function metroStop() {
+    if (metroIidRef.current) { clearInterval(metroIidRef.current); metroIidRef.current = null; }
+    setMetroPlaying(false);
+  }
+  // BPM変更時に再起動
+  React.useEffect(()=>{
+    if (metroPlaying) {
+      if (metroIidRef.current) clearInterval(metroIidRef.current);
+      const interval = Math.round((60/metroBpm/3)*1000);
+      metroIidRef.current = setInterval(metroTick, interval);
+    }
+  },[metroBpm]);
+
   const [selectedSecs,  setSelectedSecs]  = useState([]); // 複数選択
   const playQueueRef    = React.useRef([]);
   const playQueueIdxRef = React.useRef(0);
@@ -3595,8 +3677,7 @@ function App() {
     if (!feedbackMsg.trim()) { setFeedbackStatus("内容を入力してください"); return; }
     setFeedbackStatus("送信中...");
     try {
-      const res = await fetch("/api/gas?" + new URLSearchParams({action:"feedback", name:feedbackName||"匿名", message:feedbackMsg}));
-      const data = await res.json();
+      const data = await gasWrite({action:"feedback", name:feedbackName||"匿名", message:feedbackMsg});
       if (data.success) {
         setFeedbackStatus("✅ 送信しました！ありがとうございます🌿");
         setFeedbackMsg("");
@@ -6683,6 +6764,59 @@ function App() {
             <span style={{fontSize:13,fontWeight:500,color:"#2a3a2a",flex:1,textAlign:"left"}}>譜面プレイヤー</span>
             <span style={{fontSize:12,color:"#6a8a6a"}}>›</span>
           </button>
+        )}
+
+        {/* メトロノーム */}
+        {!isInstructor && (
+          <div style={{background:"rgba(255,255,255,0.88)",border:"1px solid rgba(212,160,192,0.5)",borderRadius:14,backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)"}}>
+            <button onClick={()=>setMetroOpen(!metroOpen)} style={{...ROW_BTN("#7a6a3a"),background:"transparent",border:"none",width:"100%"}}>
+              <span style={{fontSize:18,color:"#7a6a3a"}}>🥁</span>
+              <span style={{fontSize:13,fontWeight:500,color:"#2a3a2a",flex:1,textAlign:"left"}}>メトロノーム</span>
+              <span style={{fontSize:12,color:"#8a4a6a",transform:metroOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+            </button>
+            {metroOpen && (
+              <div style={{padding:"0 16px 16px"}}>
+                {/* 再生ボタン */}
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
+                  <button onClick={()=>{metroPlaying?metroStop():metroStart();}} style={{width:50,height:50,borderRadius:"50%",border:"none",background:"linear-gradient(135deg,#7a6a3a,#a08a4a)",color:"#fff",fontSize:20,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    {metroPlaying?"⏸":"▶"}
+                  </button>
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:10,color:"#888",marginBottom:2}}>BPM</div>
+                    <div style={{fontSize:20,fontWeight:700,color:"#2a3a2a"}}>{metroBpm}</div>
+                  </div>
+                </div>
+                {/* BPMスライダー */}
+                <input type="range" min="50" max="180" value={metroBpm} onChange={e=>setMetroBpm(parseInt(e.target.value))}
+                  style={{width:"100%",accentColor:"#7a6a3a",cursor:"pointer",marginBottom:14}}/>
+                {/* 拍子選択 */}
+                <div style={{fontSize:10,color:"#888",marginBottom:6}}>拍子</div>
+                <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:14}}>
+                  {[[4,"♩4分"],["4u","♩4分裏"],[8,"♪8分"],["8u","♪8分裏"],[3,"三連符"]].map(([v,l])=>(
+                    <button key={v} onClick={()=>setMetroMode(v)} style={{padding:"6px 12px",borderRadius:14,border:"1px solid #ccc",background:metroMode===v?"linear-gradient(135deg,#7a6a3a,#a08a4a)":"#fff",color:metroMode===v?"#fff":"#666",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                      {l}
+                    </button>
+                  ))}
+                </div>
+                {/* 頭チーン */}
+                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+                  <span style={{fontSize:11,color:"#666"}}>頭チーン</span>
+                  <label style={{position:"relative",display:"inline-block",width:36,height:20}}>
+                    <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
+                    <span style={{position:"absolute",inset:0,background:metroAccent?"#4a8a4a":"#ccc",borderRadius:20,transition:"0.2s",cursor:"pointer"}}>
+                      <span style={{position:"absolute",height:16,width:16,left:metroAccent?18:2,bottom:2,background:"#fff",borderRadius:"50%",transition:"0.2s"}}/>
+                    </span>
+                  </label>
+                </div>
+                {/* 音量 */}
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <span style={{fontSize:11,color:"#666",minWidth:30}}>音量</span>
+                  <input type="range" min="0" max="1" step="0.1" value={metroVol} onChange={e=>setMetroVol(parseFloat(e.target.value))}
+                    style={{flex:1,accentColor:"#7a6a3a",cursor:"pointer"}}/>
+                </div>
+              </div>
+            )}
+          </div>
         )}
 
         {/* MAPボタン */}
