@@ -1111,6 +1111,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handlePlay(){
     if(playing){doStop();return;}
+    // iOS: タップ操作内でAudioContextをresumeする
+    if(actxRef.current&&actxRef.current.state==="suspended"){
+      actxRef.current.resume();
+    }
     initAudio(function(){
       stepRef.current=startStepRef.current;
       setPlaying(true);doStart();
