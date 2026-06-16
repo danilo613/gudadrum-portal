@@ -936,35 +936,26 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function playSound(c){
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
-    var doPlay=function(){
-      var s=actx.createBufferSource();s.buffer=bufs[c];
-      var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
-      s.connect(g);g.connect(actx.destination);s.start(0);
-    };
-    if(actx.state==="suspended"){actx.resume().then(doPlay);}else{doPlay();}
+    var s=actx.createBufferSource();s.buffer=bufs[c];
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
+    s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
     var actx=actxRef.current,bufs2=bufs2Ref.current;
     if(!actx||!bufs2[c])return;
-    var doPlay2=function(){
-      var s=actx.createBufferSource();s.buffer=bufs2[c];
-      var g=actx.createGain();g.gain.value=0.492;
-      s.connect(g);g.connect(actx.destination);s.start(0);
-    };
-    if(actx.state==="suspended"){actx.resume().then(doPlay2);}else{doPlay2();}
+    var s=actx.createBufferSource();s.buffer=bufs2[c];
+    var g=actx.createGain();g.gain.value=0.492;
+    s.connect(g);g.connect(actx.destination);s.start(0);
   }
 
   function woodClick(accent, atTime){
     var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
     var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
     if(!bufs[key])return;
-    var doClick=function(){
-      var s=actx.createBufferSource();s.buffer=bufs[key];
-      var g=actx.createGain();g.gain.value=metroVolRef.current;
-      s.connect(g);g.connect(actx.destination);
-      s.start(atTime||actx.currentTime);
-    };
-    if(actx.state==="suspended"){actx.resume().then(doClick);}else{doClick();}
+    var s=actx.createBufferSource();s.buffer=bufs[key];
+    var g=actx.createGain();g.gain.value=metroVolRef.current;
+    s.connect(g);g.connect(actx.destination);
+    s.start(atTime||actx.currentTime);
   }
 
   function dimAll(){
@@ -1699,35 +1690,26 @@ function renderSideGrid2(barIdx, side){
   function playSound(c){
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
-    var doPlay=function(){
-      var s=actx.createBufferSource();s.buffer=bufs[c];
-      var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
-      s.connect(g);g.connect(actx.destination);s.start(0);
-    };
-    if(actx.state==="suspended"){actx.resume().then(doPlay);}else{doPlay();}
+    var s=actx.createBufferSource();s.buffer=bufs[c];
+    var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
+    s.connect(g);g.connect(actx.destination);s.start(0);
   }
   function playSound2(c){
     var actx=actxRef.current,bufs2=bufs2Ref.current;
     if(!actx||!bufs2[c])return;
-    var doPlay2=function(){
-      var s=actx.createBufferSource();s.buffer=bufs2[c];
-      var g=actx.createGain();g.gain.value=0.492;
-      s.connect(g);g.connect(actx.destination);s.start(0);
-    };
-    if(actx.state==="suspended"){actx.resume().then(doPlay2);}else{doPlay2();}
+    var s=actx.createBufferSource();s.buffer=bufs2[c];
+    var g=actx.createGain();g.gain.value=0.492;
+    s.connect(g);g.connect(actx.destination);s.start(0);
   }
 
   function woodClick(accent, atTime){
     var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
     var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
     if(!bufs[key])return;
-    var doClick=function(){
-      var s=actx.createBufferSource();s.buffer=bufs[key];
-      var g=actx.createGain();g.gain.value=metroVolRef.current;
-      s.connect(g);g.connect(actx.destination);
-      s.start(atTime||actx.currentTime);
-    };
-    if(actx.state==="suspended"){actx.resume().then(doClick);}else{doClick();}
+    var s=actx.createBufferSource();s.buffer=bufs[key];
+    var g=actx.createGain();g.gain.value=metroVolRef.current;
+    s.connect(g);g.connect(actx.destination);
+    s.start(atTime||actx.currentTime);
   }
 
   function dimAll(){
@@ -4260,7 +4242,7 @@ function App() {
     if (!m) { setLoginErr("メンバーが見つかりません"); return; }
     const normPass = s => String(s||"").replace(/[０-９]/g, c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/\s/g,"");
     if (m.password && normPass(String(m.password)) !== normPass(password)) { setLoginErr("パスワードが違います"); return; }
-    setCurrentMember(m); setIsFromAdmin(false); setIsInstructor(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false); loadPurchasedScores(m.name); window.scrollTo(0,0); if(!bgmRef.current){var bgm=new Audio("/meguru.m4a");bgm.volume=0.4;bgmRef.current=bgm;bgm.play().catch(function(){});}
+    setCurrentMember(m); setIsFromAdmin(false); setIsInstructor(false); setPage("member"); setPassword(""); setGoalOpen(false); setScheduleOpen(false); setMyDataOpen(false); setCommentOpen(false); setCurriculumOpen(false); loadPurchasedScores(m.name); window.scrollTo(0,0); if(!bgmRef.current){var bgm=new Audio("/meguru.m4a");bgm.volume=0.4;bgm.loop=true;bgmRef.current=bgm;bgm.play().catch(function(){});setTimeout(function(){if(bgmRef.current)bgmRef.current.volume=0;},40000);}
     recordLogin(m.name);
   }
 
