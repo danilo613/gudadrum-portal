@@ -3619,8 +3619,8 @@ function App() {
 
   // ルックアヘッド用ref
   const metroNextTimeRef = React.useRef(0);
-  const metroSchedAheadTime = 0.1; // 100ms 先までスケジュール
-  const metroLookaheadInterval = 25; // 25ms ごとにチェック
+  const metroSchedAheadTime = 0.05; // 50ms 先までスケジュール
+  const metroLookaheadInterval = 15; // 15ms ごとにチェック
 
   function getMetroStepDuration(){
     const m = metroModeRef.current;
