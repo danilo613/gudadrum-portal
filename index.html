@@ -3474,6 +3474,63 @@ function App() {
   React.useEffect(()=>{metroVolRef.current=metroVol;},[metroVol]);
   React.useEffect(()=>{metroAccentRef.current=metroAccent;},[metroAccent]);
 
+  // === Rhythm Training Mode ===
+  const [rtmOn, setRtmOn] = useState(false);
+  const [rtmMinutes, setRtmMinutes] = useState(0); // 0=未選択, 5/10/15
+  const [rtmActive, setRtmActive] = useState(false);
+  const [rtmStartTime, setRtmStartTime] = useState(0);
+  const [rtmElapsed, setRtmElapsed] = useState(0); // 秒
+  const [rtmStartBpm, setRtmStartBpm] = useState(80);
+  const rtmIidRef = React.useRef(null);
+  const rtmActiveRef = React.useRef(false);
+  React.useEffect(()=>{rtmActiveRef.current=rtmActive;},[rtmActive]);
+
+  function rtmStart(minutes){
+    if (!metroActxRef.current) return;
+    const bpmIncrease = minutes === 5 ? 10 : minutes === 10 ? 20 : 30;
+    setRtmStartBpm(metroBpm);
+    setRtmMinutes(minutes);
+    setRtmActive(true);
+    setRtmElapsed(0);
+    const startBpm = metroBpm;
+    const startTime = Date.now();
+    setRtmStartTime(startTime);
+    // メトロノーム開始
+    if (!metroPlaying) metroStart();
+    // 1秒ごとにBPM更新＋経過時間チェック
+    rtmIidRef.current = setInterval(()=>{
+      if (!rtmActiveRef.current) return;
+      const elapsedSec = (Date.now() - startTime) / 1000;
+      const totalSec = minutes * 60;
+      setRtmElapsed(elapsedSec);
+      if (elapsedSec >= totalSec) {
+        // 完了
+        rtmStop(true);
+        return;
+      }
+      // 線形BPM増加
+      const progress = elapsedSec / totalSec;
+      const newBpm = Math.round(startBpm + bpmIncrease * progress);
+      if (newBpm !== metroBpmRef.current) {
+        setMetroBpm(Math.min(180, newBpm));
+      }
+    }, 1000);
+  }
+  function rtmStop(completed){
+    if (rtmIidRef.current) { clearInterval(rtmIidRef.current); rtmIidRef.current = null; }
+    setRtmActive(false);
+    metroStop();
+    if (completed) {
+      // TODO: ステップ3で記録機能、ステップ4でポイント付与
+      alert(`🎉 ${rtmMinutes}分達成！`);
+    }
+  }
+  function rtmFormatTime(sec){
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${String(s).padStart(2,"0")}`;
+  }
+
   async function metroInit() {
     if (metroActxRef.current) return;
     const actx = new (window.AudioContext||window.webkitAudioContext)();
@@ -4801,6 +4858,59 @@ function App() {
               <span style={{fontSize:14,color:"rgba(150,220,180,0.4)"}}>🔊</span>
             </div>
           </div>
+
+          {/* RHYTHM TRAINING MODE（サブスク利用者のみ） */}
+          {currentMember && currentMember.subscType && currentMember.subscType !== "種" && (
+            <div style={{marginTop:14,padding:"16px 18px",background:"linear-gradient(180deg, rgba(20,40,30,0.6), rgba(10,20,15,0.8))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:14}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:rtmOn?14:0}}>
+                <div style={{fontSize:11,color:"rgba(150,220,180,0.7)",letterSpacing:3,fontWeight:300}}>RHYTHM TRAINING MODE</div>
+                <label style={{position:"relative",display:"inline-block",width:42,height:24,cursor:"pointer"}}>
+                  <input type="checkbox" checked={rtmOn} onChange={e=>{setRtmOn(e.target.checked); if(!e.target.checked && rtmActive) rtmStop(false);}} style={{opacity:0,width:0,height:0}}/>
+                  <span style={{position:"absolute",inset:0,background:rtmOn?"linear-gradient(180deg, #4a8a60, #2a5a3a)":"#2a3530",borderRadius:24,transition:"0.2s",boxShadow:rtmOn?"inset 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(150,220,180,0.4)":"inset 0 1px 3px rgba(0,0,0,0.4)"}}>
+                    <span style={{position:"absolute",height:18,width:18,left:rtmOn?21:3,top:3,background:"#fff",borderRadius:"50%",transition:"0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+                  </span>
+                </label>
+              </div>
+              {rtmOn && !rtmActive && (
+                <div>
+                  <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:10,letterSpacing:1}}>Select duration. BPM will gradually increase.</div>
+                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                    {[[5,10],[10,20],[15,30]].map(([min,inc])=>(
+                      <button key={min} onClick={()=>rtmStart(min)} style={{padding:"12px 16px",borderRadius:10,border:"1px solid rgba(150,220,180,0.2)",background:"linear-gradient(180deg, rgba(30,60,45,0.6), rgba(15,30,22,0.8))",color:"#c8e8d4",fontSize:13,fontWeight:400,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",letterSpacing:1}}>
+                        <span>{min} minutes</span>
+                        <span style={{color:"rgba(160,232,192,0.7)",fontSize:11,letterSpacing:0.5}}>+{inc} BPM</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {rtmActive && (
+                <div>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
+                    <div>
+                      <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>ELAPSED / TOTAL</div>
+                      <div style={{fontSize:24,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300,letterSpacing:2}}>
+                        {rtmFormatTime(rtmElapsed)} <span style={{color:"rgba(150,220,180,0.4)"}}>/ {rtmMinutes}:00</span>
+                      </div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>BPM</div>
+                      <div style={{fontSize:18,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>
+                        {rtmStartBpm} → {Math.min(180, rtmStartBpm + (rtmMinutes===5?10:rtmMinutes===10?20:30))}
+                      </div>
+                    </div>
+                  </div>
+                  {/* プログレスバー */}
+                  <div style={{width:"100%",height:6,background:"rgba(10,20,15,0.8)",borderRadius:3,overflow:"hidden",boxShadow:"inset 0 1px 2px rgba(0,0,0,0.5)",marginBottom:12}}>
+                    <div style={{width:`${(rtmElapsed/(rtmMinutes*60))*100}%`,height:"100%",background:"linear-gradient(90deg, #4a8a60, #a0e8c0)",transition:"width 0.5s linear",boxShadow:"0 0 8px rgba(150,220,180,0.6)"}}/>
+                  </div>
+                  <button onClick={()=>rtmStop(false)} style={{width:"100%",padding:"10px",borderRadius:8,border:"1px solid rgba(220,150,150,0.3)",background:"rgba(60,30,30,0.4)",color:"#e8a0a0",fontSize:11,fontWeight:400,cursor:"pointer",letterSpacing:1}}>
+                    STOP (No record will be saved)
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
