@@ -3485,30 +3485,37 @@ function App() {
   const rtmActiveRef = React.useRef(false);
   React.useEffect(()=>{rtmActiveRef.current=rtmActive;},[rtmActive]);
 
-  function rtmStart(minutes){
-    if (!metroActxRef.current) return;
+  async function rtmStart(minutes){
+    // メトロノーム初期化を確実に
+    await metroInit();
+    const actx = metroActxRef.current;
+    if (!actx) return;
+    if (actx.state==="suspended") await actx.resume();
     const bpmIncrease = minutes === 5 ? 10 : minutes === 10 ? 20 : 30;
-    setRtmStartBpm(metroBpm);
+    const startBpm = metroBpm;
+    setRtmStartBpm(startBpm);
     setRtmMinutes(minutes);
     setRtmActive(true);
     setRtmElapsed(0);
-    const startBpm = metroBpm;
     const startTime = Date.now();
     setRtmStartTime(startTime);
     // メトロノーム開始
-    if (!metroPlaying) metroStart();
+    if (!metroPlaying) {
+      metroStepRef.current = 0;
+      setMetroVisualStep(0);
+      setMetroPlaying(true);
+      metroNextTimeRef.current = actx.currentTime + 0.05;
+      metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
+    }
     // 1秒ごとにBPM更新＋経過時間チェック
     rtmIidRef.current = setInterval(()=>{
-      if (!rtmActiveRef.current) return;
       const elapsedSec = (Date.now() - startTime) / 1000;
       const totalSec = minutes * 60;
       setRtmElapsed(elapsedSec);
       if (elapsedSec >= totalSec) {
-        // 完了
         rtmStop(true);
         return;
       }
-      // 線形BPM増加
       const progress = elapsedSec / totalSec;
       const newBpm = Math.round(startBpm + bpmIncrease * progress);
       if (newBpm !== metroBpmRef.current) {
@@ -4886,12 +4893,17 @@ function App() {
               )}
               {rtmActive && (
                 <div>
+                  {/* カウントダウン（大きく中央） */}
+                  <div style={{textAlign:"center",marginBottom:16,padding:"12px 0",background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:10,boxShadow:"inset 0 2px 6px rgba(0,0,0,0.6)"}}>
+                    <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:3,marginBottom:4}}>REMAINING</div>
+                    <div style={{fontSize:42,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300,letterSpacing:4,lineHeight:1,textShadow:"0 0 16px rgba(150,220,180,0.5)"}}>
+                      {rtmFormatTime(Math.max(0, rtmMinutes*60 - rtmElapsed))}
+                    </div>
+                  </div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
                     <div>
-                      <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>ELAPSED / TOTAL</div>
-                      <div style={{fontSize:24,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300,letterSpacing:2}}>
-                        {rtmFormatTime(rtmElapsed)} <span style={{color:"rgba(150,220,180,0.4)"}}>/ {rtmMinutes}:00</span>
-                      </div>
+                      <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>ELAPSED</div>
+                      <div style={{fontSize:18,color:"#c8e8d4",fontFamily:"monospace",fontWeight:300}}>{rtmFormatTime(rtmElapsed)}</div>
                     </div>
                     <div style={{textAlign:"right"}}>
                       <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>BPM</div>
