@@ -3528,12 +3528,30 @@ function App() {
   }
   function rtmStop(completed, completedMinutes){
     if (rtmIidRef.current) { clearInterval(rtmIidRef.current); rtmIidRef.current = null; }
+    const info = rtmInfoRef.current;
     rtmInfoRef.current = null;
     setRtmActive(false);
     metroStop();
     if (completed) {
       const min = completedMinutes || rtmMinutes;
-      alert(`🎉 ${min}分達成！`);
+      const startBpm = info ? info.startBpm : rtmStartBpm;
+      const endBpm = info ? Math.min(180, info.startBpm + info.bpmIncrease) : startBpm;
+      // GASに記録送信
+      if (currentMember && currentMember.subscType && currentMember.subscType !== "種") {
+        gasWrite({
+          action: "addworkout",
+          name: currentMember.name,
+          minutes: min,
+          startBpm: startBpm,
+          endBpm: endBpm
+        }).then(()=>{
+          alert(`🎉 ${min}分達成！記録を保存しました`);
+        }).catch(()=>{
+          alert(`🎉 ${min}分達成！（記録の保存に失敗しました）`);
+        });
+      } else {
+        alert(`🎉 ${min}分達成！`);
+      }
     }
   }
   function rtmFormatTime(sec){
@@ -4788,7 +4806,7 @@ function App() {
       <div style={{flexShrink:0,padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
           <div style={{width:36,height:36,borderRadius:"50%",background:"radial-gradient(circle at 30% 30%, #2a3a30, #0a1410)",border:"1px solid rgba(150,220,180,0.2)",boxShadow:"inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#96dcb4"}}>🎼</div>
-          <span style={{fontSize:15,fontWeight:300,color:"#c8e8d4",letterSpacing:6}}>METRONOME</span>
+          <span style={{fontSize:15,fontWeight:300,color:"#c8e8d4",letterSpacing:6}}>メトロノーム</span>
         </div>
         <button onClick={()=>{metroStop();setMetroFullscreen(false);}}
           style={{width:32,height:32,borderRadius:"50%",border:"1px solid rgba(150,220,180,0.2)",background:"rgba(20,40,30,0.5)",color:"#96dcb4",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -4871,7 +4889,7 @@ function App() {
           </div>
           {/* SUBDIVISION */}
           <div style={{marginBottom:20}}>
-            <div style={{fontSize:11,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:300,marginBottom:10}}>SUBDIVISION</div>
+            <div style={{fontSize:11,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:300,marginBottom:10}}>音符</div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
               {(rtmActive ? [[4,"♩4分"],[8,"♪8分"]] : [[4,"♩4分"],[8,"♪8分"],[16,"♬16分"],[3,"三連符"],["shuffle","ハネ"]]).map(([v,l])=>(
                 <button key={v} onClick={()=>setMetroMode(v)} style={{flex:1,padding:"12px 8px",borderRadius:10,border:metroMode===v?"1px solid rgba(150,220,180,0.6)":"1px solid rgba(150,220,180,0.1)",background:metroMode===v?"linear-gradient(180deg, rgba(40,80,60,0.6), rgba(20,50,35,0.6))":"linear-gradient(180deg, rgba(20,40,30,0.4), rgba(10,20,15,0.6))",color:metroMode===v?"#c8e8d4":"rgba(200,232,212,0.5)",fontSize:13,fontWeight:metroMode===v?500:300,cursor:"pointer",boxShadow:metroMode===v?"inset 0 1px 0 rgba(255,255,255,0.08), 0 0 12px rgba(150,220,180,0.3)":"inset 0 1px 0 rgba(255,255,255,0.03)",transition:"all 0.2s"}}>
@@ -4883,7 +4901,7 @@ function App() {
           {/* TIME SIG + ACCENT */}
           <div style={{marginBottom:20,padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
             <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:metroAccent?10:0}}>
-              <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>TIME</span>
+              <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>拍子</span>
               <div style={{display:"flex",gap:6}}>
                 {["3/4","4/4"].map(ts=>(
                   <button key={ts} onClick={()=>setMetroTimeSig(ts)} style={{padding:"6px 14px",borderRadius:8,border:metroTimeSig===ts?"1px solid rgba(150,220,180,0.5)":"1px solid rgba(150,220,180,0.1)",background:metroTimeSig===ts?"rgba(40,80,60,0.6)":"rgba(20,40,30,0.4)",color:metroTimeSig===ts?"#c8e8d4":"rgba(200,232,212,0.5)",fontSize:13,fontWeight:400,cursor:"pointer",fontFamily:"monospace"}}>
@@ -4892,7 +4910,7 @@ function App() {
                 ))}
               </div>
               <div style={{flex:1}}/>
-              <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>ACCENT</span>
+              <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>アクセント</span>
               <label style={{position:"relative",display:"inline-block",width:42,height:24,cursor:"pointer"}}>
                 <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
                 <span style={{position:"absolute",inset:0,background:metroAccent?"linear-gradient(180deg, #4a8a60, #2a5a3a)":"#2a3530",borderRadius:24,transition:"0.2s",boxShadow:metroAccent?"inset 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(150,220,180,0.4)":"inset 0 1px 3px rgba(0,0,0,0.4)"}}>
@@ -4902,7 +4920,7 @@ function App() {
             </div>
             {metroAccent && (
               <div style={{display:"flex",alignItems:"center",gap:10,marginTop:4}}>
-                <span style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,minWidth:80}}>ACCENT VOL</span>
+                <span style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,minWidth:80}}>アクセント音量</span>
                 <input type="range" min="0" max="2" step="0.05" value={metroAccentVol} onChange={e=>setMetroAccentVol(parseFloat(e.target.value))}
                   style={{flex:1,accentColor:"#a0e8c0",cursor:"pointer",height:4}}/>
                 <span style={{fontSize:10,color:"rgba(150,220,180,0.5)",fontFamily:"monospace",minWidth:30,textAlign:"right"}}>{(metroAccentVol*100).toFixed(0)}%</span>
@@ -4911,7 +4929,7 @@ function App() {
           </div>
           {/* VOLUME */}
           <div style={{padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
-            <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:300,marginBottom:10}}>VOLUME</div>
+            <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:300,marginBottom:10}}>音量</div>
             <div style={{display:"flex",alignItems:"center",gap:12}}>
               <span style={{fontSize:14,color:"rgba(150,220,180,0.4)"}}>🔈</span>
               <input type="range" min="0" max="1" step="0.05" value={metroVol} onChange={e=>setMetroVol(parseFloat(e.target.value))}
@@ -4920,8 +4938,8 @@ function App() {
             </div>
           </div>
 
-          {/* RHYTHM TRAINING MODE（サブスク利用者のみ） */}
-          {currentMember && currentMember.subscType && currentMember.subscType !== "種" && (
+          {/* RHYTHM TRAINING MODE */}
+          {currentMember && (
             <div style={{marginTop:14,padding:"16px 18px",background:"linear-gradient(180deg, rgba(20,40,30,0.6), rgba(10,20,15,0.8))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:14}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:rtmOn?14:0}}>
                 <div style={{fontSize:11,color:"rgba(150,220,180,0.7)",letterSpacing:3,fontWeight:300}}>RHYTHM TRAINING MODE</div>
@@ -4934,29 +4952,45 @@ function App() {
               </div>
               {rtmOn && !rtmActive && (
                 <div>
-                  <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:10,letterSpacing:1}}>Select duration. BPM will gradually increase.</div>
+                  <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:10,letterSpacing:1}}>時間を選択。BPMが徐々に上昇します。</div>
                   <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {[[5,10],[10,20],[15,30]].map(([min,inc])=>(
-                      <button key={min} onClick={()=>rtmStart(min)} style={{padding:"12px 16px",borderRadius:10,border:"1px solid rgba(150,220,180,0.2)",background:"linear-gradient(180deg, rgba(30,60,45,0.6), rgba(15,30,22,0.8))",color:"#c8e8d4",fontSize:13,fontWeight:400,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",letterSpacing:1}}>
-                        <span>{min} minutes</span>
-                        <span style={{color:"rgba(160,232,192,0.7)",fontSize:11,letterSpacing:0.5}}>+{inc} BPM</span>
-                      </button>
-                    ))}
+                    {[[5,10],[10,20],[15,30]].map(([min,inc])=>{
+                      const isSubscriber = currentMember.subscType && currentMember.subscType !== "種";
+                      return (
+                        <button key={min} onClick={()=>{
+                          if (!isSubscriber) {
+                            alert("🌿 リズム筋トレモードは、サブスク会員特典です。\nぜひこの機会にサブスクをご検討ください！");
+                            return;
+                          }
+                          rtmStart(min);
+                        }} style={{padding:"12px 16px",borderRadius:10,border:"1px solid rgba(150,220,180,0.2)",background:"linear-gradient(180deg, rgba(30,60,45,0.6), rgba(15,30,22,0.8))",color:"#c8e8d4",fontSize:13,fontWeight:400,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",letterSpacing:1,position:"relative"}}>
+                          <span>{min}分</span>
+                          <span style={{color:"rgba(160,232,192,0.7)",fontSize:11,letterSpacing:0.5}}>
+                            +{inc} BPM {!isSubscriber && <span style={{marginLeft:6,color:"rgba(220,180,140,0.8)"}}>🔒</span>}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
+                  {(!currentMember.subscType || currentMember.subscType === "種") && (
+                    <div style={{marginTop:12,padding:"10px 12px",background:"rgba(60,50,30,0.4)",border:"1px solid rgba(220,180,140,0.2)",borderRadius:8,fontSize:10,color:"rgba(220,180,140,0.9)",lineHeight:1.6}}>
+                      🌿 リズム筋トレモードはサブスク会員特典です
+                    </div>
+                  )}
                 </div>
               )}
               {rtmActive && (
                 <div>
                   {/* カウントダウン（大きく中央） */}
                   <div style={{textAlign:"center",marginBottom:16,padding:"12px 0",background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:10,boxShadow:"inset 0 2px 6px rgba(0,0,0,0.6)"}}>
-                    <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:3,marginBottom:4}}>REMAINING</div>
+                    <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:3,marginBottom:4}}>残り時間</div>
                     <div style={{fontSize:42,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300,letterSpacing:4,lineHeight:1,textShadow:"0 0 16px rgba(150,220,180,0.5)"}}>
                       {rtmFormatTime(Math.max(0, rtmMinutes*60 - rtmElapsed))}
                     </div>
                   </div>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:10}}>
                     <div>
-                      <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>ELAPSED</div>
+                      <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>経過時間</div>
                       <div style={{fontSize:18,color:"#c8e8d4",fontFamily:"monospace",fontWeight:300}}>{rtmFormatTime(rtmElapsed)}</div>
                     </div>
                     <div style={{textAlign:"right"}}>
@@ -4971,7 +5005,7 @@ function App() {
                     <div style={{width:`${(rtmElapsed/(rtmMinutes*60))*100}%`,height:"100%",background:"linear-gradient(90deg, #4a8a60, #a0e8c0)",transition:"width 0.5s linear",boxShadow:"0 0 8px rgba(150,220,180,0.6)"}}/>
                   </div>
                   <button onClick={()=>rtmStop(false)} style={{width:"100%",padding:"10px",borderRadius:8,border:"1px solid rgba(220,150,150,0.3)",background:"rgba(60,30,30,0.4)",color:"#e8a0a0",fontSize:11,fontWeight:400,cursor:"pointer",letterSpacing:1}}>
-                    STOP (No record will be saved)
+                    中断（記録は残りません）
                   </button>
                 </div>
               )}
