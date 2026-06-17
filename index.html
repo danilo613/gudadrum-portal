@@ -3487,7 +3487,6 @@ function App() {
   React.useEffect(()=>{rtmActiveRef.current=rtmActive;},[rtmActive]);
 
   async function rtmStart(minutes){
-    // メトロノーム初期化を確実に
     await metroInit();
     const actx = metroActxRef.current;
     if (!actx) return;
@@ -3500,6 +3499,8 @@ function App() {
     setRtmElapsed(0);
     const startTime = Date.now();
     setRtmStartTime(startTime);
+    // RTM情報をスケジューラーに渡す
+    rtmInfoRef.current = {startTime, totalSec: minutes*60, startBpm, bpmIncrease};
     // メトロノーム開始
     if (!metroPlaying) {
       metroStepRef.current = 0;
@@ -3508,7 +3509,7 @@ function App() {
       metroNextTimeRef.current = actx.currentTime + 0.05;
       metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
     }
-    // 1秒ごとにBPM更新＋経過時間チェック
+    // 1秒ごとに表示更新（実際のBPM変化はスケジューラー側で連続的）
     rtmIidRef.current = setInterval(()=>{
       const elapsedSec = (Date.now() - startTime) / 1000;
       const totalSec = minutes * 60;
@@ -3518,15 +3519,13 @@ function App() {
         return;
       }
       const progress = elapsedSec / totalSec;
-      const newBpm = Math.round(startBpm + bpmIncrease * progress);
-      if (newBpm !== metroBpmRef.current) {
-        // 小節頭で適用される目標BPMにセット
-        rtmTargetBpmRef.current = Math.min(180, newBpm);
-      }
+      const displayBpm = Math.min(180, Math.round(startBpm + bpmIncrease * progress));
+      setMetroBpm(displayBpm); // 表示用
     }, 1000);
   }
   function rtmStop(completed, completedMinutes){
     if (rtmIidRef.current) { clearInterval(rtmIidRef.current); rtmIidRef.current = null; }
+    rtmInfoRef.current = null;
     setRtmActive(false);
     metroStop();
     if (completed) {
@@ -3624,10 +3623,21 @@ function App() {
   const metroSchedAheadTime = 0.05; // 50ms 先までスケジュール
   const metroLookaheadInterval = 15; // 15ms ごとにチェック
 
+  // RTM用情報
+  const rtmInfoRef = React.useRef(null); // {startTime, totalSec, startBpm, bpmIncrease}
+
   function getMetroStepDuration(){
     const m = metroModeRef.current;
     const stepsPerBeat = (m===3||m==="shuffle") ? 3 : 4;
-    return 60 / metroBpmRef.current / stepsPerBeat; // 秒
+    // RTM中は経過時間から動的にBPMを計算
+    let bpm = metroBpmRef.current;
+    if (rtmInfoRef.current) {
+      const info = rtmInfoRef.current;
+      const elapsedSec = (Date.now() - info.startTime) / 1000;
+      const progress = Math.min(1, elapsedSec / info.totalSec);
+      bpm = Math.min(180, info.startBpm + info.bpmIncrease * progress);
+    }
+    return 60 / bpm / stepsPerBeat;
   }
 
   function metroScheduleClick(accent, soft, atTime){
