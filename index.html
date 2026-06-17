@@ -3523,9 +3523,7 @@ function App() {
         rtmStop(true, minutes);
         return;
       }
-      const progress = elapsedSec / totalSec;
-      const displayBpm = Math.min(180, Math.round(startBpm + bpmIncrease * progress));
-      setMetroBpm(displayBpm);
+      // setMetroBpmは呼ばない（リズムの乱れ防止）。表示はrtmInfoRefから計算
     }, 1000);
   }
   function rtmStop(completed, completedMinutes){
@@ -4826,7 +4824,15 @@ function App() {
             <div style={{flex:1,background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:16,padding:"14px 24px",boxShadow:"inset 0 2px 6px rgba(0,0,0,0.7)",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
               <div style={{position:"relative",zIndex:2}}>
                 <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:400}}>BPM</div>
-                <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{String(metroBpm).padStart(3,"0")}</div>
+                <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{(()=>{
+                  if (rtmActive && rtmInfoRef.current) {
+                    const info = rtmInfoRef.current;
+                    const progress = Math.min(1, rtmElapsed / info.totalSec);
+                    const bpm = Math.min(180, Math.round(info.startBpm + info.bpmIncrease * progress));
+                    return String(bpm).padStart(3,"0");
+                  }
+                  return String(metroBpm).padStart(3,"0");
+                })()}</div>
               </div>
               {/* 5本線 + 背景うねり（同じ横幅・中央揃え） */}
               <div style={{position:"relative",flexShrink:0,width:"min(420px, 55vw)",height:64,display:"flex",alignItems:"center",justifyContent:"center"}}>
