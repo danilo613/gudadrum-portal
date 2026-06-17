@@ -3553,30 +3553,88 @@ function App() {
     metroStepRef.current++;
   }
 
-  function getMetroInterval(){
+  // ルックアヘッド用ref
+  const metroNextTimeRef = React.useRef(0);
+  const metroSchedAheadTime = 0.1; // 100ms 先までスケジュール
+  const metroLookaheadInterval = 25; // 25ms ごとにチェック
+
+  function getMetroStepDuration(){
     const m = metroModeRef.current;
     const stepsPerBeat = (m===3||m==="shuffle") ? 3 : 4;
-    return Math.round((60/metroBpmRef.current/stepsPerBeat)*1000);
+    return 60 / metroBpmRef.current / stepsPerBeat; // 秒
   }
+
+  function metroScheduleClick(accent, soft, atTime){
+    const actx = metroActxRef.current;
+    if (!actx) return;
+    const key = (accent && metroBufRef.current.accent) ? "accent" : "click";
+    const buf = metroBufRef.current[key];
+    if (!buf) return;
+    const s = actx.createBufferSource(); s.buffer = buf;
+    const g = actx.createGain();
+    g.gain.value = metroVolRef.current * (soft ? 0.45 : 1);
+    s.connect(g); g.connect(actx.destination);
+    s.start(atTime);
+  }
+
+  function metroScheduler(){
+    const actx = metroActxRef.current;
+    if (!actx) return;
+    // 先読み時間内のステップを全てスケジュール
+    while (metroNextTimeRef.current < actx.currentTime + metroSchedAheadTime) {
+      const step = metroStepRef.current;
+      const m = metroModeRef.current;
+      const ts = metroTimeSigRef.current;
+      const beatsPerBar = ts==="3/4"?3:4;
+      let stepsPerBeat = 4, totalSteps = 16;
+      if (m===3||m==="shuffle") { stepsPerBeat = 3; totalSteps = stepsPerBeat * beatsPerBar; }
+      else { stepsPerBeat = 4; totalSteps = stepsPerBeat * beatsPerBar; }
+      const stepInBar = step % totalSteps;
+      const isBarHead = stepInBar===0;
+      const stepInBeat = stepInBar % stepsPerBeat;
+      const doBarAcc = isBarHead && metroAccentRef.current;
+
+      let playSound = false;
+      if (m===4) { if (stepInBeat===0) playSound = true; }
+      else if (m===8) { if (stepInBeat===0 || stepInBeat===2) playSound = true; }
+      else if (m===16) { playSound = true; }
+      else if (m===3) { playSound = true; }
+      else if (m==="shuffle") { if (stepInBeat===0 || stepInBeat===2) playSound = true; }
+
+      if (playSound) {
+        const isBeatHead = stepInBeat===0;
+        metroScheduleClick(doBarAcc, !isBeatHead, metroNextTimeRef.current);
+      }
+      // ビジュアル更新（次のティック時間に合わせてsetTimeout）
+      const timeUntilStep = (metroNextTimeRef.current - actx.currentTime) * 1000;
+      const stepCapture = step;
+      setTimeout(()=>{ setMetroVisualStep(stepCapture); }, Math.max(0, timeUntilStep));
+
+      metroNextTimeRef.current += getMetroStepDuration();
+      metroStepRef.current++;
+    }
+  }
+
   async function metroStart() {
     await metroInit();
+    const actx = metroActxRef.current;
+    if (actx.state==="suspended") await actx.resume();
     metroStepRef.current = 0;
     setMetroVisualStep(0);
     setMetroPlaying(true);
-    metroIidRef.current = setInterval(metroTick, getMetroInterval());
+    metroNextTimeRef.current = actx.currentTime + 0.05;
+    metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
   }
   function metroStop() {
     if (metroIidRef.current) { clearInterval(metroIidRef.current); metroIidRef.current = null; }
     setMetroPlaying(false);
     setMetroVisualStep(0);
   }
-  // BPM/拍子変更時に再起動
+  // BPM/拍子変更時に再起動（再生中のみ）
   React.useEffect(()=>{
-    if (metroPlaying) {
-      if (metroIidRef.current) clearInterval(metroIidRef.current);
-      metroStepRef.current = 0;
-      setMetroVisualStep(0);
-      metroIidRef.current = setInterval(metroTick, getMetroInterval());
+    if (metroPlaying && metroActxRef.current) {
+      // 再起動: 現在の時刻からスケジュール継続
+      metroNextTimeRef.current = metroActxRef.current.currentTime + 0.05;
     }
   },[metroBpm,metroMode,metroTimeSig]);
 
@@ -4651,9 +4709,14 @@ function App() {
               const pulseIntensity = metroPlaying ? Math.max(0, 1 - (stepInBeat/stepsPerBeat)*2.5) : 0;
               return (
                 <button onClick={()=>{metroPlaying?metroStop():metroStart();}} style={{width:96,height:96,borderRadius:"50%",border:"none",cursor:"pointer",flexShrink:0,background:"radial-gradient(circle at 30% 25%, #2a4a38, #0a1810 70%, #050a08)",boxShadow:`inset 0 2px 8px rgba(0,0,0,0.6), 0 0 ${16+pulseIntensity*32}px rgba(150,220,180,${0.2+pulseIntensity*0.6}), 0 0 0 ${2+pulseIntensity*3}px rgba(150,220,180,${0.2+pulseIntensity*0.4})`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",transition:"box-shadow 0.1s"}}>
-                  <div style={{fontSize:36,color:"#a0e8c0",filter:`drop-shadow(0 0 ${8+pulseIntensity*12}px rgba(150,220,180,${0.7+pulseIntensity*0.3}))`,marginLeft:metroPlaying?0:4,transition:"filter 0.1s"}}>
-                    {metroPlaying?"⏸":"▶"}
-                  </div>
+                  {metroPlaying ? (
+                    <div style={{display:"flex",gap:6,filter:`drop-shadow(0 0 ${8+pulseIntensity*12}px rgba(150,220,180,${0.7+pulseIntensity*0.3}))`}}>
+                      <div style={{width:8,height:30,background:"#a0e8c0",borderRadius:1}}/>
+                      <div style={{width:8,height:30,background:"#a0e8c0",borderRadius:1}}/>
+                    </div>
+                  ) : (
+                    <div style={{width:0,height:0,borderTop:"18px solid transparent",borderBottom:"18px solid transparent",borderLeft:"28px solid #a0e8c0",marginLeft:6,filter:`drop-shadow(0 0 ${8+pulseIntensity*12}px rgba(150,220,180,${0.7+pulseIntensity*0.3}))`}}/>
+                  )}
                 </button>
               );
             })()}
