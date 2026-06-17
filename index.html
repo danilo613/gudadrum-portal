@@ -3458,6 +3458,7 @@ function App() {
   const [metroTimeSig, setMetroTimeSig] = useState("4/4"); // "3/4" or "4/4"
   const [metroAccent, setMetroAccent] = useState(true);
   const [metroVol, setMetroVol] = useState(0.5);
+  const [metroAccentVol, setMetroAccentVol] = useState(1.0);
   const [metroVisualStep, setMetroVisualStep] = useState(0); // 視覚用ステップ
   const metroActxRef = React.useRef(null);
   const metroBufRef = React.useRef({});
@@ -3467,11 +3468,13 @@ function App() {
   const metroModeRef = React.useRef(4);
   const metroTimeSigRef = React.useRef("4/4");
   const metroVolRef = React.useRef(0.5);
+  const metroAccentVolRef = React.useRef(1.0);
   const metroAccentRef = React.useRef(true);
   React.useEffect(()=>{metroBpmRef.current=metroBpm;},[metroBpm]);
   React.useEffect(()=>{metroModeRef.current=metroMode;},[metroMode]);
   React.useEffect(()=>{metroTimeSigRef.current=metroTimeSig;},[metroTimeSig]);
   React.useEffect(()=>{metroVolRef.current=metroVol;},[metroVol]);
+  React.useEffect(()=>{metroAccentVolRef.current=metroAccentVol;},[metroAccentVol]);
   React.useEffect(()=>{metroAccentRef.current=metroAccent;},[metroAccent]);
 
   // === Rhythm Training Mode ===
@@ -3648,7 +3651,9 @@ function App() {
     if (!buf) return;
     const s = actx.createBufferSource(); s.buffer = buf;
     const g = actx.createGain();
-    g.gain.value = metroVolRef.current * (soft ? 0.45 : 1);
+    // アクセント音はaccentVolを掛ける
+    const accMultiplier = accent ? metroAccentVolRef.current : 1;
+    g.gain.value = metroVolRef.current * (soft ? 0.45 : 1) * accMultiplier;
     s.connect(g); g.connect(actx.destination);
     s.start(atTime);
   }
@@ -3710,6 +3715,12 @@ function App() {
     if (metroIidRef.current) { clearInterval(metroIidRef.current); metroIidRef.current = null; }
     setMetroPlaying(false);
     setMetroVisualStep(0);
+    // RTM中ならRTMも停止（不正防止）
+    if (rtmActiveRef.current) {
+      if (rtmIidRef.current) { clearInterval(rtmIidRef.current); rtmIidRef.current = null; }
+      rtmInfoRef.current = null;
+      setRtmActive(false);
+    }
   }
   // BPM/拍子変更時に再起動（再生中のみ）
   React.useEffect(()=>{
@@ -4846,7 +4857,7 @@ function App() {
           <div style={{marginBottom:20}}>
             <div style={{fontSize:11,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:300,marginBottom:10}}>SUBDIVISION</div>
             <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-              {[[4,"♩4分"],[8,"♪8分"],[16,"♬16分"],[3,"三連符"],["shuffle","ハネ"]].map(([v,l])=>(
+              {(rtmActive ? [[4,"♩4分"],[8,"♪8分"]] : [[4,"♩4分"],[8,"♪8分"],[16,"♬16分"],[3,"三連符"],["shuffle","ハネ"]]).map(([v,l])=>(
                 <button key={v} onClick={()=>setMetroMode(v)} style={{flex:1,padding:"12px 8px",borderRadius:10,border:metroMode===v?"1px solid rgba(150,220,180,0.6)":"1px solid rgba(150,220,180,0.1)",background:metroMode===v?"linear-gradient(180deg, rgba(40,80,60,0.6), rgba(20,50,35,0.6))":"linear-gradient(180deg, rgba(20,40,30,0.4), rgba(10,20,15,0.6))",color:metroMode===v?"#c8e8d4":"rgba(200,232,212,0.5)",fontSize:13,fontWeight:metroMode===v?500:300,cursor:"pointer",boxShadow:metroMode===v?"inset 0 1px 0 rgba(255,255,255,0.08), 0 0 12px rgba(150,220,180,0.3)":"inset 0 1px 0 rgba(255,255,255,0.03)",transition:"all 0.2s"}}>
                   {l}
                 </button>
@@ -4854,23 +4865,33 @@ function App() {
             </div>
           </div>
           {/* TIME SIG + ACCENT */}
-          <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:20,padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
-            <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>TIME</span>
-            <div style={{display:"flex",gap:6}}>
-              {["3/4","4/4"].map(ts=>(
-                <button key={ts} onClick={()=>setMetroTimeSig(ts)} style={{padding:"6px 14px",borderRadius:8,border:metroTimeSig===ts?"1px solid rgba(150,220,180,0.5)":"1px solid rgba(150,220,180,0.1)",background:metroTimeSig===ts?"rgba(40,80,60,0.6)":"rgba(20,40,30,0.4)",color:metroTimeSig===ts?"#c8e8d4":"rgba(200,232,212,0.5)",fontSize:13,fontWeight:400,cursor:"pointer",fontFamily:"monospace"}}>
-                  {ts}
-                </button>
-              ))}
+          <div style={{marginBottom:20,padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:metroAccent?10:0}}>
+              <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>TIME</span>
+              <div style={{display:"flex",gap:6}}>
+                {["3/4","4/4"].map(ts=>(
+                  <button key={ts} onClick={()=>setMetroTimeSig(ts)} style={{padding:"6px 14px",borderRadius:8,border:metroTimeSig===ts?"1px solid rgba(150,220,180,0.5)":"1px solid rgba(150,220,180,0.1)",background:metroTimeSig===ts?"rgba(40,80,60,0.6)":"rgba(20,40,30,0.4)",color:metroTimeSig===ts?"#c8e8d4":"rgba(200,232,212,0.5)",fontSize:13,fontWeight:400,cursor:"pointer",fontFamily:"monospace"}}>
+                    {ts}
+                  </button>
+                ))}
+              </div>
+              <div style={{flex:1}}/>
+              <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>ACCENT</span>
+              <label style={{position:"relative",display:"inline-block",width:42,height:24,cursor:"pointer"}}>
+                <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
+                <span style={{position:"absolute",inset:0,background:metroAccent?"linear-gradient(180deg, #4a8a60, #2a5a3a)":"#2a3530",borderRadius:24,transition:"0.2s",boxShadow:metroAccent?"inset 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(150,220,180,0.4)":"inset 0 1px 3px rgba(0,0,0,0.4)"}}>
+                  <span style={{position:"absolute",height:18,width:18,left:metroAccent?21:3,top:3,background:"#fff",borderRadius:"50%",transition:"0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
+                </span>
+              </label>
             </div>
-            <div style={{flex:1}}/>
-            <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>ACCENT</span>
-            <label style={{position:"relative",display:"inline-block",width:42,height:24,cursor:"pointer"}}>
-              <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
-              <span style={{position:"absolute",inset:0,background:metroAccent?"linear-gradient(180deg, #4a8a60, #2a5a3a)":"#2a3530",borderRadius:24,transition:"0.2s",boxShadow:metroAccent?"inset 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(150,220,180,0.4)":"inset 0 1px 3px rgba(0,0,0,0.4)"}}>
-                <span style={{position:"absolute",height:18,width:18,left:metroAccent?21:3,top:3,background:"#fff",borderRadius:"50%",transition:"0.2s",boxShadow:"0 1px 3px rgba(0,0,0,0.4)"}}/>
-              </span>
-            </label>
+            {metroAccent && (
+              <div style={{display:"flex",alignItems:"center",gap:10,marginTop:4}}>
+                <span style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,minWidth:80}}>ACCENT VOL</span>
+                <input type="range" min="0" max="2" step="0.05" value={metroAccentVol} onChange={e=>setMetroAccentVol(parseFloat(e.target.value))}
+                  style={{flex:1,accentColor:"#a0e8c0",cursor:"pointer",height:4}}/>
+                <span style={{fontSize:10,color:"rgba(150,220,180,0.5)",fontFamily:"monospace",minWidth:30,textAlign:"right"}}>{(metroAccentVol*100).toFixed(0)}%</span>
+              </div>
+            )}
           </div>
           {/* VOLUME */}
           <div style={{padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
