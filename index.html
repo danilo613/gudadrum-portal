@@ -3547,7 +3547,7 @@ function App() {
       const isBeatHead = stepInBeat===0;
       metroClick(doBarAcc, !isBeatHead);
     }
-    setMetroVisualStep(step);
+    setMetroVisualStep(metroStepRef.current);
     metroStepRef.current++;
   }
 
