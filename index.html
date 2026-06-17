@@ -3536,20 +3536,8 @@ function App() {
       const min = completedMinutes || rtmMinutes;
       const startBpm = info ? info.startBpm : rtmStartBpm;
       const endBpm = info ? Math.min(180, info.startBpm + info.bpmIncrease) : startBpm;
-      // GASに記録送信
       if (currentMember && currentMember.subscType && currentMember.subscType !== "種") {
-        gasWrite({
-          action: "addworkout",
-          name: currentMember.name,
-          minutes: min,
-          startBpm: startBpm,
-          endBpm: endBpm
-        }).then(()=>{
-          alert(`🎉 ${min}分達成！記録を保存しました`);
-          fetchWorkoutStats();
-        }).catch(()=>{
-          alert(`🎉 ${min}分達成！（記録の保存に失敗しました）`);
-        });
+        showRtmComplete(min, startBpm, endBpm);
       } else {
         alert(`🎉 ${min}分達成！`);
       }
@@ -3647,6 +3635,58 @@ function App() {
 
   // RTM用情報
   const rtmInfoRef = React.useRef(null); // {startTime, totalSec, startBpm, bpmIncrease}
+
+  // 完了→10秒タップ
+  const [rtmCompleteOpen, setRtmCompleteOpen] = useState(false);
+  const [rtmCompleteCountdown, setRtmCompleteCountdown] = useState(10);
+  const [rtmCompleteData, setRtmCompleteData] = useState(null);
+  const rtmCompleteIidRef = React.useRef(null);
+
+  function showRtmComplete(minutes, startBpm, endBpm){
+    setRtmCompleteData({minutes, startBpm, endBpm});
+    setRtmCompleteCountdown(10);
+    setRtmCompleteOpen(true);
+    const startTime = Date.now();
+    rtmCompleteIidRef.current = setInterval(()=>{
+      const remaining = Math.max(0, 10 - Math.floor((Date.now() - startTime)/1000));
+      setRtmCompleteCountdown(remaining);
+      if (remaining <= 0) {
+        clearInterval(rtmCompleteIidRef.current);
+        rtmCompleteIidRef.current = null;
+        setRtmCompleteOpen(false);
+        setRtmCompleteData(null);
+      }
+    }, 200);
+  }
+
+  async function rtmClaimPoints(){
+    if (!rtmCompleteData) return;
+    if (rtmCompleteIidRef.current) {
+      clearInterval(rtmCompleteIidRef.current);
+      rtmCompleteIidRef.current = null;
+    }
+    const data = rtmCompleteData;
+    setRtmCompleteOpen(false);
+    setRtmCompleteData(null);
+    try {
+      const res = await gasWrite({
+        action: "addworkout",
+        name: currentMember.name,
+        minutes: data.minutes,
+        startBpm: data.startBpm,
+        endBpm: data.endBpm
+      });
+      const pts = res && res.points !== undefined ? res.points : 0;
+      if (pts > 0) {
+        alert(`🎉 ${pts}P 獲得！`);
+      } else {
+        alert(`✨ お疲れさまでした！（本日/今月のポイント上限に達しました）`);
+      }
+      fetchWorkoutStats();
+    } catch(e) {
+      alert("記録の保存に失敗しました");
+    }
+  }
 
   // 筋トレ累積データ
   const [workoutStats, setWorkoutStats] = useState(null);
@@ -5029,35 +5069,55 @@ function App() {
           )}
 
           {/* トレーニング履歴（サブスク会員のみ） */}
-          {currentMember && currentMember.subscType && currentMember.subscType !== "種" && workoutStats && (
+          {currentMember && currentMember.subscType && currentMember.subscType !== "種" && (
             <div style={{marginTop:14,padding:"16px 18px",background:"linear-gradient(180deg, rgba(20,40,30,0.6), rgba(10,20,15,0.8))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:14}}>
               <div style={{fontSize:11,color:"rgba(150,220,180,0.7)",letterSpacing:3,fontWeight:300,marginBottom:14}}>トレーニング履歴</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>今月の練習時間</div>
-                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{workoutStats.monthMinutes||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span></div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.monthMinutes)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span></div>
                 </div>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>累計練習時間</div>
-                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{workoutStats.totalMinutes||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span></div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.totalMinutes)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span></div>
                 </div>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>連続日数</div>
-                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{workoutStats.streakDays||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>日</span></div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.streakDays)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>日</span></div>
                 </div>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>今月の獲得ポイント</div>
-                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{workoutStats.monthPoints||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>P</span></div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.monthPoints)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>P</span></div>
                 </div>
                 <div style={{gridColumn:"1 / -1",padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>累計獲得ポイント</div>
-                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{workoutStats.totalPoints||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>P</span></div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.totalPoints)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>P</span></div>
+                </div>
+              </div>
+              {/* 不正の注意喚起 */}
+              <div style={{marginTop:14,padding:"12px 14px",background:"rgba(60,40,30,0.5)",border:"1px solid rgba(220,150,120,0.3)",borderRadius:8}}>
+                <div style={{fontSize:10,color:"rgba(220,180,150,0.95)",lineHeight:1.7,letterSpacing:0.5}}>
+                  ⚠️ <span style={{fontWeight:500}}>ご注意</span><br/>
+                  不正な手段によるポイント取得が発覚した場合、保有ポイントの没収、購入済み譜面の利用停止、ポータルサイトへのアクセス制限などの措置を取らせていただきます。
                 </div>
               </div>
             </div>
           )}
         </div>
       </div>
+      {/* 完了→10秒タップ画面 */}
+      {rtmCompleteOpen && rtmCompleteData && (
+        <div style={{position:"fixed",inset:0,background:"rgba(5,10,8,0.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",zIndex:1000,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20,fontFamily:"'Noto Sans JP',sans-serif"}}>
+          <div style={{fontSize:48,marginBottom:8}}>🎉</div>
+          <div style={{fontSize:18,color:"#c8e8d4",letterSpacing:4,marginBottom:6,fontWeight:300}}>{rtmCompleteData.minutes}分達成！</div>
+          <div style={{fontSize:11,color:"rgba(150,220,180,0.6)",marginBottom:24,letterSpacing:1}}>BPM {rtmCompleteData.startBpm} → {rtmCompleteData.endBpm}</div>
+          <button onClick={rtmClaimPoints} style={{width:200,height:200,borderRadius:"50%",border:"none",cursor:"pointer",background:"radial-gradient(circle at 30% 25%, #4a9a68, #1a4a30 70%, #0a1810)",boxShadow:`inset 0 2px 12px rgba(0,0,0,0.5), 0 0 ${30+rtmCompleteCountdown*4}px rgba(150,220,180,${0.3+rtmCompleteCountdown*0.05}), 0 0 0 ${4+rtmCompleteCountdown}px rgba(150,220,180,${0.15+rtmCompleteCountdown*0.03})`,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",color:"#fff",transition:"all 0.3s"}}>
+            <div style={{fontSize:14,letterSpacing:3,marginBottom:4,opacity:0.9}}>ポイント獲得</div>
+            <div style={{fontSize:48,fontWeight:300,fontFamily:"monospace",lineHeight:1,textShadow:"0 0 20px rgba(255,255,255,0.6)"}}>{rtmCompleteCountdown}</div>
+            <div style={{fontSize:10,letterSpacing:2,marginTop:4,opacity:0.7}}>秒以内にタップ</div>
+          </button>
+        </div>
+      )}
     </div>
   );
 
