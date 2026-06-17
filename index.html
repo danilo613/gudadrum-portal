@@ -3625,8 +3625,8 @@ function App() {
 
   // ルックアヘッド用ref
   const metroNextTimeRef = React.useRef(0);
-  const metroSchedAheadTime = 0; // 先読みなし（次のステップだけ）
-  const metroLookaheadInterval = 5; // 5ms ごとにチェック
+  const metroSchedAheadTime = 0.1;
+  const metroLookaheadInterval = 25;
 
   // RTM用情報
   const rtmInfoRef = React.useRef(null); // {startTime, totalSec, startBpm, bpmIncrease}
