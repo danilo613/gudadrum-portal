@@ -3485,7 +3485,7 @@ function App() {
       }
     } catch(e) {}
   }
-  function metroClick(accent) {
+  function metroClick(accent, soft) {
     const actx = metroActxRef.current;
     if (!actx) return;
     if (actx.state==="suspended") actx.resume();
@@ -3493,7 +3493,8 @@ function App() {
     const buf = metroBufRef.current[key];
     if (!buf) return;
     const s = actx.createBufferSource(); s.buffer = buf;
-    const g = actx.createGain(); g.gain.value = metroVolRef.current;
+    const g = actx.createGain();
+    g.gain.value = metroVolRef.current * (soft ? 0.45 : 1);
     s.connect(g); g.connect(actx.destination); s.start(0);
   }
 
@@ -3540,7 +3541,11 @@ function App() {
       if (stepInBeat===0 || stepInBeat===2) playSound = true;
     }
 
-    if (playSound) metroClick(doBarAcc);
+    if (playSound) {
+      // 4分拍頭(stepInBeat===0)以外はsoft
+      const isBeatHead = stepInBeat===0;
+      metroClick(doBarAcc, !isBeatHead);
+    }
     setMetroVisualStep(step);
     metroStepRef.current++;
   }
