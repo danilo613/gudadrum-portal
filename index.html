@@ -4590,18 +4590,18 @@ function App() {
                 <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{String(metroBpm).padStart(3,"0")}</div>
               </div>
               {/* 5本線 + 背景うねり */}
-              <div style={{position:"relative",flexShrink:0,width:240,height:60,display:"flex",alignItems:"center",justifyContent:"flex-end"}}>
-                {/* 背景の25本うねり（薄く黄色寄り） */}
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:1,zIndex:1}}>
+              <div style={{position:"relative",flexShrink:0,width:"min(420px, 55vw)",height:60,display:"flex",alignItems:"center",justifyContent:"flex-end"}}>
+                {/* 背景の25本うねり（蛍光イエロー寄り） */}
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:3,zIndex:1}}>
                   {(()=>{
                     const {states} = getMetroBarStates();
                     return states.map((intensity,i)=>(
-                      <div key={i} style={{width:2,height:6+intensity*36,background:intensity>0.3?`rgba(220,232,140,${intensity*0.45})`:intensity>0.05?`rgba(220,232,140,${intensity*0.3})`:"rgba(220,232,140,0.05)",borderRadius:1.5,boxShadow:intensity>0.5?`0 0 ${8*intensity}px rgba(220,232,140,${intensity*0.3})`:"none",transition:"all 0.08s"}}/>
+                      <div key={i} style={{flex:1,maxWidth:8,height:6+intensity*42,background:intensity>0.3?`rgba(240,255,80,${intensity*0.75})`:intensity>0.05?`rgba(240,255,80,${intensity*0.5})`:"rgba(240,255,80,0.06)",borderRadius:2,boxShadow:intensity>0.4?`0 0 ${16*intensity}px rgba(240,255,80,${intensity*0.7}), 0 0 ${6*intensity}px rgba(255,255,160,${intensity*0.6})`:"none",transition:"all 0.08s"}}/>
                     ));
                   })()}
                 </div>
                 {/* 5本線（前面） */}
-                <div style={{display:"flex",alignItems:"center",gap:10,position:"relative",zIndex:2}}>
+                <div style={{display:"flex",alignItems:"center",gap:"min(40px, 8vw)",position:"relative",zIndex:2,paddingRight:8}}>
                   {(()=>{
                     const {states} = getMetroBarStates();
                     const positions = [0,6,12,18,24];
