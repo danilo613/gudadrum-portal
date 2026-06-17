@@ -3578,66 +3578,94 @@ function App() {
     }
   },[metroBpm,metroMode,metroTimeSig]);
 
-  // 視覚用：現在のステップでどの棒が光るか
+  // 残像用：過去のメイン位置を記録
+  const metroTrailRef = React.useRef([]);
+  React.useEffect(()=>{
+    // visualStepが変わるたびに記録（最新5つを保持）
+    metroTrailRef.current = [{step:metroVisualStep, time:Date.now()}, ...metroTrailRef.current].slice(0,6);
+  },[metroVisualStep]);
+
+  // 視覚用：多本棒（25本）の状態を返す
+  // 5本棒相当の位置: barIdx 0〜4 → 25本での位置 0,6,12,18,24
   function getMetroBarStates(){
     const m = metroModeRef.current;
     const ts = metroTimeSigRef.current;
     const step = metroVisualStep;
-    // 全モード5本棒に統一
+    const NUM_BARS = 25;
+    const positions5to25 = [0, 6, 12, 18, 24]; // 5本相当の25本中の位置
+
+    // モードごとに、現在のメイン棒位置(0-4)と強さを決定
+    let mainIdx5 = 2, intensity = 0;
     if (m===4||m===8||m===16) {
-      // 1拍4ステップ: 3→4→5→4→3→2→1→2 を1小節分繰り返し
-      // 4/4は4拍=16ステップ、3/4は3拍=12ステップ
       const totalBeats = ts==="3/4"?3:4;
       const totalSteps = 4 * totalBeats;
       const s = step % totalSteps;
-      // 動きパターン: 8ステップで一周（右に行って戻って、左に行って戻る）
-      // s%8: 0=中央, 1=右1, 2=右端, 3=右1, 4=中央, 5=左1, 6=左端, 7=左1
-      const pattern8 = [2,3,4,3,2,1,0,1]; // 0-indexed
-      const barIdx = pattern8[s % 8];
-      const states = [0,0,0,0,0];
+      const pattern8 = [2,3,4,3,2,1,0,1];
+      mainIdx5 = pattern8[s % 8];
       const stepInBeat = s % 4;
-      if (m===4) {
-        // 4分: 各拍の頭(stepInBeat===0)のみ強く、それ以外は薄く
-        if (stepInBeat===0) states[barIdx] = 1;
-        else states[barIdx] = 0.4;
-      } else if (m===8) {
-        // 8分: stepInBeat 0と2で強く、1と3は薄く
-        if (stepInBeat===0 || stepInBeat===2) states[barIdx] = 1;
-        else states[barIdx] = 0.4;
-      } else if (m===16) {
-        // 16分: 全ステップ強く
-        states[barIdx] = 1;
-      }
-      return {count:5, states};
+      if (m===4) intensity = stepInBeat===0 ? 1 : 0.3;
+      else if (m===8) intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
+      else intensity = 1;
     } else if (m===3) {
-      // 三連符: 1拍3ステップ。各拍ごとに左右が入れ替わる
-      // 偶数拍: 3→4→5 (中→右1→右端) → 0-indexed: [2,3,4]
-      // 奇数拍: 3→2→1 (中→左1→左端) → 0-indexed: [2,1,0]
       const totalBeats = ts==="3/4"?3:4;
       const beatIdx = Math.floor(step / 3) % totalBeats;
       const stepInBeat = step % 3;
       const goRight = beatIdx % 2 === 0;
-      const patternR = [2,3,4];
-      const patternL = [2,1,0];
-      const barIdx = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
-      const states = [0,0,0,0,0];
-      states[barIdx] = 1;
-      return {count:5, states};
+      const patternR = [2,3,4], patternL = [2,1,0];
+      mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
+      intensity = 1;
     } else if (m==="shuffle") {
-      // ハネ: 三連と同じ動きだが、ステップ1（中間）は薄く
       const totalBeats = ts==="3/4"?3:4;
       const beatIdx = Math.floor(step / 3) % totalBeats;
       const stepInBeat = step % 3;
       const goRight = beatIdx % 2 === 0;
-      const patternR = [2,3,4];
-      const patternL = [2,1,0];
-      const barIdx = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
-      const states = [0,0,0,0,0];
-      if (stepInBeat===0 || stepInBeat===2) states[barIdx] = 1;
-      else states[barIdx] = 0.4;
-      return {count:5, states};
+      const patternR = [2,3,4], patternL = [2,1,0];
+      mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
+      intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
     }
-    return {count:5, states:[0,0,0,0,0]};
+
+    const mainPos25 = positions5to25[mainIdx5];
+
+    // 各棒の強度を計算（うねり + 残像）
+    const bars = new Array(NUM_BARS).fill(0);
+
+    // 1. メイン棒とその周囲（うねり）
+    for (let i=0; i<NUM_BARS; i++){
+      const dist = Math.abs(i - mainPos25);
+      // 距離に応じて減衰（ガウシアン的）
+      const falloff = Math.exp(-(dist*dist) / 18);
+      bars[i] = Math.max(bars[i], intensity * falloff);
+    }
+
+    // 2. 残像（過去の位置を薄く）
+    const now = Date.now();
+    metroTrailRef.current.forEach((trail, ti)=>{
+      if (ti===0) return; // 現在は除外
+      const age = (now - trail.time) / 400; // 400msで消える
+      if (age >= 1) return;
+      const fade = (1 - age) * 0.5;
+      // 過去のステップの位置を再計算
+      const pastStep = trail.step;
+      let pastMainIdx5 = 2;
+      if (m===4||m===8||m===16) {
+        const s = pastStep % (4 * (ts==="3/4"?3:4));
+        pastMainIdx5 = [2,3,4,3,2,1,0,1][s % 8];
+      } else if (m===3 || m==="shuffle") {
+        const totalBeats = ts==="3/4"?3:4;
+        const beatIdx = Math.floor(pastStep / 3) % totalBeats;
+        const stepInBeat = pastStep % 3;
+        const goRight = beatIdx % 2 === 0;
+        pastMainIdx5 = goRight ? [2,3,4][stepInBeat] : [2,1,0][stepInBeat];
+      }
+      const pastPos25 = positions5to25[pastMainIdx5];
+      for (let i=0; i<NUM_BARS; i++){
+        const dist = Math.abs(i - pastPos25);
+        const falloff = Math.exp(-(dist*dist) / 20);
+        bars[i] = Math.max(bars[i], fade * falloff);
+      }
+    });
+
+    return {count: NUM_BARS, states: bars};
   }
 
   const [selectedSecs,  setSelectedSecs]  = useState([]); // 複数選択
@@ -4547,24 +4575,22 @@ function App() {
               </div>
             </button>
             {/* BPMディスプレイ */}
-            <div style={{flex:1,background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:16,padding:"14px 24px",boxShadow:"inset 0 2px 6px rgba(0,0,0,0.7)",position:"relative",overflow:"hidden"}}>
-              <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:400}}>BPM</div>
-              <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{String(metroBpm).padStart(3,"0")}</div>
-              {/* ウェーブ視覚化 */}
-              <svg style={{position:"absolute",right:0,top:0,bottom:0,height:"100%",width:"50%",opacity:0.6}} viewBox="0 0 200 80" preserveAspectRatio="none">
+            <div style={{flex:1,background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:16,padding:"14px 24px",boxShadow:"inset 0 2px 6px rgba(0,0,0,0.7)",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
+              <div>
+                <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:400}}>BPM</div>
+                <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{String(metroBpm).padStart(3,"0")}</div>
+              </div>
+              {/* 5本線ビジュアライザー（5本相当の代表位置のみ） */}
+              <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
                 {(()=>{
                   const {states} = getMetroBarStates();
-                  // 棒の代わりに小さな点で波を作る
-                  const points = [];
-                  for (let i=0;i<60;i++){
-                    const x = (i/60)*200;
-                    const phase = (metroVisualStep + i*0.3) * 0.4;
-                    const y = 40 + Math.sin(phase) * 15 * (states.some(s=>s>0)?1:0.3);
-                    points.push(`${x},${y}`);
-                  }
-                  return <polyline points={points.join(" ")} fill="none" stroke="#96dcb4" strokeWidth="0.5" opacity="0.5"/>;
+                  // 25本の中から5本相当の位置を抽出
+                  const positions = [0,6,12,18,24];
+                  return positions.map(p=>(
+                    <div key={p} style={{width:4,height:36,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.1)",borderRadius:2,boxShadow:states[p]>0.5?`0 0 ${12*states[p]}px rgba(160,232,192,${states[p]})`:"none",opacity:0.3+states[p]*0.7,transition:"all 0.08s"}}/>
+                  ));
                 })()}
-              </svg>
+              </div>
             </div>
           </div>
           {/* BPMスライダー */}
@@ -4598,12 +4624,12 @@ function App() {
             </div>
             <div style={{flex:1}}/>
             <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>ACCENT</span>
-            {/* リズムビジュアライザー */}
-            <div style={{display:"flex",alignItems:"center",gap:4,padding:"4px 8px"}}>
+            {/* リズムビジュアライザー（25本うねり） */}
+            <div style={{display:"flex",alignItems:"center",gap:1.5,padding:"4px 8px"}}>
               {(()=>{
                 const {states} = getMetroBarStates();
                 return states.map((intensity,i)=>(
-                  <div key={i} style={{width:3,height:14,background:intensity===1?"#a0e8c0":intensity===0.4?"rgba(160,232,192,0.3)":"rgba(150,220,180,0.1)",borderRadius:2,boxShadow:intensity===1?"0 0 8px rgba(160,232,192,0.9), 0 0 3px rgba(160,232,192,1)":"none",transition:"all 0.05s"}}/>
+                  <div key={i} style={{width:2,height:4+intensity*16,background:intensity>0.5?"#a0e8c0":intensity>0.1?`rgba(160,232,192,${intensity})`:"rgba(150,220,180,0.08)",borderRadius:1.5,boxShadow:intensity>0.5?`0 0 ${6*intensity}px rgba(160,232,192,${intensity})`:"none",transition:"all 0.08s"}}/>
                 ));
               })()}
             </div>
