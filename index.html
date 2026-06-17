@@ -3483,6 +3483,7 @@ function App() {
   const [rtmStartBpm, setRtmStartBpm] = useState(80);
   const rtmIidRef = React.useRef(null);
   const rtmActiveRef = React.useRef(false);
+  const rtmTargetBpmRef = React.useRef(null); // 小節頭で適用予定のBPM
   React.useEffect(()=>{rtmActiveRef.current=rtmActive;},[rtmActive]);
 
   async function rtmStart(minutes){
@@ -3513,23 +3514,24 @@ function App() {
       const totalSec = minutes * 60;
       setRtmElapsed(elapsedSec);
       if (elapsedSec >= totalSec) {
-        rtmStop(true);
+        rtmStop(true, minutes);
         return;
       }
       const progress = elapsedSec / totalSec;
       const newBpm = Math.round(startBpm + bpmIncrease * progress);
       if (newBpm !== metroBpmRef.current) {
-        setMetroBpm(Math.min(180, newBpm));
+        // 小節頭で適用される目標BPMにセット
+        rtmTargetBpmRef.current = Math.min(180, newBpm);
       }
     }, 1000);
   }
-  function rtmStop(completed){
+  function rtmStop(completed, completedMinutes){
     if (rtmIidRef.current) { clearInterval(rtmIidRef.current); rtmIidRef.current = null; }
     setRtmActive(false);
     metroStop();
     if (completed) {
-      // TODO: ステップ3で記録機能、ステップ4でポイント付与
-      alert(`🎉 ${rtmMinutes}分達成！`);
+      const min = completedMinutes || rtmMinutes;
+      alert(`🎉 ${min}分達成！`);
     }
   }
   function rtmFormatTime(sec){
@@ -3655,6 +3657,11 @@ function App() {
       else { stepsPerBeat = 4; totalSteps = stepsPerBeat * beatsPerBar; }
       const stepInBar = step % totalSteps;
       const isBarHead = stepInBar===0;
+      // 小節頭でRTMの目標BPMを適用
+      if (isBarHead && rtmTargetBpmRef.current !== null) {
+        setMetroBpm(rtmTargetBpmRef.current);
+        rtmTargetBpmRef.current = null;
+      }
       const stepInBeat = stepInBar % stepsPerBeat;
       const doBarAcc = isBarHead && metroAccentRef.current;
 
