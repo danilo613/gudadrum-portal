@@ -3472,12 +3472,12 @@ function App() {
     const actx = new (window.AudioContext||window.webkitAudioContext)();
     metroActxRef.current = actx;
     try {
-      const urls = {click:"/sounds/wood.mp3", accent:"/sounds/wood_accent.mp3"};
-      const keys = Object.keys(urls);
+      const keys = Object.keys(METRO_SOUNDS_B64);
       for (const k of keys) {
-        const r = await fetch(urls[k]);
-        const ab = await r.arrayBuffer();
-        metroBufRef.current[k] = await actx.decodeAudioData(ab);
+        const bin = atob(METRO_SOUNDS_B64[k]);
+        const arr = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+        metroBufRef.current[k] = await actx.decodeAudioData(arr.buffer);
       }
     } catch(e) {}
   }
@@ -3485,8 +3485,8 @@ function App() {
     const actx = metroActxRef.current;
     if (!actx) return;
     if (actx.state==="suspended") actx.resume();
-    const key = accent ? "accent" : "click";
-    const buf = metroBufRef.current[key]||metroBufRef.current.click;
+    const key = (accent && metroBufRef.current.accent) ? "accent" : "click";
+    const buf = metroBufRef.current[key];
     if (!buf) return;
     const s = actx.createBufferSource(); s.buffer = buf;
     const g = actx.createGain(); g.gain.value = metroVolRef.current;
