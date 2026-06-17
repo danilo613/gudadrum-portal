@@ -3668,6 +3668,78 @@ function App() {
     return {count: NUM_BARS, states: bars};
   }
 
+  // 5本線用：残像を半分にしたバージョン
+  function getMetroBarStatesShortTrail(){
+    const m = metroModeRef.current;
+    const ts = metroTimeSigRef.current;
+    const step = metroVisualStep;
+    const NUM_BARS = 25;
+    const positions5to25 = [0, 6, 12, 18, 24];
+
+    let mainIdx5 = 2, intensity = 0;
+    if (m===4||m===8||m===16) {
+      const totalBeats = ts==="3/4"?3:4;
+      const totalSteps = 4 * totalBeats;
+      const s = step % totalSteps;
+      const pattern8 = [2,3,4,3,2,1,0,1];
+      mainIdx5 = pattern8[s % 8];
+      const stepInBeat = s % 4;
+      if (m===4) intensity = stepInBeat===0 ? 1 : 0.3;
+      else if (m===8) intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
+      else intensity = 1;
+    } else if (m===3) {
+      const totalBeats = ts==="3/4"?3:4;
+      const beatIdx = Math.floor(step / 3) % totalBeats;
+      const stepInBeat = step % 3;
+      const goRight = beatIdx % 2 === 0;
+      const patternR = [2,3,4], patternL = [2,1,0];
+      mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
+      intensity = 1;
+    } else if (m==="shuffle") {
+      const totalBeats = ts==="3/4"?3:4;
+      const beatIdx = Math.floor(step / 3) % totalBeats;
+      const stepInBeat = step % 3;
+      const goRight = beatIdx % 2 === 0;
+      const patternR = [2,3,4], patternL = [2,1,0];
+      mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
+      intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
+    }
+    const mainPos25 = positions5to25[mainIdx5];
+    const bars = new Array(NUM_BARS).fill(0);
+    for (let i=0; i<NUM_BARS; i++){
+      const dist = Math.abs(i - mainPos25);
+      const falloff = Math.exp(-(dist*dist) / 18);
+      bars[i] = Math.max(bars[i], intensity * falloff);
+    }
+    // 残像は200msで消える（半分）
+    const now = Date.now();
+    metroTrailRef.current.forEach((trail, ti)=>{
+      if (ti===0) return;
+      const age = (now - trail.time) / 200;
+      if (age >= 1) return;
+      const fade = (1 - age) * 0.5;
+      const pastStep = trail.step;
+      let pastMainIdx5 = 2;
+      if (m===4||m===8||m===16) {
+        const s = pastStep % (4 * (ts==="3/4"?3:4));
+        pastMainIdx5 = [2,3,4,3,2,1,0,1][s % 8];
+      } else if (m===3 || m==="shuffle") {
+        const totalBeats = ts==="3/4"?3:4;
+        const beatIdx = Math.floor(pastStep / 3) % totalBeats;
+        const stepInBeat = pastStep % 3;
+        const goRight = beatIdx % 2 === 0;
+        pastMainIdx5 = goRight ? [2,3,4][stepInBeat] : [2,1,0][stepInBeat];
+      }
+      const pastPos25 = positions5to25[pastMainIdx5];
+      for (let i=0; i<NUM_BARS; i++){
+        const dist = Math.abs(i - pastPos25);
+        const falloff = Math.exp(-(dist*dist) / 20);
+        bars[i] = Math.max(bars[i], fade * falloff);
+      }
+    });
+    return {count: NUM_BARS, states: bars};
+  }
+
   const [selectedSecs,  setSelectedSecs]  = useState([]); // 複数選択
   const playQueueRef    = React.useRef([]);
   const playQueueIdxRef = React.useRef(0);
@@ -4589,24 +4661,24 @@ function App() {
                 <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:400}}>BPM</div>
                 <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{String(metroBpm).padStart(3,"0")}</div>
               </div>
-              {/* 5本線 + 背景うねり */}
-              <div style={{position:"relative",flexShrink:0,width:"min(420px, 55vw)",height:60,display:"flex",alignItems:"center",justifyContent:"flex-end"}}>
-                {/* 背景の25本うねり（蛍光イエロー寄り） */}
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:3,zIndex:1}}>
+              {/* 5本線 + 背景うねり（中央揃え） */}
+              <div style={{position:"relative",flexShrink:0,width:"min(420px, 55vw)",height:64,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {/* 背景の25本うねり（蛍光イエロー、細め） */}
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:4,zIndex:1}}>
                   {(()=>{
                     const {states} = getMetroBarStates();
                     return states.map((intensity,i)=>(
-                      <div key={i} style={{flex:1,maxWidth:8,height:6+intensity*42,background:intensity>0.3?`rgba(240,255,80,${intensity*0.75})`:intensity>0.05?`rgba(240,255,80,${intensity*0.5})`:"rgba(240,255,80,0.06)",borderRadius:2,boxShadow:intensity>0.4?`0 0 ${16*intensity}px rgba(240,255,80,${intensity*0.7}), 0 0 ${6*intensity}px rgba(255,255,160,${intensity*0.6})`:"none",transition:"all 0.08s"}}/>
+                      <div key={i} style={{width:1.5,height:6+intensity*48,background:intensity>0.3?`rgba(240,255,80,${intensity*0.65})`:intensity>0.05?`rgba(240,255,80,${intensity*0.4})`:"rgba(240,255,80,0.05)",borderRadius:1,boxShadow:intensity>0.4?`0 0 ${14*intensity}px rgba(240,255,80,${intensity*0.6}), 0 0 ${5*intensity}px rgba(255,255,160,${intensity*0.5})`:"none",transition:"all 0.08s"}}/>
                     ));
                   })()}
                 </div>
-                {/* 5本線（前面） */}
-                <div style={{display:"flex",alignItems:"center",gap:"min(40px, 8vw)",position:"relative",zIndex:2,paddingRight:8}}>
+                {/* 5本線（前面、中央揃え・太く・大きく） */}
+                <div style={{display:"flex",alignItems:"center",gap:"min(46px, 9vw)",position:"relative",zIndex:2,justifyContent:"center"}}>
                   {(()=>{
-                    const {states} = getMetroBarStates();
+                    const {states} = getMetroBarStatesShortTrail();
                     const positions = [0,6,12,18,24];
                     return positions.map(p=>(
-                      <div key={p} style={{width:4,height:36,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.15)",borderRadius:2,boxShadow:states[p]>0.5?`0 0 ${12*states[p]}px rgba(160,232,192,${states[p]})`:"none",opacity:0.4+states[p]*0.6,transition:"all 0.08s"}}/>
+                      <div key={p} style={{width:7,height:50,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.15)",borderRadius:3,boxShadow:states[p]>0.5?`0 0 ${16*states[p]}px rgba(160,232,192,${states[p]}), 0 0 ${6*states[p]}px rgba(200,255,220,${states[p]*0.8})`:"none",opacity:0.4+states[p]*0.6,transition:"all 0.08s"}}/>
                     ));
                   })()}
                 </div>
