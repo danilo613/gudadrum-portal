@@ -4663,17 +4663,17 @@ function App() {
               </div>
               {/* 5本線 + 背景うねり（中央揃え） */}
               <div style={{position:"relative",flexShrink:0,width:"min(420px, 55vw)",height:64,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                {/* 背景の25本うねり（蛍光イエロー、細め） */}
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:4,zIndex:1}}>
+                {/* 背景の25本うねり（ライムグリーン、滑らか） */}
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:"min(8px, 1.8vw)",zIndex:1,paddingLeft:"min(10px, 2vw)",paddingRight:"min(10px, 2vw)"}}>
                   {(()=>{
                     const {states} = getMetroBarStates();
                     return states.map((intensity,i)=>(
-                      <div key={i} style={{width:1.5,height:6+intensity*48,background:intensity>0.3?`rgba(240,255,80,${intensity*0.65})`:intensity>0.05?`rgba(240,255,80,${intensity*0.4})`:"rgba(240,255,80,0.05)",borderRadius:1,boxShadow:intensity>0.4?`0 0 ${14*intensity}px rgba(240,255,80,${intensity*0.6}), 0 0 ${5*intensity}px rgba(255,255,160,${intensity*0.5})`:"none",transition:"all 0.08s"}}/>
+                      <div key={i} style={{width:1.5,height:8+intensity*48,background:intensity>0.3?`rgba(200,255,140,${intensity*0.7})`:intensity>0.05?`rgba(200,255,140,${intensity*0.45})`:"rgba(200,255,140,0.06)",borderRadius:1,boxShadow:intensity>0.4?`0 0 ${16*intensity}px rgba(180,255,120,${intensity*0.7}), 0 0 ${6*intensity}px rgba(220,255,180,${intensity*0.6})`:"none",transition:"all 0.18s ease-out"}}/>
                     ));
                   })()}
                 </div>
                 {/* 5本線（前面、中央揃え・太く・大きく） */}
-                <div style={{display:"flex",alignItems:"center",gap:"min(46px, 9vw)",position:"relative",zIndex:2,justifyContent:"center"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",position:"relative",zIndex:2,width:"100%",paddingLeft:"min(10px, 2vw)",paddingRight:"min(10px, 2vw)",boxSizing:"border-box"}}>
                   {(()=>{
                     const {states} = getMetroBarStatesShortTrail();
                     const positions = [0,6,12,18,24];
