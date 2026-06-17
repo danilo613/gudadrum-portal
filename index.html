@@ -3500,19 +3500,21 @@ function App() {
     setRtmMinutes(minutes);
     setRtmActive(true);
     setRtmElapsed(0);
+    // 4分・8分以外の場合は4分にリセット
+    if (metroMode !== 4 && metroMode !== 8) setMetroMode(4);
+    // ここではメトロノームを開始せず、ユーザーが再生ボタンを押したら開始
+  }
+
+  function rtmBeginTraining(){
+    // 再生ボタン押下時にRTMのタイマーを開始
+    if (!rtmActive || rtmInfoRef.current) return; // 既に進行中なら何もしない
+    const minutes = rtmMinutes;
+    const startBpm = metroBpm;
+    setRtmStartBpm(startBpm);
+    const bpmIncrease = minutes === 5 ? 10 : minutes === 10 ? 20 : 30;
     const startTime = Date.now();
     setRtmStartTime(startTime);
-    // RTM情報をスケジューラーに渡す
     rtmInfoRef.current = {startTime, totalSec: minutes*60, startBpm, bpmIncrease};
-    // メトロノーム開始
-    if (!metroPlaying) {
-      metroStepRef.current = 0;
-      setMetroVisualStep(0);
-      setMetroPlaying(true);
-      metroNextTimeRef.current = actx.currentTime + 0.05;
-      metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
-    }
-    // 1秒ごとに表示更新（実際のBPM変化はスケジューラー側で連続的）
     rtmIidRef.current = setInterval(()=>{
       const elapsedSec = (Date.now() - startTime) / 1000;
       const totalSec = minutes * 60;
@@ -3523,7 +3525,7 @@ function App() {
       }
       const progress = elapsedSec / totalSec;
       const displayBpm = Math.min(180, Math.round(startBpm + bpmIncrease * progress));
-      setMetroBpm(displayBpm); // 表示用
+      setMetroBpm(displayBpm);
     }, 1000);
   }
   function rtmStop(completed, completedMinutes){
@@ -3623,8 +3625,8 @@ function App() {
 
   // ルックアヘッド用ref
   const metroNextTimeRef = React.useRef(0);
-  const metroSchedAheadTime = 0.05; // 50ms 先までスケジュール
-  const metroLookaheadInterval = 15; // 15ms ごとにチェック
+  const metroSchedAheadTime = 0.03; // 30ms 先までスケジュール
+  const metroLookaheadInterval = 10; // 10ms ごとにチェック
 
   // RTM用情報
   const rtmInfoRef = React.useRef(null); // {startTime, totalSec, startBpm, bpmIncrease}
@@ -3714,6 +3716,10 @@ function App() {
     setMetroPlaying(true);
     metroNextTimeRef.current = actx.currentTime + 0.05;
     metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
+    // RTMがコース選択済みで未開始ならタイマーを開始
+    if (rtmActiveRef.current && !rtmInfoRef.current) {
+      rtmBeginTraining();
+    }
   }
   function metroStop() {
     if (metroIidRef.current) { clearInterval(metroIidRef.current); metroIidRef.current = null; }
