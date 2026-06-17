@@ -3661,6 +3661,10 @@ function App() {
   function metroScheduler(){
     const actx = metroActxRef.current;
     if (!actx) return;
+    // スケジュール時刻が過去になったら現在時刻にリセット（音の暴発防止）
+    if (metroNextTimeRef.current < actx.currentTime) {
+      metroNextTimeRef.current = actx.currentTime + 0.02;
+    }
     // 先読み時間内のステップを全てスケジュール
     while (metroNextTimeRef.current < actx.currentTime + metroSchedAheadTime) {
       const step = metroStepRef.current;
