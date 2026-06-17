@@ -3597,8 +3597,8 @@ function App() {
     // モードごとに、現在のメイン棒位置(0-4)と強さを決定
     let mainIdx5 = 2, intensity = 0;
     if (m===4||m===8||m===16) {
-      const totalBeats = ts==="3/4"?3:4;
-      const beatIdx = Math.floor(step / 4) % totalBeats;
+      // 累計拍数で左右交互（小節は無視）
+      const beatIdx = Math.floor(step / 4);
       const stepInBeat = step % 4;
       const goRight = beatIdx % 2 === 0;
       const patternR = [2,3,4,3];
@@ -3608,16 +3608,14 @@ function App() {
       else if (m===8) intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
       else intensity = 1;
     } else if (m===3) {
-      const totalBeats = ts==="3/4"?3:4;
-      const beatIdx = Math.floor(step / 3) % totalBeats;
+      const beatIdx = Math.floor(step / 3);
       const stepInBeat = step % 3;
       const goRight = beatIdx % 2 === 0;
       const patternR = [2,3,4], patternL = [2,1,0];
       mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
       intensity = 1;
     } else if (m==="shuffle") {
-      const totalBeats = ts==="3/4"?3:4;
-      const beatIdx = Math.floor(step / 3) % totalBeats;
+      const beatIdx = Math.floor(step / 3);
       const stepInBeat = step % 3;
       const goRight = beatIdx % 2 === 0;
       const patternR = [2,3,4], patternL = [2,1,0];
@@ -3649,14 +3647,12 @@ function App() {
       const pastStep = trail.step;
       let pastMainIdx5 = 2;
       if (m===4||m===8||m===16) {
-        const totalBeats = ts==="3/4"?3:4;
-        const pBeatIdx = Math.floor(pastStep / 4) % totalBeats;
+        const pBeatIdx = Math.floor(pastStep / 4);
         const pStepInBeat = pastStep % 4;
         const pGoRight = pBeatIdx % 2 === 0;
         pastMainIdx5 = pGoRight ? [2,3,4,3][pStepInBeat] : [2,1,0,1][pStepInBeat];
       } else if (m===3 || m==="shuffle") {
-        const totalBeats = ts==="3/4"?3:4;
-        const beatIdx = Math.floor(pastStep / 3) % totalBeats;
+        const beatIdx = Math.floor(pastStep / 3);
         const stepInBeat = pastStep % 3;
         const goRight = beatIdx % 2 === 0;
         pastMainIdx5 = goRight ? [2,3,4][stepInBeat] : [2,1,0][stepInBeat];
@@ -3682,8 +3678,8 @@ function App() {
 
     let mainIdx5 = 2, intensity = 0;
     if (m===4||m===8||m===16) {
-      const totalBeats = ts==="3/4"?3:4;
-      const beatIdx = Math.floor(step / 4) % totalBeats;
+      // 累計拍数で左右交互（小節は無視）
+      const beatIdx = Math.floor(step / 4);
       const stepInBeat = step % 4;
       const goRight = beatIdx % 2 === 0;
       const patternR = [2,3,4,3];
@@ -3693,16 +3689,14 @@ function App() {
       else if (m===8) intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
       else intensity = 1;
     } else if (m===3) {
-      const totalBeats = ts==="3/4"?3:4;
-      const beatIdx = Math.floor(step / 3) % totalBeats;
+      const beatIdx = Math.floor(step / 3);
       const stepInBeat = step % 3;
       const goRight = beatIdx % 2 === 0;
       const patternR = [2,3,4], patternL = [2,1,0];
       mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
       intensity = 1;
     } else if (m==="shuffle") {
-      const totalBeats = ts==="3/4"?3:4;
-      const beatIdx = Math.floor(step / 3) % totalBeats;
+      const beatIdx = Math.floor(step / 3);
       const stepInBeat = step % 3;
       const goRight = beatIdx % 2 === 0;
       const patternR = [2,3,4], patternL = [2,1,0];
@@ -3726,14 +3720,12 @@ function App() {
       const pastStep = trail.step;
       let pastMainIdx5 = 2;
       if (m===4||m===8||m===16) {
-        const totalBeats = ts==="3/4"?3:4;
-        const pBeatIdx = Math.floor(pastStep / 4) % totalBeats;
+        const pBeatIdx = Math.floor(pastStep / 4);
         const pStepInBeat = pastStep % 4;
         const pGoRight = pBeatIdx % 2 === 0;
         pastMainIdx5 = pGoRight ? [2,3,4,3][pStepInBeat] : [2,1,0,1][pStepInBeat];
       } else if (m===3 || m==="shuffle") {
-        const totalBeats = ts==="3/4"?3:4;
-        const beatIdx = Math.floor(pastStep / 3) % totalBeats;
+        const beatIdx = Math.floor(pastStep / 3);
         const stepInBeat = pastStep % 3;
         const goRight = beatIdx % 2 === 0;
         pastMainIdx5 = goRight ? [2,3,4][stepInBeat] : [2,1,0][stepInBeat];
@@ -4669,26 +4661,29 @@ function App() {
                 <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:400}}>BPM</div>
                 <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{String(metroBpm).padStart(3,"0")}</div>
               </div>
-              {/* 5本線 + 背景うねり（中央揃え） */}
+              {/* 5本線 + 背景うねり（同じ横幅・中央揃え） */}
               <div style={{position:"relative",flexShrink:0,width:"min(420px, 55vw)",height:64,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                {/* 背景の25本うねり（ライムグリーン、滑らか） */}
-                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:"min(8px, 1.8vw)",zIndex:1,paddingLeft:"min(10px, 2vw)",paddingRight:"min(10px, 2vw)"}}>
-                  {(()=>{
-                    const {states} = getMetroBarStates();
-                    return states.map((intensity,i)=>(
-                      <div key={i} style={{width:1.5,height:8+intensity*48,background:intensity>0.3?`rgba(200,255,140,${intensity*0.7})`:intensity>0.05?`rgba(200,255,140,${intensity*0.45})`:"rgba(200,255,140,0.06)",borderRadius:1,boxShadow:intensity>0.4?`0 0 ${16*intensity}px rgba(180,255,120,${intensity*0.7}), 0 0 ${6*intensity}px rgba(220,255,180,${intensity*0.6})`:"none",transition:"all 0.18s ease-out"}}/>
-                    ));
-                  })()}
-                </div>
-                {/* 5本線（前面、中央揃え・太く・大きく） */}
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",position:"relative",zIndex:2,width:"100%",paddingLeft:"min(10px, 2vw)",paddingRight:"min(10px, 2vw)",boxSizing:"border-box"}}>
-                  {(()=>{
-                    const {states} = getMetroBarStatesShortTrail();
-                    const positions = [0,6,12,18,24];
-                    return positions.map(p=>(
-                      <div key={p} style={{width:7,height:50,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.15)",borderRadius:3,boxShadow:states[p]>0.5?`0 0 ${16*states[p]}px rgba(160,232,192,${states[p]}), 0 0 ${6*states[p]}px rgba(200,255,220,${states[p]*0.8})`:"none",opacity:0.4+states[p]*0.6,transition:"all 0.08s"}}/>
-                    ));
-                  })()}
+                {/* 内側コンテナ：5本線と同じ70%幅 */}
+                <div style={{position:"relative",width:"70%",height:"100%",display:"flex",alignItems:"center"}}>
+                  {/* 背景の25本うねり */}
+                  <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"space-between",zIndex:1}}>
+                    {(()=>{
+                      const {states} = getMetroBarStates();
+                      return states.map((intensity,i)=>(
+                        <div key={i} style={{width:1.5,height:8+intensity*48,background:intensity>0.3?`rgba(200,255,140,${intensity*0.7})`:intensity>0.05?`rgba(200,255,140,${intensity*0.45})`:"rgba(200,255,140,0.06)",borderRadius:1,boxShadow:intensity>0.4?`0 0 ${16*intensity}px rgba(180,255,120,${intensity*0.7}), 0 0 ${6*intensity}px rgba(220,255,180,${intensity*0.6})`:"none",transition:"all 0.18s ease-out"}}/>
+                      ));
+                    })()}
+                  </div>
+                  {/* 5本線（前面） */}
+                  <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",position:"relative",zIndex:2,width:"100%"}}>
+                    {(()=>{
+                      const {states} = getMetroBarStatesShortTrail();
+                      const positions = [0,6,12,18,24];
+                      return positions.map(p=>(
+                        <div key={p} style={{width:7,height:50,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.15)",borderRadius:3,boxShadow:states[p]>0.5?`0 0 ${16*states[p]}px rgba(160,232,192,${states[p]}), 0 0 ${6*states[p]}px rgba(200,255,220,${states[p]*0.8})`:"none",opacity:0.4+states[p]*0.6,transition:"all 0.08s"}}/>
+                      ));
+                    })()}
+                  </div>
                 </div>
               </div>
             </div>
