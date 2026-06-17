@@ -3598,11 +3598,12 @@ function App() {
     let mainIdx5 = 2, intensity = 0;
     if (m===4||m===8||m===16) {
       const totalBeats = ts==="3/4"?3:4;
-      const totalSteps = 4 * totalBeats;
-      const s = step % totalSteps;
-      const pattern8 = [2,3,4,3,2,1,0,1];
-      mainIdx5 = pattern8[s % 8];
-      const stepInBeat = s % 4;
+      const beatIdx = Math.floor(step / 4) % totalBeats;
+      const stepInBeat = step % 4;
+      const goRight = beatIdx % 2 === 0;
+      const patternR = [2,3,4,3];
+      const patternL = [2,1,0,1];
+      mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
       if (m===4) intensity = stepInBeat===0 ? 1 : 0.3;
       else if (m===8) intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
       else intensity = 1;
@@ -3648,8 +3649,11 @@ function App() {
       const pastStep = trail.step;
       let pastMainIdx5 = 2;
       if (m===4||m===8||m===16) {
-        const s = pastStep % (4 * (ts==="3/4"?3:4));
-        pastMainIdx5 = [2,3,4,3,2,1,0,1][s % 8];
+        const totalBeats = ts==="3/4"?3:4;
+        const pBeatIdx = Math.floor(pastStep / 4) % totalBeats;
+        const pStepInBeat = pastStep % 4;
+        const pGoRight = pBeatIdx % 2 === 0;
+        pastMainIdx5 = pGoRight ? [2,3,4,3][pStepInBeat] : [2,1,0,1][pStepInBeat];
       } else if (m===3 || m==="shuffle") {
         const totalBeats = ts==="3/4"?3:4;
         const beatIdx = Math.floor(pastStep / 3) % totalBeats;
@@ -3679,11 +3683,12 @@ function App() {
     let mainIdx5 = 2, intensity = 0;
     if (m===4||m===8||m===16) {
       const totalBeats = ts==="3/4"?3:4;
-      const totalSteps = 4 * totalBeats;
-      const s = step % totalSteps;
-      const pattern8 = [2,3,4,3,2,1,0,1];
-      mainIdx5 = pattern8[s % 8];
-      const stepInBeat = s % 4;
+      const beatIdx = Math.floor(step / 4) % totalBeats;
+      const stepInBeat = step % 4;
+      const goRight = beatIdx % 2 === 0;
+      const patternR = [2,3,4,3];
+      const patternL = [2,1,0,1];
+      mainIdx5 = goRight ? patternR[stepInBeat] : patternL[stepInBeat];
       if (m===4) intensity = stepInBeat===0 ? 1 : 0.3;
       else if (m===8) intensity = (stepInBeat===0||stepInBeat===2) ? 1 : 0.3;
       else intensity = 1;
@@ -3721,8 +3726,11 @@ function App() {
       const pastStep = trail.step;
       let pastMainIdx5 = 2;
       if (m===4||m===8||m===16) {
-        const s = pastStep % (4 * (ts==="3/4"?3:4));
-        pastMainIdx5 = [2,3,4,3,2,1,0,1][s % 8];
+        const totalBeats = ts==="3/4"?3:4;
+        const pBeatIdx = Math.floor(pastStep / 4) % totalBeats;
+        const pStepInBeat = pastStep % 4;
+        const pGoRight = pBeatIdx % 2 === 0;
+        pastMainIdx5 = pGoRight ? [2,3,4,3][pStepInBeat] : [2,1,0,1][pStepInBeat];
       } else if (m===3 || m==="shuffle") {
         const totalBeats = ts==="3/4"?3:4;
         const beatIdx = Math.floor(pastStep / 3) % totalBeats;
