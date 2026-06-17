@@ -3449,6 +3449,7 @@ function App() {
 
   // === メトロノーム単体機能 ===
   const [metroOpen, setMetroOpen] = useState(false);
+  const [metroFullscreen, setMetroFullscreen] = useState(false);
   const [metroBpm, setMetroBpm] = useState(80);
   const [metroPlaying, setMetroPlaying] = useState(false);
   const [metroMode, setMetroMode] = useState(4); // 4, 8, 16, 3, "shuffle"
@@ -4524,6 +4525,91 @@ function App() {
         const ai=LEVEL_ORDER.indexOf(a.level), bi=LEVEL_ORDER.indexOf(b.level);
         return (ai===-1?99:ai)-(bi===-1?99:bi);
       });
+
+  // メトロノーム全画面表示
+  if (metroFullscreen) return (
+    <div style={{minHeight:"100vh",background:"linear-gradient(180deg,#1a1a1e,#0a0a0c)",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      {/* ヘッダー */}
+      <div style={{background:"linear-gradient(180deg,#2a2a2e,#1a1a1e)",borderBottom:"1px solid #3a3a40",flexShrink:0,padding:"10px 16px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:18,color:"#d4a060",filter:"drop-shadow(0 0 4px rgba(212,160,96,0.4))"}}>🥁</span>
+          <span style={{fontSize:14,fontWeight:700,color:"#e0e0e4",letterSpacing:2}}>METRONOME</span>
+        </div>
+        <button onClick={()=>{metroStop();setMetroFullscreen(false);}}
+          style={{padding:"6px 14px",borderRadius:16,border:"1px solid #3a3a40",background:"linear-gradient(180deg,#3a3a40,#2a2a30)",color:"#e0e0e4",fontSize:11,cursor:"pointer"}}>
+          終了
+        </button>
+      </div>
+      {/* メインコンテンツ */}
+      <div style={{flex:1,padding:"20px 16px",display:"flex",flexDirection:"column",gap:14,maxWidth:520,margin:"0 auto",width:"100%",boxSizing:"border-box"}}>
+        {/* リズムビジュアライザー */}
+        <div style={{display:"flex",justifyContent:"center",alignItems:"flex-end",gap:18,height:120,background:"#0a0a0c",borderRadius:8,border:"1px solid #2a2a30",boxShadow:"inset 0 2px 6px rgba(0,0,0,0.8)",padding:"16px 24px"}}>
+          {(()=>{
+            const {count, states} = getMetroBarStates();
+            return states.map((intensity,i)=>(
+              <div key={i} style={{width:8,height:"100%",background:intensity===1?"#d4a060":intensity===0.4?"rgba(212,160,96,0.3)":"#1a1a20",borderRadius:3,boxShadow:intensity===1?"0 0 16px rgba(212,160,96,0.9), 0 0 6px rgba(212,160,96,1)":"none",transition:"background 0.05s, box-shadow 0.05s"}}/>
+            ));
+          })()}
+        </div>
+        {/* BPMディスプレイ + 再生ボタン */}
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <button onClick={()=>{metroPlaying?metroStop():metroStart();}} style={{width:70,height:70,borderRadius:"50%",border:"2px solid #4a4a50",background:metroPlaying?"radial-gradient(circle at 30% 30%,#d44040,#8a2020)":"radial-gradient(circle at 30% 30%,#4ad460,#208a30)",color:"#fff",fontSize:28,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"inset 0 2px 6px rgba(255,255,255,0.2), 0 3px 8px rgba(0,0,0,0.6)",flexShrink:0}}>
+            {metroPlaying?"⏸":"▶"}
+          </button>
+          <div style={{flex:1,background:"#0a0a0c",border:"1px solid #2a2a30",borderRadius:6,padding:"10px 16px",boxShadow:"inset 0 2px 4px rgba(0,0,0,0.6)"}}>
+            <div style={{fontSize:10,color:"#6a6a70",letterSpacing:2,fontWeight:600}}>BPM</div>
+            <div style={{fontSize:36,fontWeight:700,color:"#d4a060",fontFamily:"monospace",textShadow:"0 0 12px rgba(212,160,96,0.6)",lineHeight:1}}>{String(metroBpm).padStart(3,"0")}</div>
+          </div>
+        </div>
+        {/* BPMスライダー */}
+        <div>
+          <input type="range" min="50" max="180" value={metroBpm} onChange={e=>setMetroBpm(parseInt(e.target.value))}
+            style={{width:"100%",accentColor:"#d4a060",cursor:"pointer"}}/>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#5a5a60",marginTop:2,fontFamily:"monospace"}}>
+            <span>50</span><span>180</span>
+          </div>
+        </div>
+        {/* 拍子選択 */}
+        <div>
+          <div style={{fontSize:10,color:"#6a6a70",letterSpacing:2,fontWeight:600,marginBottom:8}}>SUBDIVISION</div>
+          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+            {[[4,"♩4分"],[8,"♪8分"],[16,"♬16分"],[3,"三連符"],["shuffle","ハネ"]].map(([v,l])=>(
+              <button key={v} onClick={()=>setMetroMode(v)} style={{flex:1,padding:"10px 8px",borderRadius:6,border:"1px solid #3a3a40",background:metroMode===v?"linear-gradient(180deg,#d4a060,#a07840)":"linear-gradient(180deg,#2a2a30,#1a1a20)",color:metroMode===v?"#1a1a1e":"#a0a0a6",fontSize:11,fontWeight:600,cursor:"pointer",boxShadow:metroMode===v?"inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 3px rgba(0,0,0,0.4)":"inset 0 1px 0 rgba(255,255,255,0.05)"}}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+        {/* 拍子記号 + アクセント */}
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:"10px 12px",background:"#0a0a0c",borderRadius:8,border:"1px solid #2a2a30"}}>
+          <span style={{fontSize:10,color:"#6a6a70",letterSpacing:1,fontWeight:600}}>TIME SIG</span>
+          <div style={{display:"flex",gap:4,flex:1}}>
+            {["3/4","4/4"].map(ts=>(
+              <button key={ts} onClick={()=>setMetroTimeSig(ts)} style={{flex:1,padding:"6px 8px",borderRadius:4,border:"1px solid #3a3a40",background:metroTimeSig===ts?"linear-gradient(180deg,#d4a060,#a07840)":"linear-gradient(180deg,#2a2a30,#1a1a20)",color:metroTimeSig===ts?"#1a1a1e":"#a0a0a6",fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"monospace"}}>
+                {ts}
+              </button>
+            ))}
+          </div>
+          <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
+            <span style={{fontSize:10,color:"#6a6a70",letterSpacing:1,fontWeight:600}}>ACC</span>
+            <span style={{position:"relative",display:"inline-block",width:36,height:20}}>
+              <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
+              <span style={{position:"absolute",inset:0,background:metroAccent?"#d4a060":"#3a3a40",borderRadius:20,transition:"0.2s",boxShadow:"inset 0 1px 3px rgba(0,0,0,0.5)"}}>
+                <span style={{position:"absolute",height:16,width:16,left:metroAccent?18:2,bottom:2,background:"#fff",borderRadius:"50%",transition:"0.2s",boxShadow:"0 1px 2px rgba(0,0,0,0.4)"}}/>
+              </span>
+            </span>
+          </label>
+        </div>
+        {/* 音量 */}
+        <div style={{padding:"10px 12px",background:"#0a0a0c",borderRadius:8,border:"1px solid #2a2a30"}}>
+          <div style={{fontSize:10,color:"#6a6a70",letterSpacing:1,fontWeight:600,marginBottom:8}}>VOLUME</div>
+          <input type="range" min="0" max="1" step="0.05" value={metroVol} onChange={e=>setMetroVol(parseFloat(e.target.value))}
+            style={{width:"100%",accentColor:"#d4a060",cursor:"pointer"}}/>
+        </div>
+      </div>
+    </div>
+  );
 
   if (playerFullscreen && scorePage) return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column"}}>
@@ -6865,100 +6951,33 @@ function App() {
             );
           })()}
 
-        {/* 譜面プレイヤー */}
-        {!isInstructor && scoreList.length > 0 && (
-          <button onClick={()=>{
-              const id=scoreList.length>0?scoreList[0]:"waterlily";
-              setCurrentScoreId(id);
-              setScoreSection("intro");
-              setScorePage(true);
-              setPlayerFullscreen(true);
-              loadScorePatterns(id);
-              if(SCORE_DEFAULT_BPM[id]) setSharedBpm(SCORE_DEFAULT_BPM[id]);
-              window.scrollTo(0,0);
-            }} style={ROW_BTN("#3a6a7a")}>
-            <span style={{fontSize:18,color:"#3a6a7a"}}>🎼</span>
-            <span style={{fontSize:13,fontWeight:500,color:"#2a3a2a",flex:1,textAlign:"left"}}>譜面プレイヤー</span>
-            <span style={{fontSize:12,color:"#6a8a6a"}}>›</span>
-          </button>
-        )}
-
-        {/* メトロノーム */}
+        {/* 譜面プレイヤー & メトロノーム横並び */}
         {!isInstructor && (
-          <div style={{background:"linear-gradient(180deg,#2a2a2e,#1a1a1e)",border:"1px solid #3a3a40",borderRadius:14,boxShadow:"inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 12px rgba(0,0,0,0.3)"}}>
-            <button onClick={()=>setMetroOpen(!metroOpen)} style={{display:"flex",alignItems:"center",gap:10,width:"100%",padding:"12px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-              <span style={{fontSize:18,color:"#d4a060",filter:"drop-shadow(0 0 4px rgba(212,160,96,0.4))"}}>🥁</span>
-              <span style={{fontSize:13,fontWeight:600,color:"#e0e0e4",flex:1,textAlign:"left",letterSpacing:1}}>METRONOME</span>
-              <span style={{fontSize:11,color:"#d4a060",transform:metroOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-            </button>
-            {metroOpen && (
-              <div style={{padding:"0 16px 16px",borderTop:"1px solid #3a3a40"}}>
-                {/* リズムビジュアライザー */}
-                <div style={{display:"flex",justifyContent:"center",alignItems:"flex-end",gap:6,height:60,marginTop:14,marginBottom:14,background:"#0a0a0c",borderRadius:6,border:"1px solid #2a2a30",boxShadow:"inset 0 2px 4px rgba(0,0,0,0.6)",padding:"8px 12px"}}>
-                  {(()=>{
-                    const {count, states} = getMetroBarStates();
-                    return states.map((intensity,i)=>(
-                      <div key={i} style={{width:6,height:"100%",background:intensity===1?"#d4a060":intensity===0.4?"rgba(212,160,96,0.3)":"#1a1a20",borderRadius:2,boxShadow:intensity===1?"0 0 12px rgba(212,160,96,0.8), 0 0 4px rgba(212,160,96,1)":"none",transition:"background 0.05s, box-shadow 0.05s"}}/>
-                    ));
-                  })()}
-                </div>
-                {/* BPMディスプレイ + 再生ボタン */}
-                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
-                  <button onClick={()=>{metroPlaying?metroStop():metroStart();}} style={{width:54,height:54,borderRadius:"50%",border:"2px solid #4a4a50",background:metroPlaying?"radial-gradient(circle at 30% 30%,#d44040,#8a2020)":"radial-gradient(circle at 30% 30%,#4ad460,#208a30)",color:"#fff",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"inset 0 2px 4px rgba(255,255,255,0.2), 0 2px 6px rgba(0,0,0,0.5)"}}>
-                    {metroPlaying?"⏸":"▶"}
-                  </button>
-                  <div style={{flex:1,background:"#0a0a0c",border:"1px solid #2a2a30",borderRadius:6,padding:"6px 12px",boxShadow:"inset 0 2px 4px rgba(0,0,0,0.6)"}}>
-                    <div style={{fontSize:9,color:"#6a6a70",letterSpacing:2,fontWeight:600}}>BPM</div>
-                    <div style={{fontSize:24,fontWeight:700,color:"#d4a060",fontFamily:"monospace",textShadow:"0 0 8px rgba(212,160,96,0.5)",lineHeight:1}}>{String(metroBpm).padStart(3,"0")}</div>
-                  </div>
-                </div>
-                {/* BPMスライダー */}
-                <div style={{marginBottom:14}}>
-                  <input type="range" min="50" max="180" value={metroBpm} onChange={e=>setMetroBpm(parseInt(e.target.value))}
-                    style={{width:"100%",accentColor:"#d4a060",cursor:"pointer"}}/>
-                  <div style={{display:"flex",justifyContent:"space-between",fontSize:8,color:"#5a5a60",marginTop:2,fontFamily:"monospace"}}>
-                    <span>50</span><span>180</span>
-                  </div>
-                </div>
-                {/* 拍子選択 */}
-                <div style={{fontSize:9,color:"#6a6a70",letterSpacing:2,fontWeight:600,marginBottom:6}}>SUBDIVISION</div>
-                <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:14}}>
-                  {[[4,"♩4分"],[8,"♪8分"],[16,"♬16分"],[3,"三連符"],["shuffle","ハネ"]].map(([v,l])=>(
-                    <button key={v} onClick={()=>setMetroMode(v)} style={{padding:"6px 10px",borderRadius:4,border:"1px solid #3a3a40",background:metroMode===v?"linear-gradient(180deg,#d4a060,#a07840)":"linear-gradient(180deg,#2a2a30,#1a1a20)",color:metroMode===v?"#1a1a1e":"#a0a0a6",fontSize:10,fontWeight:600,cursor:"pointer",boxShadow:metroMode===v?"inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 3px rgba(0,0,0,0.4)":"inset 0 1px 0 rgba(255,255,255,0.05)"}}>
-                      {l}
-                    </button>
-                  ))}
-                </div>
-                {/* 拍子記号 + アクセント */}
-                <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,padding:"8px 10px",background:"#0a0a0c",borderRadius:6,border:"1px solid #2a2a30"}}>
-                  <span style={{fontSize:9,color:"#6a6a70",letterSpacing:1,fontWeight:600}}>TIME SIG</span>
-                  <div style={{display:"flex",gap:4,flex:1}}>
-                    {["3/4","4/4"].map(ts=>(
-                      <button key={ts} onClick={()=>setMetroTimeSig(ts)} style={{flex:1,padding:"5px 8px",borderRadius:4,border:"1px solid #3a3a40",background:metroTimeSig===ts?"linear-gradient(180deg,#d4a060,#a07840)":"linear-gradient(180deg,#2a2a30,#1a1a20)",color:metroTimeSig===ts?"#1a1a1e":"#a0a0a6",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"monospace"}}>
-                        {ts}
-                      </button>
-                    ))}
-                  </div>
-                  <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
-                    <span style={{fontSize:9,color:"#6a6a70",letterSpacing:1,fontWeight:600}}>ACC</span>
-                    <span style={{position:"relative",display:"inline-block",width:32,height:18}}>
-                      <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
-                      <span style={{position:"absolute",inset:0,background:metroAccent?"#d4a060":"#3a3a40",borderRadius:18,transition:"0.2s",boxShadow:"inset 0 1px 3px rgba(0,0,0,0.5)"}}>
-                        <span style={{position:"absolute",height:14,width:14,left:metroAccent?16:2,bottom:2,background:"#fff",borderRadius:"50%",transition:"0.2s",boxShadow:"0 1px 2px rgba(0,0,0,0.4)"}}/>
-                      </span>
-                    </span>
-                  </label>
-                </div>
-                {/* 音量 */}
-                <div style={{padding:"8px 10px",background:"#0a0a0c",borderRadius:6,border:"1px solid #2a2a30"}}>
-                  <div style={{fontSize:9,color:"#6a6a70",letterSpacing:1,fontWeight:600,marginBottom:6}}>VOLUME</div>
-                  <input type="range" min="0" max="1" step="0.05" value={metroVol} onChange={e=>setMetroVol(parseFloat(e.target.value))}
-                    style={{width:"100%",accentColor:"#d4a060",cursor:"pointer"}}/>
-                </div>
-              </div>
+          <div style={{display:"flex",gap:8}}>
+            {scoreList.length > 0 && (
+              <button onClick={()=>{
+                  const id=scoreList.length>0?scoreList[0]:"waterlily";
+                  setCurrentScoreId(id);
+                  setScoreSection("intro");
+                  setScorePage(true);
+                  setPlayerFullscreen(true);
+                  loadScorePatterns(id);
+                  if(SCORE_DEFAULT_BPM[id]) setSharedBpm(SCORE_DEFAULT_BPM[id]);
+                  window.scrollTo(0,0);
+                }} style={{...ROW_BTN("#3a6a7a"),flex:1}}>
+                <span style={{fontSize:18,color:"#3a6a7a"}}>🎼</span>
+                <span style={{fontSize:13,fontWeight:500,color:"#2a3a2a",flex:1,textAlign:"left"}}>譜面プレイヤー</span>
+                <span style={{fontSize:12,color:"#6a8a6a"}}>›</span>
+              </button>
             )}
+            <button onClick={()=>{setMetroFullscreen(true); setMetroOpen(true); window.scrollTo(0,0);}} style={{...ROW_BTN("#7a6a3a"),flex:1}}>
+              <span style={{fontSize:18,color:"#7a6a3a"}}>🥁</span>
+              <span style={{fontSize:13,fontWeight:500,color:"#2a3a2a",flex:1,textAlign:"left"}}>メトロノーム</span>
+              <span style={{fontSize:12,color:"#6a8a6a"}}>›</span>
+            </button>
           </div>
         )}
+
 
         {/* MAPボタン */}
         <button onClick={()=>{ fetchMemberMap(); setMapPage(true); }} style={ROW_BTN("#c87aaa")}>
