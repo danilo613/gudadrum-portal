@@ -4555,7 +4555,7 @@ function App() {
       {/* ヘッダー */}
       <div style={{flexShrink:0,padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
         <div style={{display:"flex",alignItems:"center",gap:12}}>
-          <div style={{width:36,height:36,borderRadius:"50%",background:"radial-gradient(circle at 30% 30%, #2a3a30, #0a1410)",border:"1px solid rgba(150,220,180,0.2)",boxShadow:"inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#96dcb4"}}>🥁</div>
+          <div style={{width:36,height:36,borderRadius:"50%",background:"radial-gradient(circle at 30% 30%, #2a3a30, #0a1410)",border:"1px solid rgba(150,220,180,0.2)",boxShadow:"inset 0 1px 2px rgba(255,255,255,0.05), 0 2px 6px rgba(0,0,0,0.5)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,color:"#96dcb4"}}>🎼</div>
           <span style={{fontSize:15,fontWeight:300,color:"#c8e8d4",letterSpacing:6}}>METRONOME</span>
         </div>
         <button onClick={()=>{metroStop();setMetroFullscreen(false);}}
@@ -4568,28 +4568,48 @@ function App() {
         <div style={{background:"linear-gradient(180deg, rgba(30,50,40,0.5), rgba(15,25,20,0.7))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:24,padding:"24px 28px",boxShadow:"inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 32px rgba(0,0,0,0.4)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)"}}>
           {/* 再生ボタン + BPMディスプレイ */}
           <div style={{display:"flex",alignItems:"center",gap:20,marginBottom:18}}>
-            {/* 再生ボタン */}
-            <button onClick={()=>{metroPlaying?metroStop():metroStart();}} style={{width:96,height:96,borderRadius:"50%",border:"none",cursor:"pointer",flexShrink:0,background:"radial-gradient(circle at 30% 25%, #2a4a38, #0a1810 70%, #050a08)",boxShadow:metroPlaying?"inset 0 2px 8px rgba(0,0,0,0.6), 0 0 24px rgba(150,220,180,0.4), 0 0 0 2px rgba(150,220,180,0.3)":"inset 0 2px 8px rgba(0,0,0,0.6), 0 0 16px rgba(150,220,180,0.2), 0 0 0 2px rgba(150,220,180,0.2)",display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
-              <div style={{fontSize:36,color:"#a0e8c0",filter:"drop-shadow(0 0 8px rgba(150,220,180,0.7))",marginLeft:metroPlaying?0:4}}>
-                {metroPlaying?"⏸":"▶"}
-              </div>
-            </button>
+            {/* 再生ボタン（四分パルス＋残像） */}
+            {(()=>{
+              const m = metroModeRef.current;
+              const step = metroVisualStep;
+              const stepsPerBeat = (m===3||m==="shuffle") ? 3 : 4;
+              const stepInBeat = step % stepsPerBeat;
+              const pulseIntensity = metroPlaying ? Math.max(0, 1 - (stepInBeat/stepsPerBeat)*2.5) : 0;
+              return (
+                <button onClick={()=>{metroPlaying?metroStop():metroStart();}} style={{width:96,height:96,borderRadius:"50%",border:"none",cursor:"pointer",flexShrink:0,background:"radial-gradient(circle at 30% 25%, #2a4a38, #0a1810 70%, #050a08)",boxShadow:`inset 0 2px 8px rgba(0,0,0,0.6), 0 0 ${16+pulseIntensity*32}px rgba(150,220,180,${0.2+pulseIntensity*0.6}), 0 0 0 ${2+pulseIntensity*3}px rgba(150,220,180,${0.2+pulseIntensity*0.4})`,display:"flex",alignItems:"center",justifyContent:"center",position:"relative",transition:"box-shadow 0.1s"}}>
+                  <div style={{fontSize:36,color:"#a0e8c0",filter:`drop-shadow(0 0 ${8+pulseIntensity*12}px rgba(150,220,180,${0.7+pulseIntensity*0.3}))`,marginLeft:metroPlaying?0:4,transition:"filter 0.1s"}}>
+                    {metroPlaying?"⏸":"▶"}
+                  </div>
+                </button>
+              );
+            })()}
             {/* BPMディスプレイ */}
             <div style={{flex:1,background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:16,padding:"14px 24px",boxShadow:"inset 0 2px 6px rgba(0,0,0,0.7)",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
-              <div>
+              <div style={{position:"relative",zIndex:2}}>
                 <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:400}}>BPM</div>
                 <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{String(metroBpm).padStart(3,"0")}</div>
               </div>
-              {/* 5本線ビジュアライザー（5本相当の代表位置のみ） */}
-              <div style={{display:"flex",alignItems:"center",gap:10,flexShrink:0}}>
-                {(()=>{
-                  const {states} = getMetroBarStates();
-                  // 25本の中から5本相当の位置を抽出
-                  const positions = [0,6,12,18,24];
-                  return positions.map(p=>(
-                    <div key={p} style={{width:4,height:36,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.1)",borderRadius:2,boxShadow:states[p]>0.5?`0 0 ${12*states[p]}px rgba(160,232,192,${states[p]})`:"none",opacity:0.3+states[p]*0.7,transition:"all 0.08s"}}/>
-                  ));
-                })()}
+              {/* 5本線 + 背景うねり */}
+              <div style={{position:"relative",flexShrink:0,width:240,height:60,display:"flex",alignItems:"center",justifyContent:"flex-end"}}>
+                {/* 背景の25本うねり（薄く黄色寄り） */}
+                <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",gap:1,zIndex:1}}>
+                  {(()=>{
+                    const {states} = getMetroBarStates();
+                    return states.map((intensity,i)=>(
+                      <div key={i} style={{width:2,height:6+intensity*36,background:intensity>0.3?`rgba(220,232,140,${intensity*0.45})`:intensity>0.05?`rgba(220,232,140,${intensity*0.3})`:"rgba(220,232,140,0.05)",borderRadius:1.5,boxShadow:intensity>0.5?`0 0 ${8*intensity}px rgba(220,232,140,${intensity*0.3})`:"none",transition:"all 0.08s"}}/>
+                    ));
+                  })()}
+                </div>
+                {/* 5本線（前面） */}
+                <div style={{display:"flex",alignItems:"center",gap:10,position:"relative",zIndex:2}}>
+                  {(()=>{
+                    const {states} = getMetroBarStates();
+                    const positions = [0,6,12,18,24];
+                    return positions.map(p=>(
+                      <div key={p} style={{width:4,height:36,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.15)",borderRadius:2,boxShadow:states[p]>0.5?`0 0 ${12*states[p]}px rgba(160,232,192,${states[p]})`:"none",opacity:0.4+states[p]*0.6,transition:"all 0.08s"}}/>
+                    ));
+                  })()}
+                </div>
               </div>
             </div>
           </div>
@@ -4624,15 +4644,6 @@ function App() {
             </div>
             <div style={{flex:1}}/>
             <span style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:2,fontWeight:300}}>ACCENT</span>
-            {/* リズムビジュアライザー（25本うねり） */}
-            <div style={{display:"flex",alignItems:"center",gap:1.5,padding:"4px 8px"}}>
-              {(()=>{
-                const {states} = getMetroBarStates();
-                return states.map((intensity,i)=>(
-                  <div key={i} style={{width:2,height:4+intensity*16,background:intensity>0.5?"#a0e8c0":intensity>0.1?`rgba(160,232,192,${intensity})`:"rgba(150,220,180,0.08)",borderRadius:1.5,boxShadow:intensity>0.5?`0 0 ${6*intensity}px rgba(160,232,192,${intensity})`:"none",transition:"all 0.08s"}}/>
-                ));
-              })()}
-            </div>
             <label style={{position:"relative",display:"inline-block",width:42,height:24,cursor:"pointer"}}>
               <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
               <span style={{position:"absolute",inset:0,background:metroAccent?"linear-gradient(180deg, #4a8a60, #2a5a3a)":"#2a3530",borderRadius:24,transition:"0.2s",boxShadow:metroAccent?"inset 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(150,220,180,0.4)":"inset 0 1px 3px rgba(0,0,0,0.4)"}}>
