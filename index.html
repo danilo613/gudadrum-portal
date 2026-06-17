@@ -3451,19 +3451,23 @@ function App() {
   const [metroOpen, setMetroOpen] = useState(false);
   const [metroBpm, setMetroBpm] = useState(80);
   const [metroPlaying, setMetroPlaying] = useState(false);
-  const [metroMode, setMetroMode] = useState(4); // 4, "4u", 8, "8u", 3
+  const [metroMode, setMetroMode] = useState(4); // 4, 8, 16, 3, "shuffle"
+  const [metroTimeSig, setMetroTimeSig] = useState("4/4"); // "3/4" or "4/4"
   const [metroAccent, setMetroAccent] = useState(true);
   const [metroVol, setMetroVol] = useState(0.5);
+  const [metroVisualStep, setMetroVisualStep] = useState(0); // 視覚用ステップ
   const metroActxRef = React.useRef(null);
   const metroBufRef = React.useRef({});
   const metroIidRef = React.useRef(null);
   const metroStepRef = React.useRef(0);
   const metroBpmRef = React.useRef(80);
   const metroModeRef = React.useRef(4);
+  const metroTimeSigRef = React.useRef("4/4");
   const metroVolRef = React.useRef(0.5);
   const metroAccentRef = React.useRef(true);
   React.useEffect(()=>{metroBpmRef.current=metroBpm;},[metroBpm]);
   React.useEffect(()=>{metroModeRef.current=metroMode;},[metroMode]);
+  React.useEffect(()=>{metroTimeSigRef.current=metroTimeSig;},[metroTimeSig]);
   React.useEffect(()=>{metroVolRef.current=metroVol;},[metroVol]);
   React.useEffect(()=>{metroAccentRef.current=metroAccent;},[metroAccent]);
 
@@ -3492,52 +3496,149 @@ function App() {
     const g = actx.createGain(); g.gain.value = metroVolRef.current;
     s.connect(g); g.connect(actx.destination); s.start(0);
   }
+
+  // 各モードのステップ数と音タイミング
+  // 4分/8分/16分: 1拍4ステップ
+  //   4分: ステップ0で音、棒[3]強
+  //   8分: ステップ0,2で音、棒[3,5]強 (1拍目) / [3,1]強 (2拍目)
+  //   16分: 全ステップで音、全部強
+  // 三連符: 1拍3ステップ × 2拍 = 6ステップで1周（3→4→5→3→2→1）
+  // ハネ: 6ステップで1周、音は0,2,3,5、棒は全部光る（光らない箇所は薄く）
+
   function metroTick() {
     const m = metroModeRef.current;
-    // 拍子ごとの1拍あたりステップ数
-    const div = m===4?1 : m===8?2 : m===16?4 : 3;
-    // アクセントは1小節（4拍）ごと: 4分=4ステップ、8分=8、16分=16、三連符/ハネ=12
-    const beatsPerBar = 4;
-    const stepsPerBar = div * beatsPerBar;
-    const sN = metroStepRef.current % div;
-    const sBar = metroStepRef.current % stepsPerBar;
-    const isHead = sN===0;
-    const isBarHead = sBar===0;
-    const doAcc = isBarHead && metroAccentRef.current;
-    // ハネ: 三連の1発目と3発目のみ鳴らす
-    if (m==="shuffle") {
-      if (sN===0) metroClick(doAcc);
-      else if (sN===2) metroClick(false);
-    } else {
-      if (isHead) metroClick(doAcc);
+    const ts = metroTimeSigRef.current;
+    const beatsPerBar = ts==="3/4"?3:4;
+    let stepsPerBeat = 4;
+    let totalSteps;
+    if (m===3||m==="shuffle") { stepsPerBeat = 3; totalSteps = stepsPerBeat * beatsPerBar; }
+    else if (m===4||m===8||m===16) { stepsPerBeat = 4; totalSteps = stepsPerBeat * beatsPerBar; }
+    else totalSteps = 4;
+
+    const step = metroStepRef.current % totalSteps;
+    const isBarHead = step===0;
+    const beatIdx = Math.floor(step / stepsPerBeat);
+    const stepInBeat = step % stepsPerBeat;
+    const doBarAcc = isBarHead && metroAccentRef.current;
+
+    // 音を鳴らすか判定
+    let playSound = false;
+    if (m===4) {
+      // 各拍の頭
+      if (stepInBeat===0) playSound = true;
+    } else if (m===8) {
+      // 各拍のステップ0と2
+      if (stepInBeat===0 || stepInBeat===2) playSound = true;
+    } else if (m===16) {
+      // 全ステップ
+      playSound = true;
+    } else if (m===3) {
+      // 三連符: 全ステップで音
+      playSound = true;
+    } else if (m==="shuffle") {
+      // ハネ: 1拍3ステップ、頭と最後のステップ(0と2)で音
+      if (stepInBeat===0 || stepInBeat===2) playSound = true;
     }
+
+    if (playSound) metroClick(doBarAcc);
+    setMetroVisualStep(step);
     metroStepRef.current++;
   }
-  // 拍子変更時はステップをリセット
-  React.useEffect(()=>{metroStepRef.current=0;},[metroMode]);
+
   function getMetroInterval(){
     const m = metroModeRef.current;
-    const div = m===4?1 : m===8?2 : m===16?4 : 3; // 三連符・ハネは3
-    return Math.round((60/metroBpmRef.current/div)*1000);
+    const stepsPerBeat = (m===3||m==="shuffle") ? 3 : 4;
+    return Math.round((60/metroBpmRef.current/stepsPerBeat)*1000);
   }
   async function metroStart() {
     await metroInit();
     metroStepRef.current = 0;
+    setMetroVisualStep(0);
     setMetroPlaying(true);
     metroIidRef.current = setInterval(metroTick, getMetroInterval());
   }
   function metroStop() {
     if (metroIidRef.current) { clearInterval(metroIidRef.current); metroIidRef.current = null; }
     setMetroPlaying(false);
+    setMetroVisualStep(0);
   }
   // BPM/拍子変更時に再起動
   React.useEffect(()=>{
     if (metroPlaying) {
       if (metroIidRef.current) clearInterval(metroIidRef.current);
       metroStepRef.current = 0;
+      setMetroVisualStep(0);
       metroIidRef.current = setInterval(metroTick, getMetroInterval());
     }
-  },[metroBpm,metroMode]);
+  },[metroBpm,metroMode,metroTimeSig]);
+
+  // 視覚用：現在のステップでどの棒が光るか
+  function getMetroBarStates(){
+    const m = metroModeRef.current;
+    const ts = metroTimeSigRef.current;
+    const step = metroVisualStep;
+    // 戻り値: 棒数(5 or 3)と、各棒の[on, intensity] (intensity: 0=消灯, 0.4=薄く, 1=強く)
+    if (m===4||m===8||m===16) {
+      // 5本棒。1拍4ステップで「3→4→5→3」または「3→2→1→3」
+      // 4/4は4拍、3/4は3拍
+      const stepInBeat = step % 4;
+      const beatIdx = Math.floor(step / 4) % (ts==="3/4"?3:4);
+      // 偶数拍は右側、奇数拍は左側（0,1,2,3...）
+      // 0拍目：3→4→5→3 (右)
+      // 1拍目：3→2→1→3 (左)
+      // 2拍目：3→4→5→3
+      // 3拍目：3→2→1→3
+      let barIdx;
+      const goRight = beatIdx % 2 === 0;
+      if (stepInBeat===0) barIdx = 2; // 3 (中央、0-indexed)
+      else if (stepInBeat===1) barIdx = goRight?3:1; // 4 or 2
+      else if (stepInBeat===2) barIdx = goRight?4:0; // 5 or 1
+      else barIdx = 2; // 戻り
+      // 光らせる：該当する棒が光る
+      const states = [0,0,0,0,0];
+      if (m===4) {
+        // 4分: 棒3（中央）のみ強く光る = stepInBeat===0 の時
+        if (stepInBeat===0) states[2] = 1;
+        else states[barIdx] = 0.4; // それ以外は薄く
+      } else if (m===8) {
+        // 8分: stepInBeat 0と2で音、強く光る。1と3は薄く
+        if (stepInBeat===0 || stepInBeat===2) states[barIdx] = 1;
+        else states[barIdx] = 0.4;
+      } else if (m===16) {
+        // 16分: 全ステップで強く光る
+        states[barIdx] = 1;
+      }
+      return {count:5, states};
+    } else if (m===3) {
+      // 3本棒、6ステップで1周: 3→4→5→3→2→1 (内部index: 1→2→2→1→0→0)
+      // 1拍3ステップ × 2拍
+      const stepInBeat = step % 3;
+      const beatIdx = Math.floor(step / 3) % (ts==="3/4"?3:4);
+      const goRight = beatIdx % 2 === 0;
+      let barIdx;
+      if (stepInBeat===0) barIdx = 1; // 中央
+      else if (stepInBeat===1) barIdx = goRight?2:0; // 端
+      else barIdx = goRight?2:0; // 端をもう一回
+      const states = [0,0,0];
+      states[barIdx] = 1; // 三連符は全ステップで強く
+      return {count:3, states};
+    } else if (m==="shuffle") {
+      // 3本棒、6ステップ: 0→1→2→0→1→0 のような。指定通り 3→4→5→3→2→1
+      // 1拍3ステップで、ステップ0,2で音(強)、ステップ1は薄く
+      const stepInBeat = step % 3;
+      const beatIdx = Math.floor(step / 3) % (ts==="3/4"?3:4);
+      const goRight = beatIdx % 2 === 0;
+      let barIdx;
+      if (stepInBeat===0) barIdx = 1;
+      else if (stepInBeat===1) barIdx = goRight?2:0;
+      else barIdx = goRight?2:0;
+      const states = [0,0,0];
+      if (stepInBeat===0 || stepInBeat===2) states[barIdx] = 1;
+      else states[barIdx] = 0.4;
+      return {count:3, states};
+    }
+    return {count:5, states:[0,0,0,0,0]};
+  }
 
   const [selectedSecs,  setSelectedSecs]  = useState([]); // 複数選択
   const playQueueRef    = React.useRef([]);
@@ -6787,8 +6888,17 @@ function App() {
             </button>
             {metroOpen && (
               <div style={{padding:"0 16px 16px",borderTop:"1px solid #3a3a40"}}>
+                {/* リズムビジュアライザー */}
+                <div style={{display:"flex",justifyContent:"center",alignItems:"flex-end",gap:6,height:60,marginTop:14,marginBottom:14,background:"#0a0a0c",borderRadius:6,border:"1px solid #2a2a30",boxShadow:"inset 0 2px 4px rgba(0,0,0,0.6)",padding:"8px 12px"}}>
+                  {(()=>{
+                    const {count, states} = getMetroBarStates();
+                    return states.map((intensity,i)=>(
+                      <div key={i} style={{width:6,height:"100%",background:intensity===1?"#d4a060":intensity===0.4?"rgba(212,160,96,0.3)":"#1a1a20",borderRadius:2,boxShadow:intensity===1?"0 0 12px rgba(212,160,96,0.8), 0 0 4px rgba(212,160,96,1)":"none",transition:"background 0.05s, box-shadow 0.05s"}}/>
+                    ));
+                  })()}
+                </div>
                 {/* BPMディスプレイ + 再生ボタン */}
-                <div style={{display:"flex",alignItems:"center",gap:12,marginTop:14,marginBottom:14}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
                   <button onClick={()=>{metroPlaying?metroStop():metroStart();}} style={{width:54,height:54,borderRadius:"50%",border:"2px solid #4a4a50",background:metroPlaying?"radial-gradient(circle at 30% 30%,#d44040,#8a2020)":"radial-gradient(circle at 30% 30%,#4ad460,#208a30)",color:"#fff",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",boxShadow:"inset 0 2px 4px rgba(255,255,255,0.2), 0 2px 6px rgba(0,0,0,0.5)"}}>
                     {metroPlaying?"⏸":"▶"}
                   </button>
@@ -6814,13 +6924,23 @@ function App() {
                     </button>
                   ))}
                 </div>
-                {/* 頭チーン */}
+                {/* 拍子記号 + アクセント */}
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14,padding:"8px 10px",background:"#0a0a0c",borderRadius:6,border:"1px solid #2a2a30"}}>
-                  <span style={{fontSize:9,color:"#6a6a70",letterSpacing:1,fontWeight:600,flex:1}}>ACCENT</span>
-                  <label style={{position:"relative",display:"inline-block",width:36,height:20}}>
-                    <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
-                    <span style={{position:"absolute",inset:0,background:metroAccent?"#d4a060":"#3a3a40",borderRadius:20,transition:"0.2s",cursor:"pointer",boxShadow:"inset 0 1px 3px rgba(0,0,0,0.5)"}}>
-                      <span style={{position:"absolute",height:16,width:16,left:metroAccent?18:2,bottom:2,background:"#fff",borderRadius:"50%",transition:"0.2s",boxShadow:"0 1px 2px rgba(0,0,0,0.4)"}}/>
+                  <span style={{fontSize:9,color:"#6a6a70",letterSpacing:1,fontWeight:600}}>TIME SIG</span>
+                  <div style={{display:"flex",gap:4,flex:1}}>
+                    {["3/4","4/4"].map(ts=>(
+                      <button key={ts} onClick={()=>setMetroTimeSig(ts)} style={{flex:1,padding:"5px 8px",borderRadius:4,border:"1px solid #3a3a40",background:metroTimeSig===ts?"linear-gradient(180deg,#d4a060,#a07840)":"linear-gradient(180deg,#2a2a30,#1a1a20)",color:metroTimeSig===ts?"#1a1a1e":"#a0a0a6",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"monospace"}}>
+                        {ts}
+                      </button>
+                    ))}
+                  </div>
+                  <label style={{display:"flex",alignItems:"center",gap:6,cursor:"pointer"}}>
+                    <span style={{fontSize:9,color:"#6a6a70",letterSpacing:1,fontWeight:600}}>ACC</span>
+                    <span style={{position:"relative",display:"inline-block",width:32,height:18}}>
+                      <input type="checkbox" checked={metroAccent} onChange={e=>setMetroAccent(e.target.checked)} style={{opacity:0,width:0,height:0}}/>
+                      <span style={{position:"absolute",inset:0,background:metroAccent?"#d4a060":"#3a3a40",borderRadius:18,transition:"0.2s",boxShadow:"inset 0 1px 3px rgba(0,0,0,0.5)"}}>
+                        <span style={{position:"absolute",height:14,width:14,left:metroAccent?16:2,bottom:2,background:"#fff",borderRadius:"50%",transition:"0.2s",boxShadow:"0 1px 2px rgba(0,0,0,0.4)"}}/>
+                      </span>
                     </span>
                   </label>
                 </div>
