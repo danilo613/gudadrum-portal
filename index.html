@@ -7344,32 +7344,6 @@ function App() {
                   })}
                 </div>
               )}
-              {/* 先月のリズム筋トレランキング */}
-              {monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0 && (
-                <div style={{background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 50%, #ffe8b4 100%)",border:"1.5px solid #d4a040",borderRadius:14,padding:"14px 18px",position:"relative",overflow:"hidden",marginBottom:4,boxShadow:"0 4px 12px rgba(212,160,64,0.15)"}}>
-                  <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#d4a040,#f4c060,#d4a040)"}}/>
-                  <div style={{position:"absolute",top:-30,right:-30,fontSize:120,opacity:0.05}}>🏆</div>
-                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,position:"relative"}}>
-                    <span style={{fontSize:18}}>🏆</span>
-                    <span style={{fontSize:13,fontWeight:700,color:"#7a5020",letterSpacing:1}}>{monthlyRanking.yearMonth}　リズム筋トレ ランキング</span>
-                  </div>
-                  <div style={{display:"flex",flexDirection:"column",gap:6,position:"relative"}}>
-                    {monthlyRanking.ranking.map(function(r, idx){
-                      var rankIcon = r.rank===1?"🥇":r.rank===2?"🥈":r.rank===3?"🥉":"　";
-                      var rankColor = r.rank===1?"#b8860b":r.rank===2?"#808080":r.rank===3?"#cd7f32":"#7a5020";
-                      var rankBg = r.rank===1?"linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05))":r.rank===2?"linear-gradient(90deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05))":r.rank===3?"linear-gradient(90deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05))":"transparent";
-                      return (
-                        <div key={idx} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 10px",background:rankBg,borderRadius:8,border:r.rank<=3?"1px solid rgba(212,160,64,0.2)":"none"}}>
-                          <span style={{fontSize:r.rank<=3?18:14,minWidth:24,textAlign:"center"}}>{rankIcon}</span>
-                          <span style={{fontSize:11,color:rankColor,fontWeight:r.rank<=3?700:500,minWidth:18}}>{r.rank}位</span>
-                          <span style={{fontSize:13,color:"#4a3018",flex:1,fontWeight:r.rank<=3?700:400}}>{r.name}</span>
-                          <span style={{fontSize:12,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.minutes}<span style={{fontSize:9,marginLeft:2,opacity:0.7}}>分</span></span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
               {/* 通常お知らせ（開閉式） */}
               {(generalNotices.length>0||monthScheds.length>0)&&(
                 <div style={{background:"rgba(255,255,255,0.92)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
@@ -7383,6 +7357,32 @@ function App() {
                       <img src="/danilo.PNG" alt=""
                         style={{position:"absolute",bottom:-8,right:-8,width:96,height:96,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:5}}
                         onError={function(e){e.target.style.display="none";}}/>
+                      {/* 先月のリズム筋トレランキング */}
+                      {monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0 && (
+                        <div style={{background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 50%, #ffe8b4 100%)",border:"1.5px solid #d4a040",borderRadius:12,padding:"12px 14px",position:"relative",overflow:"hidden",marginBottom:10,boxShadow:"0 2px 8px rgba(212,160,64,0.15)"}}>
+                          <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#d4a040,#f4c060,#d4a040)"}}/>
+                          <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:0.06}}>🏆</div>
+                          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8,position:"relative"}}>
+                            <span style={{fontSize:15}}>🏆</span>
+                            <span style={{fontSize:11,fontWeight:700,color:"#7a5020",letterSpacing:0.5}}>{monthlyRanking.yearMonth}　リズム筋トレ ランキング</span>
+                          </div>
+                          <div style={{display:"flex",flexDirection:"column",gap:4,position:"relative"}}>
+                            {monthlyRanking.ranking.map(function(r, idx){
+                              var rankIcon = r.rank===1?"🥇":r.rank===2?"🥈":r.rank===3?"🥉":"　";
+                              var rankColor = r.rank===1?"#b8860b":r.rank===2?"#808080":r.rank===3?"#cd7f32":"#7a5020";
+                              var rankBg = r.rank===1?"linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05))":r.rank===2?"linear-gradient(90deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05))":r.rank===3?"linear-gradient(90deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05))":"transparent";
+                              return (
+                                <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 8px",background:rankBg,borderRadius:6,border:r.rank<=3?"1px solid rgba(212,160,64,0.2)":"none"}}>
+                                  <span style={{fontSize:r.rank<=3?15:12,minWidth:20,textAlign:"center"}}>{rankIcon}</span>
+                                  <span style={{fontSize:10,color:rankColor,fontWeight:r.rank<=3?700:500,minWidth:16}}>{r.rank}位</span>
+                                  <span style={{fontSize:12,color:"#4a3018",flex:1,fontWeight:r.rank<=3?700:400}}>{r.name}</span>
+                                  <span style={{fontSize:11,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.minutes}<span style={{fontSize:8,marginLeft:2,opacity:0.7}}>分</span></span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                       {generalNotices.map(function(n,i){
                         return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:600,marginBottom:6,lineHeight:1.6}}>💬 {n.message}</p>;
                       })}
