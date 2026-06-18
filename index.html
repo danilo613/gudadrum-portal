@@ -3680,11 +3680,12 @@ function App() {
         endBpm: data.endBpm
       });
       const pts = res && res.points !== undefined ? res.points : 0;
-      if (pts > 0) {
-        alert(`🎉 ${pts}P 獲得！`);
-      } else {
-        alert(`✨ お疲れさまでした！（本日/今月のポイント上限に達しました）`);
-      }
+      const bonus = res && res.bonusGranted ? res.bonusGranted : 0;
+      let msg = "";
+      if (pts > 0) msg = `🎉 ${pts}P 獲得！`;
+      else msg = `✨ お疲れさまでした！（本日/今月のポイント上限に達しました）`;
+      if (bonus > 0) msg += `\n\n🌟 累計500P達成！\n母体ポイントに ${bonus}P が付与されました`;
+      alert(msg);
       fetchWorkoutStats();
     } catch(e) {
       alert("記録の保存に失敗しました");
@@ -5089,12 +5090,32 @@ function App() {
                   <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.streakDays)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>日</span></div>
                 </div>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
-                  <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>今月の獲得ポイント</div>
+                  <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>今月の獲得P</div>
                   <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.monthPoints)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>P</span></div>
                 </div>
-                <div style={{gridColumn:"1 / -1",padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
-                  <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>累計獲得ポイント</div>
+                <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
+                  <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>累計獲得P</div>
                   <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.totalPoints)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>P</span></div>
+                </div>
+                <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
+                  <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>母体送付回数</div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.bonusCount)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>回</span></div>
+                </div>
+                {/* 現在の貯金（全幅） */}
+                <div style={{gridColumn:"1 / -1",padding:"12px 14px",background:"linear-gradient(180deg, rgba(30,60,40,0.6), rgba(10,30,18,0.8))",border:"1px solid rgba(160,232,192,0.25)",borderRadius:8}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+                    <div style={{fontSize:10,color:"rgba(200,232,212,0.8)",letterSpacing:1}}>現在の貯金</div>
+                    <div style={{fontSize:9,color:"rgba(150,220,180,0.6)"}}>500P で母体に付与</div>
+                  </div>
+                  <div style={{display:"flex",alignItems:"baseline",gap:6,marginBottom:8}}>
+                    <span style={{fontSize:28,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300,textShadow:"0 0 10px rgba(160,232,192,0.5)"}}>{(workoutStats&&workoutStats.savingPoints)||0}</span>
+                    <span style={{fontSize:13,color:"rgba(150,220,180,0.5)"}}>/ 500 P</span>
+                    <div style={{flex:1}}/>
+                    <span style={{fontSize:11,color:"rgba(150,220,180,0.6)"}}>あと {Math.max(0, 500 - ((workoutStats&&workoutStats.savingPoints)||0))} P</span>
+                  </div>
+                  <div style={{width:"100%",height:6,background:"rgba(10,20,15,0.8)",borderRadius:3,overflow:"hidden",boxShadow:"inset 0 1px 2px rgba(0,0,0,0.5)"}}>
+                    <div style={{width:`${Math.min(100, ((workoutStats&&workoutStats.savingPoints)||0)/500*100)}%`,height:"100%",background:"linear-gradient(90deg, #4a8a60, #a0e8c0)",boxShadow:"0 0 8px rgba(150,220,180,0.6)",transition:"width 0.5s"}}/>
+                  </div>
                 </div>
               </div>
               {/* 不正の注意喚起 */}
