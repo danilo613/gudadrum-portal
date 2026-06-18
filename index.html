@@ -3394,6 +3394,7 @@ function App() {
   const [notices, setNotices] = useState([]);
   const [noticesLoaded, setNoticesLoaded] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
+  const [monthlyRanking, setMonthlyRanking] = useState(null);
   const [specialNoticeOpen, setSpecialNoticeOpen] = useState(true);
   const [diagOpen, setDiagOpen] = useState(false);
   const [setlistRows, setSetlistRows] = useState([]);
@@ -4150,6 +4151,11 @@ function App() {
       const res = await gasRead({ action: "getnotices" });
       if (res.notices) setNotices(res.notices);
       setNoticesLoaded(true);
+    } catch(e) {}
+    // ランキング取得
+    try {
+      const res2 = await gasRead({ action: "getmonthlyranking" });
+      if (res2 && res2.ranking) setMonthlyRanking(res2);
     } catch(e) {}
   }
 
@@ -7325,7 +7331,8 @@ function App() {
             return d.getFullYear()===year && d.getMonth()+1===month &&
               (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("交流")));
           }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
-          if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0) return null;
+          var hasRanking = monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0;
+          if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0 && !hasRanking) return null;
           return (
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {/* スペシャルお知らせ */}
@@ -7335,6 +7342,32 @@ function App() {
                   {specialNotices.map(function(n,i){
                     return <p key={i} style={{fontSize:12,color:"#6a2a4a",fontWeight:700,lineHeight:1.7,marginBottom:i<specialNotices.length-1?6:0}}>💬 {n.message}</p>;
                   })}
+                </div>
+              )}
+              {/* 先月のリズム筋トレランキング */}
+              {monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0 && (
+                <div style={{background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 50%, #ffe8b4 100%)",border:"1.5px solid #d4a040",borderRadius:14,padding:"14px 18px",position:"relative",overflow:"hidden",marginBottom:4,boxShadow:"0 4px 12px rgba(212,160,64,0.15)"}}>
+                  <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:"linear-gradient(90deg,#d4a040,#f4c060,#d4a040)"}}/>
+                  <div style={{position:"absolute",top:-30,right:-30,fontSize:120,opacity:0.05}}>🏆</div>
+                  <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:10,position:"relative"}}>
+                    <span style={{fontSize:18}}>🏆</span>
+                    <span style={{fontSize:13,fontWeight:700,color:"#7a5020",letterSpacing:1}}>{monthlyRanking.yearMonth}　リズム筋トレ ランキング</span>
+                  </div>
+                  <div style={{display:"flex",flexDirection:"column",gap:6,position:"relative"}}>
+                    {monthlyRanking.ranking.map(function(r, idx){
+                      var rankIcon = r.rank===1?"🥇":r.rank===2?"🥈":r.rank===3?"🥉":"　";
+                      var rankColor = r.rank===1?"#b8860b":r.rank===2?"#808080":r.rank===3?"#cd7f32":"#7a5020";
+                      var rankBg = r.rank===1?"linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05))":r.rank===2?"linear-gradient(90deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05))":r.rank===3?"linear-gradient(90deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05))":"transparent";
+                      return (
+                        <div key={idx} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 10px",background:rankBg,borderRadius:8,border:r.rank<=3?"1px solid rgba(212,160,64,0.2)":"none"}}>
+                          <span style={{fontSize:r.rank<=3?18:14,minWidth:24,textAlign:"center"}}>{rankIcon}</span>
+                          <span style={{fontSize:11,color:rankColor,fontWeight:r.rank<=3?700:500,minWidth:18}}>{r.rank}位</span>
+                          <span style={{fontSize:13,color:"#4a3018",flex:1,fontWeight:r.rank<=3?700:400}}>{r.name}</span>
+                          <span style={{fontSize:12,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.minutes}<span style={{fontSize:9,marginLeft:2,opacity:0.7}}>分</span></span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
               {/* 通常お知らせ（開閉式） */}
