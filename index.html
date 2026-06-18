@@ -3647,16 +3647,19 @@ function App() {
     setRtmCompleteCountdown(10);
     setRtmCompleteOpen(true);
     const startTime = Date.now();
+    if (rtmCompleteIidRef.current) clearInterval(rtmCompleteIidRef.current);
     rtmCompleteIidRef.current = setInterval(()=>{
       const remaining = Math.max(0, 10 - Math.floor((Date.now() - startTime)/1000));
       setRtmCompleteCountdown(remaining);
       if (remaining <= 0) {
-        clearInterval(rtmCompleteIidRef.current);
-        rtmCompleteIidRef.current = null;
+        if (rtmCompleteIidRef.current) {
+          clearInterval(rtmCompleteIidRef.current);
+          rtmCompleteIidRef.current = null;
+        }
         setRtmCompleteOpen(false);
         setRtmCompleteData(null);
       }
-    }, 200);
+    }, 100);
   }
 
   async function rtmClaimPoints(){
@@ -5096,9 +5099,16 @@ function App() {
               </div>
               {/* 不正の注意喚起 */}
               <div style={{marginTop:14,padding:"12px 14px",background:"rgba(60,40,30,0.5)",border:"1px solid rgba(220,150,120,0.3)",borderRadius:8}}>
-                <div style={{fontSize:10,color:"rgba(220,180,150,0.95)",lineHeight:1.7,letterSpacing:0.5}}>
+                <div style={{fontSize:10,color:"rgba(220,210,170,0.9)",lineHeight:1.7,letterSpacing:0.5,marginBottom:10}}>
+                  💡 <span style={{fontWeight:500}}>ポイント付与について</span><br/>
+                  ・5分=5P / 10分=10P / 15分=20P を獲得できます<br/>
+                  ・1日の獲得上限：20P<br/>
+                  ・1ヶ月の獲得上限：100P<br/>
+                  ・累計500Pに達した時点で母体ポイントに付与され、使用可能になります
+                </div>
+                <div style={{fontSize:10,color:"rgba(220,180,150,0.95)",lineHeight:1.7,letterSpacing:0.5,paddingTop:10,borderTop:"1px solid rgba(220,150,120,0.2)"}}>
                   ⚠️ <span style={{fontWeight:500}}>ご注意</span><br/>
-                  不正な手段によるポイント取得が発覚した場合、保有ポイントの没収、購入済み譜面の利用停止、ポータルサイトへのアクセス制限などの措置を取らせていただきます。
+                  不正な手段によるポイント取得が発覚した場合、ポータルサイトへのアクセス制限、保有ポイントの没収などの措置を取らせていただきます。
                 </div>
               </div>
             </div>
