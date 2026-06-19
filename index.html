@@ -936,6 +936,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function playSound(c){
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
+    if(actx.state==="suspended"){ try { actx.resume(); } catch(e){} }
     var s=actx.createBufferSource();s.buffer=bufs[c];
     var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
@@ -943,6 +944,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function playSound2(c){
     var actx=actxRef.current,bufs2=bufs2Ref.current;
     if(!actx||!bufs2[c])return;
+    if(actx.state==="suspended"){ try { actx.resume(); } catch(e){} }
     var s=actx.createBufferSource();s.buffer=bufs2[c];
     var g=actx.createGain();g.gain.value=0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
@@ -950,6 +952,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function woodClick(accent, atTime){
     var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
+    if(actx.state==="suspended"){ try { actx.resume(); } catch(e){} }
     var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
     if(!bufs[key])return;
     var s=actx.createBufferSource();s.buffer=bufs[key];
@@ -1690,6 +1693,7 @@ function renderSideGrid2(barIdx, side){
   function playSound(c){
     var actx=actxRef.current,bufs=bufsRef.current;
     if(!actx||!bufs[c])return;
+    if(actx.state==="suspended"){ try { actx.resume(); } catch(e){} }
     var s=actx.createBufferSource();s.buffer=bufs[c];
     var g=actx.createGain();g.gain.value=scoreId==="nostalgic"?1.0:0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
@@ -1697,6 +1701,7 @@ function renderSideGrid2(barIdx, side){
   function playSound2(c){
     var actx=actxRef.current,bufs2=bufs2Ref.current;
     if(!actx||!bufs2[c])return;
+    if(actx.state==="suspended"){ try { actx.resume(); } catch(e){} }
     var s=actx.createBufferSource();s.buffer=bufs2[c];
     var g=actx.createGain();g.gain.value=0.492;
     s.connect(g);g.connect(actx.destination);s.start(0);
@@ -1704,6 +1709,7 @@ function renderSideGrid2(barIdx, side){
 
   function woodClick(accent, atTime){
     var actx=actxRef.current,bufs=bufsRef.current;if(!actx)return;
+    if(actx.state==="suspended"){ try { actx.resume(); } catch(e){} }
     var key=(accent&&bufs['metro_accent'])?'metro_accent':'metro_click';
     if(!bufs[key])return;
     var s=actx.createBufferSource();s.buffer=bufs[key];
