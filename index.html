@@ -3463,6 +3463,12 @@ function App() {
   // === メトロノーム単体機能 ===
   const [metroOpen, setMetroOpen] = useState(false);
   const [metroFullscreen, setMetroFullscreen] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth < 600);
+  React.useEffect(()=>{
+    const handler = ()=>setIsMobile(window.innerWidth < 600);
+    window.addEventListener('resize', handler);
+    return ()=>window.removeEventListener('resize', handler);
+  },[]);
   const [metroBpm, setMetroBpm] = useState(80);
   const [metroPlaying, setMetroPlaying] = useState(false);
   const [metroMode, setMetroMode] = useState(4); // 4, 8, 16, 3, "shuffle"
@@ -3561,7 +3567,21 @@ function App() {
   }
 
   async function metroInit() {
-    if (metroActxRef.current) return;
+    // 既存のactxの状態をチェック
+    if (metroActxRef.current) {
+      const existing = metroActxRef.current;
+      if (existing.state === "closed") {
+        // closedなら作り直し
+        metroActxRef.current = null;
+        metroBufRef.current = {};
+      } else {
+        // running または suspended なら、suspendedをresumeして使い続ける
+        if (existing.state === "suspended") {
+          try { await existing.resume(); } catch(e){}
+        }
+        return;
+      }
+    }
     const actx = new (window.AudioContext||window.webkitAudioContext)();
     metroActxRef.current = actx;
     try {
@@ -3735,6 +3755,9 @@ function App() {
   function metroScheduleClick(accent, soft, atTime){
     const actx = metroActxRef.current;
     if (!actx) return;
+    if (actx.state === "suspended") {
+      try { actx.resume(); } catch(e){}
+    }
     const key = (accent && metroBufRef.current.accent) ? "accent" : "click";
     const buf = metroBufRef.current[key];
     if (!buf) return;
@@ -3750,6 +3773,10 @@ function App() {
   function metroScheduler(){
     const actx = metroActxRef.current;
     if (!actx) return;
+    // iOSでsuspendされた場合は自動復帰
+    if (actx.state === "suspended") {
+      try { actx.resume(); } catch(e){}
+    }
     // スケジュール時刻が過去になったら現在時刻にリセット（音の暴発防止）
     if (metroNextTimeRef.current < actx.currentTime) {
       metroNextTimeRef.current = actx.currentTime + 0.02;
@@ -3794,6 +3821,34 @@ function App() {
     }
   }
 
+  // Wake Lock（メトロノーム再生中は画面を消さない）
+  const metroWakeLockRef = React.useRef(null);
+  async function metroAcquireWakeLock(){
+    try {
+      if ('wakeLock' in navigator) {
+        metroWakeLockRef.current = await navigator.wakeLock.request('screen');
+      }
+    } catch(e){}
+  }
+  function metroReleaseWakeLock(){
+    try {
+      if (metroWakeLockRef.current) {
+        metroWakeLockRef.current.release();
+        metroWakeLockRef.current = null;
+      }
+    } catch(e){}
+  }
+  // 画面が再表示された時にWake Lockを再取得（iOSがリリースすることがある）
+  React.useEffect(()=>{
+    const handler = ()=>{
+      if (document.visibilityState === 'visible' && metroPlaying) {
+        metroAcquireWakeLock();
+      }
+    };
+    document.addEventListener('visibilitychange', handler);
+    return ()=>document.removeEventListener('visibilitychange', handler);
+  },[metroPlaying]);
+
   async function metroStart() {
     await metroInit();
     const actx = metroActxRef.current;
@@ -3803,6 +3858,7 @@ function App() {
     setMetroPlaying(true);
     metroNextTimeRef.current = actx.currentTime + 0.05;
     metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
+    metroAcquireWakeLock();
     // RTMがコース選択済みで未開始ならタイマーを開始
     if (rtmActiveRef.current && !rtmInfoRef.current) {
       rtmBeginTraining();
@@ -3812,6 +3868,7 @@ function App() {
     if (metroIidRef.current) { clearInterval(metroIidRef.current); metroIidRef.current = null; }
     setMetroPlaying(false);
     setMetroVisualStep(0);
+    metroReleaseWakeLock();
     // RTM中ならRTMも停止（不正防止）
     if (rtmActiveRef.current) {
       if (rtmIidRef.current) { clearInterval(rtmIidRef.current); rtmIidRef.current = null; }
@@ -4915,7 +4972,7 @@ function App() {
               );
             })()}
             {/* BPMディスプレイ */}
-            <div style={{flex:1,background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:16,padding:"14px 24px",boxShadow:"inset 0 2px 6px rgba(0,0,0,0.7)",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"space-between",gap:16}}>
+            <div style={{flex:1,background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:16,padding:"14px 24px",boxShadow:"inset 0 2px 6px rgba(0,0,0,0.7)",position:"relative",overflow:"hidden",display:"flex",flexDirection:isMobile?"column":"row",alignItems:isMobile?"stretch":"center",justifyContent:"space-between",gap:isMobile?10:16}}>
               <div style={{position:"relative",zIndex:2}}>
                 <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:400}}>BPM</div>
                 <div style={{fontSize:52,fontWeight:300,color:"#a0e8c0",fontFamily:"'Helvetica Neue', sans-serif",textShadow:"0 0 16px rgba(150,220,180,0.5)",lineHeight:1,letterSpacing:2}}>{(()=>{
@@ -4928,16 +4985,16 @@ function App() {
                   return String(metroBpm).padStart(3,"0");
                 })()}</div>
               </div>
-              {/* 5本線 + 背景うねり（同じ横幅・中央揃え） */}
-              <div style={{position:"relative",flexShrink:0,width:"min(420px, 55vw)",height:64,display:"flex",alignItems:"center",justifyContent:"center"}}>
-                {/* 内側コンテナ：5本線と同じ70%幅 */}
-                <div style={{position:"relative",width:"70%",height:"100%",display:"flex",alignItems:"center"}}>
+              {/* 5本線 + 背景うねり */}
+              <div style={{position:"relative",flexShrink:0,width:isMobile?"100%":"min(420px, 55vw)",height:isMobile?54:64,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                {/* 内側コンテナ */}
+                <div style={{position:"relative",width:isMobile?"100%":"70%",height:"100%",display:"flex",alignItems:"center"}}>
                   {/* 背景の25本うねり */}
                   <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"space-between",zIndex:1}}>
                     {(()=>{
                       const {states} = getMetroBarStates();
                       return states.map((intensity,i)=>(
-                        <div key={i} style={{width:1.5,height:8+intensity*48,background:intensity>0.3?`rgba(200,255,140,${intensity*0.7})`:intensity>0.05?`rgba(200,255,140,${intensity*0.45})`:"rgba(200,255,140,0.06)",borderRadius:1,boxShadow:intensity>0.4?`0 0 ${16*intensity}px rgba(180,255,120,${intensity*0.7}), 0 0 ${6*intensity}px rgba(220,255,180,${intensity*0.6})`:"none",transition:"all 0.18s ease-out"}}/>
+                        <div key={i} style={{width:1.5,height:8+intensity*(isMobile?38:48),background:intensity>0.3?`rgba(200,255,140,${intensity*0.7})`:intensity>0.05?`rgba(200,255,140,${intensity*0.45})`:"rgba(200,255,140,0.06)",borderRadius:1,boxShadow:intensity>0.4?`0 0 ${16*intensity}px rgba(180,255,120,${intensity*0.7}), 0 0 ${6*intensity}px rgba(220,255,180,${intensity*0.6})`:"none",transition:"all 0.18s ease-out"}}/>
                       ));
                     })()}
                   </div>
@@ -4947,7 +5004,7 @@ function App() {
                       const {states} = getMetroBarStatesShortTrail();
                       const positions = [0,6,12,18,24];
                       return positions.map(p=>(
-                        <div key={p} style={{width:7,height:50,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.15)",borderRadius:3,boxShadow:states[p]>0.5?`0 0 ${16*states[p]}px rgba(160,232,192,${states[p]}), 0 0 ${6*states[p]}px rgba(200,255,220,${states[p]*0.8})`:"none",opacity:0.4+states[p]*0.6,transition:"all 0.08s"}}/>
+                        <div key={p} style={{width:7,height:isMobile?40:50,background:states[p]>0.3?"#a0e8c0":states[p]>0.05?"rgba(160,232,192,0.4)":"rgba(150,220,180,0.15)",borderRadius:3,boxShadow:states[p]>0.5?`0 0 ${16*states[p]}px rgba(160,232,192,${states[p]}), 0 0 ${6*states[p]}px rgba(200,255,220,${states[p]*0.8})`:"none",opacity:0.4+states[p]*0.6,transition:"all 0.08s"}}/>
                       ));
                     })()}
                   </div>
