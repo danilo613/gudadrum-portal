@@ -753,6 +753,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   useEffect(function(){
     subdivRef.current=subdiv;
+    // 再生中にsubdivが変わったらintervalを更新（テンポずれ防止）
+    if(playing && iidRef.current){
+      doStart();
+    }
     // 編集中はsubdivが変わってもデータをリセットしない
     if(canEdit) return;
     // subdivPropが変わった時にleft/rightを正しいサイズで再構築
