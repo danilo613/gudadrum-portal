@@ -5317,7 +5317,7 @@ function App() {
       <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
         {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
         <ScorePlayer
-          key={currentScoreId+"-"+scoreSection}
+          key={currentScoreId}
           scoreId={currentScoreId}
           sectionKey={scoreSection}
           sectionLabel={(function(){var sec=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreSection;});return sec?sec[1]:scoreSection;})()}
