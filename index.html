@@ -3420,6 +3420,15 @@ function App() {
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
   const [showLogins, setShowLogins] = useState(false);
+  const [showWorkouts, setShowWorkouts] = useState(false);
+  const [workoutHistory, setWorkoutHistory] = useState(null);
+  async function fetchAllWorkouts(){
+    try {
+      const res = await gasRead({action:"getallworkouts"});
+      if (res && res.workouts) setWorkoutHistory(res.workouts);
+      else setWorkoutHistory([]);
+    } catch(e){ setWorkoutHistory([]); }
+  }
   const [showAdminPastScheds, setShowAdminPastScheds] = useState(false);
   const [playerMode, setPlayerMode] = useState("single");
   const [iridescenceScale, setIridescenceScale] = useState("arcane");
@@ -6223,6 +6232,41 @@ function App() {
                     <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 4px",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
                       <span style={{fontSize:11,color:C.label,minWidth:140,flexShrink:0}}>{String(l.date||"")}</span>
                       <span style={{fontSize:12,fontWeight:500,color:C.choco}}>{l.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+        {/* 筋トレ履歴（DANiLOのみ） */}
+        <button onClick={()=>{setShowWorkouts(!showWorkouts); if(!showWorkouts && !workoutHistory) fetchAllWorkouts();}}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a5a",background:showWorkouts?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.1)",color:showWorkouts?"#fff":"#3a7a5a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          💪 筋トレ履歴 {showWorkouts?"▲":"▼"}
+        </button>
+        {showWorkouts&&(
+          <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+            {!workoutHistory ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>
+            ) : workoutHistory.length===0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
+            ) : (
+              <div style={{maxHeight:500,overflowY:"auto"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,padding:"4px 6px",borderBottom:"2px solid rgba(58,122,90,0.3)",fontSize:10,color:"#3a7a5a",fontWeight:700,letterSpacing:1,position:"sticky",top:0,background:"#fff"}}>
+                  <span style={{minWidth:120,flexShrink:0}}>日時</span>
+                  <span style={{minWidth:70,flexShrink:0}}>名前</span>
+                  <span style={{minWidth:36,flexShrink:0,textAlign:"right"}}>分</span>
+                  <span style={{minWidth:64,flexShrink:0,textAlign:"right"}}>BPM変化</span>
+                  <span style={{minWidth:36,flexShrink:0,textAlign:"right"}}>P</span>
+                </div>
+                {workoutHistory.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(w,i){
+                  return (
+                    <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 6px",borderBottom:"1px solid rgba(0,0,0,0.05)",fontSize:11}}>
+                      <span style={{color:C.label,minWidth:120,flexShrink:0,fontFamily:"monospace"}}>{String(w.date||"")}</span>
+                      <span style={{fontWeight:500,color:C.choco,minWidth:70,flexShrink:0}}>{w.name}</span>
+                      <span style={{color:C.choco,minWidth:36,flexShrink:0,textAlign:"right"}}>{w.minutes}</span>
+                      <span style={{color:C.label,minWidth:64,flexShrink:0,textAlign:"right",fontFamily:"monospace",fontSize:10}}>{w.startBpm}→{w.endBpm}</span>
+                      <span style={{color:"#3a7a5a",minWidth:36,flexShrink:0,textAlign:"right",fontWeight:600}}>{w.points}</span>
                     </div>
                   );
                 })}
