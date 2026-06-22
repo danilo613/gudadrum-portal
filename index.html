@@ -6168,11 +6168,13 @@ function App() {
           </div>
         )}
         {/* 全メンバースケジュール（DANiLOのみ表示） */}
-        <button onClick={()=>setShowAllScheds(!showAllScheds)}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #7a6a3a",background:showAllScheds?"linear-gradient(135deg,#a08040,#7a6a3a)":"rgba(122,106,58,0.1)",color:showAllScheds?"#fff":"#7a6a3a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
-          📅 全メンバースケジュール {showAllScheds?"▲":"▼"}
-        </button>
-        {showAllScheds&&(()=>{
+        {!isInstructor && (
+          <button onClick={()=>setShowAllScheds(!showAllScheds)}
+            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #7a6a3a",background:showAllScheds?"linear-gradient(135deg,#a08040,#7a6a3a)":"rgba(122,106,58,0.1)",color:showAllScheds?"#fff":"#7a6a3a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            📅 全メンバースケジュール {showAllScheds?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showAllScheds&&(()=>{
           const today = new Date(new Date().toDateString());
           const upcoming = memberSchedules.filter(s=>new Date(s["日付"])>=today).sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
           const past = memberSchedules.filter(s=>new Date(s["日付"])<today).sort((a,b)=>new Date(b["日付"])-new Date(a["日付"]));
@@ -6217,11 +6219,13 @@ function App() {
           );
         })()}
         {/* ログイン履歴（DANiLOのみ） */}
-        <button onClick={()=>setShowLogins(!showLogins)}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a4a8a",background:showLogins?"linear-gradient(135deg,#7a6aaa,#5a4a8a)":"rgba(90,74,138,0.1)",color:showLogins?"#fff":"#5a4a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
-          🔐 ログイン履歴 {showLogins?"▲":"▼"}
-        </button>
-        {showLogins&&(
+        {!isInstructor && (
+          <button onClick={()=>setShowLogins(!showLogins)}
+            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a4a8a",background:showLogins?"linear-gradient(135deg,#7a6aaa,#5a4a8a)":"rgba(90,74,138,0.1)",color:showLogins?"#fff":"#5a4a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            🔐 ログイン履歴 {showLogins?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showLogins&&(
           <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
             {loginData.length===0?(
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
@@ -6240,11 +6244,13 @@ function App() {
           </div>
         )}
         {/* 筋トレ履歴（DANiLOのみ） */}
-        <button onClick={()=>{setShowWorkouts(!showWorkouts); if(!showWorkouts && !workoutHistory) fetchAllWorkouts();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a5a",background:showWorkouts?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.1)",color:showWorkouts?"#fff":"#3a7a5a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
-          💪 筋トレ履歴 {showWorkouts?"▲":"▼"}
-        </button>
-        {showWorkouts&&(
+        {!isInstructor && (
+          <button onClick={()=>{setShowWorkouts(!showWorkouts); if(!showWorkouts && !workoutHistory) fetchAllWorkouts();}}
+            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a5a",background:showWorkouts?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.1)",color:showWorkouts?"#fff":"#3a7a5a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            💪 筋トレ履歴 {showWorkouts?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showWorkouts&&(
           <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
             {!workoutHistory ? (
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>
