@@ -299,6 +299,7 @@ function getSoundUrls(scoreId, soundType) {
 const SCORE_SHEET_MAP = {
   // scoreId: GASのシート名（未定義の場合はデフォルトの"SCORE"シートを使用）
   inori: "SCORE_inori",
+  kigaru: "SCORE_kigaru",
 };
 
 const SCORE_DEFAULT_BPM = {
@@ -312,6 +313,7 @@ const SCORE_DEFAULT_BPM = {
   megumi: 113,
   regrace: 119,
   inori: 113,
+  kigaru: 80,
 };
 
 const SCORE_ID_TO_NAME = {
@@ -325,6 +327,7 @@ const SCORE_ID_TO_NAME = {
   megumi: "めぐみの空",
   regrace: "Re:Grace",
   inori: "祈音〜Inorion〜",
+  kigaru: "気軽サブスク譜面",
 };
 
 const SCORE_SECTIONS = {
@@ -436,6 +439,18 @@ const SCORE_SECTIONS = {
     ["sabi2b","サビ②後半","16th"],
     ["outro","アウトロ","16th"],
   ],
+  kigaru: [
+    ["section1","セクション1","16th"],
+    ["section2","セクション2","16th"],
+    ["section3","セクション3","16th"],
+    ["section4","セクション4","16th"],
+    ["section5","セクション5","16th"],
+    ["section6","セクション6","16th"],
+    ["section7","セクション7","16th"],
+    ["section8","セクション8","16th"],
+    ["section9","セクション9","16th"],
+    ["section10","セクション10","16th"],
+  ],
 };
 
 const SCORE_DOT_COLORS = {"yellow":"#F5E642","red":"#E83020","purple":"#8844CC","green":"#1A8A40","brown":"#C4A882","cyan":"#00BFEF","orange":"#F07020","pink":"#F020B0","lime":"#8CC830"};
@@ -498,6 +513,28 @@ const SCORE_DOTS_NOSTALGIC = {
 
 const SCORE_DOTS = SCORE_DOTS_FUNENONE;
 
+// kigaruのセクション番号からDOTS配置を判定
+function getKigaruDots(sectionKey) {
+  // section1〜5: 低音上（DREAMY配置）, section6〜10: 高音上（FUNENONE配置）
+  var m = String(sectionKey||"").match(/^section(\d+)$/);
+  if (!m) return null;
+  var n = parseInt(m[1]);
+  if (n >= 1 && n <= 5) return SCORE_DOTS_DREAMY;
+  if (n >= 6 && n <= 10) return SCORE_DOTS_FUNENONE;
+  return null;
+}
+// scoreId+sectionKey+scaleからDOTSを返すヘルパー
+function getEffectiveDots(scoreId, sectionKey, scale, instrument2) {
+  if (instrument2==="arcane") return SCORE_DOTS_HIBIKI;
+  if (scoreId==="kigaru") {
+    var d = getKigaruDots(sectionKey);
+    if (d) return d;
+  }
+  if (scale==="nostalgic") return SCORE_DOTS_NOSTALGIC;
+  if (scale==="dreamy"||scale==="arcane"||scale==="enigma") return SCORE_DOTS_DREAMY;
+  return SCORE_DOTS_FUNENONE;
+}
+
 function makeEmptyPat() {
   const p = {};
   SCORE_COLOR_ORDER.forEach(c => { p[c] = Array(TOTAL_STEPS).fill(0); });
@@ -509,7 +546,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
   var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
-  var DOTS2 = instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+  var DOTS2 = getEffectiveDots(scoreId, sectionKey, scale, instrument2);
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
   var SPB = subdiv==="16th" ? 16 : 12;
@@ -616,11 +653,17 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
 
-  // scaleが変わった時にsoundTypeをリセット（iridescence用）
+  // scaleが変わった時にsoundTypeをリセット（iridescence/kigaru用）
   useEffect(function(){
     if(scoreId==="iridescence"){
       var newType = scale==="arcane"?"arcane":"enigma";
       setSoundType(newType);
+      actxRef.current=null;
+      bufsRef.current={};
+    }
+    if(scoreId==="kigaru"){
+      // kigaruはscale自体がsoundType（default/arcane/enigma/equinox）
+      setSoundType(scale||"default");
       actxRef.current=null;
       bufsRef.current={};
     }
@@ -911,7 +954,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
           // 1台目の音源
-          var soundUrls=getSoundUrls(scoreId, scoreId==="iridescence"?soundType:(scoreId==="aoi"?"arcane":null));
+          var soundUrls=getSoundUrls(scoreId, (scoreId==="iridescence"||scoreId==="kigaru")?soundType:(scoreId==="aoi"?"arcane":null));
           var skeys=Object.keys(soundUrls);
           // 2台目の音源
           var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
@@ -1120,7 +1163,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   }
 
   function handlePrint(){
-    var DOTS=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb=subdiv==="16th"?16:12;
     var CELL_P=20, GAP_P=1;
@@ -1668,7 +1711,7 @@ function renderSideGrid2(barIdx, side){
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
           // 1台目の音源
-          var soundUrls=getSoundUrls(scoreId, scoreId==="iridescence"?soundType:(scoreId==="aoi"?"arcane":null));
+          var soundUrls=getSoundUrls(scoreId, (scoreId==="iridescence"||scoreId==="kigaru")?soundType:(scoreId==="aoi"?"arcane":null));
           var skeys=Object.keys(soundUrls);
           // 2台目の音源
           var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
@@ -1867,7 +1910,7 @@ function renderSideGrid2(barIdx, side){
 
 
   function handlePrint(){
-    var DOTS=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+    var DOTS=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb=subdiv==="16th"?16:12;
     var CELL_P=20, GAP_P=1;
@@ -2405,7 +2448,7 @@ function renderSideGrid2(barIdx, side){
   var grid2EditElement = null;
   var renderBar2Edit = null;
   if(instrument2) {
-    var DOTS_2=instrument2==="arcane"?SCORE_DOTS_HIBIKI:(scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE);
+    var DOTS_2=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
     var pat2={left:left2,right:right2};
     var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
     var topBars2=[],botBars2=[];
@@ -2612,7 +2655,7 @@ function renderSideGrid2(barIdx, side){
             <svg viewBox="0 0 140 166" width="100" height="118">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {(function(){
-                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
@@ -2641,7 +2684,7 @@ function renderSideGrid2(barIdx, side){
           <svg viewBox="0 0 140 166" width="100" height="118">
             <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
             {(function(){
-              var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+              var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
               return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                 var pos=activeDots[color];
                 return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
@@ -2809,7 +2852,7 @@ function renderSideGrid2(barIdx, side){
               <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
               <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
               {(function(){
-                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
                 return Object.keys(activeDots).filter(function(c){return !(scale==="nostalgic"&&c==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
@@ -2940,7 +2983,7 @@ function renderSideGrid2(barIdx, side){
               <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
               <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
               {(function(){
-                var activeDots=scale==="nostalgic"?SCORE_DOTS_NOSTALGIC:(scale==="dreamy"||scale==="arcane"||scale==="enigma")?SCORE_DOTS_DREAMY:SCORE_DOTS_FUNENONE;
+                var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
@@ -3432,6 +3475,7 @@ function App() {
   const [showAdminPastScheds, setShowAdminPastScheds] = useState(false);
   const [playerMode, setPlayerMode] = useState("single");
   const [iridescenceScale, setIridescenceScale] = useState("arcane");
+  const [kigaruScale, setKigaruScale] = useState("default"); // default=風, arcane=響, enigma=秘, equinox=光
   const [practiceSessions, setPracticeSessions] = useState([]);
   const [practiceOpen, setPracticeOpen] = useState(false);
   const [setlistOpen, setSetlistOpen] = useState(false);
@@ -3492,6 +3536,14 @@ function App() {
   const [scorePage,      setScorePage]      = useState(false);
   const [playerFullscreen, setPlayerFullscreen] = useState(false);
   const [scoreList,      setScoreList]      = useState([]);
+  const [kigaruUnlock,   setKigaruUnlock]   = useState(null); // {section1:true, section2:false,...}
+  async function fetchKigaruUnlock(name) {
+    try {
+      const res = await gasRead({action:"getkigaruunlock", name});
+      if (res && res.unlock) setKigaruUnlock(res.unlock);
+      else setKigaruUnlock({});
+    } catch(e){ setKigaruUnlock({}); }
+  }
   const [scoreSection,   setScoreSection]   = useState("intro");
 
   // === メトロノーム単体機能 ===
@@ -4538,8 +4590,14 @@ function App() {
     try {
       const res = await gasRead({ action:"getpurchasedscores", name });
       console.log("購入済み譜面レスポンス:", res);
-      const ids = (res.score_ids || []).filter(id => typeof id === "string" && id.trim() !== "");
+      let ids = (res.score_ids || []).filter(id => typeof id === "string" && id.trim() !== "");
       console.log("購入済み譜面IDs:", ids);
+      // 気軽サブスク会員にはkigaruを自動追加
+      const m = members.find(mm => mm.name === name);
+      if (m && m.subscType === "蕾 気軽サブスク" && !ids.includes("kigaru")) {
+        ids = [...ids, "kigaru"];
+        fetchKigaruUnlock(name);
+      }
       setScoreList(ids);
     } catch(e) { console.warn("loadPurchasedScores error:", e); setScoreList([]); }
     setScoreLoading(false);
@@ -5356,6 +5414,28 @@ function App() {
             </button>
           </div>
         )}
+        {/* kigaru音階切り替え（4音階） */}
+        {currentScoreId==="kigaru"&&(
+          <div style={{display:"flex",gap:6,marginBottom:8,alignItems:"center",flexWrap:"wrap"}}>
+            <span style={{fontSize:11,color:C.label,fontWeight:600}}>音階：</span>
+            {[
+              {key:"default",label:"風ノ音",color:"#3a8a6a"},
+              {key:"arcane",label:"響ノ音",color:"#5845C0"},
+              {key:"enigma",label:"秘ノ音",color:"#708238"},
+              {key:"equinox",label:"光ノ音",color:"#d4a040"},
+            ].map(function(s){
+              return (
+                <button key={s.key} onClick={()=>setKigaruScale(s.key)}
+                  style={{padding:"4px 12px",borderRadius:8,border:"none",
+                    background:kigaruScale===s.key?s.color:s.color+"22",
+                    color:kigaruScale===s.key?"#fff":s.color,
+                    fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                  {s.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
         {/* モード切り替え */}
         <div style={{display:"flex",gap:6,marginBottom:10,alignItems:"center"}}>
           <button onClick={()=>{setPlayerMode("single");setSelectedSecs([]);}}
@@ -5374,7 +5454,14 @@ function App() {
           </button>
           {playerMode==="queue"&&(
             <>
-              <button onClick={()=>{var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(s=>s[0]);setSelectedSecs(all);setScoreSection(all[0]);}}
+              <button onClick={()=>{
+                var all=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily);
+                if (currentScoreId==="kigaru" && !isFromAdmin && !isInstructor && kigaruUnlock) {
+                  all = all.filter(function(s){return kigaruUnlock[s[0]];});
+                }
+                var ids = all.map(s=>s[0]);
+                setSelectedSecs(ids); if(ids.length>0) setScoreSection(ids[0]);
+              }}
                 style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>全選択</button>
               <button onClick={()=>{setSelectedSecs([]);}}
                 style={{padding:"4px 10px",borderRadius:8,border:"0.5px solid "+C.border,background:"#f5f5f3",color:C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>解除</button>
@@ -5382,7 +5469,18 @@ function App() {
           )}
         </div>
         <div style={{display:"flex",gap:6,flexWrap:"wrap",alignItems:"flex-start"}}>
-          {(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
+          {(()=>{
+            var allSecs = SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily;
+            // kigaruの場合：気軽サブスク会員には解放されたセクションのみ表示。管理者は全て表示
+            if (currentScoreId==="kigaru" && !isFromAdmin && !isInstructor) {
+              if (kigaruUnlock) {
+                allSecs = allSecs.filter(function(s){return kigaruUnlock[s[0]];});
+              } else {
+                allSecs = [];
+              }
+            }
+            return allSecs;
+          })().map(([key,lbl,nt])=>(
             <button key={key} onClick={()=>{
               if(playerMode==="single"){
                 setScoreSection(key);
@@ -5421,7 +5519,7 @@ function App() {
           patternData={(scorePatterns[currentScoreId]||{})[scoreSection]}
           canEdit={false}
           onSave={saveScorePattern}
-          scale={(currentScoreId==="iridescence")?iridescenceScale:(currentScoreId==="nostalgic"||currentScoreId==="holychild")?"nostalgic":(currentScoreId==="dreamy"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori"||currentScoreId==="regrace")?"dreamy":"funenone"}
+          scale={(currentScoreId==="iridescence")?iridescenceScale:(currentScoreId==="kigaru")?kigaruScale:(currentScoreId==="nostalgic"||currentScoreId==="holychild")?"nostalgic":(currentScoreId==="dreamy"||currentScoreId==="aoi"||currentScoreId==="megumi"||currentScoreId==="inori"||currentScoreId==="regrace")?"dreamy":"funenone"}
           subdivProp={(function(){var sec=(SCORE_SECTIONS[currentScoreId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreSection;});return sec?sec[2]:"16th";})()}
           sharedBpm={sharedBpm} onBpmChange={v=>{setSharedBpm(v);}}
           sharedMetroOn={sharedMetroOn} sharedMetroMode={sharedMetroMode}
