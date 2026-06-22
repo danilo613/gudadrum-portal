@@ -523,8 +523,18 @@ function getKigaruDots(sectionKey) {
   if (n >= 6 && n <= 10) return SCORE_DOTS_FUNENONE;
   return null;
 }
-// scoreId+sectionKey+scaleからDOTSを返すヘルパー
+// 風ノ音用のDOTS（楽器1）
 function getEffectiveDots(scoreId, sectionKey, scale, instrument2) {
+  if (scoreId==="kigaru") {
+    var d = getKigaruDots(sectionKey);
+    if (d) return d;
+  }
+  if (scale==="nostalgic") return SCORE_DOTS_NOSTALGIC;
+  if (scale==="dreamy"||scale==="arcane"||scale==="enigma") return SCORE_DOTS_DREAMY;
+  return SCORE_DOTS_FUNENONE;
+}
+// 響ノ音用のDOTS2（楽器2、arcane時のみ呼ばれる）
+function getEffectiveDots2(scoreId, sectionKey, scale, instrument2) {
   if (instrument2==="arcane") return SCORE_DOTS_HIBIKI;
   if (scoreId==="kigaru") {
     var d = getKigaruDots(sectionKey);
@@ -546,7 +556,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
   var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
-  var DOTS2 = getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+  var DOTS2 = getEffectiveDots2(scoreId, sectionKey, scale, instrument2);
   // noteTypeはpropから受け取る（楽曲ごとに固定）
   var subdiv = subdivProp||"triplet";
   var SPB = subdiv==="16th" ? 16 : 12;
@@ -2448,7 +2458,7 @@ function renderSideGrid2(barIdx, side){
   var grid2EditElement = null;
   var renderBar2Edit = null;
   if(instrument2) {
-    var DOTS_2=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+    var DOTS_2=getEffectiveDots2(scoreId, sectionKey, scale, instrument2);
     var pat2={left:left2,right:right2};
     var numBars2=Math.max(2,Math.min(parseInt(bars)||8,32));
     var topBars2=[],botBars2=[];
