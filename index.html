@@ -3547,6 +3547,41 @@ function App() {
   const [playerFullscreen, setPlayerFullscreen] = useState(false);
   const [scoreList,      setScoreList]      = useState([]);
   const [kigaruUnlock,   setKigaruUnlock]   = useState(null); // {section1:true, section2:false,...}
+  const [showKigaruUnlock, setShowKigaruUnlock] = useState(false); // 解放管理パネルの開閉
+  const [allKigaruUnlock, setAllKigaruUnlock] = useState(null); // [{name, sections:{section1:true,...}}, ...]
+  async function fetchAllKigaruUnlock(){
+    try {
+      const res = await gasRead({action:"getallkigaruunlock"});
+      if (res && res.all) setAllKigaruUnlock(res.all);
+      else setAllKigaruUnlock([]);
+    } catch(e){ setAllKigaruUnlock([]); }
+  }
+  async function toggleKigaruUnlock(name, section, unlocked){
+    try {
+      await gasWrite({action:"setkigaruunlock", name, section, unlocked: unlocked?"true":"false"});
+      // ローカルstate更新
+      setAllKigaruUnlock(function(prev){
+        if (!prev) return prev;
+        var found = false;
+        var next = prev.map(function(item){
+          if (item.name === name) {
+            found = true;
+            var newSections = Object.assign({}, item.sections);
+            newSections[section] = unlocked;
+            return {name: item.name, sections: newSections};
+          }
+          return item;
+        });
+        if (!found) {
+          var sec = {};
+          for (var i = 1; i <= 10; i++) sec["section"+i] = false;
+          sec[section] = unlocked;
+          next = next.concat([{name, sections: sec}]);
+        }
+        return next;
+      });
+    } catch(e){ alert("更新に失敗しました"); }
+  }
   async function fetchKigaruUnlock(name) {
     try {
       const res = await gasRead({action:"getkigaruunlock", name});
@@ -6060,6 +6095,61 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
+        <button onClick={()=>{setShowKigaruUnlock(!showKigaruUnlock); if(!showKigaruUnlock && !allKigaruUnlock) fetchAllKigaruUnlock();}}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a5a3a",background:showKigaruUnlock?"linear-gradient(135deg,#b88a5a,#8a5a3a)":"rgba(138,90,58,0.1)",color:showKigaruUnlock?"#fff":"#8a5a3a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          🔓 気軽サブスク 解放管理 {showKigaruUnlock?"▲":"▼"}
+        </button>
+        {showKigaruUnlock && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #c8a880",borderRadius:12,padding:"14px",overflowX:"auto"}}>
+            <p style={{fontSize:11,color:C.label,marginBottom:10,lineHeight:1.6}}>気軽サブスク会員のセクション解放管理。◯をタップで切り替え。</p>
+            {!allKigaruUnlock ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読込中…</p>
+            ) : (
+              <div style={{overflowX:"auto"}}>
+                {(()=>{
+                  // 気軽サブスク会員一覧
+                  var kigaruMembers = members.filter(function(m){return m.subscType === "蕾 気軽サブスク";});
+                  if (kigaruMembers.length === 0) return <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>気軽サブスク会員がいません</p>;
+                  return (
+                    <table style={{borderCollapse:"collapse",fontSize:11,minWidth:"100%"}}>
+                      <thead>
+                        <tr style={{background:"rgba(138,90,58,0.1)"}}>
+                          <th style={{padding:"6px 8px",border:"1px solid #d0b890",textAlign:"left",position:"sticky",left:0,background:"rgba(138,90,58,0.15)",zIndex:1,minWidth:90}}>名前</th>
+                          {[1,2,3,4,5,6,7,8,9,10].map(function(n){
+                            return <th key={n} style={{padding:"6px 4px",border:"1px solid #d0b890",minWidth:38,fontSize:10}}>S{n}</th>;
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {kigaruMembers.map(function(m){
+                          var entry = allKigaruUnlock.find(function(a){return a.name === m.name;});
+                          var secs = entry ? entry.sections : {};
+                          return (
+                            <tr key={m.name}>
+                              <td style={{padding:"6px 8px",border:"1px solid #e0d0b0",fontWeight:600,color:C.choco,position:"sticky",left:0,background:"#fff",zIndex:1}}>{m.name}</td>
+                              {[1,2,3,4,5,6,7,8,9,10].map(function(n){
+                                var key = "section"+n;
+                                var unlocked = !!secs[key];
+                                return (
+                                  <td key={n} style={{padding:0,border:"1px solid #e0d0b0",textAlign:"center"}}>
+                                    <button onClick={()=>toggleKigaruUnlock(m.name, key, !unlocked)}
+                                      style={{width:"100%",height:32,border:"none",background:unlocked?"#8a5a3a":"transparent",color:unlocked?"#fff":"#c0a880",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                                      {unlocked?"◯":"・"}
+                                    </button>
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        )}
         <button onClick={()=>{setScoreEditOpen(function(v){if(!v){if(isInstructor) setScoreEditId("kigaru"); loadScorePatterns(isInstructor?"kigaru":scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:scoreEditOpen?"linear-gradient(135deg,#5a9aaa,#3a6a7a)":"rgba(58,106,122,0.1)",color:scoreEditOpen?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎼 {isInstructor?"気軽サブスク譜面編集":"譜面編集"} {scoreEditOpen?"▲":"▼"}
