@@ -3504,7 +3504,7 @@ function App() {
   const [subsLoaded, setSubsLoaded] = useState(false);
   const [subsAddOpen, setSubsAddOpen] = useState(false);
   const [subsAddName, setSubsAddName] = useState("");
-  const [subsAddPlan, setSubsAddPlan] = useState("蕾 気軽サブスク");
+  const [subsAddPlan, setSubsAddPlan] = useState("蕾気軽サブスク");
   const [subsAddDate, setSubsAddDate] = useState("");
   const [mapPage, setMapPage] = useState(false);
   const [mapMembers, setMapMembers] = useState([]);
@@ -4639,7 +4639,7 @@ function App() {
       console.log("購入済み譜面IDs:", ids);
       // 気軽サブスク会員にはkigaruを自動追加
       const m = members.find(mm => mm.name === name);
-      if (m && m.subscType === "蕾 気軽サブスク" && !ids.includes("kigaru")) {
+      if (m && m.subscType === "蕾気軽サブスク" && !ids.includes("kigaru")) {
         ids = [...ids, "kigaru"];
         fetchKigaruUnlock(name);
       }
@@ -5989,7 +5989,7 @@ function App() {
                       </select>
                       <select value={subsAddPlan} onChange={e=>setSubsAddPlan(e.target.value)}
                         style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}>
-                        <option value="蕾 気軽サブスク">蕾 気軽サブスク（¥2,400）</option>
+                        <option value="蕾気軽サブスク">蕾気軽サブスク（¥2,400）</option>
                         <option value="幹 ノーマル">幹 ノーマル（¥6,900）</option>
                         <option value="幹 スペシャル">幹 スペシャル（¥12,900）</option>
                       </select>
@@ -6011,9 +6011,9 @@ function App() {
                   <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>登録者なし</p>
                 ):(
                   subscriptions.map(function(s,i){
-                    const PLAN_POINTS={"蕾 気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":13500};
-                    const PLAN_AMOUNT={"蕾 気軽サブスク":2400,"幹 ノーマル":6900,"幹 スペシャル":12900};
-                    const PLAN_LABEL={"蕾 気軽サブスク":"蕾","幹 ノーマル":"幹ノーマル","幹 スペシャル":"幹スペシャル"};
+                    const PLAN_POINTS={"蕾気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":13500};
+                    const PLAN_AMOUNT={"蕾気軽サブスク":2400,"幹 ノーマル":6900,"幹 スペシャル":12900};
+                    const PLAN_LABEL={"蕾気軽サブスク":"蕾","幹 ノーマル":"幹ノーマル","幹 スペシャル":"幹スペシャル"};
                     var nextPayDate=s.nextPayDate||"";
                     var monthCount=0;
                     if(s.renewDate){
@@ -6080,7 +6080,7 @@ function App() {
                     <span style={{fontSize:12,fontWeight:700,color:C.choco}}>次回支払合計</span>
                     <span style={{fontSize:14,fontWeight:700,color:"#3a6a7a"}}>
                       ¥{subscriptions.reduce(function(sum,s){
-                        var PLAN_AMOUNT2={"蕾気軽サブスク":2400,"蕾 気軽サブスク":2400,"幹ノーマル":6900,"幹 ノーマル":6900,"幹スペシャル":12900,"幹 スペシャル":12900};
+                        var PLAN_AMOUNT2={"蕾気軽サブスク":2400,"蕾気軽サブスク":2400,"幹ノーマル":6900,"幹 ノーマル":6900,"幹スペシャル":12900,"幹 スペシャル":12900};
                         return sum+(PLAN_AMOUNT2[s.plan]||0);
                       },0).toLocaleString()}
                     </span>
@@ -6108,7 +6108,7 @@ function App() {
               <div style={{overflowX:"auto"}}>
                 {(()=>{
                   // 気軽サブスク会員一覧
-                  var kigaruMembers = members.filter(function(m){return m.subscType === "蕾 気軽サブスク";});
+                  var kigaruMembers = members.filter(function(m){return m.subscType === "蕾気軽サブスク";});
                   if (kigaruMembers.length === 0) return <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>気軽サブスク会員がいません</p>;
                   return (
                     <table style={{borderCollapse:"collapse",fontSize:11,minWidth:"100%"}}>
