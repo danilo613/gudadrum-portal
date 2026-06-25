@@ -807,7 +807,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){
     subdivRef.current=subdiv;
     // 再生中にsubdivが変わったらintervalを更新（テンポずれ防止）
-    if(playing && iidRef.current){
+    // iidRefがあれば再生中とみなす（playingのstale closure問題を回避）
+    if(iidRef.current){
       doStart();
     }
     // 編集中はsubdivが変わってもデータをリセットしない
@@ -2859,8 +2860,17 @@ function renderSideGrid2(barIdx, side){
               <div style={{width:140}}>
               <svg viewBox="0 0 140 166" width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-              <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
-              <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
+              {scale==="nostalgic" ? (
+                <>
+                  <text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  <text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                </>
+              ) : (
+                <>
+                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
+                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
+                </>
+              )}
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
                 return Object.keys(activeDots).filter(function(c){return !(scale==="nostalgic"&&c==="pink");}).map(function(color){
