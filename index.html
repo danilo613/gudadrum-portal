@@ -821,10 +821,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   useEffect(function(){
     subdivRef.current=subdiv;
-    // 再生中にsubdivが変わったらintervalを更新（テンポずれ防止）
-    // iidRefがあれば再生中とみなす（playingのstale closure問題を回避）
+    // 再生中にsubdivが変わったらintervalを強制再作成（テンポずれ防止）
     if(iidRef.current){
-      doStart();
+      clearInterval(iidRef.current);
+      var newMs = Math.round((60/bpmRef.current/(subdiv==="16th"?4:3))*1000);
+      lastTickMsRef.current = newMs;
+      console.log("subdiv useEffect: 強制interval再作成", newMs, "subdiv=", subdiv);
+      iidRef.current = setInterval(tick, newMs);
     }
     // 編集中はsubdivが変わってもデータをリセットしない
     if(canEdit) return;
@@ -1090,6 +1093,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
     if(lastTickMsRef.current !== ms){
+      console.log("tick interval再作成", lastTickMsRef.current, "→", ms, "subdiv=", subdivRef.current);
       lastTickMsRef.current = ms;
       if(iidRef.current){
         clearInterval(iidRef.current);
@@ -1854,6 +1858,7 @@ function renderSideGrid2(barIdx, side){
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
     if(lastTickMsRef.current !== ms){
+      console.log("tick interval再作成", lastTickMsRef.current, "→", ms, "subdiv=", subdivRef.current);
       lastTickMsRef.current = ms;
       if(iidRef.current){
         clearInterval(iidRef.current);
