@@ -638,6 +638,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   var startStepRef=useRef(0);
   var iidRef=useRef(null); var stepRef=useRef(0); var dimRef=useRef(null);
+  var lastTickMsRef = useRef(0); // tick間隔の追跡（subdiv変更時の再作成用）
   var actxRef=useRef(null); var bufsRef=useRef({});
   var bufs2Ref=useRef({}); // 2台目の音源バッファ
   var leftRef=useRef(left); var rightRef=useRef(right);
@@ -1073,6 +1074,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
+    if(lastTickMsRef.current !== ms){
+      lastTickMsRef.current = ms;
+      if(iidRef.current){
+        clearInterval(iidRef.current);
+        iidRef.current = setInterval(tick, ms);
+      }
+    }
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
@@ -1830,6 +1839,14 @@ function renderSideGrid2(barIdx, side){
     if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
+    if(lastTickMsRef.current !== ms){
+      lastTickMsRef.current = ms;
+      if(iidRef.current){
+        clearInterval(iidRef.current);
+        iidRef.current = setInterval(tick, ms);
+      }
+    }
     if(dimRef.current)clearTimeout(dimRef.current);
     dimRef.current=setTimeout(dimAll,Math.round(ms*0.75));
     setCurStep(s);
@@ -2830,8 +2847,8 @@ function renderSideGrid2(barIdx, side){
                 <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
                 <svg viewBox="0 0 140 166" width="140" height="166">
                   <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                  {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                   {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                       var pos=SCORE_DOTS_HIBIKI[color];
                       return (
@@ -2867,8 +2884,8 @@ function renderSideGrid2(barIdx, side){
                 </>
               ) : (
                 <>
-                  <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
-                  <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
+                  {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>}
+                  {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>}
                 </>
               )}
               {(function(){
@@ -2901,8 +2918,8 @@ function renderSideGrid2(barIdx, side){
               <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
               <svg viewBox="0 0 140 166" width="140" height="166">
                 <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                 {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                   var pos=SCORE_DOTS_HIBIKI[color];
                   return (
@@ -2963,8 +2980,8 @@ function renderSideGrid2(barIdx, side){
                   <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
                   <svg viewBox="0 0 140 166" width="120" height="142">
                     <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                    {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                    {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                     {(function(){
                       var used2={};
                       COLORS2.forEach(function(c){
@@ -3000,8 +3017,8 @@ function renderSideGrid2(barIdx, side){
               {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
               <svg viewBox="0 0 140 166" width="120" height="142">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-              <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>
-              <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>
+              {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text><text x="130" y="86" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text></> : <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>}
+              {scale!=="nostalgic" && <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>}
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
@@ -3034,8 +3051,8 @@ function renderSideGrid2(barIdx, side){
                   <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
                   <svg viewBox="0 0 140 166" width="120" height="142">
                     <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                    <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
-                    <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                    {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                    {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                     {Object.keys(DOTS_I).map(function(color){
                       var pos=DOTS_I[color];
                       return (
@@ -6465,7 +6482,50 @@ function App() {
             ) : workoutHistory.length===0 ? (
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
             ) : (
-              <div style={{maxHeight:500,overflowY:"auto"}}>
+              <>
+                {/* 今月のTOP5ランキング */}
+                {(function(){
+                  var now = new Date();
+                  var thisMonth = String(now.getFullYear()) + "/" + String(now.getMonth()+1).padStart(2,"0");
+                  var totals = {};
+                  workoutHistory.forEach(function(w){
+                    var dateStr = String(w.date||"");
+                    var ds = dateStr.replace("-","/"); // 念のため
+                    var ym = ds.substring(0, 7); // "2026/06" 形式
+                    // ゼロ埋め判定
+                    var matched = ym === thisMonth || ds.indexOf(String(now.getFullYear())+"/"+String(now.getMonth()+1)+"/") === 0;
+                    if (matched) {
+                      if (!totals[w.name]) totals[w.name] = 0;
+                      totals[w.name] += w.minutes || 0;
+                    }
+                  });
+                  var ranked = Object.keys(totals).map(function(name){return {name:name, minutes:totals[name]};}).sort(function(a,b){return b.minutes - a.minutes;}).slice(0,5);
+                  if (ranked.length === 0) return null;
+                  return (
+                    <div style={{marginBottom:12,padding:"10px 12px",background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 100%)",border:"1px solid #d4a040",borderRadius:8}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                        <span style={{fontSize:14}}>🏆</span>
+                        <span style={{fontSize:11,fontWeight:700,color:"#7a5020",letterSpacing:0.5}}>今月のTOP5</span>
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                        {ranked.map(function(r, idx){
+                          var rankIcon = r.rank===1||idx===0?"🥇":idx===1?"🥈":idx===2?"🥉":"　";
+                          var rankColor = idx===0?"#b8860b":idx===1?"#808080":idx===2?"#cd7f32":"#7a5020";
+                          var rankBg = idx===0?"rgba(255,215,0,0.15)":idx===1?"rgba(192,192,192,0.12)":idx===2?"rgba(205,127,50,0.12)":"transparent";
+                          return (
+                            <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 8px",background:rankBg,borderRadius:6}}>
+                              <span style={{fontSize:idx<3?14:12,minWidth:20,textAlign:"center"}}>{rankIcon}</span>
+                              <span style={{fontSize:10,color:rankColor,fontWeight:idx<3?700:500,minWidth:18}}>{idx+1}位</span>
+                              <span style={{fontSize:12,color:"#4a3018",flex:1,fontWeight:idx<3?700:400}}>{r.name}</span>
+                              <span style={{fontSize:11,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.minutes}<span style={{fontSize:9,marginLeft:2,opacity:0.7}}>分</span></span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+                <div style={{maxHeight:500,overflowY:"auto"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,padding:"4px 6px",borderBottom:"2px solid rgba(58,122,90,0.3)",fontSize:10,color:"#3a7a5a",fontWeight:700,letterSpacing:1,position:"sticky",top:0,background:"#fff"}}>
                   <span style={{minWidth:120,flexShrink:0}}>日時</span>
                   <span style={{minWidth:70,flexShrink:0}}>名前</span>
@@ -6485,6 +6545,7 @@ function App() {
                   );
                 })}
               </div>
+              </>
             )}
           </div>
         )}
