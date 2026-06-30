@@ -551,6 +551,20 @@ function makeEmptyPat() {
   return p;
 }
 
+// 上下ラベルのヘルパー（kigaru section1〜5は表記を逆にする）
+function getDrumLabels(scoreId, sectionKey, scale) {
+  if (scoreId === "kigaru") {
+    var m = String(sectionKey||"").match(/^section(\d+)$/);
+    if (m) {
+      var n = parseInt(m[1]);
+      if (n >= 1 && n <= 5) return {top: "低音", bottom: "高音"};
+      if (n >= 6 && n <= 10) return {top: "高音", bottom: "低音"};
+    }
+  }
+  if (scale === "dreamy" || scale === "arcane" || scale === "enigma") return {top: "低音", bottom: "高音"};
+  return {top: "高音", bottom: "低音"};
+}
+
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell, floatPosInit, onFloatPosChange, swapLR }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
@@ -1230,8 +1244,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var barsHtml=[];
     for(var bi=0;bi<nb;bi++) barsHtml.push(barHtml(bi));
     var svgDots="";
-    var highLabel=scale==="nostalgic"?"高音":(scale==="dreamy"||scale==="arcane")?"低音":"高音";
-    var lowLabel=scale==="nostalgic"?"低音":(scale==="dreamy"||scale==="arcane")?"高音":"低音";
+    var _lbls=getDrumLabels(scoreId, sectionKey, scale);var highLabel=scale==="nostalgic"?"高音":_lbls.top;var lowLabel=scale==="nostalgic"?"低音":_lbls.bottom;
     Object.keys(DOTS).forEach(function(color){
       if(scale==="nostalgic"&&color==="pink") return;
       var pos=DOTS[color];
@@ -1985,8 +1998,7 @@ function renderSideGrid2(barIdx, side){
     var barsHtml=[];
     for(var bi=0;bi<nb;bi++) barsHtml.push(barHtml(bi));
     var svgDots="";
-    var highLabel=scale==="nostalgic"?"高音":(scale==="dreamy"||scale==="arcane")?"低音":"高音";
-    var lowLabel=scale==="nostalgic"?"低音":(scale==="dreamy"||scale==="arcane")?"高音":"低音";
+    var _lbls=getDrumLabels(scoreId, sectionKey, scale);var highLabel=scale==="nostalgic"?"高音":_lbls.top;var lowLabel=scale==="nostalgic"?"低音":_lbls.bottom;
     Object.keys(DOTS).forEach(function(color){
       if(scale==="nostalgic"&&color==="pink") return;
       var pos=DOTS[color];
@@ -2884,8 +2896,8 @@ function renderSideGrid2(barIdx, side){
                 </>
               ) : (
                 <>
-                  {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>}
-                  {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>}
+                  {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="130" y="86" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{getDrumLabels(scoreId, sectionKey, scale).top}</text>}
+                  {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">{getDrumLabels(scoreId, sectionKey, scale).bottom}</text>}
                 </>
               )}
               {(function(){
@@ -3017,8 +3029,8 @@ function renderSideGrid2(barIdx, side){
               {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
               <svg viewBox="0 0 140 166" width="120" height="142">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-              {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text><text x="130" y="86" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text></> : <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"低音":"高音"}</text>}
-              {scale!=="nostalgic" && <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{(scale==="dreamy"||scale==="arcane")?"高音":"低音"}</text>}
+              {scale==="nostalgic" ? <><text x="10" y="86" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text><text x="130" y="86" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text></> : <text x="70" y="8" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{getDrumLabels(scoreId, sectionKey, scale).top}</text>}
+              {scale!=="nostalgic" && <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{getDrumLabels(scoreId, sectionKey, scale).bottom}</text>}
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
