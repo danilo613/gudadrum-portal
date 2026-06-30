@@ -6349,6 +6349,29 @@ function App() {
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
+        {showAllPoints && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            {!allPointsLoaded ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
+            ) : allPointHistory.length === 0 ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>履歴がありません</p>
+            ) : (
+              <div style={{maxHeight:400,overflowY:"auto"}}>
+                {allPointHistory.slice().reverse().map((h,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 4px",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
+                    <div>
+                      <p style={{fontSize:12,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
+                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                    </div>
+                    <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030",flexShrink:0,marginLeft:8}}>
+                      {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <button onClick={()=>{setShowKigaruUnlock(!showKigaruUnlock); if(!showKigaruUnlock && !allKigaruUnlock) fetchAllKigaruUnlock();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a5a3a",background:showKigaruUnlock?"linear-gradient(135deg,#b88a5a,#8a5a3a)":"rgba(138,90,58,0.1)",color:showKigaruUnlock?"#fff":"#8a5a3a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🔓 気軽サブスク 解放管理 {showKigaruUnlock?"▲":"▼"}
@@ -6592,29 +6615,6 @@ function App() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </div>
-        )}
-        {showAllPoints && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            {!allPointsLoaded ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
-            ) : allPointHistory.length === 0 ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>履歴がありません</p>
-            ) : (
-              <div style={{maxHeight:400,overflowY:"auto"}}>
-                {allPointHistory.slice().reverse().map((h,i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 4px",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                    <div>
-                      <p style={{fontSize:12,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
-                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
-                    </div>
-                    <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030",flexShrink:0,marginLeft:8}}>
-                      {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
-                    </p>
-                  </div>
-                ))}
               </div>
             )}
           </div>
