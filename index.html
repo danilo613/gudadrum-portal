@@ -820,6 +820,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
 
   useEffect(function(){
+    console.log("subdiv useEffect発火: subdiv=", subdiv, "subdivRef.current=", subdivRef.current, "iidRef.current=", !!iidRef.current);
     subdivRef.current=subdiv;
     // 再生中にsubdivが変わったらintervalを強制再作成（テンポずれ防止）
     if(iidRef.current){
