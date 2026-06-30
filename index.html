@@ -820,7 +820,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
 
   useEffect(function(){
-    console.log("subdiv useEffect発火: subdiv=", subdiv, "subdivRef.current=", subdivRef.current, "iidRef.current=", !!iidRef.current);
+    console.log("subdiv useEffect発火:", scoreId, sectionKey, "subdiv=", subdiv, "subdivRef.current=", subdivRef.current, "iidRef.current=", !!iidRef.current);
     subdivRef.current=subdiv;
     // 再生中にsubdivが変わったらintervalを強制再作成（テンポずれ防止）
     if(iidRef.current){
@@ -1089,7 +1089,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var barSpb=getBarSpb(curBar);
     var barStart=getBarStart(curBar);
     var s12=s-barStart; // 小節内のステップ位置
-    if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
+    if(s===0) console.log("tick start:", scoreId, sectionKey, "bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
@@ -1854,7 +1854,7 @@ function renderSideGrid2(barIdx, side){
     var barSpb=getBarSpb(curBar);
     var barStart=getBarStart(curBar);
     var s12=s-barStart; // 小節内のステップ位置
-    if(s===0) console.log("tick start: bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
+    if(s===0) console.log("tick start:", scoreId, sectionKey, "bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
     var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
     // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
