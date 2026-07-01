@@ -805,6 +805,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(prevKeyRef.current !== sectionKey){
       prevKeyRef.current = sectionKey;
       hasLoadedRef.current=false; // セクション切り替え時にリセット
+      // 新しいセクションのsubdivを確実に反映
+      subdivRef.current = subdiv;
+      console.log("sectionKey変更:", sectionKey, "subdiv同期=", subdiv);
       if(autoPlay){
         initAudio(function(){
           stepRef.current=0;
@@ -813,7 +816,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         });
       }
     }
-  },[sectionKey]);
+  },[sectionKey,subdiv]);
 
 
 
