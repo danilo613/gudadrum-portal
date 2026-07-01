@@ -661,8 +661,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
-  // レンダリング時に即subdivRefを同期（useEffectを待たない）
-  subdivRef.current = subdiv;
+  var subdivPropRef = useRef(subdivProp); // 最新のsubdivPropを追跡
+  subdivPropRef.current = subdivProp; // レンダリング毎に更新
   var onSectionEndRef=useRef(onSectionEnd);
   var barsRef=useRef(parseInt(bars)||8);
   var barLengthsRef=useRef(null); // 各小節のステップ数配列（nullなら全小節SPBで統一）
@@ -1088,7 +1088,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function tick(){
     var s=stepRef.current,L=leftRef.current,R=rightRef.current;
-    var spbNow2=subdivRef.current==="16th"?16:12;
+    // subdivPropRefから最新値を取得（クロージャstaleを回避）
+    var currentSubdiv = subdivPropRef.current || "triplet";
+    subdivRef.current = currentSubdiv; // ここで最新に同期
+    var spbNow2=currentSubdiv==="16th"?16:12;
     var totalNow2=getBarLengthsTotal();
     var curBar=stepToBar(s);
     var barSpb=getBarSpb(curBar);
@@ -1096,10 +1099,10 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var s12=s-barStart; // 小節内のステップ位置
     if(s===0) console.log("tick start:", scoreId, sectionKey, "bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
-    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    var ms=Math.round((60/bpmRef.current/(currentSubdiv==="16th"?4:3))*1000);
     // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
     if(lastTickMsRef.current !== ms){
-      console.log("tick interval再作成", lastTickMsRef.current, "→", ms, "subdiv=", subdivRef.current);
+      console.log("tick interval再作成", lastTickMsRef.current, "→", ms, "subdiv=", currentSubdiv);
       lastTickMsRef.current = ms;
       if(iidRef.current){
         clearInterval(iidRef.current);
@@ -1158,7 +1161,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(metroOnRef.current){
       var m=metroModeRef.current;
       var doAcc=s12===0&&metroAccentRef.current;
-      if(subdivRef.current==="16th"){
+      if(currentSubdiv==="16th"){
         if(m===4&&s12%4===0)woodClick(doAcc);
         else if(m==="4u"&&s12%4===2)woodClick(doAcc);
         else if(m===8&&s12%2===0)woodClick(doAcc);
@@ -1859,7 +1862,10 @@ function renderSideGrid2(barIdx, side){
 
   function tick(){
     var s=stepRef.current,L=leftRef.current,R=rightRef.current;
-    var spbNow2=subdivRef.current==="16th"?16:12;
+    // subdivPropRefから最新値を取得（クロージャstaleを回避）
+    var currentSubdiv = subdivPropRef.current || "triplet";
+    subdivRef.current = currentSubdiv; // ここで最新に同期
+    var spbNow2=currentSubdiv==="16th"?16:12;
     var totalNow2=getBarLengthsTotal();
     var curBar=stepToBar(s);
     var barSpb=getBarSpb(curBar);
@@ -1867,10 +1873,10 @@ function renderSideGrid2(barIdx, side){
     var s12=s-barStart; // 小節内のステップ位置
     if(s===0) console.log("tick start:", scoreId, sectionKey, "bars=",barsRef.current,"spb=",spbNow2,"total=",totalNow2);
     if(s >= totalNow2-2) console.log("tick near end: s=",s,"total=",totalNow2);
-    var ms=Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000);
+    var ms=Math.round((60/bpmRef.current/(currentSubdiv==="16th"?4:3))*1000);
     // intervalの間隔が現状のBPM/subdivと合っていない場合、interval再作成
     if(lastTickMsRef.current !== ms){
-      console.log("tick interval再作成", lastTickMsRef.current, "→", ms, "subdiv=", subdivRef.current);
+      console.log("tick interval再作成", lastTickMsRef.current, "→", ms, "subdiv=", currentSubdiv);
       lastTickMsRef.current = ms;
       if(iidRef.current){
         clearInterval(iidRef.current);
@@ -1929,7 +1935,7 @@ function renderSideGrid2(barIdx, side){
     if(metroOnRef.current){
       var m=metroModeRef.current;
       var doAcc=s12===0&&metroAccentRef.current;
-      if(subdivRef.current==="16th"){
+      if(currentSubdiv==="16th"){
         if(m===4&&s12%4===0)woodClick(doAcc);
         else if(m==="4u"&&s12%4===2)woodClick(doAcc);
         else if(m===8&&s12%2===0)woodClick(doAcc);
