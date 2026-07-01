@@ -1179,7 +1179,12 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+    // subdiv変数は最新のpropsから計算された値（useEffect発火を待たない）
+    subdivRef.current = subdiv; // 強制同期
+    var ms = Math.round((60/bpmRef.current/(subdiv==="16th"?4:3))*1000);
+    lastTickMsRef.current = ms;
+    iidRef.current=setInterval(tick, ms);
+    console.log("doStart:", scoreId, sectionKey, "subdiv=", subdiv, "ms=", ms);
   }
 
   function doStop(){
@@ -1944,7 +1949,12 @@ function renderSideGrid2(barIdx, side){
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    iidRef.current=setInterval(tick,Math.round((60/bpmRef.current/(subdivRef.current==="16th"?4:3))*1000));
+    // subdiv変数は最新のpropsから計算された値（useEffect発火を待たない）
+    subdivRef.current = subdiv; // 強制同期
+    var ms = Math.round((60/bpmRef.current/(subdiv==="16th"?4:3))*1000);
+    lastTickMsRef.current = ms;
+    iidRef.current=setInterval(tick, ms);
+    console.log("doStart:", scoreId, sectionKey, "subdiv=", subdiv, "ms=", ms);
   }
 
   function doStop(){
