@@ -661,6 +661,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   var metroModeRef=useRef(metroMode); var metroVolRef=useRef(metroVol);
   var metroAccentRef=useRef(metroAccent); var lrOnRef=useRef(lrOn);
   var subdivRef=useRef(subdiv); var setSPB=function(){}; var setSubdiv=function(){};
+  // レンダリング時に即subdivRefを同期（useEffectを待たない）
+  subdivRef.current = subdiv;
   var onSectionEndRef=useRef(onSectionEnd);
   var barsRef=useRef(parseInt(bars)||8);
   var barLengthsRef=useRef(null); // 各小節のステップ数配列（nullなら全小節SPBで統一）
@@ -1182,12 +1184,13 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    // subdiv変数は最新のpropsから計算された値（useEffect発火を待たない）
-    subdivRef.current = subdiv; // 強制同期
-    var ms = Math.round((60/bpmRef.current/(subdiv==="16th"?4:3))*1000);
+    // subdivPropから直接計算（クロージャのsubdiv変数はstaleの可能性）
+    var currentSubdiv = subdivProp || "triplet";
+    subdivRef.current = currentSubdiv;
+    var ms = Math.round((60/bpmRef.current/(currentSubdiv==="16th"?4:3))*1000);
     lastTickMsRef.current = ms;
     iidRef.current=setInterval(tick, ms);
-    console.log("doStart:", scoreId, sectionKey, "subdiv=", subdiv, "ms=", ms);
+    console.log("doStart:", scoreId, sectionKey, "subdiv=", currentSubdiv, "ms=", ms);
   }
 
   function doStop(){
@@ -1952,12 +1955,13 @@ function renderSideGrid2(barIdx, side){
   function doStart(){
     if(iidRef.current)clearInterval(iidRef.current);
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
-    // subdiv変数は最新のpropsから計算された値（useEffect発火を待たない）
-    subdivRef.current = subdiv; // 強制同期
-    var ms = Math.round((60/bpmRef.current/(subdiv==="16th"?4:3))*1000);
+    // subdivPropから直接計算（クロージャのsubdiv変数はstaleの可能性）
+    var currentSubdiv = subdivProp || "triplet";
+    subdivRef.current = currentSubdiv;
+    var ms = Math.round((60/bpmRef.current/(currentSubdiv==="16th"?4:3))*1000);
     lastTickMsRef.current = ms;
     iidRef.current=setInterval(tick, ms);
-    console.log("doStart:", scoreId, sectionKey, "subdiv=", subdiv, "ms=", ms);
+    console.log("doStart:", scoreId, sectionKey, "subdiv=", currentSubdiv, "ms=", ms);
   }
 
   function doStop(){
