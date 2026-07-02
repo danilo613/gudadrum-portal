@@ -3750,7 +3750,7 @@ function App() {
   }
 
   React.useEffect(() => {
-    if (resonanceOpen && resonanceMicOn) resonanceStartClick();
+    if (resonanceOpen && resonanceMicOn && page === "admin" && !isInstructor) resonanceStartClick();
     // eslint-disable-next-line
   }, [resonanceBpm]);
 
@@ -3768,7 +3768,8 @@ function App() {
       const buf = new Uint8Array(analyser.fftSize);
       setResonanceMicOn(true);
       setResonanceError("");
-      resonanceStartClick();
+      // メトロノーム再生（音を鳴らす権限）はDANiLOのみ。他は将来メンバー解放時、DANiLOのテンポに合わせて再生予定
+      if (page === "admin" && !isInstructor) resonanceStartClick();
       const loop = () => {
         analyser.getByteTimeDomainData(buf);
         let peak = 0;
@@ -6150,6 +6151,7 @@ function App() {
     );
   }
 
+  const resonanceIsController = page === "admin" && !isInstructor; // テンポ設定・再生権限はDANiLOのみ
   if (resonanceOpen) return (
     <div style={{minHeight:"100vh",background:"#000",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
@@ -6197,9 +6199,13 @@ function App() {
       {/* コントロールパネル */}
       <div style={{flexShrink:0,padding:"16px 20px 24px",background:"linear-gradient(0deg, rgba(10,5,20,0.9), transparent)",position:"relative",zIndex:5}}>
         <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:10}}>
-          <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>テンポ {resonanceBpm}</span>
-          <input type="range" min="40" max="140" value={resonanceBpm} onChange={e=>setResonanceBpm(parseInt(e.target.value))}
-            style={{flex:1,accentColor:"#c8b0ff"}}/>
+          <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>テンポ {resonanceBpm}{!resonanceIsController?" 🔒":""}</span>
+          {resonanceIsController ? (
+            <input type="range" min="40" max="140" value={resonanceBpm} onChange={e=>setResonanceBpm(parseInt(e.target.value))}
+              style={{flex:1,accentColor:"#c8b0ff"}}/>
+          ) : (
+            <div style={{flex:1,fontSize:10,color:"rgba(200,200,255,0.4)"}}>DANiLOが設定中（テストフェーズにつき編集不可）</div>
+          )}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
           <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>マイク感度</span>
@@ -6218,6 +6224,7 @@ function App() {
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("管理者ダッシュボード",[
+        ...(!isInstructor ? [iconBtn("✨ 共鳴モード",()=>resonanceOpenMode())] : []),
         iconBtn("🗾 MAP",()=>{ fetchMemberMap(); setMapPage(true); }),
         iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
         iconBtn("ログアウト",()=>setPage("login")),
@@ -7996,11 +8003,9 @@ function App() {
     <div style={{height:"100vh",backgroundImage:"url(/back.png)",backgroundSize:"cover",backgroundPosition:"top left",backgroundAttachment:"fixed",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
-        iconBtn("✨ 共鳴モード",()=>resonanceOpenMode()),
         iconBtn("← 管理者に戻る",()=>setPage("admin")),
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");try{localStorage.removeItem("guda_session");}catch(e){}}),
       ] : [
-        iconBtn("✨ 共鳴モード",()=>resonanceOpenMode()),
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");try{localStorage.removeItem("guda_session");}catch(e){}}),
       ])}
       <div style={{flex:1,overflowY:"auto",padding:"16px 24px 24px",background:"transparent"}}><div style={{maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
