@@ -3696,6 +3696,8 @@ function App() {
   // === 共鳴モード（Resonance Mode / 響同モード）プロトタイプ ===
   const [resonanceOpen, setResonanceOpen] = useState(false);
   const [resonanceBpm, setResonanceBpm] = useState(72);
+  const resonanceBpmRef = React.useRef(72);
+  React.useEffect(()=>{ resonanceBpmRef.current = resonanceBpm; }, [resonanceBpm]);
   const [resonanceMembers, setResonanceMembers] = useState([]); // [{name, hit}]
   const [resonanceSensitivity, setResonanceSensitivity] = useState(90); // 固定：人混みで使う想定がないためマックス寄りに固定
   const [resonanceMicOn, setResonanceMicOn] = useState(false);
@@ -3778,11 +3780,12 @@ function App() {
 
   function resonanceStartClick() {
     if (resonanceClickIidRef.current) { clearInterval(resonanceClickIidRef.current); }
-    const intervalMs = 60000 / resonanceBpm;
+    const intervalMs = 60000 / resonanceBpmRef.current; // refで取得＝タイマー経由で呼ばれても常に最新テンポ
     resonanceClickIidRef.current = setInterval(() => {
       const actx = resonanceAudioCtxRef.current;
       if (!actx) return;
       try {
+        if (actx.state === "suspended") actx.resume(); // ユーザー操作を介さず起動された場合の保険
         const osc = actx.createOscillator();
         const gain = actx.createGain();
         osc.frequency.value = 1000;
@@ -3824,6 +3827,7 @@ function App() {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       const actx = new Ctx();
       resonanceAudioCtxRef.current = actx;
+      if (actx.state === "suspended") actx.resume().catch(() => {});
       const source = actx.createMediaStreamSource(stream);
       const analyser = actx.createAnalyser();
       analyser.fftSize = 1024;
@@ -7835,6 +7839,11 @@ function App() {
                       <p style={{fontSize:12,color:item.highlight?"#6a2a4a":"#4a2a3a",fontWeight:item.highlight?700:400,lineHeight:1.6}}>{item.label}</p>
                     </div>
                   ))}
+
+                  {/* 注意書き */}
+                  <div style={{marginTop:10,background:"rgba(200,122,170,0.08)",borderRadius:10,padding:"10px 14px",border:"1px solid rgba(200,122,170,0.25)"}}>
+                    <p style={{fontSize:12,color:"#6a2a4a",lineHeight:1.7}}>⚠️ リハーサル後、貴重品以外のスタンドや機材等の残置可能です。</p>
+                  </div>
                 </div>
 
                 {/* 10月17日 */}
