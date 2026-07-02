@@ -3697,6 +3697,7 @@ function App() {
   const [rtmOn, setRtmOn] = useState(false);
   const [rtmMinutes, setRtmMinutes] = useState(0); // 0=未選択, 5/10/15
   const [rtmActive, setRtmActive] = useState(false);
+  const [rtmType, setRtmType] = useState(null); // "training" or "muscle"
   const [rtmStartTime, setRtmStartTime] = useState(0);
   const [rtmElapsed, setRtmElapsed] = useState(0); // 秒
   const [rtmStartBpm, setRtmStartBpm] = useState(80);
@@ -3705,13 +3706,14 @@ function App() {
   const rtmTargetBpmRef = React.useRef(null); // 小節頭で適用予定のBPM
   React.useEffect(()=>{rtmActiveRef.current=rtmActive;},[rtmActive]);
 
-  async function rtmStart(minutes){
+  async function rtmStart(minutes, type){
     await metroInit();
     const actx = metroActxRef.current;
     if (!actx) return;
     if (actx.state==="suspended") await actx.resume();
-    const bpmIncrease = minutes === 5 ? 10 : minutes === 10 ? 20 : 30;
+    const bpmIncrease = type === "training" ? 0 : (minutes === 5 ? 10 : minutes === 10 ? 20 : 30);
     const startBpm = metroBpm;
+    setRtmType(type);
     setRtmStartBpm(startBpm);
     setRtmMinutes(minutes);
     setRtmActive(true);
@@ -3727,10 +3729,10 @@ function App() {
     const minutes = rtmMinutes;
     const startBpm = metroBpm;
     setRtmStartBpm(startBpm);
-    const bpmIncrease = minutes === 5 ? 10 : minutes === 10 ? 20 : 30;
+    const bpmIncrease = rtmType === "training" ? 0 : (minutes === 5 ? 10 : minutes === 10 ? 20 : 30);
     const startTime = Date.now();
     setRtmStartTime(startTime);
-    rtmInfoRef.current = {startTime, totalSec: minutes*60, startBpm, bpmIncrease};
+    rtmInfoRef.current = {startTime, totalSec: minutes*60, startBpm, bpmIncrease, type: rtmType};
     rtmIidRef.current = setInterval(()=>{
       const elapsedSec = (Date.now() - startTime) / 1000;
       const totalSec = minutes * 60;
@@ -3752,8 +3754,9 @@ function App() {
       const min = completedMinutes || rtmMinutes;
       const startBpm = info ? info.startBpm : rtmStartBpm;
       const endBpm = info ? Math.min(180, info.startBpm + info.bpmIncrease) : startBpm;
+      const type = info ? info.type : rtmType;
       if (currentMember && currentMember.subscType && currentMember.subscType !== "種") {
-        showRtmComplete(min, startBpm, endBpm);
+        showRtmComplete(min, startBpm, endBpm, type);
       } else {
         alert(`🎉 ${min}分達成！`);
       }
@@ -3872,8 +3875,8 @@ function App() {
   const [rtmCompleteData, setRtmCompleteData] = useState(null);
   const rtmCompleteIidRef = React.useRef(null);
 
-  function showRtmComplete(minutes, startBpm, endBpm){
-    setRtmCompleteData({minutes, startBpm, endBpm});
+  function showRtmComplete(minutes, startBpm, endBpm, type){
+    setRtmCompleteData({minutes, startBpm, endBpm, type});
     setRtmCompleteCountdown(10);
     setRtmCompleteOpen(true);
     const startTime = Date.now();
@@ -3907,7 +3910,8 @@ function App() {
         name: currentMember.name,
         minutes: data.minutes,
         startBpm: data.startBpm,
-        endBpm: data.endBpm
+        endBpm: data.endBpm,
+        trainingType: data.type || "muscle"
       });
       const pts = res && res.points !== undefined ? res.points : 0;
       const bonus = res && res.bonusGranted ? res.bonusGranted : 0;
@@ -5292,29 +5296,57 @@ function App() {
               </div>
               {rtmOn && !rtmActive && (
                 <div>
-                  <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:10,letterSpacing:1}}>時間を選択。BPMが徐々に上昇します。</div>
-                  <div style={{display:"flex",flexDirection:"column",gap:8}}>
-                    {[[5,10],[10,20],[15,30]].map(([min,inc])=>{
-                      const isSubscriber = currentMember.subscType && currentMember.subscType !== "種";
-                      return (
-                        <button key={min} onClick={()=>{
-                          if (!isSubscriber) {
-                            alert("🌿 リズム筋トレモードは、サブスク会員特典です。\nぜひこの機会にサブスクをご検討ください！");
-                            return;
-                          }
-                          rtmStart(min);
-                        }} style={{padding:"12px 16px",borderRadius:10,border:"1px solid rgba(150,220,180,0.2)",background:"linear-gradient(180deg, rgba(30,60,45,0.6), rgba(15,30,22,0.8))",color:"#c8e8d4",fontSize:13,fontWeight:400,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",letterSpacing:1,position:"relative"}}>
-                          <span>{min}分</span>
-                          <span style={{color:"rgba(160,232,192,0.7)",fontSize:11,letterSpacing:0.5}}>
-                            +{inc} BPM {!isSubscriber && <span style={{marginLeft:6,color:"rgba(220,180,140,0.8)"}}>🔒</span>}
-                          </span>
-                        </button>
-                      );
-                    })}
+                  {/* リズムトレーニングモード（テンポ上がらない） */}
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:11,color:"rgba(150,220,180,0.85)",letterSpacing:2,fontWeight:500,marginBottom:6}}>🎯 リズムトレーニングモード</div>
+                    <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>一定のテンポで練習。5分=5P / 10分=10P / 15分=15P</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {[[5,5],[10,10],[15,15]].map(([min,pt])=>{
+                        const isSubscriber = currentMember.subscType && currentMember.subscType !== "種";
+                        return (
+                          <button key={min} onClick={()=>{
+                            if (!isSubscriber) {
+                              alert("🌿 リズムトレーニングモードは、サブスク会員特典です。\nぜひこの機会にサブスクをご検討ください！");
+                              return;
+                            }
+                            rtmStart(min, "training");
+                          }} style={{padding:"10px 14px",borderRadius:8,border:"1px solid rgba(150,220,180,0.2)",background:"linear-gradient(180deg, rgba(30,60,45,0.5), rgba(15,30,22,0.7))",color:"#c8e8d4",fontSize:12,fontWeight:400,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",letterSpacing:1}}>
+                            <span>{min}分</span>
+                            <span style={{color:"rgba(160,232,192,0.7)",fontSize:10,letterSpacing:0.5}}>
+                              +{pt} P {!isSubscriber && <span style={{marginLeft:6,color:"rgba(220,180,140,0.8)"}}>🔒</span>}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {/* リズム筋トレモード（テンポが徐々に上がる） */}
+                  <div>
+                    <div style={{fontSize:11,color:"rgba(150,220,180,0.85)",letterSpacing:2,fontWeight:500,marginBottom:6}}>💪 リズム筋トレモード</div>
+                    <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>BPMが徐々に上昇。5分=5P / 10分=10P / 15分=20P</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {[[5,10],[10,20],[15,30]].map(([min,inc])=>{
+                        const isSubscriber = currentMember.subscType && currentMember.subscType !== "種";
+                        return (
+                          <button key={min} onClick={()=>{
+                            if (!isSubscriber) {
+                              alert("🌿 リズム筋トレモードは、サブスク会員特典です。\nぜひこの機会にサブスクをご検討ください！");
+                              return;
+                            }
+                            rtmStart(min, "muscle");
+                          }} style={{padding:"10px 14px",borderRadius:8,border:"1px solid rgba(150,220,180,0.2)",background:"linear-gradient(180deg, rgba(30,60,45,0.5), rgba(15,30,22,0.7))",color:"#c8e8d4",fontSize:12,fontWeight:400,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",letterSpacing:1}}>
+                            <span>{min}分</span>
+                            <span style={{color:"rgba(160,232,192,0.7)",fontSize:10,letterSpacing:0.5}}>
+                              +{inc} BPM {!isSubscriber && <span style={{marginLeft:6,color:"rgba(220,180,140,0.8)"}}>🔒</span>}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                   {(!currentMember.subscType || currentMember.subscType === "種") && (
                     <div style={{marginTop:12,padding:"10px 12px",background:"rgba(60,50,30,0.4)",border:"1px solid rgba(220,180,140,0.2)",borderRadius:8,fontSize:10,color:"rgba(220,180,140,0.9)",lineHeight:1.6}}>
-                      🌿 リズム筋トレモードはサブスク会員特典です
+                      🌿 リズムトレーニング/筋トレモードはサブスク会員特典です
                     </div>
                   )}
                 </div>
