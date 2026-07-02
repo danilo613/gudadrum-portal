@@ -3702,6 +3702,9 @@ function App() {
   const [resonancePlaying, setResonancePlaying] = useState(false);
   const [resonanceSelfGlow, setResonanceSelfGlow] = useState(false);
   const resonanceSelfGlowTimeoutRef = React.useRef(null);
+  const [resonanceMyColor, setResonanceMyColor] = useState("#ffd873"); // その場限りの色選択（保存しない）
+  const resonanceMyColorRef = React.useRef("#ffd873");
+  React.useEffect(()=>{ resonanceMyColorRef.current = resonanceMyColor; }, [resonanceMyColor]);
   const [resonanceError, setResonanceError] = useState("");
   const resonancePollRef = React.useRef(null);
   const resonancePingRef = React.useRef(null);
@@ -3720,9 +3723,25 @@ function App() {
     return "ゲスト";
   }
 
+  function resonanceHexToRgb(hex) {
+    var h = String(hex || "").replace("#", "");
+    if (h.length === 3) h = h.split("").map(function (c) { return c + c; }).join("");
+    var num = parseInt(h, 16);
+    if (!h || isNaN(num)) return { r: 255, g: 216, b: 115 };
+    return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+  }
+
+  function resonanceLighten(rgb, amt) {
+    return {
+      r: Math.round(rgb.r + (255 - rgb.r) * amt),
+      g: Math.round(rgb.g + (255 - rgb.g) * amt),
+      b: Math.round(rgb.b + (255 - rgb.b) * amt),
+    };
+  }
+
   async function resonancePing(hit) {
     try {
-      await gasWrite({ action: "hitresonance", name: resonanceMyName(), hit: hit ? "true" : "false" });
+      await gasWrite({ action: "hitresonance", name: resonanceMyName(), hit: hit ? "true" : "false", color: resonanceMyColorRef.current });
     } catch (e) {}
   }
 
@@ -6209,6 +6228,11 @@ function App() {
               const visualHit = isMe ? (resonanceSelfGlow || mem.hit) : mem.hit;
               const gradId = "starGrad" + i;
               const t = visualHit ? "0.35s cubic-bezier(0.2,0.8,0.3,1)" : "1.2s ease-in"; // 光る時はふわっと、消える時はゆっくり
+              const hitHex = isMe ? resonanceMyColor : (mem.color || "#ffd873");
+              const hitRgb = resonanceHexToRgb(hitHex);
+              const hitRgbStr = hitRgb.r + "," + hitRgb.g + "," + hitRgb.b;
+              const hitLabelRgb = resonanceLighten(hitRgb, 0.55);
+              const hitLabelStr = "rgb(" + hitLabelRgb.r + "," + hitLabelRgb.g + "," + hitLabelRgb.b + ")";
               return (
                 <div key={mem.name} style={{position:"absolute",left:cx+"%",top:cy+"%",transform:"translate(-50%,-50%)",display:"flex",flexDirection:"column",alignItems:"center"}}>
                   <div style={{position:"relative",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center"}}>
@@ -6218,7 +6242,7 @@ function App() {
                       background:"radial-gradient(circle, rgba(200,210,255,0.22) 0%, rgba(200,210,255,0.08) 45%, transparent 72%)",
                       filter:"blur(4px)",
                     }}/>
-                    {/* 感知中の黄色い光の輪。外側でopacityフェード、内側で光の揺らぎ */}
+                    {/* 感知中の光の輪（その人の色）。外側でopacityフェード、内側で光の揺らぎ */}
                     <div style={{
                       position:"absolute",top:"50%",left:"50%",width:"160%",height:"160%",marginTop:"-80%",marginLeft:"-80%",borderRadius:"50%",pointerEvents:"none",
                       opacity: visualHit ? 1 : 0,
@@ -6226,7 +6250,7 @@ function App() {
                     }}>
                       <div className={visualHit?"resonance-star-flicker":""} style={{
                         width:"100%",height:"100%",borderRadius:"50%",
-                        background:"radial-gradient(circle, rgba(255,225,140,0.7) 0%, rgba(255,215,120,0.32) 45%, transparent 72%)",
+                        background:"radial-gradient(circle, rgba("+hitRgbStr+",0.7) 0%, rgba("+hitRgbStr+",0.32) 45%, transparent 72%)",
                         filter:"blur(5px)",
                       }}/>
                     </div>
@@ -6241,15 +6265,15 @@ function App() {
                       </defs>
                       <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill={"url(#"+gradId+")"}/>
                     </svg>
-                    {/* 感知中の黄色い星＋強いグロー。外側でopacityフェード、内側で光の揺らぎ */}
+                    {/* 感知中の星＋強いグロー（その人の色）。外側でopacityフェード、内側で光の揺らぎ */}
                     <div style={{position:"absolute",top:"50%",left:"50%",marginTop:-10,marginLeft:-10,opacity:visualHit?1:0,transition:"opacity "+t}}>
                       <svg width={20} height={20} viewBox="0 0 24 24" className={visualHit?"resonance-star-flicker":""}
-                        style={{filter:"drop-shadow(0 0 7px rgba(255,225,140,0.95))"}}>
-                        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill="#fff3c4"/>
+                        style={{filter:"drop-shadow(0 0 7px rgba("+hitRgbStr+",0.95))"}}>
+                        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill={hitHex}/>
                       </svg>
                     </div>
                   </div>
-                  <div style={{fontSize:9,color:visualHit?"#ffe9b0":"rgba(220,220,255,0.5)",marginTop:2,letterSpacing:1,whiteSpace:"nowrap",transition:"color "+t}}>{mem.name}</div>
+                  <div style={{fontSize:9,color:visualHit?hitLabelStr:"rgba(220,220,255,0.5)",marginTop:2,letterSpacing:1,whiteSpace:"nowrap",transition:"color "+t}}>{mem.name}</div>
                 </div>
               );
             });
@@ -6275,6 +6299,12 @@ function App() {
           ) : (
             <div style={{flex:1,fontSize:10,color:"rgba(200,200,255,0.4)"}}>DANiLOが設定中（テストフェーズにつき編集不可）</div>
           )}
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
+          <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>叩いた時の色</span>
+          <input type="color" value={resonanceMyColor} onChange={e=>setResonanceMyColor(e.target.value)}
+            style={{width:36,height:24,border:"1px solid rgba(200,180,255,0.3)",borderRadius:6,background:"transparent",padding:0,cursor:"pointer"}}/>
+          <span style={{fontSize:9,color:"rgba(200,200,255,0.4)"}}>その場だけの色・保存はされません</span>
         </div>
         <div style={{fontSize:10,color:"rgba(200,200,255,0.4)",textAlign:"center",lineHeight:1.6}}>
           🎧 イヤフォン推奨（スピーカーだと自分のメトロノーム音を拾って誤反応することがあります）<br/>
