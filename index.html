@@ -6175,7 +6175,7 @@ function App() {
   const resonanceIsController = page === "admin" && !isInstructor; // テンポ設定・再生権限はDANiLOのみ
   if (resonanceOpen) return (
     <div style={{minHeight:"100vh",background:"#000",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
-      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap'); @keyframes resonanceBreathe { 0%,100% { opacity:0.55; transform:scale(1); } 50% { opacity:0.95; transform:scale(1.12); } } .resonance-star-idle { animation: resonanceBreathe 2.6s ease-in-out infinite; }"}</style>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap'); @keyframes resonanceBreathe { 0%,100% { opacity:0.55; transform:scale(1); } 50% { opacity:0.95; transform:scale(1.12); } } .resonance-star-idle { animation: resonanceBreathe 2.6s ease-in-out infinite; } @keyframes resonanceFlicker { 0% { opacity:0.88; transform:scale(1); } 9% { opacity:1; transform:scale(1.06); } 18% { opacity:0.8; transform:scale(0.96); } 29% { opacity:0.97; transform:scale(1.03); } 38% { opacity:0.74; transform:scale(0.94); } 47% { opacity:1; transform:scale(1.07); } 58% { opacity:0.83; transform:scale(0.97); } 68% { opacity:0.95; transform:scale(1.02); } 79% { opacity:0.78; transform:scale(0.95); } 90% { opacity:0.98; transform:scale(1.05); } 100% { opacity:0.88; transform:scale(1); } } .resonance-star-flicker { animation: resonanceFlicker 1.3s ease-in-out infinite; }"}</style>
       {/* ヘッダー */}
       <div style={{flexShrink:0,padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",zIndex:5}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -6218,14 +6218,18 @@ function App() {
                       background:"radial-gradient(circle, rgba(200,210,255,0.22) 0%, rgba(200,210,255,0.08) 45%, transparent 72%)",
                       filter:"blur(4px)",
                     }}/>
-                    {/* 感知中の黄色い光の輪。opacityのみで滑らかにクロスフェード */}
+                    {/* 感知中の黄色い光の輪。外側でopacityフェード、内側で光の揺らぎ */}
                     <div style={{
-                      position:"absolute",top:"50%",left:"50%",width:"230%",height:"230%",marginTop:"-115%",marginLeft:"-115%",borderRadius:"50%",pointerEvents:"none",
-                      background:"radial-gradient(circle, rgba(255,225,140,0.65) 0%, rgba(255,215,120,0.3) 45%, transparent 72%)",
-                      filter:"blur(6px)",
+                      position:"absolute",top:"50%",left:"50%",width:"160%",height:"160%",marginTop:"-80%",marginLeft:"-80%",borderRadius:"50%",pointerEvents:"none",
                       opacity: visualHit ? 1 : 0,
                       transition:"opacity "+t,
-                    }}/>
+                    }}>
+                      <div className={visualHit?"resonance-star-flicker":""} style={{
+                        width:"100%",height:"100%",borderRadius:"50%",
+                        background:"radial-gradient(circle, rgba(255,225,140,0.7) 0%, rgba(255,215,120,0.32) 45%, transparent 72%)",
+                        filter:"blur(5px)",
+                      }}/>
+                    </div>
                     <svg width={20} height={20} viewBox="0 0 24 24" className="resonance-star-idle"
                       style={{position:"relative",filter:"drop-shadow(0 0 3px rgba(200,210,255,0.35))"}}>
                       <defs>
@@ -6237,11 +6241,13 @@ function App() {
                       </defs>
                       <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill={"url(#"+gradId+")"}/>
                     </svg>
-                    {/* 感知中の黄色い星＋強いグロー。opacityのみで滑らかにクロスフェード */}
-                    <svg width={20} height={20} viewBox="0 0 24 24" className="resonance-star-idle"
-                      style={{position:"absolute",top:"50%",left:"50%",marginTop:-10,marginLeft:-10,filter:"drop-shadow(0 0 7px rgba(255,225,140,0.95))",opacity:visualHit?1:0,transition:"opacity "+t}}>
-                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill="#fff3c4"/>
-                    </svg>
+                    {/* 感知中の黄色い星＋強いグロー。外側でopacityフェード、内側で光の揺らぎ */}
+                    <div style={{position:"absolute",top:"50%",left:"50%",marginTop:-10,marginLeft:-10,opacity:visualHit?1:0,transition:"opacity "+t}}>
+                      <svg width={20} height={20} viewBox="0 0 24 24" className={visualHit?"resonance-star-flicker":""}
+                        style={{filter:"drop-shadow(0 0 7px rgba(255,225,140,0.95))"}}>
+                        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill="#fff3c4"/>
+                      </svg>
+                    </div>
                   </div>
                   <div style={{fontSize:9,color:visualHit?"#ffe9b0":"rgba(220,220,255,0.5)",marginTop:2,letterSpacing:1,whiteSpace:"nowrap",transition:"color "+t}}>{mem.name}</div>
                 </div>
