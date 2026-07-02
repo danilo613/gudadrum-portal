@@ -3693,6 +3693,148 @@ function App() {
   React.useEffect(()=>{metroAccentVolRef.current=metroAccentVol;},[metroAccentVol]);
   React.useEffect(()=>{metroAccentRef.current=metroAccent;},[metroAccent]);
 
+  // === 共鳴モード（Resonance Mode / 響同モード）プロトタイプ ===
+  const [resonanceOpen, setResonanceOpen] = useState(false);
+  const [resonanceBpm, setResonanceBpm] = useState(72);
+  const [resonanceMembers, setResonanceMembers] = useState([]); // [{name, hit}]
+  const [resonanceSensitivity, setResonanceSensitivity] = useState(50); // 0-100
+  const [resonanceMicOn, setResonanceMicOn] = useState(false);
+  const [resonanceError, setResonanceError] = useState("");
+  const resonancePollRef = React.useRef(null);
+  const resonancePingRef = React.useRef(null);
+  const resonanceAudioCtxRef = React.useRef(null);
+  const resonanceStreamRef = React.useRef(null);
+  const resonanceRafRef = React.useRef(null);
+  const resonanceLastHitRef = React.useRef(0);
+  const resonanceSensitivityRef = React.useRef(50);
+  const resonanceClickIidRef = React.useRef(null);
+  React.useEffect(()=>{ resonanceSensitivityRef.current = resonanceSensitivity; }, [resonanceSensitivity]);
+
+  function resonanceMyName() {
+    return currentMember ? currentMember.name : (isInstructor ? (instructorName || "講師") : "ゲスト");
+  }
+
+  async function resonancePing(hit) {
+    try {
+      await gasWrite({ action: "hitresonance", name: resonanceMyName(), hit: hit ? "true" : "false" });
+    } catch (e) {}
+  }
+
+  async function resonancePoll() {
+    try {
+      const data = await gasWrite({ action: "getresonance" });
+      if (data && data.members) setResonanceMembers(data.members);
+    } catch (e) {}
+  }
+
+  function resonanceStartClick() {
+    if (resonanceClickIidRef.current) { clearInterval(resonanceClickIidRef.current); }
+    const intervalMs = 60000 / resonanceBpm;
+    resonanceClickIidRef.current = setInterval(() => {
+      const actx = resonanceAudioCtxRef.current;
+      if (!actx) return;
+      try {
+        const osc = actx.createOscillator();
+        const gain = actx.createGain();
+        osc.frequency.value = 1000;
+        gain.gain.value = 0.15;
+        osc.connect(gain); gain.connect(actx.destination);
+        osc.start();
+        osc.stop(actx.currentTime + 0.05);
+      } catch (e) {}
+    }, intervalMs);
+  }
+
+  function resonanceStopClick() {
+    if (resonanceClickIidRef.current) { clearInterval(resonanceClickIidRef.current); resonanceClickIidRef.current = null; }
+  }
+
+  React.useEffect(() => {
+    if (resonanceOpen && resonanceMicOn) resonanceStartClick();
+    // eslint-disable-next-line
+  }, [resonanceBpm]);
+
+  async function resonanceStartMic() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      resonanceStreamRef.current = stream;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      const actx = new Ctx();
+      resonanceAudioCtxRef.current = actx;
+      const source = actx.createMediaStreamSource(stream);
+      const analyser = actx.createAnalyser();
+      analyser.fftSize = 1024;
+      source.connect(analyser);
+      const buf = new Uint8Array(analyser.fftSize);
+      setResonanceMicOn(true);
+      setResonanceError("");
+      resonanceStartClick();
+      const loop = () => {
+        analyser.getByteTimeDomainData(buf);
+        let peak = 0;
+        for (let i = 0; i < buf.length; i++) {
+          const v = Math.abs(buf[i] - 128);
+          if (v > peak) peak = v;
+        }
+        const threshold = 128 - resonanceSensitivityRef.current * 1.1; // 感度が高いほど閾値が下がる＝反応しやすい
+        const now = Date.now();
+        if (peak > threshold && now - resonanceLastHitRef.current > 500) {
+          resonanceLastHitRef.current = now;
+          resonancePing(true);
+        }
+        resonanceRafRef.current = requestAnimationFrame(loop);
+      };
+      loop();
+    } catch (e) {
+      setResonanceError("マイクへのアクセスが許可されませんでした。ブラウザの設定をご確認ください。");
+      setResonanceMicOn(false);
+    }
+  }
+
+  function resonanceStopMic() {
+    if (resonanceRafRef.current) { cancelAnimationFrame(resonanceRafRef.current); resonanceRafRef.current = null; }
+    resonanceStopClick();
+    if (resonanceStreamRef.current) {
+      resonanceStreamRef.current.getTracks().forEach(t => t.stop());
+      resonanceStreamRef.current = null;
+    }
+    if (resonanceAudioCtxRef.current) {
+      resonanceAudioCtxRef.current.close().catch(() => {});
+      resonanceAudioCtxRef.current = null;
+    }
+    setResonanceMicOn(false);
+  }
+
+  function resonanceOpenMode() {
+    setResonanceOpen(true);
+    setResonanceMembers([]);
+    setResonanceError("");
+    resonancePing(false); // 入室プレゼンスping
+    resonancePollRef.current = setInterval(resonancePoll, 1000);
+    resonancePingRef.current = setInterval(() => resonancePing(false), 3000);
+    resonanceStartMic();
+  }
+
+  function resonanceCloseMode() {
+    setResonanceOpen(false);
+    if (resonancePollRef.current) { clearInterval(resonancePollRef.current); resonancePollRef.current = null; }
+    if (resonancePingRef.current) { clearInterval(resonancePingRef.current); resonancePingRef.current = null; }
+    resonanceStopMic();
+  }
+
+  React.useEffect(() => {
+    return () => {
+      // アンマウント時のクリーンアップ（安全対策）
+      if (resonancePollRef.current) clearInterval(resonancePollRef.current);
+      if (resonancePingRef.current) clearInterval(resonancePingRef.current);
+      if (resonanceClickIidRef.current) clearInterval(resonanceClickIidRef.current);
+      if (resonanceRafRef.current) cancelAnimationFrame(resonanceRafRef.current);
+      if (resonanceStreamRef.current) resonanceStreamRef.current.getTracks().forEach(t => t.stop());
+      if (resonanceAudioCtxRef.current) resonanceAudioCtxRef.current.close().catch(() => {});
+    };
+    // eslint-disable-next-line
+  }, []);
+
   // === Rhythm Training Mode ===
   const [rtmOn, setRtmOn] = useState(false);
   const [rtmMinutes, setRtmMinutes] = useState(0); // 0=未選択, 5/10/15
@@ -6008,6 +6150,70 @@ function App() {
     );
   }
 
+  if (resonanceOpen) return (
+    <div style={{minHeight:"100vh",background:"#000",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
+      <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap');"}</style>
+      {/* ヘッダー */}
+      <div style={{flexShrink:0,padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",zIndex:5}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <span style={{fontSize:16}}>✨</span>
+          <span style={{fontSize:13,fontWeight:300,color:"#e8e0ff",letterSpacing:4}}>共鳴モード</span>
+        </div>
+        <button onClick={resonanceCloseMode}
+          style={{width:32,height:32,borderRadius:"50%",border:"1px solid rgba(200,180,255,0.25)",background:"rgba(20,10,40,0.5)",color:"#e0d0ff",fontSize:14,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          ✕
+        </button>
+      </div>
+
+      {resonanceError && (
+        <div style={{margin:"0 20px 8px",padding:"10px 14px",background:"rgba(120,30,30,0.4)",border:"1px solid rgba(255,120,120,0.3)",borderRadius:10,color:"#ffb0b0",fontSize:12,position:"relative",zIndex:5}}>
+          ⚠️ {resonanceError}
+        </div>
+      )}
+
+      {/* 星空 */}
+      <div style={{flex:1,position:"relative",display:"flex",alignItems:"center",justifyContent:"center"}}>
+        <div style={{position:"relative",width:"min(92vw, 520px)",height:"min(92vw, 520px)"}}>
+          {(() => {
+            const list = resonanceMembers.length > 0 ? resonanceMembers : [{ name: resonanceMyName(), hit: false }];
+            const n = list.length;
+            return list.map((mem, i) => {
+              const angle = (i / Math.max(n, 1)) * Math.PI * 2 - Math.PI / 2;
+              const radius = n <= 1 ? 0 : (34 + (i % 3) * 8);
+              const cx = 50 + Math.cos(angle) * radius;
+              const cy = 50 + Math.sin(angle) * radius;
+              const isMe = mem.name === resonanceMyName();
+              return (
+                <div key={mem.name} style={{position:"absolute",left:cx+"%",top:cy+"%",transform:"translate(-50%,-50%)",display:"flex",flexDirection:"column",alignItems:"center"}}>
+                  <div style={{width:mem.hit?16:8,height:mem.hit?16:8,borderRadius:"50%",background:mem.hit?"#fff8d8":isMe?"rgba(210,225,255,0.7)":"rgba(200,200,255,0.35)",boxShadow:mem.hit?"0 0 24px 8px rgba(255,240,180,0.85), 0 0 60px 16px rgba(255,220,140,0.4)":"0 0 6px rgba(200,200,255,0.3)",transition:"all 1s ease-out"}}/>
+                  <div style={{fontSize:9,color:mem.hit?"#fff8d8":"rgba(220,220,255,0.5)",marginTop:6,letterSpacing:1,whiteSpace:"nowrap"}}>{mem.name}</div>
+                </div>
+              );
+            });
+          })()}
+        </div>
+      </div>
+
+      {/* コントロールパネル */}
+      <div style={{flexShrink:0,padding:"16px 20px 24px",background:"linear-gradient(0deg, rgba(10,5,20,0.9), transparent)",position:"relative",zIndex:5}}>
+        <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:10}}>
+          <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>テンポ {resonanceBpm}</span>
+          <input type="range" min="40" max="140" value={resonanceBpm} onChange={e=>setResonanceBpm(parseInt(e.target.value))}
+            style={{flex:1,accentColor:"#c8b0ff"}}/>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
+          <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>マイク感度</span>
+          <input type="range" min="10" max="90" value={resonanceSensitivity} onChange={e=>setResonanceSensitivity(parseInt(e.target.value))}
+            style={{flex:1,accentColor:"#c8b0ff"}}/>
+        </div>
+        <div style={{fontSize:10,color:"rgba(200,200,255,0.4)",textAlign:"center",lineHeight:1.6}}>
+          🎧 イヤフォン推奨（スピーカーだと自分のメトロノーム音を拾って誤反応することがあります）<br/>
+          {resonanceMicOn ? "マイク接続中・叩くと星が光ります" : "マイクを準備しています..."}
+        </div>
+      </div>
+    </div>
+  );
+
   if (page === "admin") return (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
@@ -7790,9 +7996,11 @@ function App() {
     <div style={{height:"100vh",backgroundImage:"url(/back.png)",backgroundSize:"cover",backgroundPosition:"top left",backgroundAttachment:"fixed",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("GUDADRUM ORCHESTRA", isFromAdmin ? [
+        iconBtn("✨ 共鳴モード",()=>resonanceOpenMode()),
         iconBtn("← 管理者に戻る",()=>setPage("admin")),
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");try{localStorage.removeItem("guda_session");}catch(e){}}),
       ] : [
+        iconBtn("✨ 共鳴モード",()=>resonanceOpenMode()),
         iconBtn("ログアウト",()=>{setPage("login");setCurrentMember(null);setSelectedName("");try{localStorage.removeItem("guda_session");}catch(e){}}),
       ])}
       <div style={{flex:1,overflowY:"auto",padding:"16px 24px 24px",background:"transparent"}}><div style={{maxWidth:720,margin:"0 auto",display:"flex",flexDirection:"column",gap:16}}>
