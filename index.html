@@ -3700,6 +3700,8 @@ function App() {
   const [resonanceSensitivity, setResonanceSensitivity] = useState(50); // 0-100
   const [resonanceMicOn, setResonanceMicOn] = useState(false);
   const [resonancePlaying, setResonancePlaying] = useState(false);
+  const [resonanceSelfGlow, setResonanceSelfGlow] = useState(false);
+  const resonanceSelfGlowTimeoutRef = React.useRef(null);
   const [resonanceError, setResonanceError] = useState("");
   const resonancePollRef = React.useRef(null);
   const resonancePingRef = React.useRef(null);
@@ -3792,6 +3794,10 @@ function App() {
         const now = Date.now();
         if (peak > threshold && now - resonanceLastHitRef.current > 500) {
           resonanceLastHitRef.current = now;
+          // 自分の星は通信を待たず即座に光らせる（体感速度優先）
+          setResonanceSelfGlow(true);
+          if (resonanceSelfGlowTimeoutRef.current) clearTimeout(resonanceSelfGlowTimeoutRef.current);
+          resonanceSelfGlowTimeoutRef.current = setTimeout(() => setResonanceSelfGlow(false), 900);
           resonancePing(true);
         }
         resonanceRafRef.current = requestAnimationFrame(loop);
@@ -3821,8 +3827,9 @@ function App() {
     setResonanceOpen(true);
     setResonanceMembers([]);
     setResonanceError("");
+    setResonanceSelfGlow(false);
     resonancePing(false); // 入室プレゼンスping
-    resonancePollRef.current = setInterval(resonancePoll, 1000);
+    resonancePollRef.current = setInterval(resonancePoll, 400); // 他の人の反応も素早く反映
     resonancePingRef.current = setInterval(() => resonancePing(false), 3000);
     resonanceStartMic();
   }
@@ -3831,6 +3838,8 @@ function App() {
     setResonanceOpen(false);
     if (resonancePollRef.current) { clearInterval(resonancePollRef.current); resonancePollRef.current = null; }
     if (resonancePingRef.current) { clearInterval(resonancePingRef.current); resonancePingRef.current = null; }
+    if (resonanceSelfGlowTimeoutRef.current) { clearTimeout(resonanceSelfGlowTimeoutRef.current); resonanceSelfGlowTimeoutRef.current = null; }
+    setResonanceSelfGlow(false);
     resonanceStopMic();
   }
 
@@ -3841,6 +3850,7 @@ function App() {
       if (resonancePingRef.current) clearInterval(resonancePingRef.current);
       if (resonanceClickIidRef.current) clearInterval(resonanceClickIidRef.current);
       if (resonanceRafRef.current) cancelAnimationFrame(resonanceRafRef.current);
+      if (resonanceSelfGlowTimeoutRef.current) clearTimeout(resonanceSelfGlowTimeoutRef.current);
       if (resonanceStreamRef.current) resonanceStreamRef.current.getTracks().forEach(t => t.stop());
       if (resonanceAudioCtxRef.current) resonanceAudioCtxRef.current.close().catch(() => {});
     };
@@ -6196,24 +6206,35 @@ function App() {
               const cx = 50 + Math.cos(angle) * radius;
               const cy = 50 + Math.sin(angle) * radius;
               const isMe = mem.name === resonanceMyName();
+              const visualHit = isMe ? (resonanceSelfGlow || mem.hit) : mem.hit;
               const gradId = "starGrad" + i;
-              const starSize = mem.hit ? 34 : 20;
+              const t = visualHit ? "0.15s ease-out" : "0.9s ease-in"; // 光る時は素早く、消える時はゆっくり
               return (
                 <div key={mem.name} style={{position:"absolute",left:cx+"%",top:cy+"%",transform:"translate(-50%,-50%)",display:"flex",flexDirection:"column",alignItems:"center"}}>
-                  <svg width={starSize} height={starSize} viewBox="0 0 24 24"
-                    className={mem.hit ? "" : "resonance-star-idle"}
-                    style={{transition:"width 0.6s ease-out, height 0.6s ease-out, filter 0.6s ease-out",filter:mem.hit?"drop-shadow(0 0 8px rgba(255,240,180,0.95)) drop-shadow(0 0 20px rgba(255,220,140,0.65))":"drop-shadow(0 0 4px rgba(200,210,255,0.4))"}}>
-                    <defs>
-                      <linearGradient id={gradId} x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor={isMe ? "#ffffff" : "#e8ecf5"}/>
-                        <stop offset="45%" stopColor={isMe ? "#c9d4e8" : "#aab4c8"}/>
-                        <stop offset="100%" stopColor={isMe ? "#8f9ab4" : "#727d92"}/>
-                      </linearGradient>
-                    </defs>
-                    <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"
-                      fill={mem.hit ? "#fff8d8" : "url(#"+gradId+")"}/>
-                  </svg>
-                  <div style={{fontSize:9,color:mem.hit?"#fff8d8":"rgba(220,220,255,0.5)",marginTop:6,letterSpacing:1,whiteSpace:"nowrap"}}>{mem.name}</div>
+                  <div style={{position:"relative",width:34,height:34,display:"flex",alignItems:"center",justifyContent:"center"}}>
+                    {/* ぼやけた周りの光。待機中は淡い青白、感知中は淡い黄色に強まる */}
+                    <div style={{
+                      position:"absolute",width:"210%",height:"210%",borderRadius:"50%",pointerEvents:"none",
+                      background: visualHit
+                        ? "radial-gradient(circle, rgba(255,230,150,0.55) 0%, rgba(255,220,130,0.22) 45%, transparent 72%)"
+                        : "radial-gradient(circle, rgba(200,210,255,0.22) 0%, rgba(200,210,255,0.08) 45%, transparent 72%)",
+                      filter: visualHit ? "blur(5px)" : "blur(4px)",
+                      transition: "background "+t+", filter "+t,
+                    }}/>
+                    <svg width={20} height={20} viewBox="0 0 24 24" className="resonance-star-idle"
+                      style={{position:"relative",transition:"filter "+t,filter: visualHit ? "drop-shadow(0 0 6px rgba(255,225,140,0.9))" : "drop-shadow(0 0 3px rgba(200,210,255,0.35))"}}>
+                      <defs>
+                        <linearGradient id={gradId} x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                          <stop offset="0%" stopColor={isMe ? "#ffffff" : "#e8ecf5"}/>
+                          <stop offset="45%" stopColor={isMe ? "#c9d4e8" : "#aab4c8"}/>
+                          <stop offset="100%" stopColor={isMe ? "#8f9ab4" : "#727d92"}/>
+                        </linearGradient>
+                      </defs>
+                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill={"url(#"+gradId+")"}/>
+                      <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" fill="#fff3c4" style={{opacity:visualHit?0.85:0,transition:"opacity "+t}}/>
+                    </svg>
+                  </div>
+                  <div style={{fontSize:9,color:visualHit?"#ffe9b0":"rgba(220,220,255,0.5)",marginTop:2,letterSpacing:1,whiteSpace:"nowrap",transition:"color "+t}}>{mem.name}</div>
                 </div>
               );
             });
