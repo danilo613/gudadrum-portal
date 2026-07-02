@@ -3714,6 +3714,8 @@ function App() {
   const resonanceLastHitRef = React.useRef(0);
   const resonanceSensitivityRef = React.useRef(50);
   const resonanceClickIidRef = React.useRef(null);
+  const resonanceTempoPollRef = React.useRef(null);
+  const resonanceRemotePlayingRef = React.useRef(false);
   React.useEffect(()=>{ resonanceSensitivityRef.current = resonanceSensitivity; }, [resonanceSensitivity]);
 
   function resonanceMyName() {
@@ -3752,6 +3754,28 @@ function App() {
     } catch (e) {}
   }
 
+  // コントローラー（DANiLO）のテンポ・再生状態を他端末に伝える
+  async function resonancePushTempo(bpmVal, playingVal) {
+    try {
+      await gasWrite({ action: "setresonancetempo", bpm: String(bpmVal), playing: playingVal ? "true" : "false" });
+    } catch (e) {}
+  }
+
+  // 全端末が定期的に呼ぶ。コントローラー以外はここでBPM・再生ON/OFFを追従させる
+  async function resonancePollTempo() {
+    const isController = page === "admin" && !isInstructor;
+    if (isController) return; // 自分が発信元なので取得不要
+    try {
+      const data = await gasWrite({ action: "getresonancetempo" });
+      if (!data) return;
+      if (typeof data.bpm === "number" && data.bpm > 0) setResonanceBpm(data.bpm);
+      if (data.playing !== resonanceRemotePlayingRef.current) {
+        resonanceRemotePlayingRef.current = data.playing;
+        if (data.playing) resonanceStartClick(); else resonanceStopClick();
+      }
+    } catch (e) {}
+  }
+
   function resonanceStartClick() {
     if (resonanceClickIidRef.current) { clearInterval(resonanceClickIidRef.current); }
     const intervalMs = 60000 / resonanceBpm;
@@ -3777,13 +3801,19 @@ function App() {
   }
 
   function resonanceTogglePlay() {
-    if (resonancePlaying) resonanceStopClick();
-    else resonanceStartClick();
+    if (resonancePlaying) {
+      resonanceStopClick();
+      resonancePushTempo(resonanceBpm, false);
+    } else {
+      resonanceStartClick();
+      resonancePushTempo(resonanceBpm, true);
+    }
   }
 
-  // テンポ変更時：再生中なら新テンポで再スタート（再生ボタンの状態は変えない）
+  // テンポ変更時：再生中なら新テンポで再スタート（再生ボタンの状態は変えない）。コントローラーは他端末にも通知
   React.useEffect(() => {
     if (resonanceOpen && resonancePlaying) resonanceStartClick();
+    if (resonanceOpen && resonancePlaying && page === "admin" && !isInstructor) resonancePushTempo(resonanceBpm, true);
     // eslint-disable-next-line
   }, [resonanceBpm]);
 
@@ -3847,9 +3877,11 @@ function App() {
     setResonanceMembers([]);
     setResonanceError("");
     setResonanceSelfGlow(false);
+    resonanceRemotePlayingRef.current = false;
     resonancePing(false); // 入室プレゼンスping
     resonancePollRef.current = setInterval(resonancePoll, 400); // 他の人の反応も素早く反映
     resonancePingRef.current = setInterval(() => resonancePing(false), 3000);
+    resonanceTempoPollRef.current = setInterval(resonancePollTempo, 500); // 他端末はDANiLOのテンポ・再生状態に追従
     resonanceStartMic();
   }
 
@@ -3857,6 +3889,7 @@ function App() {
     setResonanceOpen(false);
     if (resonancePollRef.current) { clearInterval(resonancePollRef.current); resonancePollRef.current = null; }
     if (resonancePingRef.current) { clearInterval(resonancePingRef.current); resonancePingRef.current = null; }
+    if (resonanceTempoPollRef.current) { clearInterval(resonanceTempoPollRef.current); resonanceTempoPollRef.current = null; }
     if (resonanceSelfGlowTimeoutRef.current) { clearTimeout(resonanceSelfGlowTimeoutRef.current); resonanceSelfGlowTimeoutRef.current = null; }
     setResonanceSelfGlow(false);
     resonanceStopMic();
@@ -3867,6 +3900,7 @@ function App() {
       // アンマウント時のクリーンアップ（安全対策）
       if (resonancePollRef.current) clearInterval(resonancePollRef.current);
       if (resonancePingRef.current) clearInterval(resonancePingRef.current);
+      if (resonanceTempoPollRef.current) clearInterval(resonanceTempoPollRef.current);
       if (resonanceClickIidRef.current) clearInterval(resonanceClickIidRef.current);
       if (resonanceRafRef.current) cancelAnimationFrame(resonanceRafRef.current);
       if (resonanceSelfGlowTimeoutRef.current) clearTimeout(resonanceSelfGlowTimeoutRef.current);
@@ -6193,7 +6227,7 @@ function App() {
 
   const resonanceIsController = page === "admin" && !isInstructor; // テンポ設定・再生権限はDANiLOのみ
   if (resonanceOpen) return (
-    <div style={{minHeight:"100vh",background:"#000",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
+    <div style={{minHeight:"100vh",background:"#000",backgroundImage:"url(/hoshi.png)",backgroundSize:"cover",backgroundPosition:"center",backgroundRepeat:"no-repeat",fontFamily:"'Noto Sans JP',sans-serif",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&display=swap'); @keyframes resonanceBreathe { 0%,100% { opacity:0.55; transform:scale(1); } 50% { opacity:0.95; transform:scale(1.12); } } .resonance-star-idle { animation: resonanceBreathe 2.6s ease-in-out infinite; } @keyframes resonanceFlicker { 0% { opacity:0.88; transform:scale(1); } 9% { opacity:1; transform:scale(1.06); } 18% { opacity:0.8; transform:scale(0.96); } 29% { opacity:0.97; transform:scale(1.03); } 38% { opacity:0.74; transform:scale(0.94); } 47% { opacity:1; transform:scale(1.07); } 58% { opacity:0.83; transform:scale(0.97); } 68% { opacity:0.95; transform:scale(1.02); } 79% { opacity:0.78; transform:scale(0.95); } 90% { opacity:0.98; transform:scale(1.05); } 100% { opacity:0.88; transform:scale(1); } } .resonance-star-flicker { animation: resonanceFlicker 1.3s ease-in-out infinite; }"}</style>
       {/* ヘッダー */}
       <div style={{flexShrink:0,padding:"14px 20px",display:"flex",justifyContent:"space-between",alignItems:"center",position:"relative",zIndex:5}}>
@@ -6301,10 +6335,9 @@ function App() {
           )}
         </div>
         <div style={{display:"flex",alignItems:"center",gap:14,marginBottom:14}}>
-          <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>叩いた時の色</span>
+          <span style={{fontSize:10,color:"rgba(220,220,255,0.6)",letterSpacing:1,flexShrink:0,width:80}}>自分の色</span>
           <input type="color" value={resonanceMyColor} onChange={e=>setResonanceMyColor(e.target.value)}
             style={{width:36,height:24,border:"1px solid rgba(200,180,255,0.3)",borderRadius:6,background:"transparent",padding:0,cursor:"pointer"}}/>
-          <span style={{fontSize:9,color:"rgba(200,200,255,0.4)"}}>その場だけの色・保存はされません</span>
         </div>
         <div style={{fontSize:10,color:"rgba(200,200,255,0.4)",textAlign:"center",lineHeight:1.6}}>
           🎧 イヤフォン推奨（スピーカーだと自分のメトロノーム音を拾って誤反応することがあります）<br/>
