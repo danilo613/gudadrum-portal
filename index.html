@@ -7106,7 +7106,12 @@ function App() {
                 {loginData.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(l,i){
                   return (
                     <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 4px",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
-                      <span style={{fontSize:11,color:C.label,minWidth:140,flexShrink:0}}>{String(l.date||"")}</span>
+                      <span style={{fontSize:11,color:C.label,minWidth:140,flexShrink:0,fontFamily:"monospace"}}>{(function(){
+                        var d = new Date(l.date);
+                        if (isNaN(d.getTime())) return String(l.date||"");
+                        var pad = function(n){return String(n).padStart(2,"0");};
+                        return d.getFullYear()+"/"+pad(d.getMonth()+1)+"/"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());
+                      })()}</span>
                       <span style={{fontSize:12,fontWeight:500,color:C.choco}}>{l.name}</span>
                     </div>
                   );
