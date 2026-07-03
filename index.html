@@ -3566,6 +3566,10 @@ function App() {
   const [menuApplyOpen, setMenuApplyOpen] = useState(false);
   const [menuLessonOpen, setMenuLessonOpen] = useState(false);
   const [menuBuyOpen, setMenuBuyOpen] = useState(false);
+  const [inorionNotices, setInorionNotices] = useState({ "前日": "", "当日": "" });
+  const [editingNotice, setEditingNotice] = useState(null); // "前日" | "当日" | null
+  const [noticeDraft, setNoticeDraft] = useState("");
+  const [noticeSaving, setNoticeSaving] = useState(false);
   const [setlistRows, setSetlistRows] = useState([]);
   const [setlistLoaded, setSetlistLoaded] = useState(true);
   const [practiceAnswers, setPracticeAnswers] = useState([]);
@@ -4713,6 +4717,27 @@ function App() {
       const data = await res.json();
       if (data.rows) setInorionData(data.rows);
     } catch(e) {}
+  }
+
+  async function fetchInorionNotices() {
+    try {
+      const res = await fetch("/api/gas?action=getinorionnotice");
+      const data = await res.json();
+      if (data) setInorionNotices({ "前日": data["前日"]||"", "当日": data["当日"]||"" });
+    } catch(e) {}
+  }
+
+  async function saveInorionNotice(key) {
+    setNoticeSaving(true);
+    try {
+      const res = await fetch("/api/gas?" + new URLSearchParams({ action: "setinorionnotice", key: key, text: noticeDraft }));
+      const data = await res.json();
+      if (data.success) {
+        setInorionNotices(prev => ({ ...prev, [key]: noticeDraft }));
+        setEditingNotice(null);
+      }
+    } catch(e) {}
+    setNoticeSaving(false);
   }
 
   async function addScheduleComment() {
@@ -7814,7 +7839,7 @@ function App() {
 
           {/* 前日&当日リハ予定 */}
           <div style={boxStyle}>
-            {headerBtn("📋 前日＆当日リハ予定（2026年5月4日現在）", inorionRehaOpen, ()=>setInorionRehaOpen(!inorionRehaOpen))}
+            {headerBtn("📋 前日＆当日リハ予定（2026年5月4日現在）", inorionRehaOpen, ()=>{setInorionRehaOpen(!inorionRehaOpen); fetchInorionNotices();})}
             {inorionRehaOpen && (
               <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
 
@@ -7848,9 +7873,28 @@ function App() {
                     </div>
                   ))}
 
-                  {/* 注意書き */}
+                  {/* 業務連絡（編集可能） */}
                   <div style={{marginTop:10,background:"rgba(200,122,170,0.08)",borderRadius:10,padding:"10px 14px",border:"1px solid rgba(200,122,170,0.25)"}}>
-                    <p style={{fontSize:12,color:"#6a2a4a",lineHeight:1.7}}>⚠️ リハーサル後、貴重品以外のスタンドや機材等の残置可能です。</p>
+                    {editingNotice === "前日" ? (
+                      <div>
+                        <textarea value={noticeDraft} onChange={e=>setNoticeDraft(e.target.value)}
+                          style={{width:"100%",minHeight:60,fontSize:12,color:"#4a2a3a",border:"1px solid rgba(138,74,106,0.3)",borderRadius:8,padding:8,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                        <div style={{display:"flex",gap:8,marginTop:6}}>
+                          <button onClick={()=>saveInorionNotice("前日")} disabled={noticeSaving}
+                            style={{fontSize:11,padding:"6px 14px",borderRadius:8,border:"none",background:"#8a4a6a",color:"#fff",cursor:"pointer"}}>{noticeSaving?"保存中...":"保存"}</button>
+                          <button onClick={()=>setEditingNotice(null)}
+                            style={{fontSize:11,padding:"6px 14px",borderRadius:8,border:"1px solid rgba(138,74,106,0.3)",background:"transparent",color:"#8a4a6a",cursor:"pointer"}}>キャンセル</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
+                        <p style={{fontSize:12,color:"#6a2a4a",lineHeight:1.7,flex:1,whiteSpace:"pre-wrap"}}>{inorionNotices["前日"] || "（業務連絡なし）"}</p>
+                        {page === "admin" && (
+                          <button onClick={()=>{setEditingNotice("前日");setNoticeDraft(inorionNotices["前日"]||"");}}
+                            style={{fontSize:12,color:"#8a4a6a",background:"transparent",border:"none",cursor:"pointer",flexShrink:0}}>✏️</button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -7887,6 +7931,30 @@ function App() {
                     <p style={{fontSize:12,fontWeight:700,color:"#4a6a8a",marginBottom:4}}>🍻 打ち上げ会場</p>
                     <a href="https://tabelog.com/hyogo/A2801/A280102/28070676/" target="_blank" rel="noreferrer"
                       style={{fontSize:13,fontWeight:700,color:"#2a3a5a",textDecoration:"underline"}}>Kono-Hana Cafe（コノハナ カフェ）</a>
+                  </div>
+
+                  {/* 業務連絡（編集可能） */}
+                  <div style={{marginTop:10,background:"rgba(74,106,138,0.08)",borderRadius:10,padding:"10px 14px",border:"1px solid rgba(74,106,138,0.25)"}}>
+                    {editingNotice === "当日" ? (
+                      <div>
+                        <textarea value={noticeDraft} onChange={e=>setNoticeDraft(e.target.value)}
+                          style={{width:"100%",minHeight:60,fontSize:12,color:"#2a3a5a",border:"1px solid rgba(74,106,138,0.3)",borderRadius:8,padding:8,fontFamily:"inherit",boxSizing:"border-box"}}/>
+                        <div style={{display:"flex",gap:8,marginTop:6}}>
+                          <button onClick={()=>saveInorionNotice("当日")} disabled={noticeSaving}
+                            style={{fontSize:11,padding:"6px 14px",borderRadius:8,border:"none",background:"#4a6a8a",color:"#fff",cursor:"pointer"}}>{noticeSaving?"保存中...":"保存"}</button>
+                          <button onClick={()=>setEditingNotice(null)}
+                            style={{fontSize:11,padding:"6px 14px",borderRadius:8,border:"1px solid rgba(74,106,138,0.3)",background:"transparent",color:"#4a6a8a",cursor:"pointer"}}>キャンセル</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
+                        <p style={{fontSize:12,color:"#2a3a5a",lineHeight:1.7,flex:1,whiteSpace:"pre-wrap"}}>{inorionNotices["当日"] || "（業務連絡なし）"}</p>
+                        {page === "admin" && (
+                          <button onClick={()=>{setEditingNotice("当日");setNoticeDraft(inorionNotices["当日"]||"");}}
+                            style={{fontSize:12,color:"#4a6a8a",background:"transparent",border:"none",cursor:"pointer",flexShrink:0}}>✏️</button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
