@@ -6151,7 +6151,7 @@ function App() {
 
           {/* 前日当日リハ予定 */}
           <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,overflow:"hidden",marginBottom:12}}>
-            <button onClick={()=>setInorionRehaOpen(!inorionRehaOpen)}
+            <button onClick={()=>{setInorionRehaOpen(!inorionRehaOpen);fetchInorionNotices();}}
               style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
               <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a"}}>📋 前日＆当日リハ予定</span>
               <span style={{fontSize:12,color:"#8a4a6a",transform:inorionRehaOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
@@ -6176,6 +6176,11 @@ function App() {
                       <p style={{fontSize:12,color:item.highlight?"#6a2a4a":"#4a2a3a",fontWeight:item.highlight?700:400,lineHeight:1.6}}>{item.label}</p>
                     </div>
                   );})}
+                </div>
+
+                {/* 業務連絡 */}
+                <div style={{marginBottom:20,background:"rgba(200,122,170,0.08)",borderRadius:10,padding:"10px 14px",border:"1px solid rgba(200,122,170,0.25)"}}>
+                  <p style={{fontSize:12,color:"#6a2a4a",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{inorionNotices["前日"] || "（業務連絡なし）"}</p>
                 </div>
                 <div>
                   <div style={{background:"linear-gradient(135deg,#7a9aba,#4a6a8a)",borderRadius:10,padding:"10px 14px",marginBottom:12}}>
@@ -6202,6 +6207,10 @@ function App() {
                       <p style={{fontSize:12,color:item.highlight?"#6a2a4a":"#4a2a3a",fontWeight:item.highlight?700:400,lineHeight:1.6}}>{item.label}</p>
                     </div>
                   );})}
+                  {/* 業務連絡 */}
+                  <div style={{marginTop:12,background:"rgba(74,106,138,0.08)",borderRadius:10,padding:"10px 14px",border:"1px solid rgba(74,106,138,0.25)"}}>
+                    <p style={{fontSize:12,color:"#2a3a5a",lineHeight:1.7,whiteSpace:"pre-wrap"}}>{inorionNotices["当日"] || "（業務連絡なし）"}</p>
+                  </div>
                 </div>
               </div>
             )}
