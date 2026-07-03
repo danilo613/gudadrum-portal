@@ -6384,6 +6384,14 @@ function App() {
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("管理者ダッシュボード",[
         iconBtn("✨ 共鳴モード",()=>resonanceOpenMode()),
+        iconBtn("🎭 壱祈音〜Inorion〜",()=>{
+          setIsFromAdmin(true);
+          setCurrentMember({name: isInstructor?"講師":"DANiLO", subscType:"", level:"", points:0});
+          setInorionPage(true);
+          window.scrollTo(0,0);
+          fetchPractice();
+          fetchSetlist();
+        }),
         iconBtn("🗾 MAP",()=>{ fetchMemberMap(); setMapPage(true); }),
         iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
         iconBtn("ログアウト",()=>setPage("login")),
@@ -7816,7 +7824,7 @@ function App() {
       <div style={{minHeight:"100vh",background:"linear-gradient(160deg,#f0e8f0,#e0d0e8)",fontFamily:"'Noto Sans JP',sans-serif"}}>
         <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
         {topbar("壱祈音〜Inorion〜", [
-          iconBtn("← メンバーページへ",()=>setInorionPage(false)),
+          iconBtn(page==="admin" ? "← 管理画面へ" : "← メンバーページへ",()=>setInorionPage(false)),
         ])}
         <div style={{padding:"24px 20px",maxWidth:680,margin:"0 auto"}}>
           {/* ヘッダー */}
@@ -7889,7 +7897,7 @@ function App() {
                     ) : (
                       <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
                         <p style={{fontSize:12,color:"#6a2a4a",lineHeight:1.7,flex:1,whiteSpace:"pre-wrap"}}>{inorionNotices["前日"] || "（業務連絡なし）"}</p>
-                        {page === "admin" && (
+                        {(isFromAdmin || isInstructor) && (
                           <button onClick={()=>{setEditingNotice("前日");setNoticeDraft(inorionNotices["前日"]||"");}}
                             style={{fontSize:12,color:"#8a4a6a",background:"transparent",border:"none",cursor:"pointer",flexShrink:0}}>✏️</button>
                         )}
@@ -7949,7 +7957,7 @@ function App() {
                     ) : (
                       <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
                         <p style={{fontSize:12,color:"#2a3a5a",lineHeight:1.7,flex:1,whiteSpace:"pre-wrap"}}>{inorionNotices["当日"] || "（業務連絡なし）"}</p>
-                        {page === "admin" && (
+                        {(isFromAdmin || isInstructor) && (
                           <button onClick={()=>{setEditingNotice("当日");setNoticeDraft(inorionNotices["当日"]||"");}}
                             style={{fontSize:12,color:"#4a6a8a",background:"transparent",border:"none",cursor:"pointer",flexShrink:0}}>✏️</button>
                         )}
