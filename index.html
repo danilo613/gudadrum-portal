@@ -7177,7 +7177,7 @@ function App() {
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
             ) : (
               <>
-                {/* 今月のTOP5ランキング */}
+                {/* 今月のTOP7ランキング */}
                 {(function(){
                   var now = new Date();
                   var thisMonth = String(now.getFullYear()) + "/" + String(now.getMonth()+1).padStart(2,"0");
@@ -7193,13 +7193,13 @@ function App() {
                       totals[w.name] += w.minutes || 0;
                     }
                   });
-                  var ranked = Object.keys(totals).map(function(name){return {name:name, minutes:totals[name]};}).sort(function(a,b){return b.minutes - a.minutes;}).slice(0,5);
+                  var ranked = Object.keys(totals).map(function(name){return {name:name, minutes:totals[name]};}).sort(function(a,b){return b.minutes - a.minutes;}).slice(0,7);
                   if (ranked.length === 0) return null;
                   return (
                     <div style={{marginBottom:12,padding:"10px 12px",background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 100%)",border:"1px solid #d4a040",borderRadius:8}}>
                       <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
                         <span style={{fontSize:14}}>🏆</span>
-                        <span style={{fontSize:11,fontWeight:700,color:"#7a5020",letterSpacing:0.5}}>今月のTOP5</span>
+                        <span style={{fontSize:11,fontWeight:700,color:"#7a5020",letterSpacing:0.5}}>今月のTOP7</span>
                       </div>
                       <div style={{display:"flex",flexDirection:"column",gap:4}}>
                         {ranked.map(function(r, idx){
