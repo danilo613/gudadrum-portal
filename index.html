@@ -8257,7 +8257,7 @@ function App() {
           var monthScheds = orchSchedules.filter(function(s){
             var d = new Date(s["日付"]);
             return d.getFullYear()===year && d.getMonth()+1===month &&
-              (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("交流")));
+              (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("交流")||s["種別"].includes("イベント")));
           }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
           var hasRanking = monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0;
           if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0 && !hasRanking) return null;
