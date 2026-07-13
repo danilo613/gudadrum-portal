@@ -4013,6 +4013,14 @@ function App() {
         const [a1, a2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
         newBuf.click = await actx.decodeAudioData(a1);
         newBuf.accent = await actx.decodeAudioData(a2);
+      } else if (soundSet === "voice") {
+        const files = ["/sounds/Voice1.mp3", "/sounds/Voice2.mp3", "/sounds/Voice3.mp3", "/sounds/Voice4.mp3", "/sounds/Voice1Flat.mp3"];
+        const resps = await Promise.all(files.map(f => fetch(f)));
+        const arrs = await Promise.all(resps.map(r => r.arrayBuffer()));
+        for (let i = 0; i < 4; i++) {
+          newBuf["voice" + (i + 1)] = await actx.decodeAudioData(arrs[i]);
+        }
+        newBuf.voice1flat = await actx.decodeAudioData(arrs[4]);
       } else {
         const keys = Object.keys(METRO_SOUNDS_B64);
         for (const k of keys) {
@@ -4213,11 +4221,23 @@ function App() {
     return 60 / bpm / stepsPerBeat;
   }
 
-  function metroScheduleClick(accent, soft, atTime){
+  function metroScheduleClick(accent, soft, atTime, beatIndex){
     const actx = metroActxRef.current;
     if (!actx) return;
     if (actx.state === "suspended") {
       try { actx.resume(); } catch(e){}
+    }
+    if (metroSoundSetRef.current === "voice") {
+      if (soft) return; // 声モードは拍の頭（ワン・ツー・スリー・フォー）だけ鳴らす。刻みでは鳴らさない
+      const bufKey = (beatIndex||0) === 0 ? (accent ? "voice1" : "voice1flat") : ("voice" + (((beatIndex||0) % 4) + 1));
+      const buf = metroBufRef.current[bufKey];
+      if (!buf) return;
+      const s = actx.createBufferSource(); s.buffer = buf;
+      const g = actx.createGain();
+      g.gain.value = metroVolRef.current;
+      s.connect(g); g.connect(actx.destination);
+      s.start(atTime);
+      return;
     }
     const key = (accent && metroBufRef.current.accent) ? "accent" : "click";
     const buf = metroBufRef.current[key];
@@ -4260,6 +4280,7 @@ function App() {
       }
       const stepInBeat = stepInBar % stepsPerBeat;
       const doBarAcc = isBarHead && metroAccentRef.current;
+      const beatIndex = Math.floor(stepInBar / stepsPerBeat); // 0=ワン, 1=ツー, 2=スリー, 3=フォー
 
       let playSound = false;
       if (m===4) { if (stepInBeat===0) playSound = true; }
@@ -4270,7 +4291,7 @@ function App() {
 
       if (playSound) {
         const isBeatHead = stepInBeat===0;
-        metroScheduleClick(doBarAcc, !isBeatHead, metroNextTimeRef.current);
+        metroScheduleClick(doBarAcc, !isBeatHead, metroNextTimeRef.current, beatIndex);
       }
       // ビジュアル更新（次のティック時間に合わせてsetTimeout）
       const timeUntilStep = (metroNextTimeRef.current - actx.currentTime) * 1000;
@@ -5565,7 +5586,7 @@ function App() {
           <div style={{padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
             <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:300,marginBottom:10}}>音色</div>
             <div style={{display:"flex",gap:8}}>
-              {[{key:"default",label:"デフォルト"},{key:"woodblock",label:"ウッドブロック"}].map(opt=>(
+              {[{key:"default",label:"デフォルト"},{key:"woodblock",label:"ウッドブロック"},{key:"voice",label:"DANiLO"}].map(opt=>(
                 <button key={opt.key} onClick={()=>setMetroSoundSet(opt.key)}
                   style={{flex:1,padding:"9px 0",borderRadius:10,border:metroSoundSet===opt.key?"1px solid rgba(150,220,180,0.6)":"1px solid rgba(150,220,180,0.15)",background:metroSoundSet===opt.key?"linear-gradient(135deg,#4a8a60,#2a5a3a)":"rgba(150,220,180,0.05)",color:metroSoundSet===opt.key?"#fff":"rgba(150,220,180,0.5)",fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:1}}>
                   {opt.label}
