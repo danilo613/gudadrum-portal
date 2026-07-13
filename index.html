@@ -3562,6 +3562,7 @@ function App() {
   const [noticesLoaded, setNoticesLoaded] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [monthlyRanking, setMonthlyRanking] = useState(null);
+  const [monthlyStreaks, setMonthlyStreaks] = useState(null);
   const [specialNoticeOpen, setSpecialNoticeOpen] = useState(true);
   const [diagOpen, setDiagOpen] = useState(false);
   const [menuApplyOpen, setMenuApplyOpen] = useState(false);
@@ -4722,6 +4723,11 @@ function App() {
     try {
       const res2 = await gasRead({ action: "getmonthlyranking" });
       if (res2 && res2.ranking) setMonthlyRanking(res2);
+    } catch(e) {}
+    // 連続練習日数ランキング取得
+    try {
+      const res3 = await gasRead({ action: "getmonthlystreaks" });
+      if (res3 && res3.streaks) setMonthlyStreaks(res3);
     } catch(e) {}
   }
 
@@ -8347,7 +8353,8 @@ function App() {
               (s["種別"]&&(s["種別"].includes("練習会")||s["種別"].includes("zoom")||s["種別"].includes("交流")||s["種別"].includes("イベント")));
           }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
           var hasRanking = monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0;
-          if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0 && !hasRanking) return null;
+          var hasStreaks = monthlyStreaks && monthlyStreaks.streaks && monthlyStreaks.streaks.length > 0;
+          if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0 && !hasRanking && !hasStreaks) return null;
           return (
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {/* スペシャルお知らせ */}
@@ -8360,7 +8367,7 @@ function App() {
                 </div>
               )}
               {/* 通常お知らせ（開閉式） */}
-              {(generalNotices.length>0||monthScheds.length>0)&&(
+              {(generalNotices.length>0||monthScheds.length>0||hasRanking||hasStreaks)&&(
                 <div style={{background:"rgba(255,255,255,0.92)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
                   <button onClick={()=>setNoticeOpen(!noticeOpen)}
                     style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
@@ -8392,6 +8399,33 @@ function App() {
                                   <span style={{fontSize:10,color:rankColor,fontWeight:r.rank<=3?700:500,minWidth:16}}>{r.rank}位</span>
                                   <span style={{fontSize:12,color:"#4a3018",flex:1,fontWeight:r.rank<=3?700:400}}>{r.name}</span>
                                   <span style={{fontSize:11,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.minutes}<span style={{fontSize:8,marginLeft:2,opacity:0.7}}>分</span></span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {/* 今月の連続練習日数TOP3 */}
+                      {hasStreaks && (
+                        <div style={{background:"linear-gradient(135deg, #fff0e8 0%, #ffe0d0 50%, #ffd4b8 100%)",border:"1.5px solid #d4703a",borderRadius:12,padding:"12px 14px",position:"relative",overflow:"hidden",marginBottom:10,boxShadow:"0 2px 8px rgba(212,112,58,0.15)"}}>
+                          <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#d4703a,#f4903a,#d4703a)"}}/>
+                          <div style={{position:"absolute",top:-20,right:-20,fontSize:80,opacity:0.06}}>🔥</div>
+                          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8,position:"relative"}}>
+                            <span style={{fontSize:15}}>🔥</span>
+                            <span style={{fontSize:11,fontWeight:700,color:"#7a3a20",letterSpacing:0.5}}>{monthlyStreaks.yearMonth}　連続練習日数 ランキング</span>
+                          </div>
+                          <div style={{display:"flex",flexDirection:"column",gap:4,position:"relative"}}>
+                            {monthlyStreaks.streaks.map(function(r, idx){
+                              var rank = idx+1;
+                              var rankIcon = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"　";
+                              var rankColor = rank===1?"#b8860b":rank===2?"#808080":rank===3?"#cd7f32":"#7a3a20";
+                              var rankBg = rank===1?"linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05))":rank===2?"linear-gradient(90deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05))":"linear-gradient(90deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05))";
+                              return (
+                                <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 8px",background:rankBg,borderRadius:6,border:"1px solid rgba(212,112,58,0.2)"}}>
+                                  <span style={{fontSize:15,minWidth:20,textAlign:"center"}}>{rankIcon}</span>
+                                  <span style={{fontSize:10,color:rankColor,fontWeight:700,minWidth:16}}>{rank}位</span>
+                                  <span style={{fontSize:12,color:"#4a2818",flex:1,fontWeight:700}}>{r.name}</span>
+                                  <span style={{fontSize:11,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.streak}<span style={{fontSize:8,marginLeft:2,opacity:0.7}}>日連続</span></span>
                                 </div>
                               );
                             })}
