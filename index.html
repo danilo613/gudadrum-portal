@@ -7048,7 +7048,7 @@ function App() {
         {inorionTab && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:12,padding:"14px"}}>
             {/* 追加フォーム */}
-            <p style={{fontSize:12,fontWeight:700,color:"#2a5a3a",marginBottom:10}}>出演者を追加</p>
+            <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:10}}>出演者を追加</p>
             <select value={inorionForm.name} onChange={e=>setInorionForm(p=>({...p,name:e.target.value}))}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
               <option value="">-- メンバーを選択 --</option>
@@ -7097,7 +7097,7 @@ function App() {
               追加する
             </button>
             {/* 出演者一覧 */}
-            <p style={{fontSize:12,fontWeight:700,color:"#2a5a3a",marginBottom:8}}>出演者一覧</p>
+            <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:8}}>出演者一覧</p>
             {inorionData.length === 0 ? (
               <p style={{fontSize:12,color:C.label,textAlign:"center"}}>まだ登録がありません</p>
             ) : (
@@ -7110,7 +7110,7 @@ function App() {
                       <button onClick={()=>setInorionOpenMap(p=>({...p,[name]:!isExpanded}))}
                         style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:"rgba(138,74,106,0.06)",border:"none",cursor:"pointer"}}>
                         <p style={{fontSize:13,fontWeight:600,color:"#1a3a2a"}}>{name}</p>
-                        <span style={{fontSize:11,color:"#2a5a3a"}}>{rows.length}曲 {isExpanded?"▲":"▼"}</span>
+                        <span style={{fontSize:11,color:"#4B3621"}}>{rows.length}曲 {isExpanded?"▲":"▼"}</span>
                       </button>
                       {isExpanded && (
                         <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
@@ -7141,7 +7141,7 @@ function App() {
             {/* 出演メンバー一覧 */}
             {inorionData.length > 0 && (
               <div style={{marginTop:16,borderTop:"1px solid rgba(138,74,106,0.2)",paddingTop:14}}>
-                <p style={{fontSize:12,fontWeight:700,color:"#2a5a3a",marginBottom:10}}>🎭 出演メンバー一覧</p>
+                <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:10}}>🎭 出演メンバー一覧</p>
                 {["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(song=>{
                   const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（") || r.song.startsWith(song+" "));
                   if (entries.length===0) return null;
@@ -7157,7 +7157,7 @@ function App() {
                               <p style={{fontSize:12,color:"#1a3a2a"}}>{r.name}</p>
                               {scale && <span style={{fontSize:10,color:"#fff",background:"#8a4a6a",borderRadius:4,padding:"1px 6px",fontWeight:600}}>{scale}</span>}
                             </div>
-                            <span style={{fontSize:11,color:"#2a5a3a"}}>{r.status}</span>
+                            <span style={{fontSize:11,color:"#4B3621"}}>{r.status}</span>
                           </div>
                         );
                       })}
