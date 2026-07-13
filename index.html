@@ -3686,6 +3686,10 @@ function App() {
   const [metroVisualStep, setMetroVisualStep] = useState(0); // 視覚用ステップ
   const metroActxRef = React.useRef(null);
   const metroBufRef = React.useRef({});
+  const [metroSoundSet, setMetroSoundSet] = useState(()=>{
+    try { return localStorage.getItem("metro_soundset") || "default"; } catch(e){ return "default"; }
+  });
+  const metroSoundSetRef = React.useRef(metroSoundSet);
   const metroIidRef = React.useRef(null);
   const metroStepRef = React.useRef(0);
   const metroBpmRef = React.useRef(80);
@@ -3997,6 +4001,39 @@ function App() {
     return `${m}:${String(s).padStart(2,"0")}`;
   }
 
+  // 選択中の音色セットをAudioContextにロードする（デフォルト＝内蔵のbase64、ウッドブロック＝公開フォルダのmp3をfetch）
+  async function metroLoadSoundSet_(actx, soundSet) {
+    const newBuf = {};
+    try {
+      if (soundSet === "woodblock") {
+        const [r1, r2] = await Promise.all([
+          fetch("/sounds/Woodblock.mp3"),
+          fetch("/sounds/Woodblockatama.mp3"),
+        ]);
+        const [a1, a2] = await Promise.all([r1.arrayBuffer(), r2.arrayBuffer()]);
+        newBuf.click = await actx.decodeAudioData(a1);
+        newBuf.accent = await actx.decodeAudioData(a2);
+      } else {
+        const keys = Object.keys(METRO_SOUNDS_B64);
+        for (const k of keys) {
+          const bin = atob(METRO_SOUNDS_B64[k]);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          newBuf[k] = await actx.decodeAudioData(arr.buffer);
+        }
+      }
+      metroBufRef.current = newBuf;
+    } catch(e) {}
+  }
+
+  // 音色セットが切り替わったら、既にAudioContextがある場合は読み込み直す
+  React.useEffect(() => {
+    metroSoundSetRef.current = metroSoundSet;
+    try { localStorage.setItem("metro_soundset", metroSoundSet); } catch(e){}
+    if (metroActxRef.current) metroLoadSoundSet_(metroActxRef.current, metroSoundSet);
+    // eslint-disable-next-line
+  }, [metroSoundSet]);
+
   async function metroInit() {
     // 既存のactxの状態をチェック
     if (metroActxRef.current) {
@@ -4015,15 +4052,7 @@ function App() {
     }
     const actx = new (window.AudioContext||window.webkitAudioContext)();
     metroActxRef.current = actx;
-    try {
-      const keys = Object.keys(METRO_SOUNDS_B64);
-      for (const k of keys) {
-        const bin = atob(METRO_SOUNDS_B64[k]);
-        const arr = new Uint8Array(bin.length);
-        for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
-        metroBufRef.current[k] = await actx.decodeAudioData(arr.buffer);
-      }
-    } catch(e) {}
+    await metroLoadSoundSet_(actx, metroSoundSetRef.current);
   }
   function metroClick(accent, soft) {
     const actx = metroActxRef.current;
@@ -5529,6 +5558,19 @@ function App() {
               <input type="range" min="0" max="1" step="0.05" value={metroVol} onChange={e=>setMetroVol(parseFloat(e.target.value))}
                 style={{flex:1,accentColor:"#a0e8c0",cursor:"pointer",height:6}}/>
               <span style={{fontSize:14,color:"rgba(150,220,180,0.4)"}}>🔊</span>
+            </div>
+          </div>
+
+          {/* 音色 */}
+          <div style={{padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
+            <div style={{fontSize:10,color:"rgba(150,220,180,0.6)",letterSpacing:3,fontWeight:300,marginBottom:10}}>音色</div>
+            <div style={{display:"flex",gap:8}}>
+              {[{key:"default",label:"デフォルト"},{key:"woodblock",label:"ウッドブロック"}].map(opt=>(
+                <button key={opt.key} onClick={()=>setMetroSoundSet(opt.key)}
+                  style={{flex:1,padding:"9px 0",borderRadius:10,border:metroSoundSet===opt.key?"1px solid rgba(150,220,180,0.6)":"1px solid rgba(150,220,180,0.15)",background:metroSoundSet===opt.key?"linear-gradient(135deg,#4a8a60,#2a5a3a)":"rgba(150,220,180,0.05)",color:metroSoundSet===opt.key?"#fff":"rgba(150,220,180,0.5)",fontSize:11,fontWeight:600,cursor:"pointer",letterSpacing:1}}>
+                  {opt.label}
+                </button>
+              ))}
             </div>
           </div>
 
