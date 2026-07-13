@@ -7145,21 +7145,27 @@ function App() {
             {loginData.length===0?(
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
             ):(
-              <div style={{maxHeight:400,overflowY:"auto"}}>
-                {loginData.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(l,i){
-                  return (
-                    <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 4px",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
-                      <span style={{fontSize:11,color:C.label,minWidth:140,flexShrink:0,fontFamily:"monospace"}}>{(function(){
-                        var d = new Date(l.date);
-                        if (isNaN(d.getTime())) return String(l.date||"");
-                        var pad = function(n){return String(n).padStart(2,"0");};
-                        return d.getFullYear()+"/"+pad(d.getMonth()+1)+"/"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());
-                      })()}</span>
-                      <span style={{fontSize:12,fontWeight:500,color:C.choco}}>{l.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              <>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 8px",marginBottom:8,background:"rgba(90,74,138,0.08)",borderRadius:8}}>
+                  <span style={{fontSize:12,fontWeight:600,color:"#5a4a8a"}}>累計ログイン数</span>
+                  <span style={{fontSize:15,fontWeight:700,color:"#5a4a8a"}}>{loginData.length}件</span>
+                </div>
+                <div style={{maxHeight:400,overflowY:"auto"}}>
+                  {loginData.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(l,i){
+                    return (
+                      <div key={i} style={{display:"flex",alignItems:"center",gap:10,padding:"6px 4px",borderBottom:"1px solid rgba(0,0,0,0.05)"}}>
+                        <span style={{fontSize:11,color:C.label,minWidth:140,flexShrink:0,fontFamily:"monospace"}}>{(function(){
+                          var d = new Date(l.date);
+                          if (isNaN(d.getTime())) return String(l.date||"");
+                          var pad = function(n){return String(n).padStart(2,"0");};
+                          return d.getFullYear()+"/"+pad(d.getMonth()+1)+"/"+pad(d.getDate())+" "+pad(d.getHours())+":"+pad(d.getMinutes());
+                        })()}</span>
+                        <span style={{fontSize:12,fontWeight:500,color:C.choco}}>{l.name}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         )}
