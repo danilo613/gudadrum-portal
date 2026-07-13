@@ -7109,7 +7109,7 @@ function App() {
                     <div key={name} style={{borderRadius:8,border:"1px solid rgba(138,74,106,0.2)",overflow:"hidden"}}>
                       <button onClick={()=>setInorionOpenMap(p=>({...p,[name]:!isExpanded}))}
                         style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:"rgba(138,74,106,0.06)",border:"none",cursor:"pointer"}}>
-                        <p style={{fontSize:13,fontWeight:600,color:"#1a3a2a"}}>{name}</p>
+                        <p style={{fontSize:13,fontWeight:600,color:"#4B3621"}}>{name}</p>
                         <span style={{fontSize:11,color:"#4B3621"}}>{rows.length}曲 {isExpanded?"▲":"▼"}</span>
                       </button>
                       {isExpanded && (
@@ -7147,14 +7147,14 @@ function App() {
                   if (entries.length===0) return null;
                   return (
                     <div key={song} style={{marginBottom:10,background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(138,74,106,0.12)"}}>
-                      <p style={{fontSize:13,fontWeight:700,color:"#1a3a2a",marginBottom:6}}>🎵 {song}</p>
+                      <p style={{fontSize:13,fontWeight:700,color:"#4B3621",marginBottom:6}}>🎵 {song}</p>
                       {entries.map((r,i)=>{
                         const scaleMatch = r.song.match(/（(.+?)）/);
                         const scale = scaleMatch ? scaleMatch[1] : r.song === "iridescence 上物" ? "上物" : "";
                         return (
                           <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 6px"}}>
                             <div style={{display:"flex",alignItems:"center",gap:6}}>
-                              <p style={{fontSize:12,color:"#1a3a2a"}}>{r.name}</p>
+                              <p style={{fontSize:12,color:"#4B3621"}}>{r.name}</p>
                               {scale && <span style={{fontSize:10,color:"#fff",background:"#8a4a6a",borderRadius:4,padding:"1px 6px",fontWeight:600}}>{scale}</span>}
                             </div>
                             <span style={{fontSize:11,color:"#4B3621"}}>{r.status}</span>
