@@ -4021,6 +4021,13 @@ function App() {
           newBuf["voice" + (i + 1)] = await actx.decodeAudioData(arrs[i]);
         }
         newBuf.voice1flat = await actx.decodeAudioData(arrs[4]);
+        // 刻み（8分・16分・三連符・ハネ）用に、デフォルトの控えめなクリック音も読み込んでおく
+        try {
+          const bin = atob(METRO_SOUNDS_B64.click);
+          const arr = new Uint8Array(bin.length);
+          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+          newBuf.click = await actx.decodeAudioData(arr.buffer);
+        } catch(e2) {}
       } else {
         const keys = Object.keys(METRO_SOUNDS_B64);
         for (const k of keys) {
@@ -4228,7 +4235,17 @@ function App() {
       try { actx.resume(); } catch(e){}
     }
     if (metroSoundSetRef.current === "voice") {
-      if (soft) return; // 声モードは拍の頭（ワン・ツー・スリー・フォー）だけ鳴らす。刻みでは鳴らさない
+      if (soft) {
+        // 拍の頭以外（刻み）は控えめなクリック音で拍子を感じさせる
+        const clickBuf = metroBufRef.current.click;
+        if (!clickBuf) return;
+        const s2 = actx.createBufferSource(); s2.buffer = clickBuf;
+        const g2 = actx.createGain();
+        g2.gain.value = metroVolRef.current * 0.35;
+        s2.connect(g2); g2.connect(actx.destination);
+        s2.start(atTime);
+        return;
+      }
       const bufKey = (beatIndex||0) === 0 ? (accent ? "voice1" : "voice1flat") : ("voice" + (((beatIndex||0) % 4) + 1));
       const buf = metroBufRef.current[bufKey];
       if (!buf) return;
