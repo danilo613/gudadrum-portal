@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="light">
   <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline' 'unsafe-eval' data: blob:;">
   <title>GUDADRUM ORCHESTRA - MEMBER PORTAL</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
@@ -4091,8 +4092,8 @@ function App() {
 
   // ルックアヘッド用ref
   const metroNextTimeRef = React.useRef(0);
-  const metroSchedAheadTime = 0.03;
-  const metroLookaheadInterval = 10;
+  const metroSchedAheadTime = 0.1; // Android端末（Motorola等）のタイマー遅延に耐えられるよう広めに確保
+  const metroLookaheadInterval = 25;
 
   // RTM用情報
   const rtmInfoRef = React.useRef(null); // {startTime, totalSec, startBpm, bpmIncrease}
