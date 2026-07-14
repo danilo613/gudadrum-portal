@@ -6811,11 +6811,12 @@ function App() {
                         <option value="幹 ノーマル">幹 ノーマル（¥6,900）</option>
                         <option value="幹 スペシャル">幹 スペシャル（¥12,900）</option>
                       </select>
+                      <label style={{fontSize:10,color:"#3a6a7a",fontWeight:600,marginBottom:-2}}>契約日（この日を起点に、翌月の同日が次回更新日として自動設定されます）</label>
                       <input type="date" value={subsAddDate} onChange={e=>setSubsAddDate(e.target.value)}
                         style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
                       <button onClick={()=>{
                         if(!subsAddName||!subsAddDate){alert("名前と契約日を入力してください");return;}
-                        gasRead({action:"addsubscription",name:subsAddName,plan:subsAddPlan,startDate:subsAddDate}).then(function(){
+                        gasWrite({action:"addsubscription",name:subsAddName,plan:subsAddPlan,startDate:subsAddDate}).then(function(){
                           fetchSubscriptions();
                           setSubsAddOpen(false);setSubsAddName("");setSubsAddDate("");
                         });
@@ -6859,7 +6860,7 @@ function App() {
                           {PLAN_POINTS[s.plan]>0&&(
                             <button onClick={()=>{
                               var pts=PLAN_POINTS[s.plan];
-                              gasRead({action:"addpoints",name:s.name,points:String(pts),reason:pointLabel,recorder:"DANiLO"}).then(function(){
+                              gasWrite({action:"addpoints",name:s.name,points:String(pts),reason:pointLabel,recorder:"DANiLO"}).then(function(){
                                 alert(s.name+"に"+pts+"pt付与しました（"+pointLabel+"）");
                               });
                             }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #708238",background:"#fff",color:"#708238",cursor:"pointer",fontFamily:"inherit"}}>
@@ -6870,7 +6871,7 @@ function App() {
                             <button onClick={()=>{
                               var pts=PLAN_POINTS[s.plan]*3;
                               var label=planLabel+"プラン一括払いポイント";
-                              gasRead({action:"addpoints",name:s.name,points:String(pts),reason:label,recorder:"DANiLO"}).then(function(){
+                              gasWrite({action:"addpoints",name:s.name,points:String(pts),reason:label,recorder:"DANiLO"}).then(function(){
                                 alert(s.name+"に"+pts+"pt付与しました（"+label+"）");
                               });
                             }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #5a8a9a",background:"#fff",color:"#5a8a9a",cursor:"pointer",fontFamily:"inherit"}}>
@@ -7213,7 +7214,6 @@ function App() {
                       </div>
                     );
                   }
-                  const isExpanded = !!subscUsageExpanded[mrow.name];
                   const statusBadge = (status) => {
                     const conf = status==="済" ? {bg:"#e0f4e0",fg:"#2a7a3a",label:"✅ 予約済み"}
                       : status==="待" ? {bg:"#fff4e0",fg:"#a06a1a",label:"⏳ 未予約"}
@@ -7222,11 +7222,10 @@ function App() {
                   };
                   return (
                     <div key={mrow.name} style={{marginBottom:8,background:"rgba(58,122,138,0.05)",borderRadius:10,border:"1px solid rgba(58,122,138,0.15)",overflow:"hidden"}}>
-                      <button onClick={()=>setSubscUsageExpanded(p=>({...p,[mrow.name]:!p[mrow.name]}))}
-                        style={{width:"100%",padding:"10px 12px",background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",gap:6,textAlign:"left"}}>
+                      <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:6}}>
                         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                           <span style={{fontSize:13,fontWeight:700,color:"#4B3621"}}>{mrow.name}</span>
-                          <span style={{fontSize:10,color:"#3a7a8a"}}>{mrow.plan} {isExpanded?"▲":"▼"}</span>
+                          <span style={{fontSize:10,color:"#3a7a8a"}}>{mrow.plan}</span>
                         </div>
                         <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                           <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -7246,31 +7245,29 @@ function App() {
                             </div>
                           )}
                         </div>
-                      </button>
-                      {isExpanded && (
-                        <div style={{padding:"0 12px 12px",borderTop:"1px solid rgba(58,122,138,0.15)"}}>
-                          <p style={{fontSize:9,color:"#3a7a8a",margin:"8px 0 4px"}}>契約日：{mrow.contractDate}</p>
-                          <p style={{fontSize:10,fontWeight:700,color:"#4B3621",marginTop:6,marginBottom:4}}>個別相談 月別履歴</p>
-                          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                            {mrow.consultation.history.map(function(h,i){
-                              return <span key={i} style={{fontSize:9,padding:"2px 6px",borderRadius:5,background:h.status==="済"?"#e0f4e0":h.status==="待"?"#fff4e0":"#fbe0e0",color:h.status==="済"?"#2a7a3a":h.status==="待"?"#a06a1a":"#a02a2a"}}>{h.year}/{h.month} {h.status==="済"?"✅":h.status==="待"?"⏳":"❌"}</span>;
-                            })}
-                          </div>
-                          {mrow.diagnosis && mrow.diagnosis.mode==="monthly" && (
-                            <>
-                              <p style={{fontSize:10,fontWeight:700,color:"#4B3621",marginTop:8,marginBottom:4}}>演奏診断 月別履歴</p>
-                              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
-                                {mrow.diagnosis.history.map(function(h,i){
-                                  return <span key={i} style={{fontSize:9,padding:"2px 6px",borderRadius:5,background:h.status==="済"?"#e0f4e0":h.status==="待"?"#fff4e0":"#fbe0e0",color:h.status==="済"?"#2a7a3a":h.status==="待"?"#a06a1a":"#a02a2a"}}>{h.year}/{h.month} {h.status==="済"?"✅":h.status==="待"?"⏳":"❌"}</span>;
-                                })}
-                              </div>
-                            </>
-                          )}
-                          {mrow.diagnosis && mrow.diagnosis.mode==="bank" && (
-                            <p style={{fontSize:9,color:"#3a7a8a",marginTop:6}}>演奏診断は前倒し可のため、契約から今月までの発生数（{mrow.diagnosis.accrued}回）から、実際に受診済みの回数（{mrow.diagnosis.used}回）を引いた残数を表示しています。</p>
-                          )}
+                      </div>
+                      <div style={{padding:"0 12px 12px",borderTop:"1px solid rgba(58,122,138,0.15)"}}>
+                        <p style={{fontSize:9,color:"#3a7a8a",margin:"8px 0 4px"}}>契約日：{mrow.contractDate}</p>
+                        <p style={{fontSize:10,fontWeight:700,color:"#4B3621",marginTop:6,marginBottom:4}}>個別相談 月別履歴（契約〜今月）</p>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                          {mrow.consultation.history.map(function(h,i){
+                            return <span key={i} style={{fontSize:9,padding:"2px 6px",borderRadius:5,background:h.status==="済"?"#e0f4e0":h.status==="待"?"#fff4e0":"#fbe0e0",color:h.status==="済"?"#2a7a3a":h.status==="待"?"#a06a1a":"#a02a2a"}}>{h.year}/{h.month} {h.status==="済"?"✅":h.status==="待"?"⏳":"❌"}</span>;
+                          })}
                         </div>
-                      )}
+                        {mrow.diagnosis && mrow.diagnosis.mode==="monthly" && (
+                          <>
+                            <p style={{fontSize:10,fontWeight:700,color:"#4B3621",marginTop:8,marginBottom:4}}>演奏診断 月別履歴（契約〜今月）</p>
+                            <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                              {mrow.diagnosis.history.map(function(h,i){
+                                return <span key={i} style={{fontSize:9,padding:"2px 6px",borderRadius:5,background:h.status==="済"?"#e0f4e0":h.status==="待"?"#fff4e0":"#fbe0e0",color:h.status==="済"?"#2a7a3a":h.status==="待"?"#a06a1a":"#a02a2a"}}>{h.year}/{h.month} {h.status==="済"?"✅":h.status==="待"?"⏳":"❌"}</span>;
+                              })}
+                            </div>
+                          </>
+                        )}
+                        {mrow.diagnosis && mrow.diagnosis.mode==="bank" && (
+                          <p style={{fontSize:9,color:"#3a7a8a",marginTop:6}}>演奏診断は前倒し可のため、契約から今月までの発生数（{mrow.diagnosis.accrued}回）から、実際に受診済みの回数（{mrow.diagnosis.used}回）を引いた残数を表示しています。</p>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
