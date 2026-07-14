@@ -3531,6 +3531,9 @@ function App() {
   const [inorionSchedView, setInorionSchedView] = useState("timeline");
   const [inorionSchedFilter, setInorionSchedFilter] = useState("すべて");
   const [inorionTab, setInorionTab] = useState(false);
+  const [subscUsageTab, setSubscUsageTab] = useState(false);
+  const [subscUsageData, setSubscUsageData] = useState(null);
+  const [subscUsageExpanded, setSubscUsageExpanded] = useState({});
   const [inorionForm, setInorionForm] = useState({name:"", song:"", scale:"", status:"🌱第一段階：フレーズ覚え中"});
   const [inorionMsg, setInorionMsg] = useState("");
   const [inorionOpenMap, setInorionOpenMap] = useState({});
@@ -4798,6 +4801,13 @@ function App() {
       const res = await fetch("/api/gas?action=getinorionnotice");
       const data = await res.json();
       if (data) setInorionNotices({ "前日": data["前日"]||"", "当日": data["当日"]||"" });
+    } catch(e) {}
+  }
+
+  async function fetchSubscUsage() {
+    try {
+      const res = await gasRead({ action: "getsubscusagereport" });
+      if (res) setSubscUsageData(res);
     } catch(e) {}
   }
 
@@ -7168,6 +7178,92 @@ function App() {
             )}
           </div>
         )}
+
+        {/* 幹サブスク利用状況（個別相談・演奏診断） */}
+        {!isInstructor && <button onClick={()=>{setSubscUsageTab(!subscUsageTab); if(!subscUsageTab) fetchSubscUsage();}}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a8a",background:subscUsageTab?"linear-gradient(135deg,#6ab0c0,#3a7a8a)":"rgba(58,122,138,0.1)",color:subscUsageTab?"#fff":"#3a7a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          📊 幹サブスク利用状況（個別相談・演奏診断） {subscUsageTab?"▲":"▼"}
+        </button>}
+        {subscUsageTab && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #a0c8d4",borderRadius:12,padding:"14px"}}>
+            {!subscUsageData ? (
+              <p style={{fontSize:12,color:"#4B3621",textAlign:"center",padding:12}}>読み込み中...</p>
+            ) : subscUsageData.members.length===0 ? (
+              <p style={{fontSize:12,color:"#4B3621",textAlign:"center",padding:12}}>幹サブスク会員が見つかりません（契約日が未記入の可能性もあります）</p>
+            ) : (
+              <>
+                <p style={{fontSize:10,color:"#3a7a8a",marginBottom:10,lineHeight:1.6}}>
+                  {subscUsageData.inorionPassed
+                    ? "壱祈音〜Inorion〜終了後：演奏診断も個別相談と同じ月次ルールです"
+                    : "壱祈音〜Inorion〜（2026/10/17）まで：演奏診断は前倒し・貯蓄が上限なしで可能です"}
+                </p>
+                {subscUsageData.members.map(function(mrow){
+                  const isExpanded = !!subscUsageExpanded[mrow.name];
+                  const statusBadge = (status) => {
+                    const conf = status==="済" ? {bg:"#e0f4e0",fg:"#2a7a3a",label:"✅ 予約済み"}
+                      : status==="待" ? {bg:"#fff4e0",fg:"#a06a1a",label:"⏳ 未予約"}
+                      : {bg:"#fbe0e0",fg:"#a02a2a",label:"❌ 権利消滅"};
+                    return <span style={{fontSize:10,fontWeight:700,color:conf.fg,background:conf.bg,borderRadius:6,padding:"2px 8px"}}>{conf.label}</span>;
+                  };
+                  return (
+                    <div key={mrow.name} style={{marginBottom:8,background:"rgba(58,122,138,0.05)",borderRadius:10,border:"1px solid rgba(58,122,138,0.15)",overflow:"hidden"}}>
+                      <button onClick={()=>setSubscUsageExpanded(p=>({...p,[mrow.name]:!p[mrow.name]}))}
+                        style={{width:"100%",padding:"10px 12px",background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",gap:6,textAlign:"left"}}>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                          <span style={{fontSize:13,fontWeight:700,color:"#4B3621"}}>{mrow.name}</span>
+                          <span style={{fontSize:10,color:"#3a7a8a"}}>{mrow.plan} {isExpanded?"▲":"▼"}</span>
+                        </div>
+                        <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                          <div style={{display:"flex",alignItems:"center",gap:6}}>
+                            <span style={{fontSize:10,color:"#4B3621"}}>個別相談（今月）</span>
+                            {statusBadge(mrow.consultation.thisMonth.status)}
+                          </div>
+                          {mrow.diagnosis && mrow.diagnosis.mode==="bank" && (
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <span style={{fontSize:10,color:"#4B3621"}}>演奏診断（貯蓄）</span>
+                              <span style={{fontSize:10,fontWeight:700,color:"#3a7a8a",background:"#e0f0f4",borderRadius:6,padding:"2px 8px"}}>残り{mrow.diagnosis.balance}回分</span>
+                            </div>
+                          )}
+                          {mrow.diagnosis && mrow.diagnosis.mode==="monthly" && (
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <span style={{fontSize:10,color:"#4B3621"}}>演奏診断（今月）</span>
+                              {statusBadge(mrow.diagnosis.thisMonth.status)}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                      {isExpanded && (
+                        <div style={{padding:"0 12px 12px",borderTop:"1px solid rgba(58,122,138,0.15)"}}>
+                          <p style={{fontSize:9,color:"#3a7a8a",margin:"8px 0 4px"}}>契約日：{mrow.contractDate}</p>
+                          <p style={{fontSize:10,fontWeight:700,color:"#4B3621",marginTop:6,marginBottom:4}}>個別相談 月別履歴</p>
+                          <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                            {mrow.consultation.history.map(function(h,i){
+                              return <span key={i} style={{fontSize:9,padding:"2px 6px",borderRadius:5,background:h.status==="済"?"#e0f4e0":h.status==="待"?"#fff4e0":"#fbe0e0",color:h.status==="済"?"#2a7a3a":h.status==="待"?"#a06a1a":"#a02a2a"}}>{h.year}/{h.month} {h.status==="済"?"✅":h.status==="待"?"⏳":"❌"}</span>;
+                            })}
+                          </div>
+                          {mrow.diagnosis && mrow.diagnosis.mode==="monthly" && (
+                            <>
+                              <p style={{fontSize:10,fontWeight:700,color:"#4B3621",marginTop:8,marginBottom:4}}>演奏診断 月別履歴</p>
+                              <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                                {mrow.diagnosis.history.map(function(h,i){
+                                  return <span key={i} style={{fontSize:9,padding:"2px 6px",borderRadius:5,background:h.status==="済"?"#e0f4e0":h.status==="待"?"#fff4e0":"#fbe0e0",color:h.status==="済"?"#2a7a3a":h.status==="待"?"#a06a1a":"#a02a2a"}}>{h.year}/{h.month} {h.status==="済"?"✅":h.status==="待"?"⏳":"❌"}</span>;
+                                })}
+                              </div>
+                            </>
+                          )}
+                          {mrow.diagnosis && mrow.diagnosis.mode==="bank" && (
+                            <p style={{fontSize:9,color:"#3a7a8a",marginTop:6}}>演奏診断は前倒し可のため、契約から今月までの発生数（{mrow.diagnosis.accrued}回）から、実際に受診済みの回数（{mrow.diagnosis.used}回）を引いた残数を表示しています。</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </div>
+        )}
+
         {/* 全メンバースケジュール（DANiLOのみ表示） */}
         {!isInstructor && (
           <button onClick={()=>setShowAllScheds(!showAllScheds)}
