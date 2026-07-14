@@ -7205,6 +7205,14 @@ function App() {
                     : "壱祈音〜Inorion〜（2026/10/17）まで：演奏診断は前倒し・貯蓄が上限なしで可能です"}
                 </p>
                 {subscUsageData.members.map(function(mrow){
+                  if (mrow.needsContractDate) {
+                    return (
+                      <div key={mrow.name} style={{marginBottom:8,background:"#fbe0e0",borderRadius:10,border:"1px solid #e0a0a0",padding:"10px 12px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <span style={{fontSize:13,fontWeight:700,color:"#a02a2a"}}>{mrow.name}</span>
+                        <span style={{fontSize:10,color:"#a02a2a"}}>⚠️ 契約日が未記入です（{mrow.plan}）</span>
+                      </div>
+                    );
+                  }
                   const isExpanded = !!subscUsageExpanded[mrow.name];
                   const statusBadge = (status) => {
                     const conf = status==="済" ? {bg:"#e0f4e0",fg:"#2a7a3a",label:"✅ 予約済み"}
