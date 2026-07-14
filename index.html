@@ -4724,12 +4724,14 @@ function App() {
     } catch(e) {}
     // ランキング取得
     try {
-      const res2 = await gasRead({ action: "getmonthlyranking" });
+      const r2 = await fetch("/api/gas?action=getmonthlyranking");
+      const res2 = await r2.json();
       if (res2 && res2.ranking) setMonthlyRanking(res2);
     } catch(e) {}
     // 連続練習日数ランキング取得
     try {
-      const res3 = await gasRead({ action: "getmonthlystreaks" });
+      const r3 = await fetch("/api/gas?action=getmonthlystreaks");
+      const res3 = await r3.json();
       if (res3 && res3.streaks) setMonthlyStreaks(res3);
     } catch(e) {}
   }
@@ -4806,9 +4808,12 @@ function App() {
 
   async function fetchSubscUsage() {
     try {
-      const res = await gasRead({ action: "getsubscusagereport" });
-      if (res) setSubscUsageData(res);
-    } catch(e) {}
+      const res = await fetch("/api/gas?action=getsubscusagereport");
+      const data = await res.json();
+      setSubscUsageData(data || { members: null });
+    } catch(e) {
+      setSubscUsageData({ members: null });
+    }
   }
 
   async function saveInorionNotice(key) {
@@ -7188,6 +7193,8 @@ function App() {
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #a0c8d4",borderRadius:12,padding:"14px"}}>
             {!subscUsageData ? (
               <p style={{fontSize:12,color:"#4B3621",textAlign:"center",padding:12}}>読み込み中...</p>
+            ) : !Array.isArray(subscUsageData.members) ? (
+              <p style={{fontSize:12,color:"#a02a2a",textAlign:"center",padding:12,lineHeight:1.7}}>データを取得できませんでした。<br/>GASの最新版がデプロイされているか確認してください。</p>
             ) : subscUsageData.members.length===0 ? (
               <p style={{fontSize:12,color:"#4B3621",textAlign:"center",padding:12}}>幹サブスク会員が見つかりません（契約日が未記入の可能性もあります）</p>
             ) : (
