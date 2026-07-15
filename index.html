@@ -3586,6 +3586,9 @@ function App() {
   const [subsAddName, setSubsAddName] = useState("");
   const [subsAddPlan, setSubsAddPlan] = useState("蕾気軽サブスク");
   const [subsAddDate, setSubsAddDate] = useState("");
+  const [subsEditingName, setSubsEditingName] = useState(null);
+  const [subsEditContractDate, setSubsEditContractDate] = useState("");
+  const [subsEditRenewDate, setSubsEditRenewDate] = useState("");
   const [mapPage, setMapPage] = useState(false);
   const [mapMembers, setMapMembers] = useState([]);
   const [showPastScheds, setShowPastScheds] = useState(false);
@@ -6848,11 +6851,41 @@ function App() {
                           <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{s.name}</span>
                           <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontWeight:600}}>{s.plan}</span>
                         </div>
-                        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4}}>
+                        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4,alignItems:"center"}}>
                           <span style={{fontSize:11,color:C.label}}>契約日：{s.contractDate||"-"}</span>
                           <span style={{fontSize:11,color:C.label}}>更新日：{s.renewDate||"-"}</span>
                           <span style={{fontSize:11,color:C.label}}>次回支払：{nextPayDate||"-"}</span>
+                          <button onClick={()=>{
+                            if (subsEditingName===s.name) { setSubsEditingName(null); }
+                            else { setSubsEditingName(s.name); setSubsEditContractDate(s.contractDate||""); setSubsEditRenewDate(s.renewDate||""); }
+                          }} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"0.5px solid #3a6a7a",background:subsEditingName===s.name?"#3a6a7a":"#fff",color:subsEditingName===s.name?"#fff":"#3a6a7a",cursor:"pointer",fontFamily:"inherit"}}>
+                            ✏️ 編集
+                          </button>
                         </div>
+                        {subsEditingName===s.name && (
+                          <div style={{background:"rgba(58,106,122,0.06)",borderRadius:8,padding:10,marginBottom:8,display:"flex",flexDirection:"column",gap:6}}>
+                            <label style={{fontSize:10,color:"#3a6a7a",fontWeight:600}}>契約日</label>
+                            <input type="date" value={subsEditContractDate} onChange={e=>setSubsEditContractDate(e.target.value)}
+                              style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
+                            <label style={{fontSize:10,color:"#3a6a7a",fontWeight:600}}>次回更新日</label>
+                            <input type="date" value={subsEditRenewDate} onChange={e=>setSubsEditRenewDate(e.target.value)}
+                              style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
+                            <div style={{display:"flex",gap:6}}>
+                              <button onClick={()=>{
+                                gasWrite({action:"updatesubscription",name:s.name,contractDate:subsEditContractDate,renewDate:subsEditRenewDate}).then(function(){
+                                  fetchSubscriptions();
+                                  setSubsEditingName(null);
+                                });
+                              }} style={{flex:1,fontSize:12,padding:"6px",borderRadius:8,border:"none",background:"#3a6a7a",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
+                                保存
+                              </button>
+                              <button onClick={()=>setSubsEditingName(null)}
+                                style={{flex:1,fontSize:12,padding:"6px",borderRadius:8,border:"0.5px solid #3a6a7a",background:"#fff",color:"#3a6a7a",cursor:"pointer",fontFamily:"inherit"}}>
+                                キャンセル
+                              </button>
+                            </div>
+                          </div>
+                        )}
                         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6,alignItems:"center"}}>
                           <span style={{fontSize:12,fontWeight:700,color:"#3a6a7a"}}>月額 ¥{(s.amount||PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
                         </div>
