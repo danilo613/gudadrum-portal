@@ -102,6 +102,19 @@ function parseCsv(text) {
   });
 }
 
+// 初回表示を速くするためのキャッシュ読み込み。前回取得したデータがあれば
+// 通信を待たずに即座に画面に反映し（stale-while-revalidate）、その裏で最新データを取りに行く
+function cachedInit(key, fallback) {
+  try {
+    const raw = localStorage.getItem("cache_" + key);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return fallback;
+}
+function cacheSave(key, value) {
+  try { localStorage.setItem("cache_" + key, JSON.stringify(value)); } catch(e) {}
+}
+
 function rowToMember(r) {
   return {
     name: String(r["名前"] || r["name"] || ""),
@@ -3440,7 +3453,7 @@ function MapPage({ members, onClose, C, currentMemberName }) {
 }
 
 function App() {
-  const [members, setMembers] = useState([]);
+  const [members, setMembers] = useState(()=>cachedInit("members", []));
   // 自動ログイン復元（localStorageから）
   const [autoLoginTried, setAutoLoginTried] = useState(false);
   React.useEffect(()=>{
@@ -3466,7 +3479,7 @@ function App() {
     } catch(e){}
     setAutoLoginTried(true);
   },[members, autoLoginTried, currentMember]);
-  const [isDemo, setIsDemo] = useState(true);
+  const [isDemo, setIsDemo] = useState(()=>cachedInit("members", []).length === 0);
   const [isInstructor, setIsInstructor] = useState(false);
   const [page, setPage] = useState("login");
   const [selectedName, setSelectedName] = useState("");
@@ -3475,14 +3488,14 @@ function App() {
   const [currentMember, setCurrentMember] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [fetchMsg, setFetchMsg] = useState("");
-  const [notionItems, setNotionItems] = useState([]);
+  const [notionItems, setNotionItems] = useState(()=>cachedInit("notionItems", []));
   const [workshopData, setWorkshopData] = useState([]);
   const [workshopHeaders, setWorkshopHeaders] = useState([]);
   const [showWorkshop, setShowWorkshop] = useState(false);
   const [workshopLoaded, setWorkshopLoaded] = useState(false);
-  const [loginData, setLoginData] = useState([]);
+  const [loginData, setLoginData] = useState(()=>cachedInit("loginData", []));
   const [workshopFilter, setWorkshopFilter] = useState("all");
-  const [memberSchedules, setMemberSchedules] = useState([]);
+  const [memberSchedules, setMemberSchedules] = useState(()=>cachedInit("memberSchedules", []));
   const [schedModal, setSchedModal] = useState(null);
   const [schedDate, setSchedDate] = useState("");
   const [schedTime, setSchedTime] = useState("");
@@ -3513,7 +3526,7 @@ function App() {
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
   const [scheduleOpen, setScheduleOpen] = useState(false);
-  const [orchSchedules, setOrchSchedules] = useState([]);
+  const [orchSchedules, setOrchSchedules] = useState(()=>cachedInit("orchSchedules", []));
   const [orchFilter, setOrchFilter] = useState("すべて");
   const [orchView, setOrchView] = useState("timeline"); // "timeline" or "category"
   const [orchOpen, setOrchOpen] = useState(false);
@@ -3521,7 +3534,7 @@ function App() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [cancelSubsConfirm, setCancelSubsConfirm] = useState(false);
   const [cancelSubsMsg, setCancelSubsMsg] = useState("");
-  const [inorionData, setInorionData] = useState([]);
+  const [inorionData, setInorionData] = useState(()=>cachedInit("inorionData", []));
   const [inorionPage, setInorionPage] = useState(false);
   const [inorionMyOpen, setInorionMyOpen] = useState(false);
   const [inorionListOpen, setInorionListOpen] = useState(false);
@@ -3947,12 +3960,37 @@ function App() {
   const rtmTargetBpmRef = React.useRef(null); // 小節頭で適用予定のBPM
   React.useEffect(()=>{rtmActiveRef.current=rtmActive;},[rtmActive]);
 
+  // internalizeモード用：5分区切りごとに10〜15回、無音にする小節の開始タイムスタンプ（秒）を生成
+  // 小節同士が連続で無音にならないよう、最低でも小節2つ分の間隔を空ける
+  function generateSilentBarSchedule_(totalSec, barDurationSec) {
+    const timestamps = [];
+    const segCount = Math.ceil(totalSec / 300);
+    for (let seg = 0; seg < segCount; seg++) {
+      const segStart = seg * 300;
+      const segEnd = Math.min(totalSec, segStart + 300);
+      const segLen = segEnd - segStart;
+      if (segLen <= 0) continue;
+      const count = 10 + Math.floor(Math.random() * 6); // 10〜15
+      const minGap = Math.max(barDurationSec * 2, segLen / (count * 2 || 1));
+      const candidates = [];
+      let attempts = 0;
+      while (candidates.length < count && attempts < count * 40) {
+        attempts++;
+        const t = segStart + Math.random() * segLen;
+        if (candidates.every(c => Math.abs(c - t) >= minGap)) candidates.push(t);
+      }
+      candidates.sort((a,b)=>a-b);
+      timestamps.push(...candidates);
+    }
+    return timestamps;
+  }
+
   async function rtmStart(minutes, type){
     await metroInit();
     const actx = metroActxRef.current;
     if (!actx) return;
     if (actx.state==="suspended") await actx.resume();
-    const bpmIncrease = type === "training" ? 0 : (minutes === 5 ? 10 : minutes === 10 ? 20 : 30);
+    const bpmIncrease = (type === "training" || type === "internalize") ? 0 : (minutes === 5 ? 10 : minutes === 10 ? 20 : 30);
     const startBpm = metroBpm;
     setRtmType(type);
     setRtmStartBpm(startBpm);
@@ -3970,10 +4008,20 @@ function App() {
     const minutes = rtmMinutes;
     const startBpm = metroBpm;
     setRtmStartBpm(startBpm);
-    const bpmIncrease = rtmType === "training" ? 0 : (minutes === 5 ? 10 : minutes === 10 ? 20 : 30);
+    const bpmIncrease = (rtmType === "training" || rtmType === "internalize") ? 0 : (minutes === 5 ? 10 : minutes === 10 ? 20 : 30);
     const startTime = Date.now();
     setRtmStartTime(startTime);
     rtmInfoRef.current = {startTime, totalSec: minutes*60, startBpm, bpmIncrease, type: rtmType};
+    // internalizeモード：無音小節のスケジュールを事前生成（テンポは固定なので小節の長さも一定）
+    rtmSilentIdxRef.current = 0;
+    rtmBarSilentRef.current = false;
+    if (rtmType === "internalize") {
+      const beatsPerBar = metroTimeSigRef.current === "3/4" ? 3 : 4;
+      const barDurationSec = (60 / startBpm) * beatsPerBar;
+      rtmSilentScheduleRef.current = generateSilentBarSchedule_(minutes*60, barDurationSec);
+    } else {
+      rtmSilentScheduleRef.current = [];
+    }
     rtmIidRef.current = setInterval(()=>{
       const elapsedSec = (Date.now() - startTime) / 1000;
       const totalSec = minutes * 60;
@@ -4149,6 +4197,9 @@ function App() {
 
   // RTM用情報
   const rtmInfoRef = React.useRef(null); // {startTime, totalSec, startBpm, bpmIncrease}
+  const rtmSilentScheduleRef = React.useRef([]); // internalizeモード：無音にするタイムスタンプ一覧（秒）
+  const rtmSilentIdxRef = React.useRef(0);
+  const rtmBarSilentRef = React.useRef(false); // 現在の小節が無音対象かどうか
 
   // 完了→10秒タップ
   const [rtmCompleteOpen, setRtmCompleteOpen] = useState(false);
@@ -4303,6 +4354,21 @@ function App() {
         setMetroBpm(rtmTargetBpmRef.current);
         rtmTargetBpmRef.current = null;
       }
+      // 小節頭でinternalizeモードの無音判定を更新
+      if (isBarHead) {
+        if (rtmInfoRef.current && rtmInfoRef.current.type === "internalize") {
+          const elapsedSec = (Date.now() - rtmInfoRef.current.startTime) / 1000;
+          const schedule = rtmSilentScheduleRef.current;
+          let silent = false;
+          while (rtmSilentIdxRef.current < schedule.length && elapsedSec >= schedule[rtmSilentIdxRef.current]) {
+            silent = true;
+            rtmSilentIdxRef.current++;
+          }
+          rtmBarSilentRef.current = silent;
+        } else {
+          rtmBarSilentRef.current = false;
+        }
+      }
       const stepInBeat = stepInBar % stepsPerBeat;
       const doBarAcc = isBarHead && metroAccentRef.current;
       const beatIndex = Math.floor(stepInBar / stepsPerBeat); // 0=ワン, 1=ツー, 2=スリー, 3=フォー
@@ -4313,6 +4379,7 @@ function App() {
       else if (m===16) { playSound = true; }
       else if (m===3) { playSound = true; }
       else if (m==="shuffle") { if (stepInBeat===0 || stepInBeat===2) playSound = true; }
+      if (rtmBarSilentRef.current) playSound = false; // リズム内在トレーニング：この小節は無音
 
       if (playSound) {
         const isBeatHead = stepInBeat===0;
@@ -4628,6 +4695,13 @@ function App() {
     }, 5 * 60 * 1000);
     return () => clearInterval(timer);
   }, []);
+  // 次回アクセス時に即座に表示できるよう、最新データをキャッシュに保存しておく
+  React.useEffect(()=>{ if (members.length>0) cacheSave("members", members); }, [members]);
+  React.useEffect(()=>{ if (notionItems.length>0) cacheSave("notionItems", notionItems); }, [notionItems]);
+  React.useEffect(()=>{ if (loginData.length>0) cacheSave("loginData", loginData); }, [loginData]);
+  React.useEffect(()=>{ if (memberSchedules.length>0) cacheSave("memberSchedules", memberSchedules); }, [memberSchedules]);
+  React.useEffect(()=>{ if (orchSchedules.length>0) cacheSave("orchSchedules", orchSchedules); }, [orchSchedules]);
+  React.useEffect(()=>{ if (inorionData.length>0) cacheSave("inorionData", inorionData); }, [inorionData]);
   useEffect(() => {
     if (currentMember) {
       setMyMemo(localStorage.getItem("memo_"+currentMember.name) || "");
@@ -5713,6 +5787,30 @@ function App() {
                       })}
                     </div>
                   </div>
+                  {/* リズム内在トレーニングモード（不規則な無音小節あり／幹サブスク限定） */}
+                  <div style={{marginBottom:16}}>
+                    <div style={{fontSize:11,color:"rgba(150,220,180,0.85)",letterSpacing:2,fontWeight:500,marginBottom:6}}>🧘 リズム内在トレーニングモード</div>
+                    <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>不規則に1小節無音になる。テンポを体の中で保つ練習。5分=5P / 10分=10P / 15分=15P</div>
+                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                      {[[5,5],[10,10],[15,15]].map(([min,pt])=>{
+                        const isKanSubscriber = currentMember.subscType === "幹ノーマル" || currentMember.subscType === "幹スペシャル" || currentMember.subscType === "幹 ノーマル" || currentMember.subscType === "幹 スペシャル";
+                        return (
+                          <button key={min} onClick={()=>{
+                            if (!isKanSubscriber) {
+                              alert("🌿 リズム内在トレーニングモードは、幹サブスク（ノーマル／スペシャル）会員限定の特典です。\nぜひこの機会にサブスクをご検討ください！");
+                              return;
+                            }
+                            rtmStart(min, "internalize");
+                          }} style={{padding:"10px 14px",borderRadius:8,border:"1px solid rgba(150,220,180,0.2)",background:"linear-gradient(180deg, rgba(30,60,45,0.5), rgba(15,30,22,0.7))",color:"#c8e8d4",fontSize:12,fontWeight:400,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center",letterSpacing:1}}>
+                            <span>{min}分</span>
+                            <span style={{color:"rgba(160,232,192,0.7)",fontSize:10,letterSpacing:0.5}}>
+                              +{pt} P {!isKanSubscriber && <span style={{marginLeft:6,color:"rgba(220,180,140,0.8)"}}>🔒</span>}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   {/* リズム筋トレモード（テンポが徐々に上がる） */}
                   <div>
                     <div style={{fontSize:11,color:"rgba(150,220,180,0.85)",letterSpacing:2,fontWeight:500,marginBottom:6}}>💪 リズム筋トレモード</div>
@@ -5746,6 +5844,11 @@ function App() {
               )}
               {rtmActive && (
                 <div>
+                  {rtmType === "internalize" && (
+                    <div style={{textAlign:"center",marginBottom:10,fontSize:11,color:"rgba(200,232,212,0.8)",letterSpacing:1,lineHeight:1.6}}>
+                      🧘 リズム内在トレーニング中——不規則に1小節無音になります。<br/>心の中でテンポを保ったまま演奏し続けてください。
+                    </div>
+                  )}
                   {/* カウントダウン（大きく中央） */}
                   <div style={{textAlign:"center",marginBottom:16,padding:"12px 0",background:"linear-gradient(180deg, rgba(10,20,15,0.8), rgba(5,10,8,0.9))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:10,boxShadow:"inset 0 2px 6px rgba(0,0,0,0.6)"}}>
                     <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:3,marginBottom:4}}>残り時間</div>
@@ -5761,7 +5864,7 @@ function App() {
                     <div style={{textAlign:"right"}}>
                       <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",letterSpacing:1}}>BPM</div>
                       <div style={{fontSize:18,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>
-                        {rtmStartBpm} → {Math.min(180, rtmStartBpm + (rtmMinutes===5?10:rtmMinutes===10?20:30))}
+                        {(rtmType === "training" || rtmType === "internalize") ? rtmStartBpm+"（一定）" : rtmStartBpm+" → "+Math.min(180, rtmStartBpm + (rtmMinutes===5?10:rtmMinutes===10?20:30))}
                       </div>
                     </div>
                   </div>
