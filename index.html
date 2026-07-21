@@ -3693,6 +3693,7 @@ function App() {
   const [metroVisualStep, setMetroVisualStep] = useState(0); // 視覚用ステップ
   const metroActxRef = React.useRef(null);
   const metroBufRef = React.useRef({});
+  const metroWorkerRef = React.useRef(null);
   const [metroSoundSet, setMetroSoundSet] = useState(()=>{
     try { return localStorage.getItem("metro_soundset") || "default"; } catch(e){ return "default"; }
   });
@@ -4355,6 +4356,33 @@ function App() {
     return ()=>document.removeEventListener('visibilitychange', handler);
   },[metroPlaying]);
 
+  // メインスレッドの負荷（描画・GC等）に影響されないよう、Web Workerでタイマーを回す。
+  // 実際の音の再生スケジューリング（metroScheduler）自体は変更なし——ここは「起こすタイミング」を裏スレッドに任せるだけ
+  function metroGetWorker_() {
+    if (metroWorkerRef.current) return metroWorkerRef.current;
+    try {
+      const code = "let timerId=null;" +
+        "self.onmessage=function(e){" +
+        "var msg=e.data;" +
+        "if(msg.cmd==='start'){" +
+        "if(timerId)clearInterval(timerId);" +
+        "timerId=setInterval(function(){postMessage('tick');},msg.interval);" +
+        "}else if(msg.cmd==='stop'){" +
+        "if(timerId){clearInterval(timerId);timerId=null;}" +
+        "}" +
+        "};";
+      const blob = new Blob([code], { type: "application/javascript" });
+      const worker = new Worker(URL.createObjectURL(blob));
+      worker.onmessage = function(e) {
+        if (e.data === "tick") metroScheduler();
+      };
+      metroWorkerRef.current = worker;
+      return worker;
+    } catch(e) {
+      return null; // Workerが使えない環境ではnullを返し、setIntervalにフォールバック
+    }
+  }
+
   async function metroStart() {
     await metroInit();
     const actx = metroActxRef.current;
@@ -4363,7 +4391,13 @@ function App() {
     setMetroVisualStep(0);
     setMetroPlaying(true);
     metroNextTimeRef.current = actx.currentTime + 0.05;
-    metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
+    const worker = metroGetWorker_();
+    if (worker) {
+      worker.postMessage({ cmd: "start", interval: metroLookaheadInterval });
+      metroIidRef.current = "worker"; // 再生中フラグとして流用（実体はworker側で管理）
+    } else {
+      metroIidRef.current = setInterval(metroScheduler, metroLookaheadInterval);
+    }
     metroAcquireWakeLock();
     // RTMがコース選択済みで未開始ならタイマーを開始
     if (rtmActiveRef.current && !rtmInfoRef.current) {
@@ -4371,7 +4405,12 @@ function App() {
     }
   }
   function metroStop() {
-    if (metroIidRef.current) { clearInterval(metroIidRef.current); metroIidRef.current = null; }
+    if (metroIidRef.current === "worker") {
+      if (metroWorkerRef.current) metroWorkerRef.current.postMessage({ cmd: "stop" });
+      metroIidRef.current = null;
+    } else if (metroIidRef.current) {
+      clearInterval(metroIidRef.current); metroIidRef.current = null;
+    }
     setMetroPlaying(false);
     setMetroVisualStep(0);
     metroReleaseWakeLock();
@@ -7493,7 +7532,10 @@ function App() {
                       <div style={{display:"flex",alignItems:"center",gap:10}}>
                         <BadgeImage level={mbr.level} size={48}/>
                         <div style={{flex:1,minWidth:0}}>
-                          <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{mbr.name}</p>
+                          <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all",display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                        {mbr.name}
+                        <span style={{fontSize:10,fontWeight:700,color:"#b8860b",background:"rgba(184,134,11,0.12)",borderRadius:8,padding:"1px 7px"}}>🪙 {(mbr.points||0).toLocaleString()}P</span>
+                      </p>
                           <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
                             <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{mbr.level||"−"}</p>
                             {mbr.region && <p style={{fontSize:10,color:C.label}}>{mbr.region}</p>}
@@ -7530,7 +7572,10 @@ function App() {
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <BadgeImage level={mbr.level} size={48}/>
                 <div style={{flex:1,minWidth:0}}>
-                  <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all"}}>{mbr.name}</p>
+                  <p style={{fontSize:14,fontWeight:600,color:C.choco,marginBottom:2,wordBreak:"keep-all",display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+                        {mbr.name}
+                        <span style={{fontSize:10,fontWeight:700,color:"#b8860b",background:"rgba(184,134,11,0.12)",borderRadius:8,padding:"1px 7px"}}>🪙 {(mbr.points||0).toLocaleString()}P</span>
+                      </p>
                   <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}> 
                     <p style={{fontSize:12,fontWeight:600,color:"#8a6a4a"}}>{mbr.level||"−"}</p>
                     {mbr.region && <p style={{fontSize:10,color:C.label}}>{mbr.region}</p>}
