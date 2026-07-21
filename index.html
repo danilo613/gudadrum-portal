@@ -5778,7 +5778,8 @@ function App() {
                 </label>
               </div>
               {rtmOn && currentMember.subscType && currentMember.subscType !== "種" && characterGrowth && (
-                <div style={{marginBottom:16,padding:14,background:"#000",border:"1px solid rgba(150,220,180,0.2)",borderRadius:12,position:"relative",display:"flex",alignItems:"center",justifyContent:"center",minHeight:160}}>
+                <div style={{marginBottom:16,padding:14,background:"#000",border:"1px solid rgba(150,220,180,0.2)",borderRadius:12,position:"relative",display:"flex",alignItems:"center",justifyContent:"center",minHeight:160,overflow:"hidden"}}>
+                  <style>{"@keyframes characterFloat { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }"}</style>
                   <div style={{position:"absolute",top:10,left:14,zIndex:2}}>
                     <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
                       <span style={{fontSize:12,fontWeight:600,color:"#c8e8d4",letterSpacing:1}}>Lv.{characterGrowth.rank}</span>
@@ -5798,7 +5799,7 @@ function App() {
                       <div style={{fontSize:9,color:"rgba(255,160,140,0.85)",marginTop:4,maxWidth:130}}>⚠️ あと{characterGrowth.daysUntilDemote}日練習しないとランクが下がります</div>
                     )}
                   </div>
-                  <img src={"/character/stage"+String(characterGrowth.rank).padStart(2,"0")+".png"} alt="" style={{width:128,height:128,objectFit:"contain",filter:"drop-shadow(0 0 10px rgba(150,220,180,0.3))"}} onError={e=>{e.target.style.display="none";}}/>
+                  <img src={"/character/stage"+String(characterGrowth.rank).padStart(2,"0")+".png"} alt="" style={{width:128,height:128,objectFit:"contain",animation:"characterFloat 3.5s ease-in-out infinite"}} onError={e=>{e.target.style.display="none";}}/>
                 </div>
               )}
               {rtmOn && !rtmActive && (
