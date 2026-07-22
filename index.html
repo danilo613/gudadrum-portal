@@ -6897,7 +6897,9 @@ function App() {
               const aAvg = calcAvg(workshopData, "練習後");
               const label = `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）`;
               // 累計計算
-              const totalSessions = new Set(workshopData.map(r=>r["練習会参加日"])).size;
+              // 「練習会参加日」列は、フォームの説明文が付くと見出しが長くなることがあるため前方一致で探す
+              const dateHeaderKey = workshopHeaders.find(h => h.startsWith("練習会参加日")) || "練習会参加日";
+              const totalSessions = new Set(workshopData.map(r=>r[dateHeaderKey]).filter(Boolean)).size;
               const totalParticipants = workshopData.filter(r=>r["回答のタイミング"]==="練習前").length;
               return (
                 <div style={{display:"flex",flexDirection:"column",gap:8,position:"relative"}}>
