@@ -5883,7 +5883,7 @@ function App() {
                         <div style={{fontSize:10,color:"rgba(255,160,140,0.85)",marginTop:5}}>⚠️ あと{characterGrowth.daysUntilDemote}日練習しないとランクが下がります</div>
                       )}
                     </div>
-                    <img src={"/character/stage"+String(characterGrowth.rank).padStart(2,"0")+".png"} alt="" style={{width:"min(60vw, 220px)",height:"min(60vw, 220px)",objectFit:"contain",animation:"characterFloat 3.5s ease-in-out infinite"}} onError={e=>{e.target.style.display="none";}}/>
+                    <img src={"/character/stage"+String(characterGrowth.rank).padStart(2,"0")+".png"} alt="" style={{width:"min(60vw, 220px)",height:"min(60vw, 220px)",objectFit:"contain",animation:"characterFloat 3.5s ease-in-out infinite",marginTop:16}} onError={e=>{e.target.style.display="none";}}/>
                     {characterMessage && (
                       <div style={{marginTop:10,padding:"10px 14px",background:"rgba(150,220,180,0.08)",border:"1px solid rgba(150,220,180,0.2)",borderRadius:12,maxWidth:"100%"}}>
                         <p style={{fontSize:12,color:"#c8e8d4",lineHeight:1.7,textAlign:"center",margin:0}}>{characterMessage}</p>
