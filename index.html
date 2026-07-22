@@ -3959,6 +3959,7 @@ function App() {
   const [rtmActive, setRtmActive] = useState(false);
   const [rtmType, setRtmType] = useState(null); // "training" or "muscle"
   const [characterGrowth, setCharacterGrowth] = useState(null);
+  const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [rtmStartTime, setRtmStartTime] = useState(0);
   const [rtmElapsed, setRtmElapsed] = useState(0); // 秒
   const [rtmStartBpm, setRtmStartBpm] = useState(80);
@@ -5778,28 +5779,45 @@ function App() {
                 </label>
               </div>
               {rtmOn && currentMember.subscType && currentMember.subscType !== "種" && characterGrowth && (
-                <div style={{marginBottom:16,padding:14,background:"#000",border:"1px solid rgba(150,220,180,0.2)",borderRadius:12,position:"relative",display:"flex",alignItems:"center",justifyContent:"center",minHeight:160,overflow:"hidden"}}>
-                  <style>{"@keyframes characterFloat { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }"}</style>
-                  <div style={{position:"absolute",top:10,left:14,zIndex:2}}>
-                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:4}}>
-                      <span style={{fontSize:12,fontWeight:600,color:"#c8e8d4",letterSpacing:1}}>Lv.{characterGrowth.rank}</span>
-                      <span style={{fontSize:9,color:"rgba(150,220,180,0.5)"}}>{characterGrowth.rank}/{characterGrowth.maxRank}</span>
+                <button onClick={()=>setCharacterModalOpen(true)}
+                  style={{width:"100%",marginBottom:16,padding:"12px 16px",borderRadius:12,border:"1px solid rgba(150,220,180,0.25)",background:"linear-gradient(135deg, rgba(20,40,30,0.8), rgba(10,22,16,0.9))",display:"flex",alignItems:"center",justifyContent:"space-between",cursor:"pointer"}}>
+                  <div style={{display:"flex",alignItems:"center",gap:10}}>
+                    <span style={{fontSize:18}}>🌱</span>
+                    <div style={{textAlign:"left"}}>
+                      <div style={{fontSize:12,fontWeight:600,color:"#c8e8d4",letterSpacing:1}}>律ちゃんの成長</div>
+                      <div style={{fontSize:9,color:"rgba(150,220,180,0.5)"}}>Lv.{characterGrowth.rank} / {characterGrowth.maxRank}</div>
+                    </div>
+                  </div>
+                  <span style={{fontSize:12,color:"rgba(150,220,180,0.5)"}}>▶</span>
+                </button>
+              )}
+              {characterModalOpen && characterGrowth && (
+                <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"#000",zIndex:9999,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
+                  <style>{"@keyframes characterFloat { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-14px); } }"}</style>
+                  <button onClick={()=>setCharacterModalOpen(false)}
+                    style={{position:"absolute",top:20,right:20,width:36,height:36,borderRadius:"50%",border:"1px solid rgba(150,220,180,0.3)",background:"rgba(20,40,30,0.6)",color:"#c8e8d4",fontSize:16,cursor:"pointer"}}>
+                    ✕
+                  </button>
+                  <div style={{position:"absolute",top:20,left:20}}>
+                    <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+                      <span style={{fontSize:14,fontWeight:600,color:"#c8e8d4",letterSpacing:1}}>律ちゃん　Lv.{characterGrowth.rank}</span>
+                      <span style={{fontSize:10,color:"rgba(150,220,180,0.5)"}}>{characterGrowth.rank}/{characterGrowth.maxRank}</span>
                     </div>
                     {characterGrowth.rank < characterGrowth.maxRank ? (
                       <>
-                        <div style={{width:110,height:5,background:"rgba(255,255,255,0.15)",borderRadius:3,overflow:"hidden",marginBottom:4}}>
+                        <div style={{width:150,height:6,background:"rgba(255,255,255,0.15)",borderRadius:3,overflow:"hidden",marginBottom:5}}>
                           <div style={{width:(characterGrowth.progress/characterGrowth.nextThreshold*100)+"%",height:"100%",background:"linear-gradient(90deg, #4a8a60, #a0e8c0)",borderRadius:3}}/>
                         </div>
-                        <div style={{fontSize:9,color:"rgba(150,220,180,0.6)"}}>次のランクまで {characterGrowth.nextThreshold-characterGrowth.progress}分</div>
+                        <div style={{fontSize:10,color:"rgba(150,220,180,0.6)"}}>次のランクまで {characterGrowth.nextThreshold-characterGrowth.progress}分</div>
                       </>
                     ) : (
-                      <div style={{fontSize:9,color:"rgba(255,220,140,0.8)"}}>✨ 最大ランク到達</div>
+                      <div style={{fontSize:10,color:"rgba(255,220,140,0.8)"}}>✨ 最大ランク到達</div>
                     )}
                     {characterGrowth.daysUntilDemote !== null && characterGrowth.daysUntilDemote <= 5 && (
-                      <div style={{fontSize:9,color:"rgba(255,160,140,0.85)",marginTop:4,maxWidth:130}}>⚠️ あと{characterGrowth.daysUntilDemote}日練習しないとランクが下がります</div>
+                      <div style={{fontSize:10,color:"rgba(255,160,140,0.85)",marginTop:5,maxWidth:180}}>⚠️ あと{characterGrowth.daysUntilDemote}日練習しないとランクが下がります</div>
                     )}
                   </div>
-                  <img src={"/character/stage"+String(characterGrowth.rank).padStart(2,"0")+".png"} alt="" style={{width:128,height:128,objectFit:"contain",animation:"characterFloat 3.5s ease-in-out infinite"}} onError={e=>{e.target.style.display="none";}}/>
+                  <img src={"/character/stage"+String(characterGrowth.rank).padStart(2,"0")+".png"} alt="" style={{width:"min(70vw, 340px)",height:"min(70vw, 340px)",objectFit:"contain",animation:"characterFloat 3.5s ease-in-out infinite"}} onError={e=>{e.target.style.display="none";}}/>
                 </div>
               )}
               {rtmOn && !rtmActive && (
