@@ -5857,7 +5857,7 @@ function App() {
                 </button>
               )}
               {characterModalOpen && characterGrowth && (
-                <div onClick={()=>setCharacterModalOpen(false)} style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.75)",zIndex:9999,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+                <div onClick={()=>setCharacterModalOpen(false)} style={{position:"fixed",top:0,left:0,right:0,bottom:0,background:"rgba(0,0,0,0.75)",zIndex:9999,display:"flex",alignItems:"flex-start",justifyContent:"center",padding:20,paddingTop:"10vh"}}>
                   <style>{"@keyframes characterFloat { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }"}</style>
                   <div onClick={e=>e.stopPropagation()} style={{position:"relative",width:"min(88vw, 340px)",background:"#000",borderRadius:16,border:"1px solid rgba(150,220,180,0.25)",padding:"18px 18px 14px",display:"flex",flexDirection:"column",alignItems:"center"}}>
                     <button onClick={()=>setCharacterModalOpen(false)}
