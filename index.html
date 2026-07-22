@@ -3622,6 +3622,8 @@ function App() {
   const [showAllScheds, setShowAllScheds] = useState(false);
   const [showLogins, setShowLogins] = useState(false);
   const [showWorkouts, setShowWorkouts] = useState(false);
+  const [workoutViewMode, setWorkoutViewMode] = useState("all"); // "all" | "byMember"
+  const [workoutExpandedMember, setWorkoutExpandedMember] = useState(null);
   const [workoutHistory, setWorkoutHistory] = useState(null);
   async function fetchAllWorkouts(){
     try {
@@ -7728,6 +7730,64 @@ function App() {
                     </div>
                   );
                 })()}
+                {/* 表示切り替え：全履歴／メンバー別 */}
+                <div style={{display:"flex",gap:6,marginBottom:10}}>
+                  <button onClick={()=>setWorkoutViewMode("all")}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="all"?"1px solid #3a7a5a":"1px solid rgba(58,122,90,0.25)",background:workoutViewMode==="all"?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.06)",color:workoutViewMode==="all"?"#fff":"#3a7a5a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                    📋 全履歴
+                  </button>
+                  <button onClick={()=>setWorkoutViewMode("byMember")}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="byMember"?"1px solid #3a7a5a":"1px solid rgba(58,122,90,0.25)",background:workoutViewMode==="byMember"?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.06)",color:workoutViewMode==="byMember"?"#fff":"#3a7a5a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                    👤 メンバー別
+                  </button>
+                </div>
+                {workoutViewMode === "byMember" ? (
+                  <div style={{maxHeight:500,overflowY:"auto"}}>
+                    {(function(){
+                      var byMember = {};
+                      workoutHistory.forEach(function(w){
+                        var name = w.name || "（不明）";
+                        if (!byMember[name]) byMember[name] = { name:name, count:0, minutes:0, points:0, lastDate:null, entries:[] };
+                        byMember[name].count += 1;
+                        byMember[name].minutes += w.minutes || 0;
+                        byMember[name].points += w.points || 0;
+                        byMember[name].entries.push(w);
+                        var d = new Date(w.date);
+                        if (!isNaN(d.getTime()) && (!byMember[name].lastDate || d > byMember[name].lastDate)) byMember[name].lastDate = d;
+                      });
+                      var list = Object.values(byMember).sort(function(a,b){ return (b.lastDate?b.lastDate.getTime():0) - (a.lastDate?a.lastDate.getTime():0); });
+                      return list.map(function(m, i){
+                        var isExpanded = workoutExpandedMember === m.name;
+                        return (
+                          <div key={i} style={{marginBottom:6,background:"rgba(58,122,90,0.05)",borderRadius:8,border:"1px solid rgba(58,122,90,0.15)",overflow:"hidden"}}>
+                            <button onClick={()=>setWorkoutExpandedMember(isExpanded ? null : m.name)}
+                              style={{width:"100%",padding:"9px 10px",background:"transparent",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                              <span style={{fontSize:12,fontWeight:600,color:C.choco}}>{m.name}</span>
+                              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                <span style={{fontSize:10,color:"#3a7a5a"}}>{m.count}回 ／ {m.minutes}分 ／ {m.points}P</span>
+                                <span style={{fontSize:10,color:"rgba(58,122,90,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                              </div>
+                            </button>
+                            {isExpanded && (
+                              <div style={{borderTop:"1px solid rgba(58,122,90,0.15)",padding:"4px 10px 8px"}}>
+                                {m.entries.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(w,j){
+                                  return (
+                                    <div key={j} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(0,0,0,0.05)",fontSize:11}}>
+                                      <span style={{color:C.label,minWidth:120,flexShrink:0,fontFamily:"monospace"}}>{String(w.date||"")}</span>
+                                      <span style={{color:C.choco,minWidth:36,flexShrink:0,textAlign:"right"}}>{w.minutes}分</span>
+                                      <span style={{color:C.label,minWidth:64,flexShrink:0,textAlign:"right",fontFamily:"monospace",fontSize:10}}>{w.startBpm}→{w.endBpm}</span>
+                                      <span style={{color:"#3a7a5a",minWidth:36,flexShrink:0,textAlign:"right",fontWeight:600}}>{w.points}P</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                ) : (
                 <div style={{maxHeight:500,overflowY:"auto"}}>
                 <div style={{display:"flex",alignItems:"center",gap:8,padding:"4px 6px",borderBottom:"2px solid rgba(58,122,90,0.3)",fontSize:10,color:"#3a7a5a",fontWeight:700,letterSpacing:1,position:"sticky",top:0,background:"#fff"}}>
                   <span style={{minWidth:120,flexShrink:0}}>日時</span>
@@ -7748,6 +7808,7 @@ function App() {
                   );
                 })}
               </div>
+              )}
               </>
             )}
           </div>
