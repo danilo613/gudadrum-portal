@@ -3680,6 +3680,7 @@ function App() {
   const [sharedFloatPos, setSharedFloatPos] = useState({x:16,y:60});
   const [myPointHistoryOpen, setMyPointHistoryOpen] = useState(false);
   const [pointNote, setPointNote] = useState("");
+  const [pointTargetDate, setPointTargetDate] = useState("");
   const [adjustTargetPoints, setAdjustTargetPoints] = useState("");
   const [feedbackName, setFeedbackName] = useState("");
   const [feedbackMsg, setFeedbackMsg] = useState("");
@@ -4908,7 +4909,7 @@ function App() {
   }
 
   async function grantUnprocessedPoint(candidate, points) {
-    await gasWrite({ action:"addpoints", name:candidate.name, points:String(points), type:"付与", note:candidate.type, recorder:"DANiLO" });
+    await gasWrite({ action:"addpoints", name:candidate.name, points:String(points), type:"付与", note:candidate.type, targetDate:candidate.date, recorder:"DANiLO" });
     await gasWrite({ action:"markpointprocessed", key:candidate.key, status:"granted" });
     setUnprocessedPoints(prev => prev.filter(c => c.key !== candidate.key));
     fetchAllPointHistory();
@@ -4924,7 +4925,7 @@ function App() {
     if (!eventPicker || eventPicker.selected.size === 0) return;
     const { candidate, selected, points } = eventPicker;
     for (const name of selected) {
-      await gasWrite({ action:"addpoints", name:name, points:String(points), type:"付与", note:candidate.type, recorder:"DANiLO" });
+      await gasWrite({ action:"addpoints", name:name, points:String(points), type:"付与", note:candidate.type, targetDate:candidate.date, recorder:"DANiLO" });
     }
     await gasWrite({ action:"markpointprocessed", key:candidate.key, status:"granted" });
     setUnprocessedPoints(prev => prev.filter(c => c.key !== candidate.key));
@@ -7285,19 +7286,26 @@ function App() {
               ) : (
                 <div style={{display:"flex",flexDirection:"column",gap:6}}>
                   {unprocessedPoints.map(function(c,i){
+                    var unmatched = c.kind === "person" && c.nameMatched === false;
                     return (
-                      <div key={c.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"7px 8px",background:"#fff",borderRadius:8,border:"1px solid rgba(224,60,60,0.15)"}}>
+                      <div key={c.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"7px 8px",background:unmatched?"rgba(255,180,60,0.1)":"#fff",borderRadius:8,border:unmatched?"1px solid rgba(255,150,40,0.5)":"1px solid rgba(224,60,60,0.15)"}}>
                         <div style={{minWidth:0}}>
-                          <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{c.kind==="event" ? c.title : c.name}</p>
+                          <p style={{fontSize:11,fontWeight:600,color:unmatched?"#a06a10":C.choco}}>
+                            {unmatched && "⚠️ "}{c.kind==="event" ? c.title : c.name}
+                          </p>
                           <p style={{fontSize:10,color:C.label}}>{c.date}　{c.type}　+{c.suggestedPoints}P</p>
+                          {unmatched && <p style={{fontSize:9,color:"#a06a10",marginTop:2}}>メンバー記録に同じ名前が見つかりません（表記ゆれの可能性）</p>}
                         </div>
                         <div style={{display:"flex",gap:4,flexShrink:0}}>
                           {c.kind === "event" ? (
                             <button onClick={()=>setEventPicker({candidate:c, selected:new Set(), points:c.suggestedPoints})}
                               style={{padding:"5px 8px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>参加者を選んで付与</button>
                           ) : (
-                            <button onClick={()=>grantUnprocessedPoint(c, c.suggestedPoints)}
-                              style={{padding:"5px 10px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>付与</button>
+                            <button onClick={()=>{
+                              if (unmatched && !confirm("「"+c.name+"」はメンバー記録に見つかりません。このまま付与しますか？（表記ゆれの可能性があります）")) return;
+                              grantUnprocessedPoint(c, c.suggestedPoints);
+                            }}
+                              style={{padding:"5px 10px",borderRadius:6,border:"none",background:unmatched?"#c08020":"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>付与</button>
                           )}
                           <button onClick={()=>ignoreUnprocessedPoint(c)}
                             style={{padding:"5px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:10,cursor:"pointer"}}>無視する</button>
@@ -7318,7 +7326,7 @@ function App() {
                   <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 4px",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
                     <div>
                       <p style={{fontSize:12,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
-                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["対象日"]?" ／対象日:"+h["対象日"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
                     </div>
                     <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030",flexShrink:0,marginLeft:8}}>
                       {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
@@ -7934,7 +7942,7 @@ function App() {
                         <button onClick={e=>{e.stopPropagation();setLessonModal(mbr.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
                         <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
                         <button onClick={e=>{e.stopPropagation();setSchedModal(mbr.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
-                        <button onClick={e=>{e.stopPropagation();setPointModal({name:mbr.name,points:mbr.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
+                        <button onClick={e=>{e.stopPropagation();setPointModal({name:mbr.name,points:mbr.points||0});setPointValue("");setPointMsg("");setPointNote("");setPointTargetDate("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
                         {!isInstructor && <button onClick={e=>{e.stopPropagation();loadMemberScores(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a6a7a",background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎼</button>}
                         {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===mbr.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
                       </div>
@@ -7974,7 +7982,7 @@ function App() {
                 <button onClick={e=>{e.stopPropagation();setLessonModal(mbr.name);setLessonValue("");setLessonMsg("");setLessonColumn("課題");setLessonTab("text");setLessonHistoryOpen(false);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid "+C.olive,background:"rgba(112,130,56,0.1)",color:C.olive,fontSize:11,fontWeight:600,cursor:"pointer"}}>✏️ 記録</button>
                 <button onClick={e=>{e.stopPropagation();setSchedHistoryModal(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a6a8a",background:"rgba(90,106,138,0.1)",color:"#5a6a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📋 履歴</button>
                 <button onClick={e=>{e.stopPropagation();setSchedModal(mbr.name);setSchedMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #5a8a6a",background:"rgba(90,138,106,0.1)",color:"#5a8a6a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📅</button>
-                <button onClick={e=>{e.stopPropagation();setPointModal({name:mbr.name,points:mbr.points||0});setPointValue("");setPointMsg("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
+                <button onClick={e=>{e.stopPropagation();setPointModal({name:mbr.name,points:mbr.points||0});setPointValue("");setPointMsg("");setPointNote("");setPointTargetDate("");}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #b8860b",background:"rgba(184,134,11,0.1)",color:"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎁 P</button>
                 {!isInstructor && <button onClick={e=>{e.stopPropagation();loadMemberScores(mbr.name);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a6a7a",background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontSize:11,fontWeight:600,cursor:"pointer"}}>🎼</button>}
                 {!isInstructor && (()=>{ const sr=surveyResults.find(r=>r.name===mbr.name); return sr?(<button onClick={e=>{e.stopPropagation();setSurveyModal(sr);}} style={{padding:"5px 10px",borderRadius:8,border:"1px solid #3a7a8a",background:"rgba(58,122,138,0.1)",color:"#3a7a8a",fontSize:11,fontWeight:600,cursor:"pointer"}}>📊</button>):null; })()}
               </div>
@@ -8109,7 +8117,10 @@ function App() {
             {!isInstructor && <p style={{fontSize:10,color:C.moss,marginBottom:8}}>※ 追加は正の数、減算はマイナス（例：-50）で入力</p>}
             <input value={pointNote} onChange={e=>setPointNote(e.target.value)}
               placeholder="備考（必須）例：練習会参加"
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.choco,marginBottom:12}}/>
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:13,color:C.choco,marginBottom:8}}/>
+            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>対象日（任意・いつの分の付与か）</label>
+            <input type="date" value={pointTargetDate} onChange={e=>setPointTargetDate(e.target.value)}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}/>
             {pointMsg && <p style={{fontSize:13,color:pointMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{pointMsg}</p>}
             <div style={{display:"flex",gap:8,marginBottom:8}}>
               <button onClick={()=>{setPointModal(null);setPointMsg("");}} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
@@ -8120,7 +8131,7 @@ function App() {
                 const newP = pointModal.points + diff;
                 const type = diff >= 0 ? "付与" : "使用";
                 const recorder = isInstructor ? (instructorName || "講師") : "DANiLO";
-                gasWrite({action:"addpoints", name:pointModal.name, points:String(diff), type:type, note:pointNote, recorder:recorder}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setPointNote("");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
+                gasWrite({action:"addpoints", name:pointModal.name, points:String(diff), type:type, note:pointNote, targetDate:pointTargetDate, recorder:recorder}).then(d=>{ if(d.error){setPointMsg("❌ "+d.error);}else{setPointMsg("✅ 完了！");setPointNote("");setPointTargetDate("");setTimeout(()=>{setPointModal(null);setPointMsg("");autoFetch();},1500);} });
               }} style={{flex:2,padding:10,borderRadius:10,border:"none",background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer"}}>{isInstructor?"付与する":"付与・減算する"}</button>
             </div>
             {!isInstructor && (
@@ -8141,7 +8152,7 @@ function App() {
                   <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 4px",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
                     <div>
                       <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
-                      <p style={{fontSize:11,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                      <p style={{fontSize:11,color:C.choco}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["対象日"]?" ／対象日:"+h["対象日"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
                     </div>
                     <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030"}}>
                       {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
@@ -9121,7 +9132,7 @@ function App() {
                 <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:"1px solid rgba(112,130,56,0.1)"}}>
                   <div>
                     <p style={{fontSize:11,color:"rgba(255,255,255,0.7)"}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}</p>
-                    <p style={{fontSize:12,color:"#fff",fontWeight:500}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                    <p style={{fontSize:12,color:"#fff",fontWeight:500}}>{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["対象日"]?" ／対象日:"+h["対象日"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
                   </div>
                   <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#d4e8a0":"#ffaaaa"}}>
                     {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
