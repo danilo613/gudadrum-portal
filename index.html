@@ -5949,7 +5949,7 @@ function App() {
                     <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>一定のテンポで練習。5分=5P / 10分=10P / 15分=15P</div>
                     <div style={{display:"flex",flexDirection:"column",gap:6}}>
                       {[[5,5],[10,10],[15,15]].map(([min,pt])=>{
-                        const isSubscriber = currentMember.subscType && currentMember.subscType !== "種";
+                        const isSubscriber = (currentMember.subscType && currentMember.subscType !== "種") || isInstructor || isFromAdmin;
                         return (
                           <button key={min} onClick={()=>{
                             if (!isSubscriber) {
@@ -5973,7 +5973,7 @@ function App() {
                     <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>不規則に1小節無音になる。テンポを体の中で保つ練習。5分=5P / 10分=10P / 15分=15P</div>
                     <div style={{display:"flex",flexDirection:"column",gap:6}}>
                       {[[5,5],[10,10],[15,15]].map(([min,pt])=>{
-                        const isKanSubscriber = currentMember.subscType === "幹ノーマル" || currentMember.subscType === "幹スペシャル" || currentMember.subscType === "幹 ノーマル" || currentMember.subscType === "幹 スペシャル";
+                        const isKanSubscriber = (currentMember.subscType === "幹ノーマル" || currentMember.subscType === "幹スペシャル" || currentMember.subscType === "幹 ノーマル" || currentMember.subscType === "幹 スペシャル") || isInstructor || isFromAdmin;
                         return (
                           <button key={min} onClick={()=>{
                             if (!isKanSubscriber) {
@@ -5997,7 +5997,7 @@ function App() {
                     <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>BPMが徐々に上昇。5分=5P / 10分=10P / 15分=20P</div>
                     <div style={{display:"flex",flexDirection:"column",gap:6}}>
                       {[[5,10],[10,20],[15,30]].map(([min,inc])=>{
-                        const isSubscriber = currentMember.subscType && currentMember.subscType !== "種";
+                        const isSubscriber = (currentMember.subscType && currentMember.subscType !== "種") || isInstructor || isFromAdmin;
                         return (
                           <button key={min} onClick={()=>{
                             if (!isSubscriber) {
