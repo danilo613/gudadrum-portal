@@ -3617,6 +3617,8 @@ function App() {
   const [pointHistory, setPointHistory] = useState([]);
   const [pointHistoryOpen, setPointHistoryOpen] = useState(false);
   const [showAllPoints, setShowAllPoints] = useState(false);
+  const [unprocessedPoints, setUnprocessedPoints] = useState(null);
+  const [eventPicker, setEventPicker] = useState(null); // {candidate, selected:Set}
   const [allPointHistory, setAllPointHistory] = useState([]);
   const [allPointsLoaded, setAllPointsLoaded] = useState(false);
   const [showAllScheds, setShowAllScheds] = useState(false);
@@ -4020,6 +4022,17 @@ function App() {
   const [characterGrowth, setCharacterGrowth] = useState(null);
   const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [characterMessage, setCharacterMessage] = useState("");
+  function speakCharacterMessage(text) {
+    try {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel(); // 前の読み上げが残ってたら止めてから再生
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = "ja-JP";
+      utter.pitch = 1.3;
+      utter.rate = 1.0;
+      window.speechSynthesis.speak(utter);
+    } catch(e) {}
+  }
   const [rtmStartTime, setRtmStartTime] = useState(0);
   const [rtmElapsed, setRtmElapsed] = useState(0); // 秒
   const [rtmStartBpm, setRtmStartBpm] = useState(80);
@@ -4885,6 +4898,39 @@ function App() {
       const data = await res.json();
       if (data.history) { setAllPointHistory(data.history); setAllPointsLoaded(true); }
     } catch(e) {}
+  }
+
+  async function fetchUnprocessedPoints() {
+    try {
+      const res = await gasWrite({ action: "getunprocessedpoints" });
+      if (res && res.candidates) setUnprocessedPoints(res.candidates);
+    } catch(e) {}
+  }
+
+  async function grantUnprocessedPoint(candidate, points) {
+    await gasWrite({ action:"addpoints", name:candidate.name, points:String(points), type:"付与", note:candidate.type, recorder:"DANiLO" });
+    await gasWrite({ action:"markpointprocessed", key:candidate.key, status:"granted" });
+    setUnprocessedPoints(prev => prev.filter(c => c.key !== candidate.key));
+    fetchAllPointHistory();
+    autoFetch();
+  }
+
+  async function ignoreUnprocessedPoint(candidate) {
+    await gasWrite({ action:"markpointprocessed", key:candidate.key, status:"ignored" });
+    setUnprocessedPoints(prev => prev.filter(c => c.key !== candidate.key));
+  }
+
+  async function grantEventPoints() {
+    if (!eventPicker || eventPicker.selected.size === 0) return;
+    const { candidate, selected, points } = eventPicker;
+    for (const name of selected) {
+      await gasWrite({ action:"addpoints", name:name, points:String(points), type:"付与", note:candidate.type, recorder:"DANiLO" });
+    }
+    await gasWrite({ action:"markpointprocessed", key:candidate.key, status:"granted" });
+    setUnprocessedPoints(prev => prev.filter(c => c.key !== candidate.key));
+    setEventPicker(null);
+    fetchAllPointHistory();
+    autoFetch();
   }
 
   async function sendFeedback() {
@@ -7220,12 +7266,48 @@ function App() {
             )}
           </>
         )}
-        <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory();}}
+        <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory(); if(unprocessedPoints===null) fetchUnprocessedPoints();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
         {showAllPoints && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            {/* 未処理リスト */}
+            <div style={{marginBottom:14,padding:"10px 12px",background:"rgba(224,60,60,0.05)",border:"1px solid rgba(224,60,60,0.2)",borderRadius:10}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                <span style={{fontSize:14}}>⚠️</span>
+                <span style={{fontSize:11,fontWeight:700,color:"#a03a3a",letterSpacing:0.5}}>ポイント未処理リスト{unprocessedPoints?"（"+unprocessedPoints.length+"件）":""}</span>
+              </div>
+              {unprocessedPoints === null ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:6}}>読み込み中...</p>
+              ) : unprocessedPoints.length === 0 ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:6}}>未処理はありません 🎉</p>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {unprocessedPoints.map(function(c,i){
+                    return (
+                      <div key={c.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"7px 8px",background:"#fff",borderRadius:8,border:"1px solid rgba(224,60,60,0.15)"}}>
+                        <div style={{minWidth:0}}>
+                          <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{c.kind==="event" ? c.title : c.name}</p>
+                          <p style={{fontSize:10,color:C.label}}>{c.date}　{c.type}　+{c.suggestedPoints}P</p>
+                        </div>
+                        <div style={{display:"flex",gap:4,flexShrink:0}}>
+                          {c.kind === "event" ? (
+                            <button onClick={()=>setEventPicker({candidate:c, selected:new Set(), points:c.suggestedPoints})}
+                              style={{padding:"5px 8px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>参加者を選んで付与</button>
+                          ) : (
+                            <button onClick={()=>grantUnprocessedPoint(c, c.suggestedPoints)}
+                              style={{padding:"5px 10px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>付与</button>
+                          )}
+                          <button onClick={()=>ignoreUnprocessedPoint(c)}
+                            style={{padding:"5px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:10,cursor:"pointer"}}>無視する</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
             {!allPointsLoaded ? (
               <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
             ) : allPointHistory.length === 0 ? (
@@ -8004,6 +8086,21 @@ function App() {
             )}
             {/* 累計ポイント調整 */}
             
+            <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>よく使う項目（タップで自動入力）</label>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:6,marginBottom:14}}>
+              {[
+                {label:"個人レッスン:対面", points:500},
+                {label:"個人レッスン:zoom", points:300},
+                {label:"練習会", points:150},
+                {label:"イベント", points:2500},
+              ].map(preset=>(
+                <button key={preset.label} onClick={()=>{setPointValue(String(preset.points));setPointNote(preset.label);}}
+                  style={{padding:"8px 6px",borderRadius:8,border:"1px solid rgba(184,134,11,0.3)",background:"rgba(184,134,11,0.06)",color:"#8a6a1a",fontSize:11,fontWeight:600,cursor:"pointer",textAlign:"center",lineHeight:1.4}}>
+                  {preset.label}<br/><span style={{fontSize:10,opacity:0.75}}>+{preset.points}P</span>
+                </button>
+              ))}
+            </div>
+
             <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>付与・減算するポイント数</label>
             <input type="number" value={pointValue} onChange={e=>setPointValue(e.target.value)}
               min={isInstructor?"0":undefined}
@@ -8053,6 +8150,41 @@ function App() {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {eventPicker && (
+        <div style={{position:"fixed",inset:0,background:"rgba(75,54,33,0.55)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:100,padding:20}}>
+          <div style={{background:C.bgLight,border:"1px solid "+C.border,borderRadius:20,padding:24,width:"100%",maxWidth:420,maxHeight:"85vh",display:"flex",flexDirection:"column"}}>
+            <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>👥 参加者を選んで付与</h3>
+            <p style={{fontSize:13,color:C.label,marginBottom:12}}>{eventPicker.candidate.date}　{eventPicker.candidate.title}</p>
+            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:12}}>
+              <label style={{fontSize:12,color:C.olive,fontWeight:600}}>1人あたりのポイント</label>
+              <input type="number" value={eventPicker.points} onChange={e=>setEventPicker(prev=>({...prev, points:parseInt(e.target.value)||0}))}
+                style={{width:100,border:"1px solid "+C.border,borderRadius:8,padding:"6px 10px",fontSize:13,color:C.choco}}/>
+            </div>
+            <p style={{fontSize:11,color:C.label,marginBottom:8}}>選択中：{eventPicker.selected.size}人</p>
+            <div style={{flex:1,overflowY:"auto",border:"1px solid "+C.border,borderRadius:10,padding:8,marginBottom:16}}>
+              {members.slice().sort((a,b)=>a.name.localeCompare(b.name,"ja")).map(m=>(
+                <label key={m.name} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 4px",cursor:"pointer",fontSize:13,color:C.choco}}>
+                  <input type="checkbox" checked={eventPicker.selected.has(m.name)} onChange={()=>{
+                    setEventPicker(prev=>{
+                      const next = new Set(prev.selected);
+                      if (next.has(m.name)) next.delete(m.name); else next.add(m.name);
+                      return {...prev, selected:next};
+                    });
+                  }}/>
+                  {m.name}
+                </label>
+              ))}
+            </div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setEventPicker(null)} style={{flex:1,padding:10,borderRadius:10,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:13,cursor:"pointer"}}>キャンセル</button>
+              <button onClick={grantEventPoints} disabled={eventPicker.selected.size===0}
+                style={{flex:2,padding:10,borderRadius:10,border:"none",background:eventPicker.selected.size===0?"#ccc":"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:13,fontWeight:700,cursor:eventPicker.selected.size===0?"default":"pointer"}}>
+                {eventPicker.selected.size}人に付与する
+              </button>
+            </div>
           </div>
         </div>
       )}
