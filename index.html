@@ -9611,11 +9611,11 @@ function App() {
                     </div>
                   );
                 };
-                var top7 = contributionData.slice(0,7);
+                var top10 = contributionData.slice(0,10);
                 return (
                   <div>
-                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP7</p>
-                    {top7.map(function(c,i){return renderRow(c, i);})}
+                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP10</p>
+                    {top10.map(function(c,i){return renderRow(c, i);})}
                   </div>
                 );
               })()}
