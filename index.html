@@ -9628,6 +9628,45 @@ function App() {
           </button>
           {contributionOpen && (
             <div style={{padding:"0 16px 14px"}}>
+              {contributionData !== null && (function(){
+                var totalHPT = contributionData.reduce(function(sum,c){return sum+c.score;},0);
+                var pillarCount = contributionData.filter(function(c){return c.level && c.level.indexOf("柱")!==-1;}).length;
+                var candidateCount = contributionData.filter(function(c){return c.isPillarCandidate;}).length;
+                var memberCount = members.length;
+                var scaleTotal = members.reduce(function(sum,mem){return sum+splitItems(mem.scales).length;},0);
+                var memberTarget = 108, pillarTarget = 12;
+                return (
+                  <div style={{marginBottom:16,padding:"14px",borderRadius:12,background:"linear-gradient(135deg, rgba(112,130,56,0.10), rgba(184,134,11,0.08))",border:"1px solid rgba(112,130,56,0.2)"}}>
+                    <p style={{fontSize:11,fontWeight:700,color:C.choco,textAlign:"center",lineHeight:1.7,marginBottom:10}}>
+                      百八祈音〜Inorion〜に向けて<br/>グーダドラムオーケストラ　響き合い　成長度数
+                    </p>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>メンバー数</p>
+                        <p style={{fontSize:15,fontWeight:700,color:C.choco}}>{memberCount}<span style={{fontSize:10,fontWeight:400}}> / {memberTarget}人</span></p>
+                        <p style={{fontSize:8,color:C.label}}>目標まであと{Math.max(0,memberTarget-memberCount)}人</p>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>柱の人数</p>
+                        <p style={{fontSize:15,fontWeight:700,color:"#8a4a1a"}}>{pillarCount}<span style={{fontSize:10,fontWeight:400}}> / {pillarTarget}人</span></p>
+                        <p style={{fontSize:8,color:C.label}}>達成率{Math.round(pillarCount/pillarTarget*100)}%</p>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>柱候補の人数</p>
+                        <p style={{fontSize:15,fontWeight:700,color:"#a06a1a"}}>{candidateCount}人</p>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>全体経験値</p>
+                        <p style={{fontSize:15,fontWeight:700,color:"#708238"}}>{totalHPT}<span style={{fontSize:10,fontWeight:400}}> HPT</span></p>
+                      </div>
+                    </div>
+                    <div style={{marginTop:8,background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
+                      <p style={{fontSize:9,color:C.moss,marginBottom:2}}>🎵 グーダドラム総数（全員のマイ音階合計）</p>
+                      <p style={{fontSize:15,fontWeight:700,color:C.choco}}>{scaleTotal}</p>
+                    </div>
+                  </div>
+                );
+              })()}
               <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
                 リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度（HPT = 響ポイント）。
               </p>
