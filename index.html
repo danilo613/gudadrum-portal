@@ -9593,6 +9593,7 @@ function App() {
                           {i!==null && <span style={{fontSize:11,color:C.moss,fontWeight:700,minWidth:20}}>{i+1}</span>}
                           <span style={{fontSize:13,fontWeight:700,color:isPillar?"#8a4a1a":C.choco}}>{c.name}</span>
                           {isPillar && <span style={{fontSize:11,fontWeight:900,color:"#8a4a1a"}}>《柱》</span>}
+                          {c.isInstructor && <span style={{fontSize:11,fontWeight:900,color:"#3a6a7a"}}>《講師》</span>}
                           {c.isPillarCandidate && <span style={{fontSize:10,fontWeight:700,color:"#a06a1a",background:"rgba(255,180,60,0.15)",borderRadius:6,padding:"1px 6px"}}>柱候補🔥</span>}
                         </div>
                         <span style={{fontSize:14,fontWeight:700,color:"#708238",flexShrink:0}}>{c.score} LOC</span>
@@ -9610,19 +9611,11 @@ function App() {
                     </div>
                   );
                 };
-                var pillarCandidates = contributionData.filter(function(c){return c.isPillarCandidate;});
-                var othersLimit = Math.max(0, 7 - pillarCandidates.length);
-                var others = contributionData.filter(function(c){return !c.isPillarCandidate;}).slice(0,othersLimit);
+                var top7 = contributionData.slice(0,7);
                 return (
                   <div>
-                    {pillarCandidates.length>0 && (
-                      <div style={{marginBottom:14}}>
-                        <p style={{fontSize:11,fontWeight:700,color:"#a06a1a",marginBottom:6}}>🔥 柱候補</p>
-                        {pillarCandidates.map(function(c){return renderRow(c, null);})}
-                      </div>
-                    )}
-                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP{othersLimit}</p>
-                    {others.map(function(c,i){return renderRow(c, i);})}
+                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP7</p>
+                    {top7.map(function(c,i){return renderRow(c, i);})}
                   </div>
                 );
               })()}
