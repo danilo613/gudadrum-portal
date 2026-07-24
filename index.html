@@ -3688,7 +3688,8 @@ function App() {
   const [showAllScheds, setShowAllScheds] = useState(false);
   const [showLogins, setShowLogins] = useState(false);
   const [showWorkouts, setShowWorkouts] = useState(false);
-  const [workoutViewMode, setWorkoutViewMode] = useState("all"); // "all" | "byMember"
+  const [workoutViewMode, setWorkoutViewMode] = useState("all"); // "all" | "byMember" | "byDate"
+  const [workoutExpandedMonth, setWorkoutExpandedMonth] = useState(null);
   const [workoutExpandedMember, setWorkoutExpandedMember] = useState(null);
   const [workoutHistory, setWorkoutHistory] = useState(null);
   async function fetchAllWorkouts(){
@@ -7896,6 +7897,10 @@ function App() {
                     style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="byMember"?"1px solid #3a7a5a":"1px solid rgba(58,122,90,0.25)",background:workoutViewMode==="byMember"?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.06)",color:workoutViewMode==="byMember"?"#fff":"#3a7a5a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
                     👤 メンバー別
                   </button>
+                  <button onClick={()=>setWorkoutViewMode("byDate")}
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="byDate"?"1px solid #3a7a5a":"1px solid rgba(58,122,90,0.25)",background:workoutViewMode==="byDate"?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.06)",color:workoutViewMode==="byDate"?"#fff":"#3a7a5a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                    📅 日別
+                  </button>
                 </div>
                 {workoutViewMode === "byMember" ? (
                   <div style={{maxHeight:500,overflowY:"auto"}}>
@@ -7933,6 +7938,56 @@ function App() {
                                       <span style={{color:C.choco,minWidth:36,flexShrink:0,textAlign:"right"}}>{w.minutes}分</span>
                                       <span style={{color:C.label,minWidth:64,flexShrink:0,textAlign:"right",fontFamily:"monospace",fontSize:10}}>{w.startBpm}→{w.endBpm}</span>
                                       <span style={{color:"#3a7a5a",minWidth:36,flexShrink:0,textAlign:"right",fontWeight:600}}>{w.points}P</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                ) : workoutViewMode === "byDate" ? (
+                  <div style={{maxHeight:500,overflowY:"auto"}}>
+                    {(function(){
+                      var byDate = {};
+                      workoutHistory.forEach(function(w){
+                        var dateStr = String(w.date||"").slice(0,10); // yyyy-MM-dd
+                        if (!dateStr) return;
+                        if (!byDate[dateStr]) byDate[dateStr] = { date:dateStr, count:0, minutes:0 };
+                        byDate[dateStr].count += 1;
+                        byDate[dateStr].minutes += w.minutes || 0;
+                      });
+                      var byMonth = {};
+                      Object.values(byDate).forEach(function(d){
+                        var month = d.date.slice(0,7); // yyyy-MM
+                        if (!byMonth[month]) byMonth[month] = { month:month, days:[], count:0, minutes:0 };
+                        byMonth[month].days.push(d);
+                        byMonth[month].count += d.count;
+                        byMonth[month].minutes += d.minutes;
+                      });
+                      var months = Object.values(byMonth).sort(function(a,b){ return b.month.localeCompare(a.month); });
+                      return months.map(function(mo){
+                        var isExpanded = workoutExpandedMonth === mo.month;
+                        var days = mo.days.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
+                        return (
+                          <div key={mo.month} style={{marginBottom:6,background:"rgba(58,122,90,0.05)",borderRadius:8,border:"1px solid rgba(58,122,90,0.15)",overflow:"hidden"}}>
+                            <button onClick={()=>setWorkoutExpandedMonth(isExpanded ? null : mo.month)}
+                              style={{width:"100%",padding:"9px 10px",background:"transparent",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                              <span style={{fontSize:12,fontWeight:600,color:C.choco}}>{mo.month.replace("-","年")}月</span>
+                              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                <span style={{fontSize:10,color:"#3a7a5a"}}>計{mo.count}回 ／ {mo.minutes}分</span>
+                                <span style={{fontSize:10,color:"rgba(58,122,90,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                              </div>
+                            </button>
+                            {isExpanded && (
+                              <div style={{borderTop:"1px solid rgba(58,122,90,0.15)",padding:"4px 10px 8px"}}>
+                                {days.map(function(d){
+                                  return (
+                                    <div key={d.date} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(0,0,0,0.05)",fontSize:11}}>
+                                      <span style={{color:C.label,fontFamily:"monospace"}}>{d.date}</span>
+                                      <span style={{color:C.choco}}>{d.count}回 ／ {d.minutes}分</span>
                                     </div>
                                   );
                                 })}
