@@ -3652,6 +3652,8 @@ function App() {
   const [myMemo, setMyMemo] = useState("");
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
+  const [contributionOpen, setContributionOpen] = useState(false);
+  const [contributionData, setContributionData] = useState(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [orchSchedules, setOrchSchedules] = useState(()=>cachedInit("orchSchedules", []));
   const [orchFilter, setOrchFilter] = useState("すべて");
@@ -4970,6 +4972,13 @@ function App() {
     try {
       const res = await gasWrite({ action: "getunprocessedpoints" });
       if (res && res.candidates) setUnprocessedPoints(res.candidates);
+    } catch(e) {}
+  }
+
+  async function fetchContributionScores() {
+    try {
+      const res = await gasWrite({ action: "getcontributionscores" });
+      if (res && res.members) setContributionData(res.members);
     } catch(e) {}
   }
 
@@ -9555,6 +9564,50 @@ function App() {
           </div>}
         </div>
 
+
+        {/* 貢献度・功労者（テスト中：ダニー名義でログイン時のみ表示） */}
+        {m.name === "ダニー" && (
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden",marginBottom:14}}>
+          <button onClick={()=>{setContributionOpen(!contributionOpen); if(!contributionOpen && contributionData===null) fetchContributionScores();}}
+            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,fontWeight:600,color:C.label}}>🏆 貢献度・功労者</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:contributionOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {contributionOpen && (
+            <div style={{padding:"0 16px 14px"}}>
+              <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+                リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度。「柱候補🔥」は既存の段階が「若幹」の方に表示されます。
+              </p>
+              {contributionData === null ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
+              ) : contributionData.length === 0 ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
+              ) : (
+                <div style={{maxHeight:420,overflowY:"auto"}}>
+                  {contributionData.map(function(c, i){
+                    var isMe = c.name === m.name;
+                    return (
+                      <div key={c.name} style={{display:"flex",flexDirection:"column",gap:2,padding:"8px 10px",marginBottom:5,borderRadius:8,background:isMe?"rgba(184,134,11,0.12)":"rgba(112,130,56,0.04)",border:isMe?"1px solid rgba(184,134,11,0.4)":"1px solid transparent"}}>
+                        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                          <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
+                            <span style={{fontSize:11,color:C.moss,fontWeight:700,minWidth:20}}>{i+1}</span>
+                            <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{c.name}</span>
+                            {c.isPillarCandidate && <span style={{fontSize:10,fontWeight:700,color:"#a06a1a",background:"rgba(255,180,60,0.15)",borderRadius:6,padding:"1px 6px"}}>柱候補🔥</span>}
+                          </div>
+                          <span style={{fontSize:14,fontWeight:700,color:"#708238",flexShrink:0}}>{c.score}pt</span>
+                        </div>
+                        <div style={{fontSize:9,color:C.label,paddingLeft:26}}>
+                          RTM {c.rtmMinutes}分 ／ レッスン {c.lessonCount}回 ／ 練習会 {c.practiceCount}回 ／ イベント {c.eventCount}回 ／ 活動{c.activeMonths}ヶ月
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        )}
 
         {/* マイメモ */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
