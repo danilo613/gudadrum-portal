@@ -9651,6 +9651,18 @@ function App() {
                         </div>
                         <span style={{fontSize:14,fontWeight:700,color:"#708238",flexShrink:0}}>{c.score} HPT</span>
                       </div>
+                      {c.titles && c.titles.length > 0 && (
+                        <div style={{display:"flex",flexDirection:"column",gap:2,marginTop:2,marginBottom:2}}>
+                          {c.titles.map(function(t,ti){
+                            return (
+                              <div key={ti} style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
+                                <span style={{fontSize:10,fontWeight:900,color:"#b8860b",background:"rgba(184,134,11,0.12)",borderRadius:6,padding:"1px 7px"}}>🏅{t.title}</span>
+                                <span style={{fontSize:9,color:C.moss}}>{t.desc}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                       <div style={{fontSize:9,color:C.label,paddingLeft:i!==null?26:0}}>
                         {[
                           c.rtmMinutes>0 && ("RTM "+c.rtmMinutes+"分"),
