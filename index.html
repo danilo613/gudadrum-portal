@@ -574,7 +574,6 @@ const SCORE_DOTS_FUNENONE = {
   purple: {cx:118.0, cy:83.0},   // 右
   green:  {cx:103.9, cy:116.9},  // 右下
   pink:   {cx:70.0,  cy:83.0},   // 中央
-  attack: {cx:53.05, cy:66.05},  // 中央とブラウン（左上）の間
 };
 
 // dreamy EYES: 正しい配置（8音、中央なし）
@@ -588,7 +587,6 @@ const SCORE_DOTS_DREAMY = {
   purple: {cx:22.0,  cy:83.0},   // 左
   green:  {cx:36.1,  cy:49.1},   // 左上
   pink:   {cx:70.0,  cy:83.0},   // 中央
-  attack: {cx:86.95, cy:99.95},  // 中央とブラウン（右下）の間
 };
 
 const SCORE_DOTS_HIBIKI = {
@@ -617,6 +615,8 @@ const SCORE_DOTS_NOSTALGIC = {
 };
 
 const SCORE_DOTS = SCORE_DOTS_FUNENONE;
+// アタック（ボディー打面）の位置は、配置（回転）によらず常にイラストの右下固定
+const SCORE_ATTACK_DOT_POS = {cx:112.0, cy:125.0};
 
 // kigaruのセクション番号からDOTS配置を判定
 function getKigaruDots(sectionKey) {
@@ -672,10 +672,12 @@ function getDrumLabels(scoreId, sectionKey, scale) {
 
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell, floatPosInit, onFloatPosChange, swapLR }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-  // アタック（ボディー打面）を左手グリッドは末尾（茶色の右）、右手グリッドは先頭（オレンジの左）に追加
-  var COLORS_LEFT = COLORS.concat(["attack"]);
-  var COLORS_RIGHT = ["attack"].concat(COLORS);
-  var COLORS_ALL = COLORS.concat(["attack"]); // パターンデータの初期化・再生判定など、左右を区別しない場面で使う
+  // アタック（ボディー打面）は今のところ「蒼〜aoi〜」と「気軽サブスク（kigaru）」のみ対応
+  var isAttackEnabled = scoreId==="aoi"||scoreId==="kigaru";
+  // 左手グリッドは末尾（茶色の右）、右手グリッドは先頭（オレンジの左）に追加
+  var COLORS_LEFT = isAttackEnabled ? COLORS.concat(["attack"]) : COLORS;
+  var COLORS_RIGHT = isAttackEnabled ? ["attack"].concat(COLORS) : COLORS;
+  var COLORS_ALL = isAttackEnabled ? COLORS.concat(["attack"]) : COLORS; // パターンデータの初期化・再生判定など、左右を区別しない場面で使う
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
   var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
@@ -1705,7 +1707,7 @@ function renderSideGrid2(barIdx, side){
   function renderBar(barIdx){
     var isStart=startBar===barIdx;
     var stepH=CELL+GAP;
-    var nCols=canEdit?COLORS.length+1:1; // +1はアタック列の分（左右とも1列増える）
+    var nCols=canEdit?(isAttackEnabled?COLORS.length+1:COLORS.length):1; // アタック対応曲のみ+1列
     var sideW=nCols*(CELL+GAP);
     var beatW=14;
     var totalW=sideW+beatW+sideW;
@@ -2470,7 +2472,7 @@ function renderSideGrid2(barIdx, side){
   function renderBar(barIdx){
     var isStart=startBar===barIdx;
     var stepH=CELL+GAP;
-    var nCols=canEdit?COLORS.length+1:1; // +1はアタック列の分（左右とも1列増える）
+    var nCols=canEdit?(isAttackEnabled?COLORS.length+1:COLORS.length):1; // アタック対応曲のみ+1列
     var sideW=nCols*(CELL+GAP);
     var beatW=14;
     var totalW=sideW+beatW+sideW;
@@ -2836,12 +2838,13 @@ function renderSideGrid2(barIdx, side){
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r="13"
                     fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                     stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>
-                    {color==="attack"&&<text x={pos.cx} y={pos.cy+5} textAnchor="middle" fontSize="15" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
+                    {color==="attack"&&<text x={pos.cx} y={pos.cy+3} textAnchor="middle" fontSize="7" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
                 });
               })()}
             </svg>
@@ -2866,12 +2869,13 @@ function renderSideGrid2(barIdx, side){
             <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
             {(function(){
               var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
               return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                 var pos=activeDots[color];
                 return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r="13"
                   fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                   stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>
-                  {color==="attack"&&<text x={pos.cx} y={pos.cy+5} textAnchor="middle" fontSize="15" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
+                  {color==="attack"&&<text x={pos.cx} y={pos.cy+3} textAnchor="middle" fontSize="7" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
               });
             })()}
           </svg>
@@ -3044,6 +3048,7 @@ function renderSideGrid2(barIdx, side){
               )}
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
                 return Object.keys(activeDots).filter(function(c){return !(scale==="nostalgic"&&c==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
@@ -3062,7 +3067,7 @@ function renderSideGrid2(barIdx, side){
                       )}
                       {color==="attack"&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="15" fontWeight="900" fill={color===highlightColor?"#fff":"#999"} fontFamily="sans-serif" pointerEvents="none">
+                          fontSize="7" fontWeight="900" fill={color===highlightColor?"#fff":"#999"} fontFamily="sans-serif" pointerEvents="none">
                           ✕
                         </text>
                       )}
@@ -3181,6 +3186,7 @@ function renderSideGrid2(barIdx, side){
               {scale!=="nostalgic" && <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{getDrumLabels(scoreId, sectionKey, scale).bottom}</text>}
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
@@ -3199,7 +3205,7 @@ function renderSideGrid2(barIdx, side){
                       )}
                       {color==="attack"&&(
                         <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
-                          fontSize="15" fontWeight="900" fill={color===highlightColor?"#fff":"#999"} fontFamily="sans-serif" pointerEvents="none">
+                          fontSize="7" fontWeight="900" fill={color===highlightColor?"#fff":"#999"} fontFamily="sans-serif" pointerEvents="none">
                           ✕
                         </text>
                       )}
