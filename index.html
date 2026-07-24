@@ -5386,6 +5386,7 @@ function App() {
     var L = pd&&pd.left||{};
     var R = pd&&pd.right||{};
     var COLORS_P = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+    if (scoreId==="aoi"||scoreId==="kigaru") COLORS_P = COLORS_P.concat(["attack"]);
     var CELL_P = 20, GAP_P = 1;
     // 使用色
     var usedC = {};
@@ -5531,6 +5532,7 @@ function App() {
 
   async function saveScorePattern(scoreId, section, left, right, meta, left2, right2) {
     var colors = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+    if (scoreId==="aoi"||scoreId==="kigaru") colors = colors.concat(["attack"]); // アタック（ボディー打面）対応曲
     var colors2 = ["turquoise","steelgray","salmon","royalblue","gold","emerald","charcoal","sage","plum"];
     // 現在のスプシデータと比較して変更があるものだけ送る
     var existing = (scorePatterns[scoreId]||{})[section]||{};
