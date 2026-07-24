@@ -319,6 +319,7 @@ const SCORE_SOUND_URLS = {
     orange:"/sounds/orange.mp3",
     pink:"/sounds/pink.mp3",
     lime:"/sounds/lime.mp3",
+    attack:"/sounds/attack.mp3",
   },
   enigma: {
     yellow:"/sounds/enigma_yellow.mp3",
@@ -362,6 +363,7 @@ const SCORE_SOUND_URLS = {
     purple:"/sounds/arcane_charcoal.mp3",
     green:"/sounds/arcane_sage.mp3",
     pink:"/sounds/arcane_plum.mp3",
+    attack:"/sounds/arcane_attack.mp3",
   },
 };
 function getSoundUrls(scoreId, soundType) {
@@ -554,12 +556,12 @@ const SCORE_SECTIONS = {
   ],
 };
 
-const SCORE_DOT_COLORS = {"yellow":"#F5E642","red":"#E83020","purple":"#8844CC","green":"#1A8A40","brown":"#C4A882","cyan":"#00BFEF","orange":"#F07020","pink":"#F020B0","lime":"#8CC830"};
-const SCORE_PALE_COLORS = {"yellow":"#FBF6B0","red":"#F8C0BC","purple":"#D4C0F4","green":"#A8E8C0","brown":"#ECD8C0","cyan":"#B0ECFC","orange":"#FAD8A8","pink":"#F4B0E0","lime":"#C4ECA8"};
+const SCORE_DOT_COLORS = {"yellow":"#F5E642","red":"#E83020","purple":"#8844CC","green":"#1A8A40","brown":"#C4A882","cyan":"#00BFEF","orange":"#F07020","pink":"#F020B0","lime":"#8CC830","attack":"#3A3A3A"};
+const SCORE_PALE_COLORS = {"yellow":"#FBF6B0","red":"#F8C0BC","purple":"#D4C0F4","green":"#A8E8C0","brown":"#ECD8C0","cyan":"#B0ECFC","orange":"#FAD8A8","pink":"#F4B0E0","lime":"#C4ECA8","attack":"#D8D8D8"};
 
 
 const SCORE_COLOR_ORDER = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
-const SCORE_COLOR_NAMES = {orange:"橙",red:"赤",lime:"黄緑",green:"緑",yellow:"黄",purple:"紫",cyan:"水色",pink:"ピンク",brown:"茶"};
+const SCORE_COLOR_NAMES = {orange:"橙",red:"赤",lime:"黄緑",green:"緑",yellow:"黄",purple:"紫",cyan:"水色",pink:"ピンク",brown:"茶",attack:"アタック"};
 const SPB = 12;
 const TOTAL_STEPS = 96;
 const SCORE_DOTS_FUNENONE = {
@@ -572,6 +574,7 @@ const SCORE_DOTS_FUNENONE = {
   purple: {cx:118.0, cy:83.0},   // 右
   green:  {cx:103.9, cy:116.9},  // 右下
   pink:   {cx:70.0,  cy:83.0},   // 中央
+  attack: {cx:53.05, cy:66.05},  // 中央とブラウン（左上）の間
 };
 
 // dreamy EYES: 正しい配置（8音、中央なし）
@@ -585,6 +588,7 @@ const SCORE_DOTS_DREAMY = {
   purple: {cx:22.0,  cy:83.0},   // 左
   green:  {cx:36.1,  cy:49.1},   // 左上
   pink:   {cx:70.0,  cy:83.0},   // 中央
+  attack: {cx:86.95, cy:99.95},  // 中央とブラウン（右下）の間
 };
 
 const SCORE_DOTS_HIBIKI = {
@@ -668,6 +672,10 @@ function getDrumLabels(scoreId, sectionKey, scale) {
 
 function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, onSave, startTime, onStartTimeChange, scale, subdivProp, scoreLoading, onSectionEnd, onQueueStart, isQueuePlaying, sharedBpm, onBpmChange, sharedMetroOn, sharedMetroMode, onMetroChange, onPrintAll, onPrintThis, onLoopComplete, autoPlay, instrument2, patternData2, sharedHeadBell, floatPosInit, onFloatPosChange, swapLR }) {
   var COLORS = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
+  // アタック（ボディー打面）を左手グリッドは末尾（茶色の右）、右手グリッドは先頭（オレンジの左）に追加
+  var COLORS_LEFT = COLORS.concat(["attack"]);
+  var COLORS_RIGHT = ["attack"].concat(COLORS);
+  var COLORS_ALL = COLORS.concat(["attack"]); // パターンデータの初期化・再生判定など、左右を区別しない場面で使う
   var COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS_ORDER:COLORS;
   var DOT_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
   var PALE_COLORS2 = instrument2==="arcane"?SCORE_HIBIKI_PALE_COLORS:SCORE_PALE_COLORS;
@@ -683,14 +691,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   function emptyPat(total) {
     var t = total || (SPB * 8); // SPBに基づいたサイズ
     var p = {};
-    COLORS.forEach(function(c){ p[c] = new Array(t).fill(0); });
+    COLORS_ALL.forEach(function(c){ p[c] = new Array(t).fill(0); });
     return p;
   }
   function initPat(side) {
     var total = SPB * 8;
     var p = emptyPat(total);
     if (patternData && patternData[side]) {
-      COLORS.forEach(function(c){
+      COLORS_ALL.forEach(function(c){
         if (patternData[side][c]) {
           var src = patternData[side][c];
           for(var i=0;i<total;i++) p[c][i] = src[i]||0;
@@ -824,7 +832,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         if(sb===null) return;
         var cBarStart=getBarStart(sb); var cBarSpb=getBarSpb(sb);
         var barLeft={}, barRight={};
-        COLORS.forEach(function(c){
+        COLORS_ALL.forEach(function(c){
           barLeft[c]=(leftRef.current[c]||[]).slice(cBarStart,cBarStart+cBarSpb);
           barRight[c]=(rightRef.current[c]||[]).slice(cBarStart,cBarStart+cBarSpb);
         });
@@ -851,7 +859,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         var copyLen=Math.min(cbSpb,pBarSpb);
         setLeft(function(prev){
           var p=Object.assign({},prev);
-          COLORS.forEach(function(c){
+          COLORS_ALL.forEach(function(c){
             p[c]=(prev[c]||[]).slice();
             for(var i=0;i<pBarSpb;i++) p[c][pBarStart+i]=i<copyLen?(cb.left[c]?cb.left[c][i]||0:0):0;
           });
@@ -859,7 +867,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         });
         setRight(function(prev){
           var p=Object.assign({},prev);
-          COLORS.forEach(function(c){
+          COLORS_ALL.forEach(function(c){
             p[c]=(prev[c]||[]).slice();
             for(var i=0;i<pBarSpb;i++) p[c][pBarStart+i]=i<copyLen?(cb.right[c]?cb.right[c][i]||0:0):0;
           });
@@ -941,7 +949,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     // subdivPropが変わった時にleft/rightを正しいサイズで再構築
     var total = SPB * 8;
     var lp={}, rp={};
-    COLORS.forEach(function(c){
+    COLORS_ALL.forEach(function(c){
       lp[c]=new Array(total).fill(0);
       rp[c]=new Array(total).fill(0);
       if(patternData&&patternData.left&&patternData.left[c]){
@@ -971,7 +979,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var total = nb * spb;
     barsRef.current = nb;
     var lp={}, rp={};
-    COLORS.forEach(function(c){
+    COLORS_ALL.forEach(function(c){
       lp[c]=new Array(total).fill(0);
       rp[c]=new Array(total).fill(0);
       if(patternData&&patternData.left&&patternData.left[c]){
@@ -1276,8 +1284,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     }
     // 音再生（WebAudio）は同期、state更新は非同期
     var firedL={},firedR={};
-    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);firedL[c]=true;}});
-    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);firedR[c]=true;}});
+    COLORS_ALL.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);firedL[c]=true;}});
+    COLORS_ALL.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);firedR[c]=true;}});
     setTimeout(function(){
       var fd={};
       Object.keys(firedL).forEach(function(c){flashDot(c,"左");fd[c]=true;});
@@ -1323,7 +1331,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var CELL_P=20, GAP_P=1;
     var stepH=CELL_P+GAP_P;
     var usedColors={};
-    COLORS.forEach(function(c){
+    COLORS_ALL.forEach(function(c){
       for(var i=0;i<nb*spb;i++){
         if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
       }
@@ -1344,7 +1352,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         var ib=subdiv==="16th"?i%4===0:i%3===0;
         var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
         var lColor=null, rColor=null;
-        COLORS.forEach(function(c){
+        COLORS_ALL.forEach(function(c){
           if(left[c]&&left[c][s]) lColor=c;
           if(right[c]&&right[c][s]) rColor=c;
         });
@@ -1519,6 +1527,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   // canEdit=false: 1列、設定色を表示、なければ薄いグレー
   function renderSideGrid(barIdx, side){
     var pat=side==="left"?left:right;
+    var sideColors=side==="left"?COLORS_LEFT:COLORS_RIGHT;
     var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
     var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
@@ -1526,7 +1535,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       // 編集モード: 9色列
       return (
         <div style={{display:"flex",flexDirection:"row"}}>
-          {COLORS.map(function(color){
+          {sideColors.map(function(color){
             var cells=[];
             for(var i=0;i<barSPB;i++){
               var s=barOffset+i;
@@ -1572,8 +1581,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         var isStart=s===startStepRef.current;
         // 風ノ音の色を探す（最大2色）
         var foundColors=[];
-        for(var ci=0;ci<COLORS.length;ci++){
-          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+        for(var ci=0;ci<sideColors.length;ci++){
+          if(pat[sideColors[ci]]&&pat[sideColors[ci]][s]) foundColors.push(sideColors[ci]);
           if(foundColors.length>=2) break;
         }
         // 響ノ音の色を探す（instrument2がある時のみ、最大2色）
@@ -1696,7 +1705,7 @@ function renderSideGrid2(barIdx, side){
   function renderBar(barIdx){
     var isStart=startBar===barIdx;
     var stepH=CELL+GAP;
-    var nCols=canEdit?COLORS.length:1;
+    var nCols=canEdit?COLORS.length+1:1; // +1はアタック列の分（左右とも1列増える）
     var sideW=nCols*(CELL+GAP);
     var beatW=14;
     var totalW=sideW+beatW+sideW;
@@ -1809,11 +1818,11 @@ function renderSideGrid2(barIdx, side){
         {canEdit&&(
           <div style={{display:"flex",gap:0,marginBottom:2}}>
             <div style={{display:"flex"}}>
-              {COLORS.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+              {COLORS_LEFT.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
             </div>
             <div style={{width:beatW,flexShrink:0}}/>
             <div style={{display:"flex"}}>
-              {COLORS.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+              {COLORS_RIGHT.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
             </div>
           </div>
         )}
@@ -2050,8 +2059,8 @@ function renderSideGrid2(barIdx, side){
     }
     // 音再生（WebAudio）は同期、state更新は非同期
     var firedL={},firedR={};
-    COLORS.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);firedL[c]=true;}});
-    COLORS.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);firedR[c]=true;}});
+    COLORS_ALL.forEach(function(c){if(L[c]&&L[c][s]){playSound(c);firedL[c]=true;}});
+    COLORS_ALL.forEach(function(c){if(R[c]&&R[c][s]){playSound(c);firedR[c]=true;}});
     setTimeout(function(){
       var fd={};
       Object.keys(firedL).forEach(function(c){flashDot(c,"左");fd[c]=true;});
@@ -2087,7 +2096,7 @@ function renderSideGrid2(barIdx, side){
     var CELL_P=20, GAP_P=1;
     var stepH=CELL_P+GAP_P;
     var usedColors={};
-    COLORS.forEach(function(c){
+    COLORS_ALL.forEach(function(c){
       for(var i=0;i<nb*spb;i++){
         if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
       }
@@ -2108,7 +2117,7 @@ function renderSideGrid2(barIdx, side){
         var ib=subdiv==="16th"?i%4===0:i%3===0;
         var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
         var lColor=null, rColor=null;
-        COLORS.forEach(function(c){
+        COLORS_ALL.forEach(function(c){
           if(left[c]&&left[c][s]) lColor=c;
           if(right[c]&&right[c][s]) rColor=c;
         });
@@ -2283,6 +2292,7 @@ function renderSideGrid2(barIdx, side){
   // canEdit=false: 1列、設定色を表示、なければ薄いグレー
   function renderSideGrid(barIdx, side){
     var pat=side==="left"?left:right;
+    var sideColors=side==="left"?COLORS_LEFT:COLORS_RIGHT;
     var barSPB=(barLengths&&barLengths.length>barIdx)?barLengths[barIdx]:SPB;
     var barOffset=(function(){if(!barLengths||barLengths.length!==parseInt(bars))return barIdx*SPB;var o=0;for(var ii=0;ii<barIdx;ii++)o+=barLengths[ii];return o;})();
 
@@ -2290,7 +2300,7 @@ function renderSideGrid2(barIdx, side){
       // 編集モード: 9色列
       return (
         <div style={{display:"flex",flexDirection:"row"}}>
-          {COLORS.map(function(color){
+          {sideColors.map(function(color){
             var cells=[];
             for(var i=0;i<barSPB;i++){
               var s=barOffset+i;
@@ -2336,8 +2346,8 @@ function renderSideGrid2(barIdx, side){
         var isStart=s===startStepRef.current;
         // 風ノ音の色を探す（最大2色）
         var foundColors=[];
-        for(var ci=0;ci<COLORS.length;ci++){
-          if(pat[COLORS[ci]]&&pat[COLORS[ci]][s]) foundColors.push(COLORS[ci]);
+        for(var ci=0;ci<sideColors.length;ci++){
+          if(pat[sideColors[ci]]&&pat[sideColors[ci]][s]) foundColors.push(sideColors[ci]);
           if(foundColors.length>=2) break;
         }
         // 響ノ音の色を探す（instrument2がある時のみ、最大2色）
@@ -2460,7 +2470,7 @@ function renderSideGrid2(barIdx, side){
   function renderBar(barIdx){
     var isStart=startBar===barIdx;
     var stepH=CELL+GAP;
-    var nCols=canEdit?COLORS.length:1;
+    var nCols=canEdit?COLORS.length+1:1; // +1はアタック列の分（左右とも1列増える）
     var sideW=nCols*(CELL+GAP);
     var beatW=14;
     var totalW=sideW+beatW+sideW;
@@ -2573,11 +2583,11 @@ function renderSideGrid2(barIdx, side){
         {canEdit&&(
           <div style={{display:"flex",gap:0,marginBottom:2}}>
             <div style={{display:"flex"}}>
-              {COLORS.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+              {COLORS_LEFT.map(function(c){return <div key={c} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
             </div>
             <div style={{width:beatW,flexShrink:0}}/>
             <div style={{display:"flex"}}>
-              {COLORS.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
+              {COLORS_RIGHT.map(function(c){return <div key={c+"r"} style={{width:CELL,height:5,background:SCORE_DOT_COLORS[c],borderRadius:1,marginRight:GAP}}/>;  })}
             </div>
           </div>
         )}
@@ -2828,9 +2838,10 @@ function renderSideGrid2(barIdx, side){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
-                  return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
+                  return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r="13"
                     fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
-                    stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>;
+                    stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>
+                    {color==="attack"&&<text x={pos.cx} y={pos.cy+5} textAnchor="middle" fontSize="15" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
                 });
               })()}
             </svg>
@@ -2857,9 +2868,10 @@ function renderSideGrid2(barIdx, side){
               var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
               return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                 var pos=activeDots[color];
-                return <circle key={color} cx={pos.cx} cy={pos.cy} r="13"
+                return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r="13"
                   fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
-                  stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>;
+                  stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>
+                  {color==="attack"&&<text x={pos.cx} y={pos.cy+5} textAnchor="middle" fontSize="15" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
               });
             })()}
           </svg>
@@ -3048,6 +3060,12 @@ function renderSideGrid2(barIdx, side){
                           {dotLabel[color]}
                         </text>
                       )}
+                      {color==="attack"&&(
+                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="15" fontWeight="900" fill={color===highlightColor?"#fff":"#999"} fontFamily="sans-serif" pointerEvents="none">
+                          ✕
+                        </text>
+                      )}
                     </g>
                   );
                 });
@@ -3177,6 +3195,12 @@ function renderSideGrid2(barIdx, side){
                           fontSize="13" fontWeight="900" fill="#2C2A28" fontFamily="sans-serif" pointerEvents="none"
                           stroke="#fff" strokeWidth="2" paintOrder="stroke">
                           {dotLabel[color]}
+                        </text>
+                      )}
+                      {color==="attack"&&(
+                        <text x={pos.cx} y={pos.cy+1} textAnchor="middle" dominantBaseline="middle"
+                          fontSize="15" fontWeight="900" fill={color===highlightColor?"#fff":"#999"} fontFamily="sans-serif" pointerEvents="none">
+                          ✕
                         </text>
                       )}
                     </g>
