@@ -615,8 +615,6 @@ const SCORE_DOTS_NOSTALGIC = {
 };
 
 const SCORE_DOTS = SCORE_DOTS_FUNENONE;
-// アタック（ボディー打面）の位置は、配置（回転）によらず常にイラストの右下固定
-const SCORE_ATTACK_DOT_POS = {cx:112.0, cy:125.0};
 
 // kigaruのセクション番号からDOTS配置を判定
 function getKigaruDots(sectionKey) {
@@ -2838,10 +2836,14 @@ function renderSideGrid2(barIdx, side){
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
-                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
+                if(isAttackEnabled){
+                  var _pinkPos=activeDots.pink||{cx:70,cy:83};
+                  var _brownPos=activeDots.brown||{cx:103.9,cy:116.9};
+                  activeDots=Object.assign({},activeDots,{attack:{cx:(_pinkPos.cx+_brownPos.cx)/2, cy:(_pinkPos.cy+_brownPos.cy)/2}});
+                }
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
-                  return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r="13"
+                  return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r={color==="attack"?7:13}
                     fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                     stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>
                     {color==="attack"&&<text x={pos.cx} y={pos.cy+3} textAnchor="middle" fontSize="7" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
@@ -2869,10 +2871,14 @@ function renderSideGrid2(barIdx, side){
             <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
             {(function(){
               var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
-                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
+                if(isAttackEnabled){
+                  var _pinkPos=activeDots.pink||{cx:70,cy:83};
+                  var _brownPos=activeDots.brown||{cx:103.9,cy:116.9};
+                  activeDots=Object.assign({},activeDots,{attack:{cx:(_pinkPos.cx+_brownPos.cx)/2, cy:(_pinkPos.cy+_brownPos.cy)/2}});
+                }
               return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                 var pos=activeDots[color];
-                return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r="13"
+                return <React.Fragment key={color}><circle cx={pos.cx} cy={pos.cy} r={color==="attack"?7:13}
                   fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                   stroke="white" strokeWidth="1.5" style={{transition:"all 0.15s"}}/>
                   {color==="attack"&&<text x={pos.cx} y={pos.cy+3} textAnchor="middle" fontSize="7" fontWeight="700" fill={color===highlightColor?"#fff":"#999"} style={{pointerEvents:"none"}}>✕</text>}</React.Fragment>;
@@ -3048,13 +3054,17 @@ function renderSideGrid2(barIdx, side){
               )}
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
-                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
+                if(isAttackEnabled){
+                  var _pinkPos=activeDots.pink||{cx:70,cy:83};
+                  var _brownPos=activeDots.brown||{cx:103.9,cy:116.9};
+                  activeDots=Object.assign({},activeDots,{attack:{cx:(_pinkPos.cx+_brownPos.cx)/2, cy:(_pinkPos.cy+_brownPos.cy)/2}});
+                }
                 return Object.keys(activeDots).filter(function(c){return !(scale==="nostalgic"&&c==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
                       <circle cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor?17:15}
+                        r={color==="attack"?(color===highlightColor?9:8):(color===highlightColor?17:15)}
                         fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
@@ -3186,13 +3196,17 @@ function renderSideGrid2(barIdx, side){
               {scale!=="nostalgic" && <text x="70" y="160" textAnchor="middle" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">{getDrumLabels(scoreId, sectionKey, scale).bottom}</text>}
               {(function(){
                 var activeDots=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
-                if(isAttackEnabled) activeDots=Object.assign({},activeDots,{attack:SCORE_ATTACK_DOT_POS});
+                if(isAttackEnabled){
+                  var _pinkPos=activeDots.pink||{cx:70,cy:83};
+                  var _brownPos=activeDots.brown||{cx:103.9,cy:116.9};
+                  activeDots=Object.assign({},activeDots,{attack:{cx:(_pinkPos.cx+_brownPos.cx)/2, cy:(_pinkPos.cy+_brownPos.cy)/2}});
+                }
                 return Object.keys(activeDots).filter(function(color){return !(scale==="nostalgic"&&color==="pink");}).map(function(color){
                   var pos=activeDots[color];
                   return (
                     <g key={color}>
                       <circle cx={pos.cx} cy={pos.cy}
-                        r={color===highlightColor?17:15}
+                        r={color==="attack"?(color===highlightColor?9:8):(color===highlightColor?17:15)}
                         fill={color===highlightColor?SCORE_DOT_COLORS[color]:(dotFills[color]||SCORE_PALE_COLORS[color])}
                         stroke="white" strokeWidth={color===highlightColor?"3":"1.5"}
                         style={{transition:"all 0.15s"}}/>
