@@ -9576,7 +9576,7 @@ function App() {
           {contributionOpen && (
             <div style={{padding:"0 16px 14px"}}>
               <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
-                リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度（LOC = Level of Contribution）。「柱候補🔥」は既存の段階が「主幹」の方。
+                リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度（LOC = Level of Contribution）。
               </p>
               {contributionData === null ? (
                 <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
@@ -9585,24 +9585,27 @@ function App() {
               ) : (function(){
                 var renderRow = function(c, i){
                   var isMe = c.name === m.name;
+                  var isPillar = c.level && c.level.indexOf("柱") !== -1;
                   return (
                     <div key={c.name} style={{display:"flex",flexDirection:"column",gap:2,padding:"8px 10px",marginBottom:5,borderRadius:8,background:isMe?"rgba(184,134,11,0.12)":"rgba(112,130,56,0.04)",border:isMe?"1px solid rgba(184,134,11,0.4)":"1px solid transparent"}}>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                         <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
                           {i!==null && <span style={{fontSize:11,color:C.moss,fontWeight:700,minWidth:20}}>{i+1}</span>}
-                          <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{c.name}</span>
+                          <span style={{fontSize:13,fontWeight:700,color:isPillar?"#8a4a1a":C.choco}}>{c.name}</span>
+                          {isPillar && <span style={{fontSize:11,fontWeight:900,color:"#8a4a1a"}}>《柱》</span>}
                           {c.isPillarCandidate && <span style={{fontSize:10,fontWeight:700,color:"#a06a1a",background:"rgba(255,180,60,0.15)",borderRadius:6,padding:"1px 6px"}}>柱候補🔥</span>}
                         </div>
                         <span style={{fontSize:14,fontWeight:700,color:"#708238",flexShrink:0}}>{c.score} LOC</span>
                       </div>
                       <div style={{fontSize:9,color:C.label,paddingLeft:i!==null?26:0}}>
-                        RTM {c.rtmMinutes}分 ／ レッスン {c.lessonCount}回 ／ 練習会 {c.practiceCount}回 ／ イベント {c.eventCount}回 ／ 活動{c.activeMonths}ヶ月
+                        RTM {c.rtmMinutes}分 ／ レッスン {c.lessonCount}回 ／ 練習会 {c.practiceCount}回 ／ イベント {c.eventCount}回 ／ 診断 {c.diagnosisCount}回 ／ 活動{c.activeMonths}ヶ月
                       </div>
                     </div>
                   );
                 };
                 var pillarCandidates = contributionData.filter(function(c){return c.isPillarCandidate;});
-                var others = contributionData.filter(function(c){return !c.isPillarCandidate;}).slice(0,7);
+                var othersLimit = Math.max(0, 7 - pillarCandidates.length);
+                var others = contributionData.filter(function(c){return !c.isPillarCandidate;}).slice(0,othersLimit);
                 return (
                   <div>
                     {pillarCandidates.length>0 && (
@@ -9611,7 +9614,7 @@ function App() {
                         {pillarCandidates.map(function(c){return renderRow(c, null);})}
                       </div>
                     )}
-                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP7</p>
+                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP{othersLimit}</p>
                     {others.map(function(c,i){return renderRow(c, i);})}
                   </div>
                 );
