@@ -9673,7 +9673,7 @@ function App() {
                 if (newcomers.length === 0) return null;
                 return (
                   <div style={{marginBottom:14,padding:"12px",borderRadius:10,background:"rgba(255,200,80,0.1)",border:"1px solid rgba(255,180,60,0.35)"}}>
-                    <p style={{fontSize:11,fontWeight:700,color:"#a06a1a",marginBottom:6}}>🌱 新人賞（初参加から1ヶ月間）</p>
+                    <p style={{fontSize:11,fontWeight:700,color:"#a06a1a",marginBottom:6}}>🌱 新人賞（最近オーケストラの活動に初めて参加した仲間）</p>
                     <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                       {newcomers.map(function(c){
                         var isMe = c.name === m.name;
@@ -9684,12 +9684,12 @@ function App() {
                         );
                       })}
                     </div>
-                    <p style={{fontSize:8,color:C.moss,marginTop:6}}>初めて記録が付いた日から1ヶ月間、ランキングとは別にここに表示されます</p>
                   </div>
                 );
               })()}
               <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
-                リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度（HPT = 響ポイント）。
+                HPTとは…響きポイント<br/>
+                リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度を表します
               </p>
               {contributionData === null ? (
                 <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
