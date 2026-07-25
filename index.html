@@ -9668,6 +9668,26 @@ function App() {
                   </div>
                 );
               })()}
+              {contributionData !== null && (function(){
+                var newcomers = contributionData.filter(function(c){return c.isNewcomer;});
+                if (newcomers.length === 0) return null;
+                return (
+                  <div style={{marginBottom:14,padding:"12px",borderRadius:10,background:"rgba(255,200,80,0.1)",border:"1px solid rgba(255,180,60,0.35)"}}>
+                    <p style={{fontSize:11,fontWeight:700,color:"#a06a1a",marginBottom:6}}>🌱 新人賞（初参加から1ヶ月間）</p>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                      {newcomers.map(function(c){
+                        var isMe = c.name === m.name;
+                        return (
+                          <span key={c.name} style={{fontSize:12,fontWeight:700,color:isMe?"#8a5a00":"#a06a1a",background:isMe?"rgba(255,180,60,0.3)":"rgba(255,180,60,0.15)",borderRadius:8,padding:"4px 10px",border:isMe?"1px solid rgba(184,134,11,0.5)":"none"}}>
+                            {c.name}{isMe && " (あなた)"}
+                          </span>
+                        );
+                      })}
+                    </div>
+                    <p style={{fontSize:8,color:C.moss,marginTop:6}}>初めて記録が付いた日から1ヶ月間、ランキングとは別にここに表示されます</p>
+                  </div>
+                );
+              })()}
               <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
                 リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度（HPT = 響ポイント）。
               </p>
