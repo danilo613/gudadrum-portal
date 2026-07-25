@@ -7442,6 +7442,7 @@ function App() {
                     c.diagnosisCount>0 && {label:"診断", raw:c.diagnosisCount+"回", loc:c.diagnosisCount*5},
                     c.subscMonths>0 && {label:"サブスク利用", raw:c.subscMonths+"ヶ月目", loc:c.subscMonths*3},
                     c.seniorityBonus>0 && {label:(isPillar?"柱":"")+(isPillar&&c.isInstructor?"・":"")+(c.isInstructor?"講師":"")+"ボーナス", raw:"", loc:c.seniorityBonus},
+                    c.firstParticipationBonus>0 && {label:"初参加ボーナス", raw:"", loc:c.firstParticipationBonus},
                   ].filter(Boolean);
                   return (
                     <div key={c.name} style={{marginBottom:8,padding:"8px 10px",background:"rgba(112,130,56,0.04)",borderRadius:8,border:"1px solid rgba(112,130,56,0.12)"}}>
@@ -9687,7 +9688,7 @@ function App() {
                   </div>
                 );
               })()}
-              <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+              <p style={{fontSize:11,color:C.choco,marginBottom:10,lineHeight:1.7,fontWeight:500}}>
                 HPTとは…響きポイント<br/>
                 リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度を表します
               </p>
@@ -9716,8 +9717,8 @@ function App() {
                           {c.titles.map(function(t,ti){
                             return (
                               <div key={ti} style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
-                                <span style={{fontSize:10,fontWeight:900,color:"#b8860b",background:"rgba(184,134,11,0.12)",borderRadius:6,padding:"1px 7px"}}>🏅{t.title}</span>
-                                <span style={{fontSize:9,color:C.moss}}>{t.desc}</span>
+                                <span style={{fontSize:11,fontWeight:900,color:"#8a6205",background:"rgba(184,134,11,0.15)",borderRadius:6,padding:"2px 8px"}}>🏅{t.title}</span>
+                                <span style={{fontSize:10,color:C.choco,fontWeight:500}}>{t.desc}</span>
                               </div>
                             );
                           })}
@@ -9731,6 +9732,7 @@ function App() {
                           c.eventCount>0 && ("イベント "+c.eventCount+"回"),
                           c.diagnosisCount>0 && ("診断 "+c.diagnosisCount+"回"),
                           c.subscMonths>0 && ("サブスク利用"+c.subscMonths+"ヶ月目"),
+                          c.firstParticipationBonus>0 && "初回ボーナス",
                         ].filter(Boolean).join(" ／ ")}
                       </div>
                     </div>
