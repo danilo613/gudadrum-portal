@@ -770,6 +770,8 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   subdivPropRef.current = subdivProp; // レンダリング毎に更新
   var onSectionEndRef=useRef(onSectionEnd);
   var barsRef=useRef(parseInt(bars)||8);
+  var repeatRef=useRef(parseInt(repeat)||1);
+  var passesCompletedRef=useRef(0); // このセクション内で、今何周（バー分）再生し終えたか
   var barLengthsRef=useRef(null); // 各小節のステップ数配列（nullなら全小節SPBで統一）
 
 
@@ -815,6 +817,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     return function(){};
   },[]);
   useEffect(function(){barsRef.current=Math.max(2,Math.min(parseInt(bars)||8,32));},[bars]);
+  useEffect(function(){repeatRef.current=parseInt(repeat)||1;},[repeat]);
   useEffect(function(){onSectionEndRef.current=onSectionEnd;},[onSectionEnd]);
   // Cmd+C/V でコピペ
   useEffect(function(){
@@ -993,7 +996,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         setBars("8");
         barsRef.current=8;
       }
-      if(patternData.meta.repeat) setRepeat(String(patternData.meta.repeat));
+      if(patternData.meta.repeat){
+        setRepeat(String(patternData.meta.repeat));
+        repeatRef.current=parseInt(patternData.meta.repeat)||1;
+      } else {
+        setRepeat("1");
+        repeatRef.current=1;
+      }
+      passesCompletedRef.current=0;
       if(patternData.meta.startTime){
         var st=patternData.meta.startTime;
         if(typeof st==="string"&&st.includes("GMT")){var d=new Date(st);if(!isNaN(d)){var h=d.getHours();var m=d.getMinutes();var s2=d.getSeconds();st=h+":"+(m<10?"0"+m:m)+(s2>0?":"+(s2<10?"0"+s2:s2):"");} else{st="";}}
@@ -1220,14 +1230,19 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     var totalNow = totalNow2;
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
-    // 1周完了
+    // 1パス（barsで指定した小節数）完了。リピート回数に達するまでは、次のパスへそのまま続ける
     if(nextStep === 0) {
-      if(onLoopCompleteRef.current) {
-        var cont=onLoopCompleteRef.current();
-        if(!cont){ doStop(); return; }
+      passesCompletedRef.current += 1;
+      var repeatCountNow = repeatRef.current || 1;
+      if(passesCompletedRef.current >= repeatCountNow) {
+        passesCompletedRef.current = 0;
+        if(onLoopCompleteRef.current) {
+          var cont=onLoopCompleteRef.current();
+          if(!cont){ doStop(); return; }
 
-      } else if(onSectionEndRef.current) {
-        onSectionEndRef.current();
+        } else if(onSectionEndRef.current) {
+          onSectionEndRef.current();
+        }
       }
     }
     var fired={};
@@ -1305,6 +1320,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
+    passesCompletedRef.current = 0; // 停止時はリピート周回数もリセット
     if(onLoopComplete){}
   }
 
@@ -1995,14 +2011,19 @@ function renderSideGrid2(barIdx, side){
     var totalNow = totalNow2;
     var nextStep = (s+1) % totalNow;
     stepRef.current = nextStep;
-    // 1周完了
+    // 1パス（barsで指定した小節数）完了。リピート回数に達するまでは、次のパスへそのまま続ける
     if(nextStep === 0) {
-      if(onLoopCompleteRef.current) {
-        var cont=onLoopCompleteRef.current();
-        if(!cont){ doStop(); return; }
+      passesCompletedRef.current += 1;
+      var repeatCountNow = repeatRef.current || 1;
+      if(passesCompletedRef.current >= repeatCountNow) {
+        passesCompletedRef.current = 0;
+        if(onLoopCompleteRef.current) {
+          var cont=onLoopCompleteRef.current();
+          if(!cont){ doStop(); return; }
 
-      } else if(onSectionEndRef.current) {
-        onSectionEndRef.current();
+        } else if(onSectionEndRef.current) {
+          onSectionEndRef.current();
+        }
       }
     }
     var fired={};
@@ -2080,6 +2101,7 @@ function renderSideGrid2(barIdx, side){
     if(iidRef.current){clearInterval(iidRef.current);iidRef.current=null;}
     if(dimRef.current){clearTimeout(dimRef.current);dimRef.current=null;}
     dimAll();stepRef.current=startStepRef.current;setCurStep(-1);setPlaying(false);
+    passesCompletedRef.current = 0; // 停止時はリピート周回数もリセット
     if(onLoopComplete){}
   }
 
