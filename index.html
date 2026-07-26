@@ -3653,12 +3653,17 @@ function App() {
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
   const [contributionOpen, setContributionOpen] = useState(false);
+  const [growthExplainOpen, setGrowthExplainOpen] = useState(false);
   const [showHPTTable, setShowHPTTable] = useState(false);
   const [showExchangeForm, setShowExchangeForm] = useState(false);
   const [exchangeDate, setExchangeDate] = useState("");
   const [exchangeSelected, setExchangeSelected] = useState({});
   const [exchangeMsg, setExchangeMsg] = useState("");
   const [exchangeSaving, setExchangeSaving] = useState(false);
+  const [exchangeRecords, setExchangeRecords] = useState(null);
+  const [showHPTHistory, setShowHPTHistory] = useState(false);
+  const [hptHistory, setHptHistory] = useState(null);
+  const [hptHistoryView, setHptHistoryView] = useState("monthly"); // "monthly" | "daily"
   const [contributionData, setContributionData] = useState(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [orchSchedules, setOrchSchedules] = useState(()=>cachedInit("orchSchedules", []));
@@ -5001,6 +5006,20 @@ function App() {
     setUnprocessedPoints(prev => prev.filter(c => c.key !== candidate.key));
   }
 
+  async function fetchExchangeRecords() {
+    try {
+      const res = await gasWrite({ action: "getexchangerecords" });
+      if (res && res.records) setExchangeRecords(res.records);
+    } catch(e) {}
+  }
+
+  async function fetchHPTHistory() {
+    try {
+      const res = await gasWrite({ action: "gethpthistory" });
+      if (res && res.daily) setHptHistory(res);
+    } catch(e) {}
+  }
+
   async function submitExchangeRecord() {
     const selected = Object.keys(exchangeSelected).filter(function(n){return exchangeSelected[n];});
     if (!exchangeDate || selected.length === 0) { setExchangeMsg("❌ 日付とメンバーを選んでください"); return; }
@@ -5011,6 +5030,7 @@ function App() {
     setExchangeMsg("✅ " + selected.length + "名分を記録しました（各自1回＝5HPT）");
     setExchangeSaving(false);
     setExchangeSelected({});
+    fetchExchangeRecords();
     setTimeout(function(){setExchangeMsg("");}, 4000);
   }
 
@@ -7427,7 +7447,7 @@ function App() {
             )}
           </div>
         )}
-        <button onClick={()=>setShowExchangeForm(!showExchangeForm)}
+        <button onClick={()=>{setShowExchangeForm(!showExchangeForm); if(!showExchangeForm && exchangeRecords===null) fetchExchangeRecords();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #2a9d97",background:showExchangeForm?"linear-gradient(135deg,#5ac4bd,#2a9d97)":"rgba(42,157,151,0.1)",color:showExchangeForm?"#fff":"#2a9d97",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎤 Zoom交流会（無料）記録 {showExchangeForm?"▲":"▼"}
         </button>
@@ -7456,6 +7476,25 @@ function App() {
               style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#2a9d97",color:"#fff",fontSize:13,fontWeight:600,cursor:exchangeSaving?"default":"pointer",opacity:exchangeSaving?0.6:1}}>
               {exchangeSaving?"記録中...":"記録する"}
             </button>
+            <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+C.border}}>
+              <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>過去の記録</p>
+              {exchangeRecords === null ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
+              ) : exchangeRecords.length === 0 ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:8}}>まだ記録がありません</p>
+              ) : (
+                <div style={{maxHeight:260,overflowY:"auto"}}>
+                  {exchangeRecords.map(function(rec){
+                    return (
+                      <div key={rec.date} style={{marginBottom:6,padding:"7px 10px",background:"rgba(42,157,151,0.06)",borderRadius:8,border:"1px solid rgba(42,157,151,0.15)"}}>
+                        <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:2}}>{rec.date}<span style={{fontWeight:400,color:C.label,marginLeft:6}}>（{rec.names.length}名）</span></p>
+                        <p style={{fontSize:10,color:C.label}}>{rec.names.join("、")}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
         <button onClick={()=>{setShowHPTTable(!showHPTTable); if(!showHPTTable && contributionData===null) fetchContributionScores();}}
@@ -7515,6 +7554,44 @@ function App() {
                 })}
               </div>
               </>
+            )}
+          </div>
+        )}
+        <button onClick={()=>{setShowHPTHistory(!showHPTHistory); if(!showHPTHistory && hptHistory===null) fetchHPTHistory();}}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showHPTHistory?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showHPTHistory?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          🔥 HPT増加量の履歴（熱量チェック） {showHPTHistory?"▲":"▼"}
+        </button>
+        {showHPTHistory && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+              その日・その月に実際に発生したHPT（RTM・レッスン・練習会・イベント・診断・交流会）の増加量のみを集計。サブスク利用月数や功労ボーナスは日付が無いため含まれません。
+            </p>
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <button onClick={()=>setHptHistoryView("monthly")}
+                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="monthly"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="monthly"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="monthly"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                📅 月別
+              </button>
+              <button onClick={()=>setHptHistoryView("daily")}
+                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="daily"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="daily"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="daily"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                🗓️ 日別
+              </button>
+            </div>
+            {hptHistory === null ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
+            ) : (hptHistoryView==="monthly" ? hptHistory.monthly : hptHistory.daily).length === 0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
+            ) : (
+              <div style={{maxHeight:400,overflowY:"auto"}}>
+                {(hptHistoryView==="monthly" ? hptHistory.monthly : hptHistory.daily).map(function(item){
+                  var label = hptHistoryView==="monthly" ? item.month.replace("-","年")+"月" : item.date;
+                  return (
+                    <div key={hptHistoryView==="monthly"?item.month:item.date} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 10px",marginBottom:4,borderRadius:8,background:"rgba(184,134,11,0.06)",border:"1px solid rgba(184,134,11,0.15)"}}>
+                      <span style={{fontSize:11,color:C.choco,fontFamily:hptHistoryView==="daily"?"monospace":"inherit"}}>{label}</span>
+                      <span style={{fontSize:13,fontWeight:700,color:"#b8860b"}}>+{item.increase} HPT</span>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
@@ -9352,9 +9429,14 @@ function App() {
                 }
                 return (
                   <div style={{marginBottom:16,padding:"14px",borderRadius:12,background:"linear-gradient(135deg, rgba(112,130,56,0.10), rgba(184,134,11,0.08))",border:"1px solid rgba(112,130,56,0.2)"}}>
-                    <p style={{fontSize:11,fontWeight:700,color:C.choco,textAlign:"center",lineHeight:1.7,marginBottom:10}}>
+                    <p style={{fontSize:11,fontWeight:700,color:C.choco,textAlign:"center",lineHeight:1.7,marginBottom:8}}>
                       百八祈音〜Inorion〜に向けて<br/>グーダドラムオーケストラ　響き合い　成長度数
                     </p>
+                    <button onClick={()=>setGrowthExplainOpen(!growthExplainOpen)}
+                      style={{display:"block",margin:"0 auto 12px",padding:"5px 14px",borderRadius:14,border:"1px solid rgba(112,130,56,0.4)",background:"rgba(255,255,255,0.6)",color:C.olive,fontSize:10,fontWeight:600,cursor:"pointer"}}>
+                      響き合い成長度数とは？ {growthExplainOpen?"▲":"▼"}
+                    </button>
+                    {growthExplainOpen && (
                     <p style={{fontSize:10,color:C.choco,lineHeight:1.9,marginBottom:12,textAlign:"left"}}>
                       百八祈音〜Inorion〜に向けて、このオーケストラは今も育ち続けている。
                       <br/><br/>
@@ -9366,6 +9448,7 @@ function App() {
                       <br/><br/>
                       誰かに強制されてじゃなく、自分自身の意志で今日も一歩を踏み出す——その自発性の一つひとつの積み重ねこそが、数字には表れない、このコミュニティの本当の結束力を育てている。
                     </p>
+                    )}
                     <div style={{marginBottom:10,background:"rgba(255,255,255,0.7)",borderRadius:10,padding:"12px 14px",textAlign:"center"}}>
                       <p style={{fontSize:19,fontWeight:900,color:C.choco,marginBottom:6}}>🌱 LEV{curLevel.lv}「{curLevel.name}」</p>
                       {nextLevel ? (
