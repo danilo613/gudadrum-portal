@@ -9559,7 +9559,7 @@ function App() {
                       </div>
                     </div>
                     <div style={{marginTop:8,background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
-                      <p style={{fontSize:9,color:C.moss,marginBottom:2}}>🎵 グーダドラム総数（全員のマイ音階合計）</p>
+                      <p style={{fontSize:9,color:C.moss,marginBottom:2}}>🎵 オーケストラ内のグーダドラム総数</p>
                       <p style={{fontSize:15,fontWeight:700,color:C.choco}}>{scaleTotal}</p>
                     </div>
                     {(function(){
@@ -9577,7 +9577,7 @@ function App() {
                       ].filter(Boolean);
                       return (
                         <div style={{marginTop:8,background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"10px 12px",textAlign:"center"}}>
-                          <p style={{fontSize:19,fontWeight:900,color:C.choco,marginBottom:4}}>🎵 マイHPT</p>
+                          <p style={{fontSize:19,fontWeight:900,color:C.choco,marginBottom:4}}>マイHPT</p>
                           <p style={{fontSize:15,fontWeight:700,color:"#708238",marginBottom:4}}>{myRecord.score}<span style={{fontSize:10,fontWeight:400}}> HPT</span></p>
                           {myRows.length>0 && <p style={{fontSize:9,color:C.label,marginBottom:myRecord.titles&&myRecord.titles.length>0?6:0}}>{myRows.join(" ／ ")}</p>}
                           {myRecord.titles && myRecord.titles.length > 0 && (
@@ -9608,7 +9608,7 @@ function App() {
                       {newcomers.map(function(c){
                         var isMe = c.name === m.name;
                         return (
-                          <span key={c.name} style={{fontSize:12,fontWeight:700,color:isMe?"#8a5a00":"#a06a1a",background:isMe?"rgba(255,180,60,0.3)":"rgba(255,180,60,0.15)",borderRadius:8,padding:"4px 10px",border:isMe?"1px solid rgba(184,134,11,0.5)":"none"}}>
+                          <span key={c.name} style={{fontSize:12,fontWeight:700,color:isMe?"#4a6a1a":"#5a8a2a",background:isMe?"rgba(180,220,90,0.4)":"rgba(180,220,90,0.2)",borderRadius:8,padding:"4px 10px",border:isMe?"1px solid rgba(120,170,50,0.5)":"none"}}>
                             {c.name}{isMe && " (あなた)"}
                           </span>
                         );
@@ -9630,7 +9630,7 @@ function App() {
                   var isMe = c.name === m.name;
                   var isPillar = c.level && c.level.indexOf("柱") !== -1;
                   return (
-                    <div key={c.name} style={{display:"flex",flexDirection:"column",gap:2,padding:"8px 10px",marginBottom:5,borderRadius:8,background:isMe?"rgba(184,134,11,0.12)":"rgba(112,130,56,0.04)",border:isMe?"1px solid rgba(184,134,11,0.4)":"1px solid transparent"}}>
+                    <div key={c.name} style={{display:"flex",flexDirection:"column",gap:2,padding:"8px 10px",marginBottom:5,borderRadius:8,background:isMe?"rgba(255,225,90,0.25)":"rgba(112,130,56,0.04)",border:isMe?"1px solid rgba(230,190,40,0.5)":"1px solid transparent"}}>
                       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                         <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
                           {i!==null && <span style={{fontSize:11,color:C.moss,fontWeight:700,minWidth:20}}>{i+1}</span>}
