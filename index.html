@@ -9313,8 +9313,8 @@ function App() {
                           <p style={{fontSize:11,color:C.label,marginBottom:6}}>
                             次のLEV{nextLevel.lv}「{nextLevel.name}」まで<br/>あと{nextLevel.req-totalHPT}HPT
                           </p>
-                          <div style={{height:10,background:"rgba(0,0,0,0.1)",borderRadius:5,overflow:"hidden"}}>
-                            <div style={{height:"100%",borderRadius:5,background:"linear-gradient(90deg,#9ab868,#708238)",width:Math.min(100,Math.round((totalHPT-curLevel.req)/(nextLevel.req-curLevel.req)*100))+"%"}}/>
+                          <div style={{height:12,background:"linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.08) 40%, rgba(0,0,0,0.2))",borderRadius:6,overflow:"hidden",boxShadow:"inset 0 1px 3px rgba(0,0,0,0.35)"}}>
+                            <div style={{height:"100%",borderRadius:6,background:"linear-gradient(180deg, #baf0ea 0%, #2a9d97 45%, #1a7a76 55%, #0f5854 100%)",boxShadow:"inset 0 1px 2px rgba(255,255,255,0.6), inset 0 -2px 3px rgba(0,0,0,0.3)",width:Math.min(100,Math.round((totalHPT-curLevel.req)/(nextLevel.req-curLevel.req)*100))+"%"}}/>
                           </div>
                         </>
                       ) : (
