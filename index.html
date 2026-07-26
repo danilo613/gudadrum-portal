@@ -331,6 +331,7 @@ const SCORE_SOUND_URLS = {
     orange:"/sounds/enigma_orange.mp3",
     pink:"/sounds/enigma_pink.mp3",
     lime:"/sounds/enigma_lime.mp3",
+    attack:"/sounds/enigma_attack.mp3",
   },
   equinox: {
     orange:"/sounds/EQ1.mp3",
@@ -787,19 +788,30 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
   useEffect(function(){metroAccentRef.current=metroAccent;},[metroAccent]);
   useEffect(function(){lrOnRef.current=lrOn;},[lrOn]);
 
-  // scaleが変わった時にsoundTypeをリセット（iridescence/kigaru用）
+  // scaleが変わった時にsoundTypeをリセット（iridescence/kigaru/aoi用）
   useEffect(function(){
     if(scoreId==="iridescence"){
       var newType = scale==="arcane"?"arcane":"enigma";
       setSoundType(newType);
       actxRef.current=null;
       bufsRef.current={};
+      initAudio(function(){},newType);
     }
     if(scoreId==="kigaru"){
       // kigaruはscale自体がsoundType（default/arcane/enigma/equinox）
-      setSoundType(scale||"default");
+      var newType2 = scale||"default";
+      setSoundType(newType2);
       actxRef.current=null;
       bufsRef.current={};
+      initAudio(function(){},newType2);
+    }
+    if(scoreId==="aoi"){
+      // 蒼〜aoi〜は響ノ音（arcane）がデフォルト。秘ノ音を選んでる場合のみenigmaに
+      var newType3 = scale==="enigma"?"enigma":"arcane";
+      setSoundType(newType3);
+      actxRef.current=null;
+      bufsRef.current={};
+      initAudio(function(){},newType3);
     }
   },[scale]);
   useEffect(function(){
@@ -1092,10 +1104,11 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
     return function(){window.removeEventListener("keydown",onKey);};
   },[playing]);
 
-  function initAudio(cb){
+  function initAudio(cb,overrideSoundType){
     if(actxRef.current){if(cb)cb();return;}
     var Ctx=window.AudioContext||window.webkitAudioContext;
     actxRef.current=new Ctx();
+    var effectiveSoundType=overrideSoundType||soundType;
     var keys=Object.keys(METRO_SOUNDS_B64);var done=0;
     keys.forEach(function(k){
       var bin=atob(METRO_SOUNDS_B64[k]),arr=new Uint8Array(bin.length);
@@ -1104,7 +1117,7 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
           // 1台目の音源
-          var soundUrls=getSoundUrls(scoreId, (scoreId==="iridescence"||scoreId==="kigaru")?soundType:(scoreId==="aoi"?"arcane":null));
+          var soundUrls=getSoundUrls(scoreId, (scoreId==="iridescence"||scoreId==="kigaru"||scoreId==="aoi")?effectiveSoundType:null);
           var skeys=Object.keys(soundUrls);
           // 2台目の音源
           var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
@@ -1873,10 +1886,11 @@ function renderSideGrid2(barIdx, side){
 
 
 
-  function initAudio(cb){
+  function initAudio(cb,overrideSoundType){
     if(actxRef.current){if(cb)cb();return;}
     var Ctx=window.AudioContext||window.webkitAudioContext;
     actxRef.current=new Ctx();
+    var effectiveSoundType=overrideSoundType||soundType;
     var keys=Object.keys(METRO_SOUNDS_B64);var done=0;
     keys.forEach(function(k){
       var bin=atob(METRO_SOUNDS_B64[k]),arr=new Uint8Array(bin.length);
@@ -1885,7 +1899,7 @@ function renderSideGrid2(barIdx, side){
         bufsRef.current['metro_'+k]=buf;done++;
         if(done===keys.length){
           // 1台目の音源
-          var soundUrls=getSoundUrls(scoreId, (scoreId==="iridescence"||scoreId==="kigaru")?soundType:(scoreId==="aoi"?"arcane":null));
+          var soundUrls=getSoundUrls(scoreId, (scoreId==="iridescence"||scoreId==="kigaru"||scoreId==="aoi")?effectiveSoundType:null);
           var skeys=Object.keys(soundUrls);
           // 2台目の音源
           var soundUrls2=instrument2?getSoundUrls(scoreId,instrument2):{};
@@ -2946,7 +2960,7 @@ function renderSideGrid2(barIdx, side){
             onChange={function(e){setMetroVol(parseFloat(e.target.value));}}
             style={{width:60,accentColor:"#708238"}}/>
         </div>
-        {!canEdit&&scoreId==="iridescence"&&(
+        {!canEdit&&(scoreId==="iridescence"||scoreId==="aoi")&&(
           <div style={{display:"flex",alignItems:"center",gap:6,marginLeft:8}}>
             <span style={{fontSize:10,color:C.label,fontWeight:600}}>音階</span>
             <button onClick={function(){setSoundType("enigma");actxRef.current=null;bufsRef.current={};}}
