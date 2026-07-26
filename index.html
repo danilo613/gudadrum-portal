@@ -7418,7 +7418,7 @@ function App() {
             <div style={{marginBottom:12,padding:"8px 10px",background:"rgba(112,130,56,0.06)",borderRadius:8}}>
               <p style={{fontSize:10,fontWeight:700,color:C.olive,marginBottom:4}}>換算基準</p>
               <p style={{fontSize:9,color:C.label,lineHeight:1.7}}>
-                RTM練習 10分＝1 HPT ／ 個人・講師レッスン 1回＝15 HPT ／ 練習会・全体練習 1回＝10 HPT ／ イベント 1回＝20 HPT ／ 演奏診断 1回＝5 HPT ／ サブスク利用 1ヶ月＝3 HPT ／ 柱・講師の功労ボーナス（4月起算）1ヶ月＝20 HPT
+                RTM練習 10分＝1 HPT ／ 個人・講師レッスン 1回＝15 HPT ／ 練習会・全体練習 1回＝10 HPT ／ イベント 1回＝20 HPT ／ 演奏診断 1回＝5 HPT ／ サブスク利用 1ヶ月＝10 HPT ／ 柱・講師の功労ボーナス（4月起算）1ヶ月＝20 HPT
               </p>
             </div>
             {contributionData === null ? (
@@ -9271,7 +9271,7 @@ function App() {
 
         {/* 貢献度・功労者（テスト中：ダニー名義でログイン時のみ表示） */}
         {m.name === "ダニー" && (
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden",marginBottom:14}}>
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid #d4a017",borderRadius:14,overflow:"hidden",marginBottom:14}}>
           <button onClick={()=>{setContributionOpen(!contributionOpen); if(!contributionOpen && contributionData===null) fetchContributionScores();}}
             style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
             <span style={{fontSize:13,fontWeight:600,color:C.label}}>🏆 オーケストラ成長度数＆功労者</span>
@@ -9286,6 +9286,21 @@ function App() {
                 var memberCount = members.length;
                 var scaleTotal = members.reduce(function(sum,mem){return sum+splitItems(mem.scales).length;},0);
                 var memberTarget = 108, pillarTarget = 12;
+                var ORCHESTRA_LEVELS = [
+                  {lv:0, name:"静寂の草原", req:0},
+                  {lv:1, name:"灯りの芽生え", req:1500},
+                  {lv:2, name:"響きの兆し", req:3000},
+                  {lv:3, name:"波紋の交わり", req:5000},
+                  {lv:4, name:"鼓動する野", req:8000},
+                  {lv:5, name:"重なる調べ", req:12000},
+                  {lv:6, name:"壱祈音の夜", req:16500},
+                ];
+                var curLevel = ORCHESTRA_LEVELS[0];
+                var nextLevel = null;
+                for (var li=0; li<ORCHESTRA_LEVELS.length; li++){
+                  if (totalHPT >= ORCHESTRA_LEVELS[li].req) curLevel = ORCHESTRA_LEVELS[li];
+                  else { nextLevel = ORCHESTRA_LEVELS[li]; break; }
+                }
                 return (
                   <div style={{marginBottom:16,padding:"14px",borderRadius:12,background:"linear-gradient(135deg, rgba(112,130,56,0.10), rgba(184,134,11,0.08))",border:"1px solid rgba(112,130,56,0.2)"}}>
                     <p style={{fontSize:11,fontWeight:700,color:C.choco,textAlign:"center",lineHeight:1.7,marginBottom:10}}>
@@ -9310,6 +9325,14 @@ function App() {
                         <p style={{fontSize:9,color:C.moss,marginBottom:2}}>全体経験値</p>
                         <p style={{fontSize:15,fontWeight:700,color:"#708238"}}>{totalHPT}<span style={{fontSize:10,fontWeight:400}}> HPT</span></p>
                       </div>
+                    </div>
+                    <div style={{marginTop:8,background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
+                      <p style={{fontSize:9,color:C.moss,marginBottom:2}}>🌱 LEV{curLevel.lv}「{curLevel.name}」</p>
+                      {nextLevel ? (
+                        <p style={{fontSize:8,color:C.label}}>次のLEV{nextLevel.lv}「{nextLevel.name}」まであと{nextLevel.req-totalHPT}HPT</p>
+                      ) : (
+                        <p style={{fontSize:8,color:C.label}}>最終形に到達しました</p>
+                      )}
                     </div>
                     <div style={{marginTop:8,background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
                       <p style={{fontSize:9,color:C.moss,marginBottom:2}}>🎵 グーダドラム総数（全員のマイ音階合計）</p>
