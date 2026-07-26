@@ -7440,7 +7440,7 @@ function App() {
                     c.practiceCount>0 && {label:"練習会", raw:c.practiceCount+"回", loc:c.practiceCount*10},
                     c.eventCount>0 && {label:"イベント", raw:c.eventCount+"回", loc:c.eventCount*20},
                     c.diagnosisCount>0 && {label:"診断", raw:c.diagnosisCount+"回", loc:c.diagnosisCount*5},
-                    c.subscMonths>0 && {label:"サブスク利用", raw:c.subscMonths+"ヶ月目", loc:c.subscMonths*3},
+                    c.subscMonths>0 && {label:"サブスク利用", raw:c.subscMonths+"ヶ月目", loc:c.subscMonths*10},
                     c.seniorityBonus>0 && {label:(isPillar?"柱":"")+(isPillar&&c.isInstructor?"・":"")+(c.isInstructor?"講師":"")+"ボーナス", raw:"", loc:c.seniorityBonus},
                     c.firstParticipationBonus>0 && {label:"初参加ボーナス", raw:"", loc:c.firstParticipationBonus},
                   ].filter(Boolean);
@@ -9268,6 +9268,137 @@ function App() {
                   )}
                 </div>
               )}
+
+        {/* 貢献度・功労者（テスト中：ダニー名義でログイン時のみ表示） */}
+        {m.name === "ダニー" && (
+        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden",marginBottom:14}}>
+          <button onClick={()=>{setContributionOpen(!contributionOpen); if(!contributionOpen && contributionData===null) fetchContributionScores();}}
+            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+            <span style={{fontSize:13,fontWeight:600,color:C.label}}>🏆 オーケストラ成長度数＆功労者</span>
+            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:contributionOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+          </button>
+          {contributionOpen && (
+            <div style={{padding:"0 16px 14px"}}>
+              {contributionData !== null && (function(){
+                var totalHPT = contributionData.reduce(function(sum,c){return sum+c.score;},0);
+                var pillarCount = contributionData.filter(function(c){return c.level && c.level.indexOf("柱")!==-1;}).length;
+                var candidateCount = contributionData.filter(function(c){return c.isPillarCandidate;}).length;
+                var memberCount = members.length;
+                var scaleTotal = members.reduce(function(sum,mem){return sum+splitItems(mem.scales).length;},0);
+                var memberTarget = 108, pillarTarget = 12;
+                return (
+                  <div style={{marginBottom:16,padding:"14px",borderRadius:12,background:"linear-gradient(135deg, rgba(112,130,56,0.10), rgba(184,134,11,0.08))",border:"1px solid rgba(112,130,56,0.2)"}}>
+                    <p style={{fontSize:11,fontWeight:700,color:C.choco,textAlign:"center",lineHeight:1.7,marginBottom:10}}>
+                      百八祈音〜Inorion〜に向けて<br/>グーダドラムオーケストラ　響き合い　成長度数
+                    </p>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>メンバー数</p>
+                        <p style={{fontSize:15,fontWeight:700,color:C.choco}}>{memberCount}<span style={{fontSize:10,fontWeight:400}}> / {memberTarget}人</span></p>
+                        <p style={{fontSize:8,color:C.label}}>目標まであと{Math.max(0,memberTarget-memberCount)}人</p>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>柱の人数</p>
+                        <p style={{fontSize:15,fontWeight:700,color:"#8a4a1a"}}>{pillarCount}<span style={{fontSize:10,fontWeight:400}}> / {pillarTarget}人</span></p>
+                        <p style={{fontSize:8,color:C.label}}>達成率{Math.round(pillarCount/pillarTarget*100)}%</p>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>柱候補の人数</p>
+                        <p style={{fontSize:15,fontWeight:700,color:"#a06a1a"}}>{candidateCount}人</p>
+                      </div>
+                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
+                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>全体経験値</p>
+                        <p style={{fontSize:15,fontWeight:700,color:"#708238"}}>{totalHPT}<span style={{fontSize:10,fontWeight:400}}> HPT</span></p>
+                      </div>
+                    </div>
+                    <div style={{marginTop:8,background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
+                      <p style={{fontSize:9,color:C.moss,marginBottom:2}}>🎵 グーダドラム総数（全員のマイ音階合計）</p>
+                      <p style={{fontSize:15,fontWeight:700,color:C.choco}}>{scaleTotal}</p>
+                    </div>
+                  </div>
+                );
+              })()}
+              {contributionData !== null && (function(){
+                var newcomers = contributionData.filter(function(c){return c.isNewcomer;});
+                if (newcomers.length === 0) return null;
+                return (
+                  <div style={{marginBottom:14,padding:"12px",borderRadius:10,background:"rgba(255,200,80,0.1)",border:"1px solid rgba(255,180,60,0.35)"}}>
+                    <p style={{fontSize:11,fontWeight:700,color:"#a06a1a",marginBottom:6}}>🌱 新人賞（最近オーケストラの活動に初めて参加した仲間）</p>
+                    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
+                      {newcomers.map(function(c){
+                        var isMe = c.name === m.name;
+                        return (
+                          <span key={c.name} style={{fontSize:12,fontWeight:700,color:isMe?"#8a5a00":"#a06a1a",background:isMe?"rgba(255,180,60,0.3)":"rgba(255,180,60,0.15)",borderRadius:8,padding:"4px 10px",border:isMe?"1px solid rgba(184,134,11,0.5)":"none"}}>
+                            {c.name}{isMe && " (あなた)"}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })()}
+              <p style={{fontSize:11,color:C.choco,marginBottom:10,lineHeight:1.7,fontWeight:500}}>
+                HPTとは…響きポイント<br/>
+                リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度を表します
+              </p>
+              {contributionData === null ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
+              ) : contributionData.length === 0 ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
+              ) : (function(){
+                var renderRow = function(c, i){
+                  var isMe = c.name === m.name;
+                  var isPillar = c.level && c.level.indexOf("柱") !== -1;
+                  return (
+                    <div key={c.name} style={{display:"flex",flexDirection:"column",gap:2,padding:"8px 10px",marginBottom:5,borderRadius:8,background:isMe?"rgba(184,134,11,0.12)":"rgba(112,130,56,0.04)",border:isMe?"1px solid rgba(184,134,11,0.4)":"1px solid transparent"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                        <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
+                          {i!==null && <span style={{fontSize:11,color:C.moss,fontWeight:700,minWidth:20}}>{i+1}</span>}
+                          <span style={{fontSize:13,fontWeight:700,color:isPillar?"#8a4a1a":C.choco}}>{c.name}</span>
+                          {isPillar && <span style={{fontSize:11,fontWeight:900,color:"#8a4a1a"}}>《柱》</span>}
+                          {c.isInstructor && <span style={{fontSize:11,fontWeight:900,color:"#3a6a7a"}}>《講師》</span>}
+                          {c.isPillarCandidate && <span style={{fontSize:10,fontWeight:700,color:"#a06a1a",background:"rgba(255,180,60,0.15)",borderRadius:6,padding:"1px 6px"}}>柱候補🔥</span>}
+                        </div>
+                        <span style={{fontSize:14,fontWeight:700,color:"#708238",flexShrink:0}}>{c.score} HPT</span>
+                      </div>
+                      {c.titles && c.titles.length > 0 && (
+                        <div style={{display:"flex",flexDirection:"column",gap:2,marginTop:2,marginBottom:2}}>
+                          {c.titles.map(function(t,ti){
+                            return (
+                              <div key={ti} style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
+                                <span style={{fontSize:11,fontWeight:900,color:"#8a6205",background:"rgba(184,134,11,0.15)",borderRadius:6,padding:"2px 8px"}}>🏅{t.title}</span>
+                                <span style={{fontSize:10,color:C.choco,fontWeight:500}}>{t.desc}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      <div style={{fontSize:9,color:C.label,paddingLeft:i!==null?26:0}}>
+                        {[
+                          c.rtmMinutes>0 && ("RTM "+c.rtmMinutes+"分"),
+                          c.lessonCount>0 && ("レッスン "+c.lessonCount+"回"),
+                          c.practiceCount>0 && ("練習会 "+c.practiceCount+"回"),
+                          c.eventCount>0 && ("イベント "+c.eventCount+"回"),
+                          c.diagnosisCount>0 && ("診断 "+c.diagnosisCount+"回"),
+                          c.subscMonths>0 && ("サブスク利用"+c.subscMonths+"ヶ月目"),
+                          c.firstParticipationBonus>0 && "初回ボーナス",
+                        ].filter(Boolean).join(" ／ ")}
+                      </div>
+                    </div>
+                  );
+                };
+                var top13 = contributionData.slice(0,13);
+                return (
+                  <div>
+                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP13</p>
+                    {top13.map(function(c,i){return renderRow(c, i);})}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </div>
+        )}
             </div>
           );
         })()}
@@ -9620,136 +9751,6 @@ function App() {
         </div>
 
 
-        {/* 貢献度・功労者（テスト中：ダニー名義でログイン時のみ表示） */}
-        {m.name === "ダニー" && (
-        <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden",marginBottom:14}}>
-          <button onClick={()=>{setContributionOpen(!contributionOpen); if(!contributionOpen && contributionData===null) fetchContributionScores();}}
-            style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
-            <span style={{fontSize:13,fontWeight:600,color:C.label}}>🏆 貢献度・功労者</span>
-            <span style={{fontSize:12,color:C.olive,display:"inline-block",transform:contributionOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
-          </button>
-          {contributionOpen && (
-            <div style={{padding:"0 16px 14px"}}>
-              {contributionData !== null && (function(){
-                var totalHPT = contributionData.reduce(function(sum,c){return sum+c.score;},0);
-                var pillarCount = contributionData.filter(function(c){return c.level && c.level.indexOf("柱")!==-1;}).length;
-                var candidateCount = contributionData.filter(function(c){return c.isPillarCandidate;}).length;
-                var memberCount = members.length;
-                var scaleTotal = members.reduce(function(sum,mem){return sum+splitItems(mem.scales).length;},0);
-                var memberTarget = 108, pillarTarget = 12;
-                return (
-                  <div style={{marginBottom:16,padding:"14px",borderRadius:12,background:"linear-gradient(135deg, rgba(112,130,56,0.10), rgba(184,134,11,0.08))",border:"1px solid rgba(112,130,56,0.2)"}}>
-                    <p style={{fontSize:11,fontWeight:700,color:C.choco,textAlign:"center",lineHeight:1.7,marginBottom:10}}>
-                      百八祈音〜Inorion〜に向けて<br/>グーダドラムオーケストラ　響き合い　成長度数
-                    </p>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
-                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>メンバー数</p>
-                        <p style={{fontSize:15,fontWeight:700,color:C.choco}}>{memberCount}<span style={{fontSize:10,fontWeight:400}}> / {memberTarget}人</span></p>
-                        <p style={{fontSize:8,color:C.label}}>目標まであと{Math.max(0,memberTarget-memberCount)}人</p>
-                      </div>
-                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
-                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>柱の人数</p>
-                        <p style={{fontSize:15,fontWeight:700,color:"#8a4a1a"}}>{pillarCount}<span style={{fontSize:10,fontWeight:400}}> / {pillarTarget}人</span></p>
-                        <p style={{fontSize:8,color:C.label}}>達成率{Math.round(pillarCount/pillarTarget*100)}%</p>
-                      </div>
-                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
-                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>柱候補の人数</p>
-                        <p style={{fontSize:15,fontWeight:700,color:"#a06a1a"}}>{candidateCount}人</p>
-                      </div>
-                      <div style={{background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px"}}>
-                        <p style={{fontSize:9,color:C.moss,marginBottom:2}}>全体経験値</p>
-                        <p style={{fontSize:15,fontWeight:700,color:"#708238"}}>{totalHPT}<span style={{fontSize:10,fontWeight:400}}> HPT</span></p>
-                      </div>
-                    </div>
-                    <div style={{marginTop:8,background:"rgba(255,255,255,0.6)",borderRadius:8,padding:"8px 10px",textAlign:"center"}}>
-                      <p style={{fontSize:9,color:C.moss,marginBottom:2}}>🎵 グーダドラム総数（全員のマイ音階合計）</p>
-                      <p style={{fontSize:15,fontWeight:700,color:C.choco}}>{scaleTotal}</p>
-                    </div>
-                  </div>
-                );
-              })()}
-              {contributionData !== null && (function(){
-                var newcomers = contributionData.filter(function(c){return c.isNewcomer;});
-                if (newcomers.length === 0) return null;
-                return (
-                  <div style={{marginBottom:14,padding:"12px",borderRadius:10,background:"rgba(255,200,80,0.1)",border:"1px solid rgba(255,180,60,0.35)"}}>
-                    <p style={{fontSize:11,fontWeight:700,color:"#a06a1a",marginBottom:6}}>🌱 新人賞（最近オーケストラの活動に初めて参加した仲間）</p>
-                    <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
-                      {newcomers.map(function(c){
-                        var isMe = c.name === m.name;
-                        return (
-                          <span key={c.name} style={{fontSize:12,fontWeight:700,color:isMe?"#8a5a00":"#a06a1a",background:isMe?"rgba(255,180,60,0.3)":"rgba(255,180,60,0.15)",borderRadius:8,padding:"4px 10px",border:isMe?"1px solid rgba(184,134,11,0.5)":"none"}}>
-                            {c.name}{isMe && " (あなた)"}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })()}
-              <p style={{fontSize:11,color:C.choco,marginBottom:10,lineHeight:1.7,fontWeight:500}}>
-                HPTとは…響きポイント<br/>
-                リズムトレーニング・個人レッスン・練習会・イベント参加・継続性から算出した、コミュニティへの貢献度を表します
-              </p>
-              {contributionData === null ? (
-                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
-              ) : contributionData.length === 0 ? (
-                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
-              ) : (function(){
-                var renderRow = function(c, i){
-                  var isMe = c.name === m.name;
-                  var isPillar = c.level && c.level.indexOf("柱") !== -1;
-                  return (
-                    <div key={c.name} style={{display:"flex",flexDirection:"column",gap:2,padding:"8px 10px",marginBottom:5,borderRadius:8,background:isMe?"rgba(184,134,11,0.12)":"rgba(112,130,56,0.04)",border:isMe?"1px solid rgba(184,134,11,0.4)":"1px solid transparent"}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                        <div style={{display:"flex",alignItems:"center",gap:6,minWidth:0}}>
-                          {i!==null && <span style={{fontSize:11,color:C.moss,fontWeight:700,minWidth:20}}>{i+1}</span>}
-                          <span style={{fontSize:13,fontWeight:700,color:isPillar?"#8a4a1a":C.choco}}>{c.name}</span>
-                          {isPillar && <span style={{fontSize:11,fontWeight:900,color:"#8a4a1a"}}>《柱》</span>}
-                          {c.isInstructor && <span style={{fontSize:11,fontWeight:900,color:"#3a6a7a"}}>《講師》</span>}
-                          {c.isPillarCandidate && <span style={{fontSize:10,fontWeight:700,color:"#a06a1a",background:"rgba(255,180,60,0.15)",borderRadius:6,padding:"1px 6px"}}>柱候補🔥</span>}
-                        </div>
-                        <span style={{fontSize:14,fontWeight:700,color:"#708238",flexShrink:0}}>{c.score} HPT</span>
-                      </div>
-                      {c.titles && c.titles.length > 0 && (
-                        <div style={{display:"flex",flexDirection:"column",gap:2,marginTop:2,marginBottom:2}}>
-                          {c.titles.map(function(t,ti){
-                            return (
-                              <div key={ti} style={{display:"flex",alignItems:"baseline",gap:6,flexWrap:"wrap"}}>
-                                <span style={{fontSize:11,fontWeight:900,color:"#8a6205",background:"rgba(184,134,11,0.15)",borderRadius:6,padding:"2px 8px"}}>🏅{t.title}</span>
-                                <span style={{fontSize:10,color:C.choco,fontWeight:500}}>{t.desc}</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                      <div style={{fontSize:9,color:C.label,paddingLeft:i!==null?26:0}}>
-                        {[
-                          c.rtmMinutes>0 && ("RTM "+c.rtmMinutes+"分"),
-                          c.lessonCount>0 && ("レッスン "+c.lessonCount+"回"),
-                          c.practiceCount>0 && ("練習会 "+c.practiceCount+"回"),
-                          c.eventCount>0 && ("イベント "+c.eventCount+"回"),
-                          c.diagnosisCount>0 && ("診断 "+c.diagnosisCount+"回"),
-                          c.subscMonths>0 && ("サブスク利用"+c.subscMonths+"ヶ月目"),
-                          c.firstParticipationBonus>0 && "初回ボーナス",
-                        ].filter(Boolean).join(" ／ ")}
-                      </div>
-                    </div>
-                  );
-                };
-                var top13 = contributionData.slice(0,13);
-                return (
-                  <div>
-                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP13</p>
-                    {top13.map(function(c,i){return renderRow(c, i);})}
-                  </div>
-                );
-              })()}
-            </div>
-          )}
-        </div>
-        )}
 
         {/* マイメモ */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
