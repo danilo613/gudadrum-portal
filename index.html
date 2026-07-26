@@ -9269,8 +9269,7 @@ function App() {
                 </div>
               )}
 
-        {/* 貢献度・功労者（テスト中：ダニー名義でログイン時のみ表示） */}
-        {m.name === "ダニー" && (
+        {/* 貢献度・功労者（全メンバー公開） */}
         <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid #ffd700",borderRadius:14,overflow:"hidden",marginBottom:14}}>
           <button onClick={()=>{setContributionOpen(!contributionOpen); if(!contributionOpen && contributionData===null) fetchContributionScores();}}
             style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
@@ -9428,7 +9427,6 @@ function App() {
             </div>
           )}
         </div>
-        )}
             </div>
           );
         })()}
