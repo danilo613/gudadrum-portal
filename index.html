@@ -9602,13 +9602,13 @@ function App() {
                 var newcomers = contributionData.filter(function(c){return c.isNewcomer;});
                 if (newcomers.length === 0) return null;
                 return (
-                  <div style={{marginBottom:14,padding:"12px",borderRadius:10,background:"rgba(255,200,80,0.1)",border:"1px solid rgba(255,180,60,0.35)"}}>
-                    <p style={{fontSize:11,fontWeight:700,color:"#a06a1a",marginBottom:6}}>🌱 新人賞（最近オーケストラの活動に初めて参加した仲間）</p>
+                  <div style={{marginBottom:14,padding:"12px",borderRadius:10,background:"rgba(180,220,90,0.15)",border:"1px solid rgba(120,170,50,0.35)"}}>
+                    <p style={{fontSize:11,fontWeight:700,color:"#5a8a2a",marginBottom:6}}>🌱 新人賞（最近オーケストラの活動に初めて参加した仲間）</p>
                     <div style={{display:"flex",flexWrap:"wrap",gap:6}}>
                       {newcomers.map(function(c){
                         var isMe = c.name === m.name;
                         return (
-                          <span key={c.name} style={{fontSize:12,fontWeight:700,color:isMe?"#4a6a1a":"#5a8a2a",background:isMe?"rgba(180,220,90,0.4)":"rgba(180,220,90,0.2)",borderRadius:8,padding:"4px 10px",border:isMe?"1px solid rgba(120,170,50,0.5)":"none"}}>
+                          <span key={c.name} style={{fontSize:12,fontWeight:700,color:C.choco,background:isMe?"rgba(180,220,90,0.4)":"rgba(180,220,90,0.2)",borderRadius:8,padding:"4px 10px",border:isMe?"1px solid rgba(120,170,50,0.5)":"none"}}>
                             {c.name}{isMe && " (あなた)"}
                           </span>
                         );
@@ -9672,7 +9672,7 @@ function App() {
                 var top13 = contributionData.slice(0,13);
                 return (
                   <div>
-                    <p style={{fontSize:11,fontWeight:700,color:C.moss,marginBottom:6}}>🏆 貢献度ランキング TOP13</p>
+                    <p style={{fontSize:22,fontWeight:700,color:C.choco,marginBottom:6}}>🏆 貢献度ランキング TOP13</p>
                     {top13.map(function(c,i){return renderRow(c, i);})}
                   </div>
                 );
