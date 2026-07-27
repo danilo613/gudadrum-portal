@@ -3701,6 +3701,11 @@ function App() {
   const [hptHistory, setHptHistory] = useState(null);
   const [hptHistoryView, setHptHistoryView] = useState("monthly"); // "monthly" | "daily"
   const [hptHistoryExpanded, setHptHistoryExpanded] = useState(null);
+  const [showInsightCard, setShowInsightCard] = useState(false);
+  const [insightMemberName, setInsightMemberName] = useState("");
+  const [insightText, setInsightText] = useState("");
+  const [insightLoading, setInsightLoading] = useState(false);
+  const [insightCopied, setInsightCopied] = useState(false);
   const [contributionData, setContributionData] = useState(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [orchSchedules, setOrchSchedules] = useState(()=>cachedInit("orchSchedules", []));
@@ -5055,6 +5060,62 @@ function App() {
       const res = await gasWrite({ action: "gethpthistory" });
       if (res && res.daily) setHptHistory(res);
     } catch(e) {}
+  }
+
+  function parseInsightComments(raw) {
+    if (!raw) return [];
+    return raw.split(/\s*;\s*/).map(function(line){
+      var trimmed = line.trim();
+      if (!trimmed) return null;
+      var match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+      if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
+      return {date:"", author:"", text:trimmed};
+    }).filter(Boolean);
+  }
+
+  async function fetchMemberInsightData() {
+    if (!insightMemberName) return;
+    setInsightLoading(true);
+    setInsightText("");
+    setInsightCopied(false);
+    try {
+      const res = await gasWrite({ action: "getmemberinsightdata", name: insightMemberName });
+      if (!res || res.error) { setInsightText("データの取得に失敗しました"); setInsightLoading(false); return; }
+      var lines = [];
+      lines.push("【メンバー状況データ：" + res.name + "】");
+      lines.push("");
+      lines.push("■ リズムトレーニング履歴（" + res.rtmRecords.length + "件）");
+      if (res.rtmRecords.length === 0) {
+        lines.push("（記録なし）");
+      } else {
+        res.rtmRecords.forEach(function(r){
+          var modeLabel = r.mode==="training"?"リズムトレーニング":r.mode==="internalize"?"リズム内在トレーニング":r.mode==="muscle"?"リズム筋トレ":r.mode;
+          var bpmInfo = r.startBpm ? (" (BPM "+r.startBpm+(r.endBpm&&r.endBpm!==r.startBpm?"→"+r.endBpm:"")+")") : "";
+          lines.push(r.date + " - " + r.minutes + "分 [" + modeLabel + "]" + bpmInfo);
+        });
+      }
+      lines.push("");
+      lines.push("■ スケジュール履歴・フィードバック（" + res.scheduleRecords.length + "件）");
+      if (res.scheduleRecords.length === 0) {
+        lines.push("（記録なし）");
+      } else {
+        res.scheduleRecords.forEach(function(s){
+          lines.push("");
+          lines.push(s.date + (s.time?" "+s.time:"") + " - " + s.type);
+          if (s.note) lines.push("  備考: " + s.note);
+          var cmts = parseInsightComments(s.comment);
+          if (cmts.length > 0) {
+            cmts.forEach(function(c){
+              lines.push("  [" + (c.date||"?") + "] " + (c.author||"?") + ": " + c.text);
+            });
+          }
+        });
+      }
+      setInsightText(lines.join("\n"));
+    } catch(e) {
+      setInsightText("データの取得に失敗しました");
+    }
+    setInsightLoading(false);
   }
 
   async function submitExchangeRecord() {
@@ -7665,6 +7726,41 @@ function App() {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+        )}
+        <button onClick={()=>setShowInsightCard(!showInsightCard)}
+          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #6a4a8a",background:showInsightCard?"linear-gradient(135deg,#a878c8,#6a4a8a)":"rgba(106,74,138,0.1)",color:showInsightCard?"#fff":"#6a4a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          🤖 メンバー状況データ収集 {showInsightCard?"▲":"▼"}
+        </button>
+        {showInsightCard && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+              選んだメンバーのRTM履歴・スケジュール・フィードバックのやり取りをテキストにまとめます。分析はコピーして別途チャットで行う想定です。
+            </p>
+            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>メンバーを選択</label>
+            <select value={insightMemberName} onChange={e=>{setInsightMemberName(e.target.value);setInsightText("");setInsightCopied(false);}}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}>
+              <option value="">選んでください</option>
+              {members.map(function(mbr){return <option key={mbr.name} value={mbr.name}>{mbr.name}</option>;})}
+            </select>
+            <button onClick={fetchMemberInsightData} disabled={!insightMemberName||insightLoading}
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#6a4a8a",color:"#fff",fontSize:13,fontWeight:600,cursor:(!insightMemberName||insightLoading)?"default":"pointer",opacity:(!insightMemberName||insightLoading)?0.5:1,marginBottom:12}}>
+              {insightLoading?"集めています...":"データを集める"}
+            </button>
+            {insightText && (
+              <div>
+                <textarea readOnly value={insightText}
+                  style={{width:"100%",height:280,background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:11,color:C.choco,lineHeight:1.7,fontFamily:"monospace",marginBottom:8,boxSizing:"border-box"}}/>
+                <button onClick={()=>{
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(insightText).then(function(){setInsightCopied(true);setTimeout(function(){setInsightCopied(false);},2500);});
+                    }
+                  }}
+                  style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #6a4a8a",background:insightCopied?"rgba(106,74,138,0.15)":"#fff",color:"#6a4a8a",fontSize:13,fontWeight:600,cursor:"pointer"}}>
+                  {insightCopied?"✅ コピーしました":"📋 コピーする"}
+                </button>
               </div>
             )}
           </div>
