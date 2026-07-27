@@ -9653,19 +9653,6 @@ function App() {
                           })}
                         </div>
                       )}
-                      <div style={{fontSize:9,color:C.label,paddingLeft:i!==null?26:0}}>
-                        {[
-                          c.rtmMinutes>0 && ("RTM "+c.rtmMinutes+"分"),
-                          c.lessonCount>0 && ("レッスン "+c.lessonCount+"回"),
-                          c.practiceCount>0 && ("練習会 "+c.practiceCount+"回"),
-                          c.eventCount>0 && ("イベント "+c.eventCount+"回"),
-                          c.diagnosisCount>0 && ("診断 "+c.diagnosisCount+"回"),
-                          c.exchangeCount>0 && ("交流会 "+c.exchangeCount+"回"),
-                          c.loginBonus>0 && ("ログイン "+c.loginDays+"日"),
-                          c.subscMonths>0 && ("サブスク利用"+c.subscMonths+"ヶ月目"),
-                          c.firstParticipationBonus>0 && "初回ボーナス",
-                        ].filter(Boolean).join(" ／ ")}
-                      </div>
                     </div>
                   );
                 };
