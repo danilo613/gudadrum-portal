@@ -5111,6 +5111,15 @@ function App() {
           }
         });
       }
+      lines.push("");
+      lines.push("■ 壱祈音〜Inorion〜 出演楽曲・基準クリア状況（" + (res.inorionSongs?res.inorionSongs.length:0) + "曲）");
+      if (!res.inorionSongs || res.inorionSongs.length === 0) {
+        lines.push("（壱祈音の出演楽曲なし）");
+      } else {
+        res.inorionSongs.forEach(function(sg){
+          lines.push(sg.song + " - " + (sg.status||"（ステータス未設定）"));
+        });
+      }
       setInsightText(lines.join("\n"));
     } catch(e) {
       setInsightText("データの取得に失敗しました");
