@@ -642,6 +642,19 @@ function buildRotatedDots(rotation) {
   dots.pink = {cx:70.0,cy:83.0};
   return dots;
 }
+// 高音（cyanの位置）・低音（orangeの位置＝cyanの真反対）が、回転と一緒に動くようにする
+const SCORE_LABEL_POSITIONS = [
+  {cx:70.0, cy:15.0}, {cx:120.1, cy:32.9}, {cx:138.0, cy:83.0}, {cx:120.1, cy:133.1},
+  {cx:70.0, cy:151.0}, {cx:19.9, cy:133.1}, {cx:2.0, cy:83.0}, {cx:19.9, cy:32.9}
+];
+function getRotatedPitchLabelPos(rotation) {
+  var r = ((parseInt(rotation)||0) % 8 + 8) % 8;
+  var cyanIdx = SCORE_COLOR_RING.indexOf("cyan"); // 高音の基準色
+  var orangeIdx = SCORE_COLOR_RING.indexOf("orange"); // 低音の基準色（cyanの真反対）
+  var highI = ((cyanIdx - r) % 8 + 8) % 8;
+  var lowI = ((orangeIdx - r) % 8 + 8) % 8;
+  return { high: SCORE_LABEL_POSITIONS[highI], low: SCORE_LABEL_POSITIONS[lowI] };
+}
 
 // kigaruのセクション番号からDOTS配置を判定
 function getKigaruDots(sectionKey) {
@@ -7872,7 +7885,7 @@ function App() {
             <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>音階</label>
             <select value={newSongScale} onChange={e=>setNewSongScale(e.target.value)}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10}}>
-              <option value="default">風ノ音（default）</option>
+              <option value="default">風ノ音（tonus）</option>
               <option value="arcane">響ノ音（arcane）</option>
               <option value="enigma">秘ノ音（enigma）</option>
               <option value="equinox">光ノ音（equinox）</option>
@@ -7883,8 +7896,8 @@ function App() {
             <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
               <svg viewBox="0 0 140 166" width="140" height="166">
                 <circle cx="70" cy="83" r="67" fill="none" stroke="#ddd" strokeWidth="1"/>
-                <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                <text x={getRotatedPitchLabelPos(newSongRotation).high.cx} y={getRotatedPitchLabelPos(newSongRotation).high.cy} textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                <text x={getRotatedPitchLabelPos(newSongRotation).low.cx} y={getRotatedPitchLabelPos(newSongRotation).low.cy} textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
                 {Object.keys(buildRotatedDots(newSongRotation)).map(function(color){
                   var pos = buildRotatedDots(newSongRotation)[color];
                   return <circle key={color} cx={pos.cx} cy={pos.cy} r="13" fill={SCORE_DOT_COLORS[color]} stroke="#fff" strokeWidth="1.5"/>;
@@ -7911,7 +7924,7 @@ function App() {
               <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>拍種別</label>
               <select value={newSectionSubdiv} onChange={e=>setNewSectionSubdiv(e.target.value)}
                 style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10}}>
-                <option value="triplet">triplet</option>
+                <option value="triplet">三連</option>
                 <option value="16th">16th</option>
               </select>
               {sectionAddMsg && <p style={{fontSize:12,color:sectionAddMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{sectionAddMsg}</p>}
