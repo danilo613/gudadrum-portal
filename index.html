@@ -6809,7 +6809,7 @@ function App() {
       <div style={{padding:"12px 20px",background:"rgba(255,255,255,0.6)",flexShrink:0}}>
         {/* 曲選択 */}
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
-          {(isInstructor?[["kigaru","気軽サブスク譜面"]]:[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"],["kigaru","気軽サブスク譜面"]]).map(([id,lbl])=>(
+          {(isInstructor?[["kigaru","気軽サブスク譜面"]]:[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"],["kigaru","気軽サブスク譜面"]].concat((songMasterList||[]).map(function(s){return [s.scoreId, s.title];}))).map(([id,lbl])=>(
             <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
               style={{padding:"8px 18px",borderRadius:10,border:"0.5px solid "+C.border,
                 background:scoreEditId===id?"#3a6a7a":"#fff",
