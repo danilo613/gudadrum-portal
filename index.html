@@ -6828,7 +6828,7 @@ function App() {
         {/* 曲選択 */}
         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:10}}>
           {(isInstructor?[["kigaru","気軽サブスク譜面"]]:[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"],["kigaru","気軽サブスク譜面"]].concat((songMasterList||[]).map(function(s){return [s.scoreId, s.title];}))).map(([id,lbl])=>(
-            <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
+            <button key={id} onClick={()=>{setScoreEditId(id);setScoreEditSec(((SCORE_SECTIONS[id]||[])[0]||["intro"])[0]);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
               style={{padding:"8px 18px",borderRadius:10,border:"0.5px solid "+C.border,
                 background:scoreEditId===id?"#3a6a7a":"#fff",
                 color:scoreEditId===id?"#fff":C.label,
@@ -7846,7 +7846,7 @@ function App() {
               <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
               <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                 {(isInstructor?[["kigaru","気軽サブスク譜面"]]:[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"],["kigaru","気軽サブスク譜面"]].concat((songMasterList||[]).map(function(s){return [s.scoreId, s.title];}))).map(([id,lbl])=>(
-                  <button key={id} onClick={()=>{setScoreEditId(id);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
+                  <button key={id} onClick={()=>{setScoreEditId(id);setScoreEditSec(((SCORE_SECTIONS[id]||[])[0]||["intro"])[0]);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
                     style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
                     {lbl}
                   </button>
