@@ -9757,6 +9757,14 @@ function App() {
                             <span style={{fontSize:15}}>🏆</span>
                             <span style={{fontSize:11,fontWeight:700,color:"#7a5020",letterSpacing:0.5}}>{monthlyRanking.yearMonth}　リズム筋トレ ランキング</span>
                           </div>
+                          {monthlyRanking.totalMinutes > 0 && (
+                            <div style={{textAlign:"center",marginBottom:10,position:"relative"}}>
+                              <span style={{fontSize:9,color:"#9a7a4a"}}>みんなの合計練習時間</span>
+                              <div style={{fontSize:18,fontWeight:700,color:"#7a5020",fontFamily:"monospace"}}>
+                                {monthlyRanking.totalMinutes}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>分</span>
+                              </div>
+                            </div>
+                          )}
                           <div style={{display:"flex",flexDirection:"column",gap:4,position:"relative"}}>
                             {monthlyRanking.ranking.map(function(r, idx){
                               var rankIcon = r.rank===1?"🥇":r.rank===2?"🥈":r.rank===3?"🥉":"　";
