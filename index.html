@@ -563,6 +563,7 @@ function registerCustomSongs(songs) {
     SCORE_SECTIONS[song.scoreId] = song.sections.map(function(s){ return [s.key, s.label, s.subdivision]; });
     SCORE_ID_TO_NAME[song.scoreId] = song.title;
     CUSTOM_SONGS[song.scoreId] = song;
+    if (song.bpm > 0) SCORE_DEFAULT_BPM[song.scoreId] = song.bpm;
   });
 }
 
@@ -3755,6 +3756,7 @@ function App() {
   const [newSongTitle, setNewSongTitle] = useState("");
   const [newSongScale, setNewSongScale] = useState("default");
   const [newSongRotation, setNewSongRotation] = useState(0);
+  const [newSongBpm, setNewSongBpm] = useState("");
   const [songMasterMsg, setSongMasterMsg] = useState("");
   const [songMasterSaving, setSongMasterSaving] = useState(false);
   const [newSectionScoreId, setNewSectionScoreId] = useState("");
@@ -5148,10 +5150,10 @@ function App() {
     if (!newSongTitle.trim()) { setSongMasterMsg("❌ タイトルを入力してください"); return; }
     setSongMasterSaving(true);
     try {
-      const res = await gasWrite({ action: "addsongmaster", title: newSongTitle.trim(), scale: newSongScale, rotation: String(newSongRotation) });
+      const res = await gasWrite({ action: "addsongmaster", title: newSongTitle.trim(), scale: newSongScale, rotation: String(newSongRotation), bpm: newSongBpm });
       if (res && res.success) {
         setSongMasterMsg("✅ 「" + newSongTitle.trim() + "」を追加しました");
-        setNewSongTitle(""); setNewSongScale("default"); setNewSongRotation(0);
+        setNewSongTitle(""); setNewSongScale("default"); setNewSongRotation(0); setNewSongBpm("");
         await fetchSongMaster();
       } else {
         setSongMasterMsg("❌ 追加に失敗しました");
@@ -7767,6 +7769,9 @@ function App() {
               <option value="enigma">秘ノ音（enigma）</option>
               <option value="equinox">光ノ音（equinox）</option>
             </select>
+            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>原曲BPM（任意）</label>
+            <input type="number" value={newSongBpm} onChange={e=>setNewSongBpm(e.target.value)} placeholder="例：100"
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10,boxSizing:"border-box"}}/>
             <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>イラストの回転（0〜7）：{newSongRotation}</label>
             <input type="range" min="0" max="7" value={newSongRotation} onChange={e=>setNewSongRotation(parseInt(e.target.value))}
               style={{width:"100%",marginBottom:8}}/>
@@ -7833,7 +7838,7 @@ function App() {
                             style={{padding:"3px 8px",borderRadius:6,border:"1px solid rgba(160,64,48,0.3)",background:"#fff",color:"#a04030",fontSize:9,cursor:"pointer"}}>🗑️削除</button>
                         )}
                       </div>
-                      <p style={{fontSize:9,color:C.label,marginBottom:6}}>音階:{s.scale} ／ 回転:{s.rotation} ／ セクション{s.sections.length}件</p>
+                      <p style={{fontSize:9,color:C.label,marginBottom:6}}>音階:{s.scale} ／ 回転:{s.rotation} ／ セクション{s.sections.length}件{s.bpm>0?" ／ BPM:"+s.bpm:""}</p>
                       {s.sections.map(function(sec){
                         var isEditing = editingSectionKey === sec.key;
                         return (
