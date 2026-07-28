@@ -7877,12 +7877,20 @@ function App() {
               <option value="enigma">秘ノ音（enigma）</option>
               <option value="equinox">光ノ音（equinox）</option>
             </select>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>イラストの回転（0〜7）</label>
+            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>イラストの回転（0〜7）：{newSongRotation}</label>
             <input type="range" min="0" max="7" value={newSongRotation} onChange={e=>setNewSongRotation(parseInt(e.target.value))}
-              style={{width:"100%",marginBottom:4}}/>
-            <p style={{fontSize:10,color:C.label,marginBottom:10}}>
-              回転：{newSongRotation}{newSongRotation===0?"（響ノ音配置と同じ）":newSongRotation===4?"（風ノ音配置と同じ）":""}
-            </p>
+              style={{width:"100%",marginBottom:8}}/>
+            <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
+              <svg viewBox="0 0 140 166" width="140" height="166">
+                <circle cx="70" cy="83" r="67" fill="none" stroke="#ddd" strokeWidth="1"/>
+                <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                {Object.keys(buildRotatedDots(newSongRotation)).map(function(color){
+                  var pos = buildRotatedDots(newSongRotation)[color];
+                  return <circle key={color} cx={pos.cx} cy={pos.cy} r="13" fill={SCORE_DOT_COLORS[color]} stroke="#fff" strokeWidth="1.5"/>;
+                })}
+              </svg>
+            </div>
             {songMasterMsg && <p style={{fontSize:12,color:songMasterMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{songMasterMsg}</p>}
             <button onClick={submitNewSong} disabled={songMasterSaving}
               style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#3a7a8a",color:"#fff",fontSize:13,fontWeight:600,cursor:songMasterSaving?"default":"pointer",opacity:songMasterSaving?0.6:1,marginBottom:16}}>
