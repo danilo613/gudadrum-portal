@@ -7816,7 +7816,7 @@ function App() {
           📊 幹サブスク利用状況（個別相談・演奏診断） {subscUsageTab?"▲":"▼"}
         </button>}
         {subscUsageTab && (
-          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #a0c8d4",borderRadius:12,padding:"14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4c877",borderRadius:12,padding:"14px"}}>
             {!subscUsageData ? (
               <p style={{fontSize:12,color:"#4B3621",textAlign:"center",padding:12}}>読み込み中...</p>
             ) : !Array.isArray(subscUsageData.members) ? (
@@ -7860,7 +7860,7 @@ function App() {
                           {mrow.diagnosis && mrow.diagnosis.mode==="bank" && (
                             <div style={{display:"flex",alignItems:"center",gap:6}}>
                               <span style={{fontSize:10,color:"#4B3621"}}>演奏診断（貯蓄）</span>
-                              <span style={{fontSize:10,fontWeight:700,color:"#a89a00",background:"#e0f0f4",borderRadius:6,padding:"2px 8px"}}>残り{mrow.diagnosis.balance}回分</span>
+                              <span style={{fontSize:10,fontWeight:700,color:"#a89a00",background:"#f4f0d0",borderRadius:6,padding:"2px 8px"}}>残り{mrow.diagnosis.balance}回分</span>
                             </div>
                           )}
                           {mrow.diagnosis && mrow.diagnosis.mode==="monthly" && (
@@ -8023,9 +8023,9 @@ function App() {
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
             ):(
               <>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 8px",marginBottom:8,background:"rgba(90,74,138,0.08)",borderRadius:8}}>
-                  <span style={{fontSize:12,fontWeight:600,color:"#5a4a8a"}}>累計ログイン数</span>
-                  <span style={{fontSize:15,fontWeight:700,color:"#5a4a8a"}}>{loginData.length}件</span>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"6px 8px",marginBottom:8,background:"rgba(34,201,58,0.1)",borderRadius:8}}>
+                  <span style={{fontSize:12,fontWeight:600,color:"#1a9a2c"}}>累計ログイン数</span>
+                  <span style={{fontSize:15,fontWeight:700,color:"#1a9a2c"}}>{loginData.length}件</span>
                 </div>
                 <div style={{maxHeight:400,overflowY:"auto"}}>
                   {loginData.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(l,i){
