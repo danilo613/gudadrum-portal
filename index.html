@@ -7500,10 +7500,12 @@ function App() {
             })()}
           </div>
         )}
+        {!isInstructor && (
         <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory(); if(unprocessedPoints===null) fetchUnprocessedPoints();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
+        )}
         {showAllPoints && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             {/* 未処理リスト */}
@@ -7620,10 +7622,12 @@ function App() {
             </div>
           </div>
         )}
+        {!isInstructor && (
         <button onClick={()=>{setShowHPTTable(!showHPTTable); if(!showHPTTable && contributionData===null) fetchContributionScores();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #708238",background:showHPTTable?"linear-gradient(135deg,#9ab868,#708238)":"rgba(112,130,56,0.1)",color:showHPTTable?"#fff":"#708238",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           📊 全メンバー HPT一覧 {showHPTTable?"▲":"▼"}
         </button>
+        )}
         {showHPTTable && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <div style={{marginBottom:12,padding:"8px 10px",background:"rgba(112,130,56,0.06)",borderRadius:8}}>
@@ -7681,10 +7685,12 @@ function App() {
             )}
           </div>
         )}
+        {!isInstructor && (
         <button onClick={()=>{setShowHPTHistory(!showHPTHistory); if(!showHPTHistory && hptHistory===null) fetchHPTHistory();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showHPTHistory?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showHPTHistory?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🔥 HPT増加量の履歴（熱量チェック） {showHPTHistory?"▲":"▼"}
         </button>
+        )}
         {showHPTHistory && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
@@ -7741,10 +7747,12 @@ function App() {
             )}
           </div>
         )}
+        {!isInstructor && (
         <button onClick={()=>setShowInsightCard(!showInsightCard)}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #6a4a8a",background:showInsightCard?"linear-gradient(135deg,#a878c8,#6a4a8a)":"rgba(106,74,138,0.1)",color:showInsightCard?"#fff":"#6a4a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🤖 メンバー状況データ収集 {showInsightCard?"▲":"▼"}
         </button>
+        )}
         {showInsightCard && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
@@ -7776,10 +7784,12 @@ function App() {
             )}
           </div>
         )}
+        {!isInstructor && (
         <button onClick={()=>{setShowSongMasterCard(!showSongMasterCard); if(!showSongMasterCard && songMasterList===null) fetchSongMaster();}}
           style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a8a",background:showSongMasterCard?"linear-gradient(135deg,#5aaac4,#3a7a8a)":"rgba(58,122,138,0.1)",color:showSongMasterCard?"#fff":"#3a7a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
           🎼 新曲・セクション追加 {showSongMasterCard?"▲":"▼"}
         </button>
+        )}
         {showSongMasterCard && (
           <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:10}}>新曲を追加</p>
