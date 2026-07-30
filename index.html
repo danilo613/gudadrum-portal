@@ -3816,6 +3816,10 @@ function App() {
   const [editingSongTitle, setEditingSongTitle] = useState("");
   const [songTitleEditMsg, setSongTitleEditMsg] = useState("");
   const [showRegisteredSongs, setShowRegisteredSongs] = useState(false);
+  const [showExpiredPoints, setShowExpiredPoints] = useState(false);
+  const [expiredPointCandidates, setExpiredPointCandidates] = useState(null);
+  const [expiredPointMsg, setExpiredPointMsg] = useState("");
+  const [confirmExpireRow, setConfirmExpireRow] = useState(null);
   const [contributionData, setContributionData] = useState(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [orchSchedules, setOrchSchedules] = useState(()=>cachedInit("orchSchedules", []));
@@ -5239,6 +5243,28 @@ function App() {
       }
     } catch(e) { setSectionEditMsg("❌ 更新に失敗しました"); }
     setTimeout(function(){setSectionEditMsg("");}, 3000);
+  }
+
+  async function fetchExpiredPointCandidates() {
+    try {
+      const res = await gasWrite({ action: "getexpiredpointcandidates" });
+      if (res && res.candidates) setExpiredPointCandidates(res.candidates);
+    } catch(e) {}
+  }
+
+  async function executeExpiredPoint(rowIndex) {
+    try {
+      const res = await gasWrite({ action: "executeexpiredpoint", rowIndex: String(rowIndex) });
+      if (res && res.success) {
+        setExpiredPointMsg("✅ 実行しました");
+        setConfirmExpireRow(null);
+        await fetchExpiredPointCandidates();
+        autoFetch();
+      } else {
+        setExpiredPointMsg("❌ 実行に失敗しました");
+      }
+    } catch(e) { setExpiredPointMsg("❌ 実行に失敗しました"); }
+    setTimeout(function(){setExpiredPointMsg("");}, 3000);
   }
 
   async function deleteSong(scoreId) {
@@ -8345,6 +8371,52 @@ function App() {
                     </p>
                   </div>
                 ))}
+              </div>
+            )}
+          </div>
+        )}
+        {!isInstructor && (
+        <button onClick={()=>{setShowExpiredPoints(!showExpiredPoints); if(!showExpiredPoints && expiredPointCandidates===null) fetchExpiredPointCandidates();}}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+          ⏰ 期限切れポイント確認 {showExpiredPoints?"▲":"▼"}
+        </button>
+        )}
+        {showExpiredPoints && (
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <p style={{fontSize:9,color:"#222",marginBottom:10,lineHeight:1.6}}>
+              付与から半年経っても未使用のポイントを、先入れ先出し（FIFO）で計算した候補一覧です。ここでは何も自動で減りません。「実行する」を押した時だけ、ポイント履歴に記録されて実際に減算されます。
+            </p>
+            {expiredPointMsg && <p style={{fontSize:12,color:expiredPointMsg.startsWith("✅")?"#1a9a2c":"#a04030",marginBottom:10}}>{expiredPointMsg}</p>}
+            {expiredPointCandidates === null ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
+            ) : expiredPointCandidates.length === 0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>期限切れ候補はありません</p>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {expiredPointCandidates.map(function(c){
+                  return (
+                    <div key={c.rowIndex} style={{padding:"8px 10px",background:"rgba(34,201,58,0.06)",borderRadius:8,border:"1px solid rgba(34,201,58,0.2)"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                        <span style={{fontSize:12,fontWeight:700,color:C.choco}}>{c.name}</span>
+                        <span style={{fontSize:13,fontWeight:700,color:"#a04030"}}>-{c.points} P</span>
+                      </div>
+                      <p style={{fontSize:10,color:C.label,marginBottom:8}}>{c.grantDate}付与分 ／ 検出日：{c.detectedAt}</p>
+                      {confirmExpireRow === c.rowIndex ? (
+                        <div style={{display:"flex",gap:6}}>
+                          <button onClick={()=>executeExpiredPoint(c.rowIndex)}
+                            style={{flex:1,padding:"7px 0",borderRadius:6,border:"none",background:"#a04030",color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer"}}>本当に実行</button>
+                          <button onClick={()=>setConfirmExpireRow(null)}
+                            style={{flex:1,padding:"7px 0",borderRadius:6,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:11,cursor:"pointer"}}>取消</button>
+                        </div>
+                      ) : (
+                        <button onClick={()=>setConfirmExpireRow(c.rowIndex)}
+                          style={{width:"100%",padding:"7px 0",borderRadius:6,border:"1px solid "+ADMIN_GROUP_COLORS.member,background:"#fff",color:"#1a9a2c",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                          実行する（{c.points}P減算）
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
