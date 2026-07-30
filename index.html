@@ -7226,7 +7226,7 @@ function App() {
   );
 
   if (page === "admin" && !inorionPage) return (
-    <div style={{minHeight:"100vh",background:C.bg,fontFamily:"'Noto Sans JP',sans-serif"}}>
+    <div style={{minHeight:"100vh",background:"#f7f5f2",fontFamily:"'Noto Sans JP',sans-serif"}}>
       <style>{"@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Noto+Serif+JP:wght@300;400;500;700&display=swap');"}</style>
       {topbar("管理者ダッシュボード",[
         iconBtn("✨ 共鳴モード",()=>resonanceOpenMode()),
@@ -7281,529 +7281,71 @@ function App() {
             </div>
           </div>
         </div>
-        {(
-          <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
-            style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
-            📊 アンケート結果 {showSurvey?"▲":"▼"}
-          </button>
-        )}
-        {showSurvey && (
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
-            {!surveyLoaded ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
-            ) : surveyResults.length === 0 ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>回答データがありません</p>
-            ) : surveyResults.map(r => (
-              <div key={r.name} style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
-                  <div>
-                    <p style={{fontSize:13,fontWeight:700,color:C.choco}}>{r.name}</p>
-                    <p style={{fontSize:10,color:C.moss}}>回答日：{r.timestamp}</p>
-                  </div>
-
-                </div>
-                <div style={{display:"flex",gap:8,marginBottom:8}}>
-                  {[
-                    {label:"A", count:r.aCount, total:r.aTotal, color:"#8a9a3a"},
-                    {label:"B", count:r.bCount, total:r.bTotal, color:"#3a7a8a"},
-                    {label:"C", count:r.cCount, total:r.cTotal, color:"#8a5a3a"},
-                  ].map(({label,count,total,color})=>(
-                    <div key={label} style={{flex:1,background:"rgba(0,0,0,0.04)",borderRadius:8,padding:"8px",textAlign:"center"}}>
-                      <p style={{fontSize:11,fontWeight:700,color:color,marginBottom:4}}>{label}</p>
-                      <p style={{fontSize:16,fontWeight:700,color:C.choco}}>{count}<span style={{fontSize:10,color:C.label}}>/{total}</span></p>
-                      <div style={{height:4,background:"rgba(0,0,0,0.1)",borderRadius:2,marginTop:4}}>
-                        <div style={{height:"100%",width:(total>0?count/total*100:0)+"%",background:color,borderRadius:2}}/>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                {r.checkedItems.length > 0 && (
-                  <details style={{fontSize:11,color:C.label}}>
-                    <summary style={{cursor:"pointer",marginBottom:4}}>選択項目を見る（{r.checkedItems.length}項目）</summary>
-                    <div style={{marginTop:4,lineHeight:1.8}}>
-                      {r.checkedItems.map((item,i)=><span key={i} style={{display:"inline-block",background:"rgba(112,130,56,0.1)",borderRadius:4,padding:"1px 6px",margin:"2px",fontSize:10}}>{item}</span>)}
-                    </div>
-                  </details>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-        <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
-          🧪 練習会データ {showWorkshop?"▲":"▼"}
+        <button onClick={()=>{setScoreEditOpen(function(v){if(!v){if(isInstructor) setScoreEditId("kigaru"); loadScorePatterns(isInstructor?"kigaru":scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
+          🎼 {isInstructor?"気軽サブスク譜面編集":"譜面編集"} {scoreEditOpen?"▲":"▼"}
         </button>
-        {showWorkshop && (
-          <div style={{marginBottom:16}}>
-            {!workshopLoaded ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
-            ) : (()=>{
-              const parseNum = v => { const n=parseFloat(String(v).replace(/[^\d.]/g,"")); return isNaN(n)?null:n; };
-              const parseScore = v => { const m=String(v).match(/^[１-５1-5]/); if(!m)return null; const map={"１":1,"1":1,"２":2,"2":2,"３":3,"3":3,"４":4,"4":4,"５":5,"5":5}; return map[m[0]]||null; };
-              const METRICS = [
-                {key:"心拍数（30秒間）",label:"心拍数",parse:parseNum,lowerIsBetter:true},
-                {key:"30秒の呼吸数（吸気＆呼吸のセットで1カウント）",label:"呼吸数",parse:parseNum,lowerIsBetter:true},
-              ];
-              const calcAvg = (rows, timing) => {
-                const f = rows.filter(r=>r["回答のタイミング"]===timing);
-                const res={};
-                METRICS.forEach(m=>{ const vals=f.map(r=>m.parse(r[m.key])).filter(v=>v!==null); res[m.key]=vals.length>0?vals.reduce((a,b)=>a+b,0)/vals.length:null; });
-                return res;
-              };
-              const pct = (b,a,low) => { if(b===null||a===null||b===0)return null; const c=(a-b)/b*100; return low?-c:c; };
-              const names = [...new Set(workshopData.map(r=>r["お名前"]))].filter(Boolean).sort();
-              const bAvg = calcAvg(workshopData, "練習前");
-              const aAvg = calcAvg(workshopData, "練習後");
-              const label = `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）`;
-              // 累計計算
-              // 「練習会参加日」列は、フォームの説明文が付くと見出しが長くなることがあるため前方一致で探す
-              const dateHeaderKey = workshopHeaders.find(h => h.startsWith("練習会参加日")) || "練習会参加日";
-              const totalSessions = new Set(workshopData.map(r=>r[dateHeaderKey]).filter(Boolean)).size;
-              const totalParticipants = workshopData.filter(r=>r["回答のタイミング"]==="練習前").length;
-              return (
-                <div style={{display:"flex",flexDirection:"column",gap:8,position:"relative"}}>
-                  <div style={{display:"flex",gap:8,marginBottom:4}}>
-                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
-                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>実施日数</p>
-                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalSessions}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>回</span></p>
-                    </div>
-                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
-                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>累計参加人数</p>
-                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalParticipants}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>人</span></p>
-                    </div>
-                  </div>
-
-                  <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-                    <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>{label}</p>
-                    <div style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,marginBottom:4}}>
-                      <p style={{fontSize:10,color:C.label,fontWeight:600}}>項目</p>
-                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>前</p>
-                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>後</p>
-                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>変化</p>
-                    </div>
-                    {METRICS.map(metric=>{
-                      const b=bAvg[metric.key], a=aAvg[metric.key], p=pct(b,a,metric.lowerIsBetter);
-                      return (
-                        <div key={metric.key} style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,padding:"5px 0",borderTop:"1px solid rgba(112,130,56,0.08)"}}>
-                          <p style={{fontSize:12,color:C.choco}}>{metric.label}</p>
-                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{b!==null?b.toFixed(1):"−"}</p>
-                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{a!==null?a.toFixed(1):"−"}</p>
-                          <p style={{fontSize:12,fontWeight:700,textAlign:"center",color:p===null?"#aaa":p>0?"#5a8a3a":"#a04030"}}>
-                            {p===null?"−":(p>0?"+":"")+p.toFixed(0)+"%"}
-                          </p>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  {/* スコア系円グラフ */}
-                  {(()=>{
-                    const SCORE_METRICS = [
-                      {key:"身体の状態、感覚", label:"身体の状態・感覚", options:["強く緊張","やや緊張","ニュートラル","やや緩む","とても緩む"]},
-                      {key:"場や人との一体感", label:"場や人との一体感", options:["分離感","少し距離","普通","つながり","深い一体感"]},
-                      {key:"時間の感覚（時の流れ） ", label:"時間の感覚", options:["気になった","時々意識","変化なし","時間忘れた","時空が広がる"]},
-                      {key:"この場に身を置いているときの安心感 ", label:"安心感", options:["強い不安","少し不安","普通","安心","深く安心"]},
-                    ];
-                    const targetRows = workshopData;
-                    const COLORS = ["#e07070","#e0a070","#d4c86a","#7aba8a","#5a8a6a"];
-                    const calcDist = (timing) => {
-                      const rows = targetRows.filter(r=>r["回答のタイミング"]===timing);
-                      return (key) => {
-                        const counts = [0,0,0,0,0];
-                        rows.forEach(r=>{
-                          const m = String(r[key]).match(/^[１-５1-5]/);
-                          if(m){ const map={"１":0,"1":0,"２":1,"2":1,"３":2,"3":2,"４":3,"4":3,"５":4,"5":4}; const idx=map[m[0]]; if(idx!==undefined) counts[idx]++; }
-                        });
-                        const total = counts.reduce((a,b)=>a+b,0);
-                        return counts.map(c=>total>0?Math.round(c/total*100):0);
-                      };
-                    };
-                    const beforeDist = calcDist("練習前");
-                    const afterDist = calcDist("練習後");
-                    const PieChart = ({dist, size=80}) => {
-                      let startAngle = -90;
-                      const cx=size/2, cy=size/2, r=size/2-4;
-                      const segments = dist.map((pct,i)=>{
-                        if(pct===0) return null;
-                        const angle = pct/100*360;
-                        const end = startAngle+angle;
-                        const x1=cx+r*Math.cos(startAngle*Math.PI/180), y1=cy+r*Math.sin(startAngle*Math.PI/180);
-                        const x2=cx+r*Math.cos(end*Math.PI/180), y2=cy+r*Math.sin(end*Math.PI/180);
-                        const large=angle>180?1:0;
-                        const d=`M${cx},${cy} L${x1},${y1} A${r},${r},0,${large},1,${x2},${y2} Z`;
-                        const seg = <path key={i} d={d} fill={COLORS[i]} stroke="#fff" strokeWidth="1"/>;
-                        startAngle = end;
-                        return seg;
-                      });
-                      return <svg width={size} height={size}>{segments}</svg>;
-                    };
-                    return (
-                      <div style={{marginTop:12}}>
-                        <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>📊 選択肢の分布（円グラフ）</p>
-                        {/* 最高スコアの前後比較バー */}
-                        <div style={{marginBottom:16,background:"rgba(90,138,106,0.06)",borderRadius:10,padding:"10px 12px"}}>
-                          <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:10}}>⭐️ 最高状態（５）の前後比較</p>
-                          {[
-                            {key:"身体の状態、感覚", label:"身体の状態", best:"とても緩んでいる"},
-                            {key:"場や人との一体感", label:"一体感", best:"深い一体感・溶け合う感覚"},
-                            {key:"時間の感覚（時の流れ） ", label:"時間の感覚", best:"時空が広がる感じ"},
-                            {key:"この場に身を置いているときの安心感 ", label:"安心感", best:"深く安心し、身を委ねられている"},
-                          ].map(({key,label,best})=>{
-                            const tgt = workshopData;
-                            const count = (timing) => {
-                              const rows = tgt.filter(r=>r["回答のタイミング"]===timing);
-                              if (rows.length===0) return 0;
-                              const top = rows.filter(r=>String(r[key]).match(/^[５5]/)).length;
-                              return Math.round(top/rows.length*100);
-                            };
-                            const bPct = count("練習前");
-                            const aPct = count("練習後");
-                            return (
-                              <div key={key} style={{marginBottom:10}}>
-                                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
-                                  <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{label}　<span style={{fontSize:10,color:C.label,fontWeight:400}}>「{best}」</span></p>
-                                </div>
-                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
-                                  <p style={{fontSize:10,color:C.label,width:40,textAlign:"right",flexShrink:0}}>練習前</p>
-                                  <div style={{flex:1,background:"rgba(0,0,0,0.06)",borderRadius:4,height:14,overflow:"hidden"}}>
-                                    <div style={{width:bPct+"%",background:"#d4c86a",height:"100%",borderRadius:4,transition:"width 0.5s"}}/>
-                                  </div>
-                                  <p style={{fontSize:11,fontWeight:700,color:"#a08a30",width:34,flexShrink:0}}>{bPct}%</p>
-                                </div>
-                                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                                  <p style={{fontSize:10,color:C.label,width:40,textAlign:"right",flexShrink:0}}>練習後</p>
-                                  <div style={{flex:1,background:"rgba(0,0,0,0.06)",borderRadius:4,height:14,overflow:"hidden"}}>
-                                    <div style={{width:aPct+"%",background:"#5a8a6a",height:"100%",borderRadius:4,transition:"width 0.5s"}}/>
-                                  </div>
-                                  <p style={{fontSize:11,fontWeight:700,color:"#5a8a6a",width:34,flexShrink:0}}>{aPct}%</p>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        {SCORE_METRICS.map(sm=>{
-                          const bd=beforeDist(sm.key), ad=afterDist(sm.key);
-                          return (
-                            <div key={sm.key} style={{marginBottom:14}}>
-                              <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:6}}>{sm.label}</p>
-                              <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
-                                <div style={{textAlign:"center"}}>
-                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習前</p>
-                                  <PieChart dist={bd}/>
-                                </div>
-                                <div style={{textAlign:"center"}}>
-                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習後</p>
-                                  <PieChart dist={ad}/>
-                                </div>
-                                <div style={{flex:1}}>
-                                  {sm.options.map((opt,i)=>(
-                                    <div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:4}}>
-                                      <div style={{width:8,height:8,borderRadius:2,background:COLORS[i],flexShrink:0}}/>
-                                      <p style={{fontSize:10,color:C.choco,flex:1}}>{opt}</p>
-                                      <p style={{fontSize:10,color:C.label,minWidth:28,textAlign:"right"}}>{bd[i]>0?bd[i]+"%":""}</p>
-                                      <p style={{fontSize:10,color:"#5a8a6a",fontWeight:700,minWidth:28,textAlign:"right"}}>{ad[i]>0?ad[i]+"%":""}</p>
-                                    </div>
-                                  ))}
-                                  <div style={{display:"flex",justifyContent:"flex-end",gap:4,marginTop:4}}>
-                                    <p style={{fontSize:9,color:C.label,minWidth:28,textAlign:"right"}}>前</p>
-                                    <p style={{fontSize:9,color:"#5a8a6a",minWidth:28,textAlign:"right"}}>後</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })()}
-                </div>
-              );
-            })()}
-          </div>
-        )}
-        {!isInstructor && (
-        <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory(); if(unprocessedPoints===null) fetchUnprocessedPoints();}}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
-          🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
-        </button>
-        )}
-        {showAllPoints && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            {/* 未処理リスト */}
-            <div style={{marginBottom:14,padding:"10px 12px",background:"rgba(224,60,60,0.05)",border:"1px solid rgba(224,60,60,0.2)",borderRadius:10}}>
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
-                <span style={{fontSize:14}}>⚠️</span>
-                <span style={{fontSize:11,fontWeight:700,color:"#a03a3a",letterSpacing:0.5}}>ポイント未処理リスト{unprocessedPoints?"（"+unprocessedPoints.length+"件）":""}</span>
-              </div>
-              {unprocessedPoints === null ? (
-                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:6}}>読み込み中...</p>
-              ) : unprocessedPoints.length === 0 ? (
-                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:6}}>未処理はありません 🎉</p>
-              ) : (
-                <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                  {unprocessedPoints.map(function(c,i){
-                    var unmatched = c.kind === "person" && c.nameMatched === false;
-                    return (
-                      <div key={c.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"7px 8px",background:unmatched?"rgba(255,180,60,0.1)":"#fff",borderRadius:8,border:unmatched?"1px solid rgba(255,150,40,0.5)":"1px solid rgba(224,60,60,0.15)"}}>
-                        <div style={{minWidth:0}}>
-                          <p style={{fontSize:11,fontWeight:600,color:unmatched?"#a06a10":C.choco}}>
-                            {unmatched && "⚠️ "}{c.kind==="event" ? c.title : c.name}
-                          </p>
-                          <p style={{fontSize:10,color:C.label}}>{c.date}　{c.type}　+{c.suggestedPoints}P</p>
-                          {unmatched && <p style={{fontSize:9,color:"#a06a10",marginTop:2}}>メンバー記録に同じ名前が見つかりません（表記ゆれの可能性）</p>}
-                        </div>
-                        <div style={{display:"flex",gap:4,flexShrink:0}}>
-                          {c.kind === "event" ? (
-                            <button onClick={()=>setEventPicker({candidate:c, selected:new Set(), points:c.suggestedPoints})}
-                              style={{padding:"5px 8px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>参加者を選んで付与</button>
-                          ) : (
-                            <button onClick={()=>{
-                              if (unmatched && !confirm("「"+c.name+"」はメンバー記録に見つかりません。このまま付与しますか？（表記ゆれの可能性があります）")) return;
-                              grantUnprocessedPoint(c, c.suggestedPoints);
-                            }}
-                              style={{padding:"5px 10px",borderRadius:6,border:"none",background:unmatched?"#c08020":"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>付与</button>
-                          )}
-                          <button onClick={()=>ignoreUnprocessedPoint(c)}
-                            style={{padding:"5px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:10,cursor:"pointer"}}>無視する</button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-            {!allPointsLoaded ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
-            ) : allPointHistory.length === 0 ? (
-              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>履歴がありません</p>
-            ) : (
-              <div style={{maxHeight:400,overflowY:"auto"}}>
-                {allPointHistory.slice().reverse().map((h,i)=>(
-                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 4px",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
-                    <div>
-                      <p style={{fontSize:12,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
-                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["対象日"]?" ／対象日:"+h["対象日"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
-                    </div>
-                    <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030",flexShrink:0,marginLeft:8}}>
-                      {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
-                    </p>
-                  </div>
+        {scoreEditOpen && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px",overflowY:"auto",maxHeight:"90vh",position:"relative"}}>
+            <p style={{fontSize:13,fontWeight:700,color:"#3a6a7a",marginBottom:12}}>🎼 {isInstructor?"気軽サブスク譜面 編集":"譜面データ編集"}</p>
+            {/* 曲選択 + 印刷ボタン */}
+            <div style={{marginBottom:10}}>
+              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {(isInstructor?[["kigaru","気軽サブスク譜面"]]:[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"],["kigaru","気軽サブスク譜面"]].concat((songMasterList||[]).map(function(s){return [s.scoreId, s.title];}))).map(([id,lbl])=>(
+                  <button key={id} onClick={()=>{setScoreEditId(id);setScoreEditSec(((SCORE_SECTIONS[id]||[])[0]||["intro"])[0]);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
+                    style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                    {lbl}
+                  </button>
                 ))}
               </div>
-            )}
-          </div>
-        )}
-        <button onClick={()=>{setShowExchangeForm(!showExchangeForm); if(!showExchangeForm && exchangeRecords===null) fetchExchangeRecords();}}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
-          🎤 Zoom交流会（無料）記録 {showExchangeForm?"▲":"▼"}
-        </button>
-        {showExchangeForm && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
-              参加したメンバーを選んで記録すると、各自1回＝5HPTが自動で加算されます（よく参加してる人には「交流賞」も付与）。
-            </p>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>開催日</label>
-            <input type="date" value={exchangeDate} onChange={e=>setExchangeDate(e.target.value)}
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}/>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>参加メンバー（複数選択可）</label>
-            <div style={{maxHeight:220,overflowY:"auto",border:"1px solid "+C.border,borderRadius:10,padding:"6px 10px",marginBottom:12,background:"#fff"}}>
-              {members.map(function(mbr){
-                return (
-                  <label key={mbr.name} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 2px",fontSize:12,color:C.choco,cursor:"pointer"}}>
-                    <input type="checkbox" checked={!!exchangeSelected[mbr.name]}
-                      onChange={e=>setExchangeSelected(prev=>({...prev,[mbr.name]:e.target.checked}))}/>
-                    {mbr.name}
-                  </label>
-                );
-              })}
             </div>
-            {exchangeMsg && <p style={{fontSize:12,color:exchangeMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{exchangeMsg}</p>}
-            <button onClick={submitExchangeRecord} disabled={exchangeSaving}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#2a9d97",color:"#fff",fontSize:13,fontWeight:600,cursor:exchangeSaving?"default":"pointer",opacity:exchangeSaving?0.6:1}}>
-              {exchangeSaving?"記録中...":"記録する"}
-            </button>
-            <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+C.border}}>
-              <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>過去の記録</p>
-              {exchangeRecords === null ? (
-                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
-              ) : exchangeRecords.length === 0 ? (
-                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:8}}>まだ記録がありません</p>
-              ) : (
-                <div style={{maxHeight:260,overflowY:"auto"}}>
-                  {exchangeRecords.map(function(rec){
-                    return (
-                      <div key={rec.date} style={{marginBottom:6,padding:"7px 10px",background:"rgba(42,157,151,0.06)",borderRadius:8,border:"1px solid rgba(42,157,151,0.15)"}}>
-                        <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:2}}>{rec.date}<span style={{fontWeight:400,color:C.label,marginLeft:6}}>（{rec.names.length}名）</span></p>
-                        <p style={{fontSize:10,color:C.label}}>{rec.names.join("、")}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        {!isInstructor && (
-        <button onClick={()=>{setShowHPTTable(!showHPTTable); if(!showHPTTable && contributionData===null) fetchContributionScores();}}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.hpt)}>
-          📊 全メンバー HPT一覧 {showHPTTable?"▲":"▼"}
-        </button>
-        )}
-        {showHPTTable && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <div style={{marginBottom:12,padding:"8px 10px",background:"rgba(112,130,56,0.06)",borderRadius:8}}>
-              <p style={{fontSize:10,fontWeight:700,color:C.olive,marginBottom:4}}>換算基準</p>
-              <p style={{fontSize:9,color:C.label,lineHeight:1.7}}>
-                RTM練習 10分＝1 HPT ／ 個人・講師レッスン 1回＝15 HPT ／ 練習会・全体練習 1回＝10 HPT ／ イベント 1回＝20 HPT ／ 演奏診断 1回＝5 HPT ／ zoom交流会 1回＝5 HPT ／ ログイン累計20日達成で一回限り5 HPT（1日1カウントまで） ／ サブスク利用 1ヶ月＝10 HPT ／ 柱・講師の功労ボーナス（4月起算）1ヶ月＝20 HPT
-              </p>
-            </div>
-            {contributionData === null ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
-            ) : contributionData.length === 0 ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
-            ) : (
-              <>
-                <div style={{marginBottom:12,padding:"10px 12px",background:"rgba(184,134,11,0.1)",borderRadius:8,textAlign:"center"}}>
-                  <p style={{fontSize:10,color:C.olive,marginBottom:2}}>現在の合計HPT（{contributionData.length}名）</p>
-                  <p style={{fontSize:20,fontWeight:700,color:"#b8860b"}}>{contributionData.reduce((sum,c)=>sum+c.score,0)} <span style={{fontSize:12,fontWeight:400}}>HPT</span></p>
-                </div>
-                <div style={{maxHeight:500,overflowY:"auto"}}>
-                {contributionData.map(function(c,idx){
-                  var isPillar = c.level && c.level.indexOf("柱") !== -1;
-                  var rows = [
-                    c.rtmMinutes>0 && {label:"RTM", raw:c.rtmMinutes+"分", loc:Math.round(c.rtmMinutes/10)},
-                    c.lessonCount>0 && {label:"レッスン", raw:c.lessonCount+"回", loc:c.lessonCount*15},
-                    c.practiceCount>0 && {label:"練習会", raw:c.practiceCount+"回", loc:c.practiceCount*10},
-                    c.eventCount>0 && {label:"イベント", raw:c.eventCount+"回", loc:c.eventCount*20},
-                    c.diagnosisCount>0 && {label:"診断", raw:c.diagnosisCount+"回", loc:c.diagnosisCount*5},
-                    c.exchangeCount>0 && {label:"交流会", raw:c.exchangeCount+"回", loc:c.exchangeCount*5},
-                    c.loginBonus>0 && {label:"ログイン", raw:c.loginDays+"日", loc:c.loginBonus},
-                    c.subscMonths>0 && {label:"サブスク利用", raw:c.subscMonths+"ヶ月目", loc:c.subscMonths*10},
-                    c.seniorityBonus>0 && {label:(isPillar?"柱":"")+(isPillar&&c.isInstructor?"・":"")+(c.isInstructor?"講師":"")+"ボーナス", raw:"", loc:c.seniorityBonus},
-                    c.firstParticipationBonus>0 && {label:"初参加ボーナス", raw:"", loc:c.firstParticipationBonus},
-                  ].filter(Boolean);
-                  return (
-                    <div key={c.name} style={{marginBottom:8,padding:"8px 10px",background:"rgba(112,130,56,0.04)",borderRadius:8,border:"1px solid rgba(112,130,56,0.12)"}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
-                        <span style={{fontSize:12,fontWeight:700,color:C.choco}}><span style={{color:C.moss,marginRight:6}}>{idx+1}.</span>{c.name}</span>
-                        <span style={{fontSize:13,fontWeight:700,color:"#708238"}}>{c.score} HPT</span>
-                      </div>
-                      <div style={{display:"flex",flexDirection:"column",gap:1}}>
-                        {rows.map(function(r,ri){
-                          return (
-                            <div key={ri} style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.label}}>
-                              <span>{r.label}{r.raw?"（"+r.raw+"）":""}</span>
-                              <span>{r.loc} HPT</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
+            {/* セクション選択 */}
+            <div style={{marginBottom:12}}>
+              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>セクションを選択</p>
+              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+                {(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
+                  <button key={key} onClick={()=>setScoreEditSec(key)}
+                    style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditSec===key?"#708238":"#fff",color:scoreEditSec===key?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
+                    {lbl}
+                  </button>
+                ))}
               </div>
-              </>
-            )}
-          </div>
-        )}
-        {!isInstructor && (
-        <button onClick={()=>{setShowHPTHistory(!showHPTHistory); if(!showHPTHistory && hptHistory===null) fetchHPTHistory();}}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.hpt)}>
-          🔥 HPT増加量の履歴（熱量チェック） {showHPTHistory?"▲":"▼"}
-        </button>
-        )}
-        {showHPTHistory && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
-              その日・その月に実際に発生したHPT（RTM・レッスン・練習会・イベント・診断・交流会）の増加量のみを集計。サブスク利用月数や功労ボーナスは日付が無いため含まれません。
-            </p>
-            <div style={{display:"flex",gap:8,marginBottom:12}}>
-              <button onClick={()=>setHptHistoryView("monthly")}
-                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="monthly"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="monthly"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="monthly"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
-                📅 月別
-              </button>
-              <button onClick={()=>setHptHistoryView("daily")}
-                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="daily"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="daily"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="daily"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
-                🗓️ 日別
-              </button>
             </div>
-            {hptHistory === null ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
-            ) : (hptHistoryView==="monthly" ? hptHistory.monthly : hptHistory.daily).length === 0 ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
-            ) : (
-              <div style={{maxHeight:400,overflowY:"auto"}}>
-                {(hptHistoryView==="monthly" ? hptHistory.monthly : hptHistory.daily).map(function(item){
-                  var key = hptHistoryView==="monthly"?item.month:item.date;
-                  var label = hptHistoryView==="monthly" ? item.month.replace("-","年")+"月" : item.date;
-                  var isExpanded = hptHistoryExpanded === key;
-                  return (
-                    <div key={key} style={{marginBottom:4,borderRadius:8,background:"rgba(184,134,11,0.06)",border:"1px solid rgba(184,134,11,0.15)",overflow:"hidden"}}>
-                      <button onClick={()=>setHptHistoryExpanded(isExpanded?null:key)}
-                        style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 10px",background:"transparent",border:"none",cursor:"pointer"}}>
-                        <span style={{fontSize:11,color:C.choco,fontFamily:hptHistoryView==="daily"?"monospace":"inherit"}}>{label}</span>
-                        <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:13,fontWeight:700,color:"#b8860b"}}>+{item.increase} HPT</span>
-                          <span style={{fontSize:9,color:"rgba(184,134,11,0.6)"}}>{isExpanded?"▲":"▼"}</span>
-                        </div>
-                      </button>
-                      {isExpanded && (
-                        <div style={{padding:"2px 10px 8px",borderTop:"1px solid rgba(184,134,11,0.15)"}}>
-                          {item.byMember.length===0 ? (
-                            <p style={{fontSize:10,color:C.label,padding:"6px 0"}}>内訳がありません</p>
-                          ) : item.byMember.map(function(m){
-                            return (
-                              <div key={m.name} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 0",fontSize:10,color:C.label}}>
-                                <span>{m.name}</span>
-                                <span style={{color:C.choco,fontWeight:600}}>+{m.increase} HPT</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
+            {/* ScorePlayer（編集モード） */}
+            <ScorePlayer
+              key={scoreEditId+"-"+scoreEditSec}
+              scoreId={scoreEditId}
+              sectionKey={scoreEditSec}
+              sectionLabel={(function(){
+                var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});
+                return sec?sec[1]:scoreEditSec;
+              })()}
+              patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
+              canEdit={true}
+              scoreLoading={scoreLoading}
+              scale={(scoreEditId==="nostalgic"||scoreEditId==="holychild")?"nostalgic":(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"dreamy":"funenone"}
+              instrument2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":null}
+              patternData2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
+              subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
+              onSave={saveScorePattern}
+              sharedBpm={sharedBpm}
+              onBpmChange={function(v){setSharedBpm(v);}}
+              sharedMetroOn={sharedMetroOn}
+              floatPosInit={sharedFloatPos}
+              onFloatPosChange={setSharedFloatPos}
+              sharedMetroMode={sharedMetroMode}
+              sharedHeadBell={sharedHeadBell}
+              onMetroChange={function(metroOn,metroMode,headBell){
+                if(metroOn!==undefined) setSharedMetroOn(metroOn);
+                if(metroMode!==undefined) setSharedMetroMode(metroMode);
+                if(headBell!==undefined) setSharedHeadBell(headBell);
+              }}
+            />
           </div>
         )}
-        {!isInstructor && (
-        <button onClick={()=>setShowInsightCard(!showInsightCard)}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
-          🤖 メンバー状況データ収集 {showInsightCard?"▲":"▼"}
-        </button>
-        )}
-        {showInsightCard && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
-              選んだメンバーのRTM履歴・スケジュール・フィードバックのやり取りをテキストにまとめます。分析はコピーして別途チャットで行う想定です。
-            </p>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>メンバーを選択</label>
-            <select value={insightMemberName} onChange={e=>{setInsightMemberName(e.target.value);setInsightText("");setInsightCopied(false);}}
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}>
-              <option value="">選んでください</option>
-              {members.map(function(mbr){return <option key={mbr.name} value={mbr.name}>{mbr.name}</option>;})}
-            </select>
-            <button onClick={fetchMemberInsightData} disabled={!insightMemberName||insightLoading}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#6a4a8a",color:"#fff",fontSize:13,fontWeight:600,cursor:(!insightMemberName||insightLoading)?"default":"pointer",opacity:(!insightMemberName||insightLoading)?0.5:1,marginBottom:12}}>
-              {insightLoading?"集めています...":"データを集める"}
-            </button>
-            {insightText && (
-              <div>
-                <textarea readOnly value={insightText}
-                  style={{width:"100%",height:280,background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:11,color:C.choco,lineHeight:1.7,fontFamily:"monospace",marginBottom:8,boxSizing:"border-box"}}/>
-                <button onClick={()=>{
-                    if (navigator.clipboard) {
-                      navigator.clipboard.writeText(insightText).then(function(){setInsightCopied(true);setTimeout(function(){setInsightCopied(false);},2500);});
-                    }
-                  }}
-                  style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #6a4a8a",background:insightCopied?"rgba(106,74,138,0.15)":"#fff",color:"#6a4a8a",fontSize:13,fontWeight:600,cursor:"pointer"}}>
-                  {insightCopied?"✅ コピーしました":"📋 コピーする"}
-                </button>
-              </div>
-            )}
-          </div>
-        )}
+
         {!isInstructor && (
         <button onClick={()=>{setShowSongMasterCard(!showSongMasterCard); if(!showSongMasterCard && songMasterList===null) fetchSongMaster();}}
           style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
@@ -7941,161 +7483,122 @@ function App() {
             )}
           </div>
         )}
-        <button onClick={()=>{setScoreEditOpen(function(v){if(!v){if(isInstructor) setScoreEditId("kigaru"); loadScorePatterns(isInstructor?"kigaru":scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
-          🎼 {isInstructor?"気軽サブスク譜面編集":"譜面編集"} {scoreEditOpen?"▲":"▼"}
+        {!isInstructor && (
+        <button onClick={()=>{setShowHPTTable(!showHPTTable); if(!showHPTTable && contributionData===null) fetchContributionScores();}}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.hpt)}>
+          📊 全メンバー HPT一覧 {showHPTTable?"▲":"▼"}
         </button>
-        {scoreEditOpen && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px",overflowY:"auto",maxHeight:"90vh",position:"relative"}}>
-            <p style={{fontSize:13,fontWeight:700,color:"#3a6a7a",marginBottom:12}}>🎼 {isInstructor?"気軽サブスク譜面 編集":"譜面データ編集"}</p>
-            {/* 曲選択 + 印刷ボタン */}
-            <div style={{marginBottom:10}}>
-              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>曲を選択</p>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {(isInstructor?[["kigaru","気軽サブスク譜面"]]:[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"],["kigaru","気軽サブスク譜面"]].concat((songMasterList||[]).map(function(s){return [s.scoreId, s.title];}))).map(([id,lbl])=>(
-                  <button key={id} onClick={()=>{setScoreEditId(id);setScoreEditSec(((SCORE_SECTIONS[id]||[])[0]||["intro"])[0]);loadScorePatterns(id);if(SCORE_DEFAULT_BPM[id])setSharedBpm(SCORE_DEFAULT_BPM[id]);}}
-                    style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditId===id?"#3a6a7a":"#fff",color:scoreEditId===id?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                    {lbl}
-                  </button>
-                ))}
-              </div>
+        )}
+        {showHPTTable && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <div style={{marginBottom:12,padding:"8px 10px",background:"rgba(112,130,56,0.06)",borderRadius:8}}>
+              <p style={{fontSize:10,fontWeight:700,color:C.olive,marginBottom:4}}>換算基準</p>
+              <p style={{fontSize:9,color:C.label,lineHeight:1.7}}>
+                RTM練習 10分＝1 HPT ／ 個人・講師レッスン 1回＝15 HPT ／ 練習会・全体練習 1回＝10 HPT ／ イベント 1回＝20 HPT ／ 演奏診断 1回＝5 HPT ／ zoom交流会 1回＝5 HPT ／ ログイン累計20日達成で一回限り5 HPT（1日1カウントまで） ／ サブスク利用 1ヶ月＝10 HPT ／ 柱・講師の功労ボーナス（4月起算）1ヶ月＝20 HPT
+              </p>
             </div>
-            {/* セクション選択 */}
-            <div style={{marginBottom:12}}>
-              <p style={{fontSize:11,color:C.label,marginBottom:6,fontWeight:600}}>セクションを選択</p>
-              <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                {(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).map(([key,lbl,nt])=>(
-                  <button key={key} onClick={()=>setScoreEditSec(key)}
-                    style={{padding:"5px 12px",borderRadius:8,border:"0.5px solid "+C.border,background:scoreEditSec===key?"#708238":"#fff",color:scoreEditSec===key?"#fff":C.label,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>
-                    {lbl}
-                  </button>
-                ))}
+            {contributionData === null ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
+            ) : contributionData.length === 0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
+            ) : (
+              <>
+                <div style={{marginBottom:12,padding:"10px 12px",background:"rgba(184,134,11,0.1)",borderRadius:8,textAlign:"center"}}>
+                  <p style={{fontSize:10,color:C.olive,marginBottom:2}}>現在の合計HPT（{contributionData.length}名）</p>
+                  <p style={{fontSize:20,fontWeight:700,color:"#b8860b"}}>{contributionData.reduce((sum,c)=>sum+c.score,0)} <span style={{fontSize:12,fontWeight:400}}>HPT</span></p>
+                </div>
+                <div style={{maxHeight:500,overflowY:"auto"}}>
+                {contributionData.map(function(c,idx){
+                  var isPillar = c.level && c.level.indexOf("柱") !== -1;
+                  var rows = [
+                    c.rtmMinutes>0 && {label:"RTM", raw:c.rtmMinutes+"分", loc:Math.round(c.rtmMinutes/10)},
+                    c.lessonCount>0 && {label:"レッスン", raw:c.lessonCount+"回", loc:c.lessonCount*15},
+                    c.practiceCount>0 && {label:"練習会", raw:c.practiceCount+"回", loc:c.practiceCount*10},
+                    c.eventCount>0 && {label:"イベント", raw:c.eventCount+"回", loc:c.eventCount*20},
+                    c.diagnosisCount>0 && {label:"診断", raw:c.diagnosisCount+"回", loc:c.diagnosisCount*5},
+                    c.exchangeCount>0 && {label:"交流会", raw:c.exchangeCount+"回", loc:c.exchangeCount*5},
+                    c.loginBonus>0 && {label:"ログイン", raw:c.loginDays+"日", loc:c.loginBonus},
+                    c.subscMonths>0 && {label:"サブスク利用", raw:c.subscMonths+"ヶ月目", loc:c.subscMonths*10},
+                    c.seniorityBonus>0 && {label:(isPillar?"柱":"")+(isPillar&&c.isInstructor?"・":"")+(c.isInstructor?"講師":"")+"ボーナス", raw:"", loc:c.seniorityBonus},
+                    c.firstParticipationBonus>0 && {label:"初参加ボーナス", raw:"", loc:c.firstParticipationBonus},
+                  ].filter(Boolean);
+                  return (
+                    <div key={c.name} style={{marginBottom:8,padding:"8px 10px",background:"rgba(112,130,56,0.04)",borderRadius:8,border:"1px solid rgba(112,130,56,0.12)"}}>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
+                        <span style={{fontSize:12,fontWeight:700,color:C.choco}}><span style={{color:C.moss,marginRight:6}}>{idx+1}.</span>{c.name}</span>
+                        <span style={{fontSize:13,fontWeight:700,color:"#708238"}}>{c.score} HPT</span>
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:1}}>
+                        {rows.map(function(r,ri){
+                          return (
+                            <div key={ri} style={{display:"flex",justifyContent:"space-between",fontSize:9,color:C.label}}>
+                              <span>{r.label}{r.raw?"（"+r.raw+"）":""}</span>
+                              <span>{r.loc} HPT</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
-            {scoreLoading && <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>}
-            {/* ScorePlayer（編集モード） */}
-            <ScorePlayer
-              key={scoreEditId+"-"+scoreEditSec}
-              scoreId={scoreEditId}
-              sectionKey={scoreEditSec}
-              sectionLabel={(function(){
-                var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});
-                return sec?sec[1]:scoreEditSec;
-              })()}
-              patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
-              canEdit={true}
-              scoreLoading={scoreLoading}
-              scale={(scoreEditId==="nostalgic"||scoreEditId==="holychild")?"nostalgic":(scoreEditId==="dreamy"||scoreEditId==="iridescence"||scoreEditId==="aoi"||scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"dreamy":"funenone"}
-              instrument2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":null}
-              patternData2={(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?{left:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).left2||{},right:((scorePatterns[scoreEditId]||{})[scoreEditSec]||{}).right2||{}}:null}
-              subdivProp={(function(){var s=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(x){return x[0]===scoreEditSec;});return s?s[2]:"triplet";})()}
-              onSave={saveScorePattern}
-              sharedBpm={sharedBpm}
-              onBpmChange={function(v){setSharedBpm(v);}}
-              sharedMetroOn={sharedMetroOn}
-              floatPosInit={sharedFloatPos}
-              onFloatPosChange={setSharedFloatPos}
-              sharedMetroMode={sharedMetroMode}
-              sharedHeadBell={sharedHeadBell}
-              onMetroChange={function(metroOn,metroMode,headBell){
-                if(metroOn!==undefined) setSharedMetroOn(metroOn);
-                if(metroMode!==undefined) setSharedMetroMode(metroMode);
-                if(headBell!==undefined) setSharedHeadBell(headBell);
-              }}
-            />
+              </>
+            )}
           </div>
         )}
-
-        {!isInstructor && <button onClick={()=>setInorionTab(!inorionTab)}
-          style={adminCardStyle(ADMIN_GROUP_COLORS.standalone)}>
-          🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
-        </button>}
-        {inorionTab && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:12,padding:"14px"}}>
-            {/* 追加フォーム */}
-            <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:10}}>出演者を追加</p>
-            <select value={inorionForm.name} onChange={e=>setInorionForm(p=>({...p,name:e.target.value}))}
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
-              <option value="">-- メンバーを選択 --</option>
-              {members.map(member=><option key={member.name} value={member.name}>{member.name}</option>)}
-            </select>
-            <select value={inorionForm.song} onChange={e=>setInorionForm(p=>({...p,song:e.target.value,scale:""}))}
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
-              <option value="">-- 演目を選択 --</option>
-              {["蒼〜aoi〜","iridescence","iridescence 上物","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(s=><option key={s} value={s}>{s}</option>)}
-            </select>
-            {inorionForm.song === "春ノ舞" && (
-              <select value={inorionForm.scale} onChange={e=>setInorionForm(p=>({...p,scale:e.target.value}))}
-                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
-                <option value="">-- 音階を選択 --</option>
-                {["響ノ音","光ノ音","秘ノ音","和ノ音","風ノ音"].map(s=><option key={s} value={s}>{s}</option>)}
-              </select>
-            )}
-            {inorionForm.song === "秋霖〜shuhrin〜" && (
-              <select value={inorionForm.scale} onChange={e=>setInorionForm(p=>({...p,scale:e.target.value}))}
-                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
-                <option value="">-- 音階を選択 --</option>
-                {["響ノ音","秘ノ音","風ノ音","和ノ音＋"].map(s=><option key={s} value={s}>{s}</option>)}
-              </select>
-            )}
-            <select value={inorionForm.status} onChange={e=>setInorionForm(p=>({...p,status:e.target.value}))}
-              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:8,cursor:"pointer"}}>
-              <option value="🌱第一段階：フレーズ覚え中">🌱 第一段階：フレーズ覚え中</option>
-              <option value="🎵第二段階：楽曲思い出し中">🎵 第二段階：楽曲思い出し中</option>
-              <option value="🔥第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）">🔥 第三段階：第一基準クリア（若幹レベル）</option>
-              <option value="⭐️第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）">⭐️ 第四段階：第二基準クリア（主幹レベル）</option>
-              <option value="💮第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）">💮 第五段階：第三基準クリア（若柱レベル）</option>
-            </select>
-            {inorionMsg && <p style={{fontSize:12,color:inorionMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:6}}>{inorionMsg}</p>}
-            <button onClick={()=>{
-              if (!inorionForm.name||!inorionForm.song){setInorionMsg("❌ 名前と演目を選択してください");return;}
-              const needsScale = ["春ノ舞","秋霖〜shuhrin〜"].includes(inorionForm.song);
-              if (needsScale && !inorionForm.scale){setInorionMsg("❌ 音階を選択してください");return;}
-              const songWithScale = inorionForm.scale ? inorionForm.song+"（"+inorionForm.scale+"）" : inorionForm.song;
-              gasWrite({action:"addinorion",name:inorionForm.name,song:songWithScale,status:inorionForm.status}).then(()=>{
-                setInorionMsg("✅ 追加しました！");
-                fetchInorion();
-                setInorionForm({name:"",song:"",scale:"",status:"🌱第一段階：フレーズ覚え中"});
-                setTimeout(()=>setInorionMsg(""),2000);
-              });
-            }} style={{width:"100%",padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:14}}>
-              追加する
-            </button>
-            {/* 出演者一覧 */}
-            <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:8}}>出演者一覧</p>
-            {inorionData.length === 0 ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center"}}>まだ登録がありません</p>
+        {!isInstructor && (
+        <button onClick={()=>{setShowHPTHistory(!showHPTHistory); if(!showHPTHistory && hptHistory===null) fetchHPTHistory();}}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.hpt)}>
+          🔥 HPT増加量の履歴（熱量チェック） {showHPTHistory?"▲":"▼"}
+        </button>
+        )}
+        {showHPTHistory && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+              その日・その月に実際に発生したHPT（RTM・レッスン・練習会・イベント・診断・交流会）の増加量のみを集計。サブスク利用月数や功労ボーナスは日付が無いため含まれません。
+            </p>
+            <div style={{display:"flex",gap:8,marginBottom:12}}>
+              <button onClick={()=>setHptHistoryView("monthly")}
+                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="monthly"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="monthly"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="monthly"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                📅 月別
+              </button>
+              <button onClick={()=>setHptHistoryView("daily")}
+                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="daily"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="daily"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="daily"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                🗓️ 日別
+              </button>
+            </div>
+            {hptHistory === null ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読み込み中...</p>
+            ) : (hptHistoryView==="monthly" ? hptHistory.monthly : hptHistory.daily).length === 0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>データがありません</p>
             ) : (
-              <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                {[...new Set(inorionData.map(r=>r.name))].map(name=>{
-                  const rows = inorionData.filter(r=>r.name===name);
-                  const isExpanded = (inorionOpenMap||{})[name] || false;
+              <div style={{maxHeight:400,overflowY:"auto"}}>
+                {(hptHistoryView==="monthly" ? hptHistory.monthly : hptHistory.daily).map(function(item){
+                  var key = hptHistoryView==="monthly"?item.month:item.date;
+                  var label = hptHistoryView==="monthly" ? item.month.replace("-","年")+"月" : item.date;
+                  var isExpanded = hptHistoryExpanded === key;
                   return (
-                    <div key={name} style={{borderRadius:8,border:"1px solid rgba(138,74,106,0.2)",overflow:"hidden"}}>
-                      <button onClick={()=>setInorionOpenMap(p=>({...p,[name]:!isExpanded}))}
-                        style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:"rgba(138,74,106,0.06)",border:"none",cursor:"pointer"}}>
-                        <p style={{fontSize:13,fontWeight:600,color:"#4B3621"}}>{name}</p>
-                        <span style={{fontSize:11,color:"#4B3621"}}>{rows.length}曲 {isExpanded?"▲":"▼"}</span>
+                    <div key={key} style={{marginBottom:4,borderRadius:8,background:"rgba(184,134,11,0.06)",border:"1px solid rgba(184,134,11,0.15)",overflow:"hidden"}}>
+                      <button onClick={()=>setHptHistoryExpanded(isExpanded?null:key)}
+                        style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 10px",background:"transparent",border:"none",cursor:"pointer"}}>
+                        <span style={{fontSize:11,color:C.choco,fontFamily:hptHistoryView==="daily"?"monospace":"inherit"}}>{label}</span>
+                        <div style={{display:"flex",alignItems:"center",gap:6}}>
+                          <span style={{fontSize:13,fontWeight:700,color:"#b8860b"}}>+{item.increase} HPT</span>
+                          <span style={{fontSize:9,color:"rgba(184,134,11,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                        </div>
                       </button>
                       {isExpanded && (
-                        <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
-                          {rows.map((r,i)=>(
-                            <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"rgba(138,74,106,0.04)",borderRadius:6}}>
-                              <p style={{fontSize:12,color:C.label,flex:1}}>🎵 {r.song}</p>
-                              <select value={r.status} onChange={e=>{
-                                gasWrite({action:"updateinorion",rowIndex:r.rowIndex,status:e.target.value}).then(()=>fetchInorion());
-                              }} style={{fontSize:11,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 6px",cursor:"pointer",color:C.choco}}>
-                                <option value="🌱第一段階：フレーズ覚え中">🌱 第一段階：フレーズ覚え中</option>
-                                <option value="🎵第二段階：楽曲思い出し中">🎵 第二段階：楽曲思い出し中</option>
-                                <option value="🔥第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）">🔥 第三段階：第一基準クリア（若幹レベル）</option>
-                                <option value="⭐️第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）">⭐️ 第四段階：第二基準クリア（主幹レベル）</option>
-                                <option value="💮第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）">💮 第五段階：第三基準クリア（若柱レベル）</option>
-                              </select>
-                              <button onClick={()=>{
-                                gasWrite({action:"deleteinorion",rowIndex:r.rowIndex}).then(()=>fetchInorion());
-                              }} style={{padding:"4px 8px",borderRadius:6,border:"1px solid #ddd",background:"transparent",color:"#aaa",fontSize:11,cursor:"pointer"}}>🗑️</button>
-                            </div>
-                          ))}
+                        <div style={{padding:"2px 10px 8px",borderTop:"1px solid rgba(184,134,11,0.15)"}}>
+                          {item.byMember.length===0 ? (
+                            <p style={{fontSize:10,color:C.label,padding:"6px 0"}}>内訳がありません</p>
+                          ) : item.byMember.map(function(m){
+                            return (
+                              <div key={m.name} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 0",fontSize:10,color:C.label}}>
+                                <span>{m.name}</span>
+                                <span style={{color:C.choco,fontWeight:600}}>+{m.increase} HPT</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -8103,37 +7606,8 @@ function App() {
                 })}
               </div>
             )}
-            {/* 出演メンバー一覧 */}
-            {inorionData.length > 0 && (
-              <div style={{marginTop:16,borderTop:"1px solid rgba(138,74,106,0.2)",paddingTop:14}}>
-                <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:10}}>🎭 出演メンバー一覧</p>
-                {["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(song=>{
-                  const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（") || r.song.startsWith(song+" "));
-                  if (entries.length===0) return null;
-                  return (
-                    <div key={song} style={{marginBottom:10,background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(138,74,106,0.12)"}}>
-                      <p style={{fontSize:13,fontWeight:700,color:"#4B3621",marginBottom:6}}>🎵 {song}</p>
-                      {entries.map((r,i)=>{
-                        const scaleMatch = r.song.match(/（(.+?)）/);
-                        const scale = scaleMatch ? scaleMatch[1] : r.song === "iridescence 上物" ? "上物" : "";
-                        return (
-                          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 6px"}}>
-                            <div style={{display:"flex",alignItems:"center",gap:6}}>
-                              <p style={{fontSize:12,color:"#4B3621"}}>{r.name}</p>
-                              {scale && <span style={{fontSize:10,color:"#fff",background:"#8a4a6a",borderRadius:4,padding:"1px 6px",fontWeight:600}}>{scale}</span>}
-                            </div>
-                            <span style={{fontSize:11,color:"#4B3621"}}>{r.status}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
           </div>
         )}
-
         {/* サブスク管理（DANiLOのみ） */}
         {page==="admin"&&!isInstructor&&(
           <>
@@ -8718,6 +8192,532 @@ function App() {
             )}
           </div>
         )}
+        {!isInstructor && (
+        <button onClick={()=>setShowInsightCard(!showInsightCard)}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+          🤖 メンバー状況データ収集 {showInsightCard?"▲":"▼"}
+        </button>
+        )}
+        {showInsightCard && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+              選んだメンバーのRTM履歴・スケジュール・フィードバックのやり取りをテキストにまとめます。分析はコピーして別途チャットで行う想定です。
+            </p>
+            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>メンバーを選択</label>
+            <select value={insightMemberName} onChange={e=>{setInsightMemberName(e.target.value);setInsightText("");setInsightCopied(false);}}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}>
+              <option value="">選んでください</option>
+              {members.map(function(mbr){return <option key={mbr.name} value={mbr.name}>{mbr.name}</option>;})}
+            </select>
+            <button onClick={fetchMemberInsightData} disabled={!insightMemberName||insightLoading}
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#6a4a8a",color:"#fff",fontSize:13,fontWeight:600,cursor:(!insightMemberName||insightLoading)?"default":"pointer",opacity:(!insightMemberName||insightLoading)?0.5:1,marginBottom:12}}>
+              {insightLoading?"集めています...":"データを集める"}
+            </button>
+            {insightText && (
+              <div>
+                <textarea readOnly value={insightText}
+                  style={{width:"100%",height:280,background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"10px 12px",fontSize:11,color:C.choco,lineHeight:1.7,fontFamily:"monospace",marginBottom:8,boxSizing:"border-box"}}/>
+                <button onClick={()=>{
+                    if (navigator.clipboard) {
+                      navigator.clipboard.writeText(insightText).then(function(){setInsightCopied(true);setTimeout(function(){setInsightCopied(false);},2500);});
+                    }
+                  }}
+                  style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #6a4a8a",background:insightCopied?"rgba(106,74,138,0.15)":"#fff",color:"#6a4a8a",fontSize:13,fontWeight:600,cursor:"pointer"}}>
+                  {insightCopied?"✅ コピーしました":"📋 コピーする"}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+        {!isInstructor && (
+        <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory(); if(unprocessedPoints===null) fetchUnprocessedPoints();}}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+          🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
+        </button>
+        )}
+        {showAllPoints && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            {/* 未処理リスト */}
+            <div style={{marginBottom:14,padding:"10px 12px",background:"rgba(224,60,60,0.05)",border:"1px solid rgba(224,60,60,0.2)",borderRadius:10}}>
+              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                <span style={{fontSize:14}}>⚠️</span>
+                <span style={{fontSize:11,fontWeight:700,color:"#a03a3a",letterSpacing:0.5}}>ポイント未処理リスト{unprocessedPoints?"（"+unprocessedPoints.length+"件）":""}</span>
+              </div>
+              {unprocessedPoints === null ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:6}}>読み込み中...</p>
+              ) : unprocessedPoints.length === 0 ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:6}}>未処理はありません 🎉</p>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                  {unprocessedPoints.map(function(c,i){
+                    var unmatched = c.kind === "person" && c.nameMatched === false;
+                    return (
+                      <div key={c.key} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"7px 8px",background:unmatched?"rgba(255,180,60,0.1)":"#fff",borderRadius:8,border:unmatched?"1px solid rgba(255,150,40,0.5)":"1px solid rgba(224,60,60,0.15)"}}>
+                        <div style={{minWidth:0}}>
+                          <p style={{fontSize:11,fontWeight:600,color:unmatched?"#a06a10":C.choco}}>
+                            {unmatched && "⚠️ "}{c.kind==="event" ? c.title : c.name}
+                          </p>
+                          <p style={{fontSize:10,color:C.label}}>{c.date}　{c.type}　+{c.suggestedPoints}P</p>
+                          {unmatched && <p style={{fontSize:9,color:"#a06a10",marginTop:2}}>メンバー記録に同じ名前が見つかりません（表記ゆれの可能性）</p>}
+                        </div>
+                        <div style={{display:"flex",gap:4,flexShrink:0}}>
+                          {c.kind === "event" ? (
+                            <button onClick={()=>setEventPicker({candidate:c, selected:new Set(), points:c.suggestedPoints})}
+                              style={{padding:"5px 8px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>参加者を選んで付与</button>
+                          ) : (
+                            <button onClick={()=>{
+                              if (unmatched && !confirm("「"+c.name+"」はメンバー記録に見つかりません。このまま付与しますか？（表記ゆれの可能性があります）")) return;
+                              grantUnprocessedPoint(c, c.suggestedPoints);
+                            }}
+                              style={{padding:"5px 10px",borderRadius:6,border:"none",background:unmatched?"#c08020":"#708238",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>付与</button>
+                          )}
+                          <button onClick={()=>ignoreUnprocessedPoint(c)}
+                            style={{padding:"5px 10px",borderRadius:6,border:"1px solid "+C.border,background:"transparent",color:C.label,fontSize:10,cursor:"pointer"}}>無視する</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            {!allPointsLoaded ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
+            ) : allPointHistory.length === 0 ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:8}}>履歴がありません</p>
+            ) : (
+              <div style={{maxHeight:400,overflowY:"auto"}}>
+                {allPointHistory.slice().reverse().map((h,i)=>(
+                  <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"7px 4px",borderBottom:"1px solid rgba(112,130,56,0.08)"}}>
+                    <div>
+                      <p style={{fontSize:12,fontWeight:600,color:C.choco}}>{h["名前"]}</p>
+                      <p style={{fontSize:11,color:C.label}}>{(()=>{const d=new Date(h["日付"]);return (!isNaN(d.getTime())&&d.getFullYear()>1900)?d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日":String(h["日付"]);})()}　{h["種別"]}{h["備考"]?" · "+h["備考"]:""}{h["対象日"]?" ／対象日:"+h["対象日"]:""}{h["記録者"]?" by "+h["記録者"]:""}</p>
+                    </div>
+                    <p style={{fontSize:14,fontWeight:700,color:parseInt(h["ポイント"])>=0?"#708238":"#a04030",flexShrink:0,marginLeft:8}}>
+                      {parseInt(h["ポイント"])>=0?"+":""}{h["ポイント"]}P
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        <button onClick={()=>{setShowExchangeForm(!showExchangeForm); if(!showExchangeForm && exchangeRecords===null) fetchExchangeRecords();}}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+          🎤 Zoom交流会（無料）記録 {showExchangeForm?"▲":"▼"}
+        </button>
+        {showExchangeForm && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+              参加したメンバーを選んで記録すると、各自1回＝5HPTが自動で加算されます（よく参加してる人には「交流賞」も付与）。
+            </p>
+            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>開催日</label>
+            <input type="date" value={exchangeDate} onChange={e=>setExchangeDate(e.target.value)}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}/>
+            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>参加メンバー（複数選択可）</label>
+            <div style={{maxHeight:220,overflowY:"auto",border:"1px solid "+C.border,borderRadius:10,padding:"6px 10px",marginBottom:12,background:"#fff"}}>
+              {members.map(function(mbr){
+                return (
+                  <label key={mbr.name} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 2px",fontSize:12,color:C.choco,cursor:"pointer"}}>
+                    <input type="checkbox" checked={!!exchangeSelected[mbr.name]}
+                      onChange={e=>setExchangeSelected(prev=>({...prev,[mbr.name]:e.target.checked}))}/>
+                    {mbr.name}
+                  </label>
+                );
+              })}
+            </div>
+            {exchangeMsg && <p style={{fontSize:12,color:exchangeMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{exchangeMsg}</p>}
+            <button onClick={submitExchangeRecord} disabled={exchangeSaving}
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#2a9d97",color:"#fff",fontSize:13,fontWeight:600,cursor:exchangeSaving?"default":"pointer",opacity:exchangeSaving?0.6:1}}>
+              {exchangeSaving?"記録中...":"記録する"}
+            </button>
+            <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+C.border}}>
+              <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>過去の記録</p>
+              {exchangeRecords === null ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
+              ) : exchangeRecords.length === 0 ? (
+                <p style={{fontSize:11,color:C.label,textAlign:"center",padding:8}}>まだ記録がありません</p>
+              ) : (
+                <div style={{maxHeight:260,overflowY:"auto"}}>
+                  {exchangeRecords.map(function(rec){
+                    return (
+                      <div key={rec.date} style={{marginBottom:6,padding:"7px 10px",background:"rgba(42,157,151,0.06)",borderRadius:8,border:"1px solid rgba(42,157,151,0.15)"}}>
+                        <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:2}}>{rec.date}<span style={{fontWeight:400,color:C.label,marginLeft:6}}>（{rec.names.length}名）</span></p>
+                        <p style={{fontSize:10,color:C.label}}>{rec.names.join("、")}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
+          🧪 練習会データ {showWorkshop?"▲":"▼"}
+        </button>
+        {showWorkshop && (
+          <div style={{marginBottom:16}}>
+            {!workshopLoaded ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
+            ) : (()=>{
+              const parseNum = v => { const n=parseFloat(String(v).replace(/[^\d.]/g,"")); return isNaN(n)?null:n; };
+              const parseScore = v => { const m=String(v).match(/^[１-５1-5]/); if(!m)return null; const map={"１":1,"1":1,"２":2,"2":2,"３":3,"3":3,"４":4,"4":4,"５":5,"5":5}; return map[m[0]]||null; };
+              const METRICS = [
+                {key:"心拍数（30秒間）",label:"心拍数",parse:parseNum,lowerIsBetter:true},
+                {key:"30秒の呼吸数（吸気＆呼吸のセットで1カウント）",label:"呼吸数",parse:parseNum,lowerIsBetter:true},
+              ];
+              const calcAvg = (rows, timing) => {
+                const f = rows.filter(r=>r["回答のタイミング"]===timing);
+                const res={};
+                METRICS.forEach(m=>{ const vals=f.map(r=>m.parse(r[m.key])).filter(v=>v!==null); res[m.key]=vals.length>0?vals.reduce((a,b)=>a+b,0)/vals.length:null; });
+                return res;
+              };
+              const pct = (b,a,low) => { if(b===null||a===null||b===0)return null; const c=(a-b)/b*100; return low?-c:c; };
+              const names = [...new Set(workshopData.map(r=>r["お名前"]))].filter(Boolean).sort();
+              const bAvg = calcAvg(workshopData, "練習前");
+              const aAvg = calcAvg(workshopData, "練習後");
+              const label = `全体平均（${workshopData.filter(r=>r["回答のタイミング"]==="練習前").length}件）`;
+              // 累計計算
+              // 「練習会参加日」列は、フォームの説明文が付くと見出しが長くなることがあるため前方一致で探す
+              const dateHeaderKey = workshopHeaders.find(h => h.startsWith("練習会参加日")) || "練習会参加日";
+              const totalSessions = new Set(workshopData.map(r=>r[dateHeaderKey]).filter(Boolean)).size;
+              const totalParticipants = workshopData.filter(r=>r["回答のタイミング"]==="練習前").length;
+              return (
+                <div style={{display:"flex",flexDirection:"column",gap:8,position:"relative"}}>
+                  <div style={{display:"flex",gap:8,marginBottom:4}}>
+                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
+                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>実施日数</p>
+                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalSessions}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>回</span></p>
+                    </div>
+                    <div style={{flex:1,background:"rgba(90,106,138,0.1)",borderRadius:10,padding:"10px 12px",textAlign:"center"}}>
+                      <p style={{fontSize:10,color:"#5a6a8a",marginBottom:4,fontWeight:600}}>累計参加人数</p>
+                      <p style={{fontSize:22,fontWeight:700,color:"#5a6a8a"}}>{totalParticipants}<span style={{fontSize:11,fontWeight:400,marginLeft:2}}>人</span></p>
+                    </div>
+                  </div>
+
+                  <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+                    <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>{label}</p>
+                    <div style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,marginBottom:4}}>
+                      <p style={{fontSize:10,color:C.label,fontWeight:600}}>項目</p>
+                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>前</p>
+                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>後</p>
+                      <p style={{fontSize:10,color:C.label,textAlign:"center"}}>変化</p>
+                    </div>
+                    {METRICS.map(metric=>{
+                      const b=bAvg[metric.key], a=aAvg[metric.key], p=pct(b,a,metric.lowerIsBetter);
+                      return (
+                        <div key={metric.key} style={{display:"grid",gridTemplateColumns:"1fr 52px 52px 60px",gap:4,padding:"5px 0",borderTop:"1px solid rgba(112,130,56,0.08)"}}>
+                          <p style={{fontSize:12,color:C.choco}}>{metric.label}</p>
+                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{b!==null?b.toFixed(1):"−"}</p>
+                          <p style={{fontSize:12,color:C.label,textAlign:"center"}}>{a!==null?a.toFixed(1):"−"}</p>
+                          <p style={{fontSize:12,fontWeight:700,textAlign:"center",color:p===null?"#aaa":p>0?"#5a8a3a":"#a04030"}}>
+                            {p===null?"−":(p>0?"+":"")+p.toFixed(0)+"%"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* スコア系円グラフ */}
+                  {(()=>{
+                    const SCORE_METRICS = [
+                      {key:"身体の状態、感覚", label:"身体の状態・感覚", options:["強く緊張","やや緊張","ニュートラル","やや緩む","とても緩む"]},
+                      {key:"場や人との一体感", label:"場や人との一体感", options:["分離感","少し距離","普通","つながり","深い一体感"]},
+                      {key:"時間の感覚（時の流れ） ", label:"時間の感覚", options:["気になった","時々意識","変化なし","時間忘れた","時空が広がる"]},
+                      {key:"この場に身を置いているときの安心感 ", label:"安心感", options:["強い不安","少し不安","普通","安心","深く安心"]},
+                    ];
+                    const targetRows = workshopData;
+                    const COLORS = ["#e07070","#e0a070","#d4c86a","#7aba8a","#5a8a6a"];
+                    const calcDist = (timing) => {
+                      const rows = targetRows.filter(r=>r["回答のタイミング"]===timing);
+                      return (key) => {
+                        const counts = [0,0,0,0,0];
+                        rows.forEach(r=>{
+                          const m = String(r[key]).match(/^[１-５1-5]/);
+                          if(m){ const map={"１":0,"1":0,"２":1,"2":1,"３":2,"3":2,"４":3,"4":3,"５":4,"5":4}; const idx=map[m[0]]; if(idx!==undefined) counts[idx]++; }
+                        });
+                        const total = counts.reduce((a,b)=>a+b,0);
+                        return counts.map(c=>total>0?Math.round(c/total*100):0);
+                      };
+                    };
+                    const beforeDist = calcDist("練習前");
+                    const afterDist = calcDist("練習後");
+                    const PieChart = ({dist, size=80}) => {
+                      let startAngle = -90;
+                      const cx=size/2, cy=size/2, r=size/2-4;
+                      const segments = dist.map((pct,i)=>{
+                        if(pct===0) return null;
+                        const angle = pct/100*360;
+                        const end = startAngle+angle;
+                        const x1=cx+r*Math.cos(startAngle*Math.PI/180), y1=cy+r*Math.sin(startAngle*Math.PI/180);
+                        const x2=cx+r*Math.cos(end*Math.PI/180), y2=cy+r*Math.sin(end*Math.PI/180);
+                        const large=angle>180?1:0;
+                        const d=`M${cx},${cy} L${x1},${y1} A${r},${r},0,${large},1,${x2},${y2} Z`;
+                        const seg = <path key={i} d={d} fill={COLORS[i]} stroke="#fff" strokeWidth="1"/>;
+                        startAngle = end;
+                        return seg;
+                      });
+                      return <svg width={size} height={size}>{segments}</svg>;
+                    };
+                    return (
+                      <div style={{marginTop:12}}>
+                        <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>📊 選択肢の分布（円グラフ）</p>
+                        {/* 最高スコアの前後比較バー */}
+                        <div style={{marginBottom:16,background:"rgba(90,138,106,0.06)",borderRadius:10,padding:"10px 12px"}}>
+                          <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:10}}>⭐️ 最高状態（５）の前後比較</p>
+                          {[
+                            {key:"身体の状態、感覚", label:"身体の状態", best:"とても緩んでいる"},
+                            {key:"場や人との一体感", label:"一体感", best:"深い一体感・溶け合う感覚"},
+                            {key:"時間の感覚（時の流れ） ", label:"時間の感覚", best:"時空が広がる感じ"},
+                            {key:"この場に身を置いているときの安心感 ", label:"安心感", best:"深く安心し、身を委ねられている"},
+                          ].map(({key,label,best})=>{
+                            const tgt = workshopData;
+                            const count = (timing) => {
+                              const rows = tgt.filter(r=>r["回答のタイミング"]===timing);
+                              if (rows.length===0) return 0;
+                              const top = rows.filter(r=>String(r[key]).match(/^[５5]/)).length;
+                              return Math.round(top/rows.length*100);
+                            };
+                            const bPct = count("練習前");
+                            const aPct = count("練習後");
+                            return (
+                              <div key={key} style={{marginBottom:10}}>
+                                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}>
+                                  <p style={{fontSize:11,fontWeight:600,color:C.choco}}>{label}　<span style={{fontSize:10,color:C.label,fontWeight:400}}>「{best}」</span></p>
+                                </div>
+                                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:2}}>
+                                  <p style={{fontSize:10,color:C.label,width:40,textAlign:"right",flexShrink:0}}>練習前</p>
+                                  <div style={{flex:1,background:"rgba(0,0,0,0.06)",borderRadius:4,height:14,overflow:"hidden"}}>
+                                    <div style={{width:bPct+"%",background:"#d4c86a",height:"100%",borderRadius:4,transition:"width 0.5s"}}/>
+                                  </div>
+                                  <p style={{fontSize:11,fontWeight:700,color:"#a08a30",width:34,flexShrink:0}}>{bPct}%</p>
+                                </div>
+                                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                                  <p style={{fontSize:10,color:C.label,width:40,textAlign:"right",flexShrink:0}}>練習後</p>
+                                  <div style={{flex:1,background:"rgba(0,0,0,0.06)",borderRadius:4,height:14,overflow:"hidden"}}>
+                                    <div style={{width:aPct+"%",background:"#5a8a6a",height:"100%",borderRadius:4,transition:"width 0.5s"}}/>
+                                  </div>
+                                  <p style={{fontSize:11,fontWeight:700,color:"#5a8a6a",width:34,flexShrink:0}}>{aPct}%</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {SCORE_METRICS.map(sm=>{
+                          const bd=beforeDist(sm.key), ad=afterDist(sm.key);
+                          return (
+                            <div key={sm.key} style={{marginBottom:14}}>
+                              <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:6}}>{sm.label}</p>
+                              <div style={{display:"flex",gap:16,alignItems:"flex-start"}}>
+                                <div style={{textAlign:"center"}}>
+                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習前</p>
+                                  <PieChart dist={bd}/>
+                                </div>
+                                <div style={{textAlign:"center"}}>
+                                  <p style={{fontSize:10,color:C.label,marginBottom:4}}>練習後</p>
+                                  <PieChart dist={ad}/>
+                                </div>
+                                <div style={{flex:1}}>
+                                  {sm.options.map((opt,i)=>(
+                                    <div key={i} style={{display:"flex",alignItems:"center",gap:4,marginBottom:4}}>
+                                      <div style={{width:8,height:8,borderRadius:2,background:COLORS[i],flexShrink:0}}/>
+                                      <p style={{fontSize:10,color:C.choco,flex:1}}>{opt}</p>
+                                      <p style={{fontSize:10,color:C.label,minWidth:28,textAlign:"right"}}>{bd[i]>0?bd[i]+"%":""}</p>
+                                      <p style={{fontSize:10,color:"#5a8a6a",fontWeight:700,minWidth:28,textAlign:"right"}}>{ad[i]>0?ad[i]+"%":""}</p>
+                                    </div>
+                                  ))}
+                                  <div style={{display:"flex",justifyContent:"flex-end",gap:4,marginTop:4}}>
+                                    <p style={{fontSize:9,color:C.label,minWidth:28,textAlign:"right"}}>前</p>
+                                    <p style={{fontSize:9,color:"#5a8a6a",minWidth:28,textAlign:"right"}}>後</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+        {(
+          <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
+            style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
+            📊 アンケート結果 {showSurvey?"▲":"▼"}
+          </button>
+        )}
+        {showSurvey && (
+          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+            {!surveyLoaded ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
+            ) : surveyResults.length === 0 ? (
+              <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>回答データがありません</p>
+            ) : surveyResults.map(r => (
+              <div key={r.name} style={{background:"rgba(255,255,255,0.9)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                  <div>
+                    <p style={{fontSize:13,fontWeight:700,color:C.choco}}>{r.name}</p>
+                    <p style={{fontSize:10,color:C.moss}}>回答日：{r.timestamp}</p>
+                  </div>
+
+                </div>
+                <div style={{display:"flex",gap:8,marginBottom:8}}>
+                  {[
+                    {label:"A", count:r.aCount, total:r.aTotal, color:"#8a9a3a"},
+                    {label:"B", count:r.bCount, total:r.bTotal, color:"#3a7a8a"},
+                    {label:"C", count:r.cCount, total:r.cTotal, color:"#8a5a3a"},
+                  ].map(({label,count,total,color})=>(
+                    <div key={label} style={{flex:1,background:"rgba(0,0,0,0.04)",borderRadius:8,padding:"8px",textAlign:"center"}}>
+                      <p style={{fontSize:11,fontWeight:700,color:color,marginBottom:4}}>{label}</p>
+                      <p style={{fontSize:16,fontWeight:700,color:C.choco}}>{count}<span style={{fontSize:10,color:C.label}}>/{total}</span></p>
+                      <div style={{height:4,background:"rgba(0,0,0,0.1)",borderRadius:2,marginTop:4}}>
+                        <div style={{height:"100%",width:(total>0?count/total*100:0)+"%",background:color,borderRadius:2}}/>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {r.checkedItems.length > 0 && (
+                  <details style={{fontSize:11,color:C.label}}>
+                    <summary style={{cursor:"pointer",marginBottom:4}}>選択項目を見る（{r.checkedItems.length}項目）</summary>
+                    <div style={{marginTop:4,lineHeight:1.8}}>
+                      {r.checkedItems.map((item,i)=><span key={i} style={{display:"inline-block",background:"rgba(112,130,56,0.1)",borderRadius:4,padding:"1px 6px",margin:"2px",fontSize:10}}>{item}</span>)}
+                    </div>
+                  </details>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {!isInstructor && <button onClick={()=>setInorionTab(!inorionTab)}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.standalone)}>
+          🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
+        </button>}
+        {inorionTab && (
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:12,padding:"14px"}}>
+            {/* 追加フォーム */}
+            <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:10}}>出演者を追加</p>
+            <select value={inorionForm.name} onChange={e=>setInorionForm(p=>({...p,name:e.target.value}))}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+              <option value="">-- メンバーを選択 --</option>
+              {members.map(member=><option key={member.name} value={member.name}>{member.name}</option>)}
+            </select>
+            <select value={inorionForm.song} onChange={e=>setInorionForm(p=>({...p,song:e.target.value,scale:""}))}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+              <option value="">-- 演目を選択 --</option>
+              {["蒼〜aoi〜","iridescence","iridescence 上物","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(s=><option key={s} value={s}>{s}</option>)}
+            </select>
+            {inorionForm.song === "春ノ舞" && (
+              <select value={inorionForm.scale} onChange={e=>setInorionForm(p=>({...p,scale:e.target.value}))}
+                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+                <option value="">-- 音階を選択 --</option>
+                {["響ノ音","光ノ音","秘ノ音","和ノ音","風ノ音"].map(s=><option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
+            {inorionForm.song === "秋霖〜shuhrin〜" && (
+              <select value={inorionForm.scale} onChange={e=>setInorionForm(p=>({...p,scale:e.target.value}))}
+                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:6,cursor:"pointer"}}>
+                <option value="">-- 音階を選択 --</option>
+                {["響ノ音","秘ノ音","風ノ音","和ノ音＋"].map(s=><option key={s} value={s}>{s}</option>)}
+              </select>
+            )}
+            <select value={inorionForm.status} onChange={e=>setInorionForm(p=>({...p,status:e.target.value}))}
+              style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:8,padding:"7px 10px",fontSize:13,color:C.choco,marginBottom:8,cursor:"pointer"}}>
+              <option value="🌱第一段階：フレーズ覚え中">🌱 第一段階：フレーズ覚え中</option>
+              <option value="🎵第二段階：楽曲思い出し中">🎵 第二段階：楽曲思い出し中</option>
+              <option value="🔥第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）">🔥 第三段階：第一基準クリア（若幹レベル）</option>
+              <option value="⭐️第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）">⭐️ 第四段階：第二基準クリア（主幹レベル）</option>
+              <option value="💮第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）">💮 第五段階：第三基準クリア（若柱レベル）</option>
+            </select>
+            {inorionMsg && <p style={{fontSize:12,color:inorionMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:6}}>{inorionMsg}</p>}
+            <button onClick={()=>{
+              if (!inorionForm.name||!inorionForm.song){setInorionMsg("❌ 名前と演目を選択してください");return;}
+              const needsScale = ["春ノ舞","秋霖〜shuhrin〜"].includes(inorionForm.song);
+              if (needsScale && !inorionForm.scale){setInorionMsg("❌ 音階を選択してください");return;}
+              const songWithScale = inorionForm.scale ? inorionForm.song+"（"+inorionForm.scale+"）" : inorionForm.song;
+              gasWrite({action:"addinorion",name:inorionForm.name,song:songWithScale,status:inorionForm.status}).then(()=>{
+                setInorionMsg("✅ 追加しました！");
+                fetchInorion();
+                setInorionForm({name:"",song:"",scale:"",status:"🌱第一段階：フレーズ覚え中"});
+                setTimeout(()=>setInorionMsg(""),2000);
+              });
+            }} style={{width:"100%",padding:"8px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",marginBottom:14}}>
+              追加する
+            </button>
+            {/* 出演者一覧 */}
+            <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:8}}>出演者一覧</p>
+            {inorionData.length === 0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center"}}>まだ登録がありません</p>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                {[...new Set(inorionData.map(r=>r.name))].map(name=>{
+                  const rows = inorionData.filter(r=>r.name===name);
+                  const isExpanded = (inorionOpenMap||{})[name] || false;
+                  return (
+                    <div key={name} style={{borderRadius:8,border:"1px solid rgba(138,74,106,0.2)",overflow:"hidden"}}>
+                      <button onClick={()=>setInorionOpenMap(p=>({...p,[name]:!isExpanded}))}
+                        style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"9px 12px",background:"rgba(138,74,106,0.06)",border:"none",cursor:"pointer"}}>
+                        <p style={{fontSize:13,fontWeight:600,color:"#4B3621"}}>{name}</p>
+                        <span style={{fontSize:11,color:"#4B3621"}}>{rows.length}曲 {isExpanded?"▲":"▼"}</span>
+                      </button>
+                      {isExpanded && (
+                        <div style={{padding:"8px 10px",display:"flex",flexDirection:"column",gap:6}}>
+                          {rows.map((r,i)=>(
+                            <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"6px 8px",background:"rgba(138,74,106,0.04)",borderRadius:6}}>
+                              <p style={{fontSize:12,color:C.label,flex:1}}>🎵 {r.song}</p>
+                              <select value={r.status} onChange={e=>{
+                                gasWrite({action:"updateinorion",rowIndex:r.rowIndex,status:e.target.value}).then(()=>fetchInorion());
+                              }} style={{fontSize:11,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 6px",cursor:"pointer",color:C.choco}}>
+                                <option value="🌱第一段階：フレーズ覚え中">🌱 第一段階：フレーズ覚え中</option>
+                                <option value="🎵第二段階：楽曲思い出し中">🎵 第二段階：楽曲思い出し中</option>
+                                <option value="🔥第三段階：第一基準クリアしてブラッシュアップ中（若幹レベル）">🔥 第三段階：第一基準クリア（若幹レベル）</option>
+                                <option value="⭐️第四段階：第二基準クリアしてブラッシュアップ中（主幹レベル）">⭐️ 第四段階：第二基準クリア（主幹レベル）</option>
+                                <option value="💮第五段階：第三基準クリアしてブラッシュアップ中（若柱レベル）">💮 第五段階：第三基準クリア（若柱レベル）</option>
+                              </select>
+                              <button onClick={()=>{
+                                gasWrite({action:"deleteinorion",rowIndex:r.rowIndex}).then(()=>fetchInorion());
+                              }} style={{padding:"4px 8px",borderRadius:6,border:"1px solid #ddd",background:"transparent",color:"#aaa",fontSize:11,cursor:"pointer"}}>🗑️</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* 出演メンバー一覧 */}
+            {inorionData.length > 0 && (
+              <div style={{marginTop:16,borderTop:"1px solid rgba(138,74,106,0.2)",paddingTop:14}}>
+                <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:10}}>🎭 出演メンバー一覧</p>
+                {["蒼〜aoi〜","iridescence","Heartbeat of L**E","water lily〜水面〜","祈音〜Inorion〜（新曲）","春ノ舞","秋霖〜shuhrin〜"].map(song=>{
+                  const entries = inorionData.filter(r=>r.song===song || r.song.startsWith(song+"（") || r.song.startsWith(song+" "));
+                  if (entries.length===0) return null;
+                  return (
+                    <div key={song} style={{marginBottom:10,background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(138,74,106,0.12)"}}>
+                      <p style={{fontSize:13,fontWeight:700,color:"#4B3621",marginBottom:6}}>🎵 {song}</p>
+                      {entries.map((r,i)=>{
+                        const scaleMatch = r.song.match(/（(.+?)）/);
+                        const scale = scaleMatch ? scaleMatch[1] : r.song === "iridescence 上物" ? "上物" : "";
+                        return (
+                          <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"4px 6px"}}>
+                            <div style={{display:"flex",alignItems:"center",gap:6}}>
+                              <p style={{fontSize:12,color:"#4B3621"}}>{r.name}</p>
+                              {scale && <span style={{fontSize:10,color:"#fff",background:"#8a4a6a",borderRadius:4,padding:"1px 6px",fontWeight:600}}>{scale}</span>}
+                            </div>
+                            <span style={{fontSize:11,color:"#4B3621"}}>{r.status}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {sortKey === "region" ? (
             Object.entries(
