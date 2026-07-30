@@ -7596,16 +7596,16 @@ function App() {
         )}
         {showHPTHistory && (
           <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+            <p style={{fontSize:9,color:"#222",marginBottom:10,lineHeight:1.6}}>
               その日・その月に実際に発生したHPT（RTM・レッスン・練習会・イベント・診断・交流会）の増加量のみを集計。サブスク利用月数や功労ボーナスは日付が無いため含まれません。
             </p>
             <div style={{display:"flex",gap:8,marginBottom:12}}>
               <button onClick={()=>setHptHistoryView("monthly")}
-                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="monthly"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="monthly"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="monthly"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="monthly"?"1px solid "+ADMIN_GROUP_COLORS.hpt:"1px solid rgba(255,153,0,0.3)",background:hptHistoryView==="monthly"?"linear-gradient(135deg,#ffc04d,"+ADMIN_GROUP_COLORS.hpt+")":"rgba(255,153,0,0.06)",color:hptHistoryView==="monthly"?"#fff":ADMIN_GROUP_COLORS.hpt,fontSize:11,fontWeight:600,cursor:"pointer"}}>
                 📅 月別
               </button>
               <button onClick={()=>setHptHistoryView("daily")}
-                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="daily"?"1px solid #b8860b":"1px solid rgba(184,134,11,0.25)",background:hptHistoryView==="daily"?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.06)",color:hptHistoryView==="daily"?"#fff":"#b8860b",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                style={{flex:1,padding:"7px 0",borderRadius:8,border:hptHistoryView==="daily"?"1px solid "+ADMIN_GROUP_COLORS.hpt:"1px solid rgba(255,153,0,0.3)",background:hptHistoryView==="daily"?"linear-gradient(135deg,#ffc04d,"+ADMIN_GROUP_COLORS.hpt+")":"rgba(255,153,0,0.06)",color:hptHistoryView==="daily"?"#fff":ADMIN_GROUP_COLORS.hpt,fontSize:11,fontWeight:600,cursor:"pointer"}}>
                 🗓️ 日別
               </button>
             </div>
@@ -7623,10 +7623,10 @@ function App() {
                     <div key={key} style={{marginBottom:4,borderRadius:8,background:"rgba(184,134,11,0.06)",border:"1px solid rgba(184,134,11,0.15)",overflow:"hidden"}}>
                       <button onClick={()=>setHptHistoryExpanded(isExpanded?null:key)}
                         style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"7px 10px",background:"transparent",border:"none",cursor:"pointer"}}>
-                        <span style={{fontSize:11,color:C.choco,fontFamily:hptHistoryView==="daily"?"monospace":"inherit"}}>{label}</span>
+                        <span style={{fontSize:11,color:"#222",fontFamily:hptHistoryView==="daily"?"monospace":"inherit"}}>{label}</span>
                         <div style={{display:"flex",alignItems:"center",gap:6}}>
-                          <span style={{fontSize:13,fontWeight:700,color:"#b8860b"}}>+{item.increase} HPT</span>
-                          <span style={{fontSize:9,color:"rgba(184,134,11,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                          <span style={{fontSize:13,fontWeight:700,color:ADMIN_GROUP_COLORS.hpt}}>+{item.increase} HPT</span>
+                          <span style={{fontSize:9,color:"rgba(255,153,0,0.6)"}}>{isExpanded?"▲":"▼"}</span>
                         </div>
                       </button>
                       {isExpanded && (
@@ -7664,11 +7664,11 @@ function App() {
               <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
                 {/* 新規追加 */}
                 <button onClick={()=>setSubsAddOpen(!subsAddOpen)}
-                  style={{fontSize:11,padding:"4px 12px",borderRadius:8,border:"0.5px solid #3a6a7a",background:subsAddOpen?"#3a6a7a":"#fff",color:subsAddOpen?"#fff":"#3a6a7a",cursor:"pointer",fontFamily:"inherit",marginBottom:subsAddOpen?8:0}}>
+                  style={{fontSize:11,padding:"4px 12px",borderRadius:8,border:"0.5px solid #a89a00",background:subsAddOpen?"#a89a00":"#fff",color:subsAddOpen?"#fff":"#a89a00",cursor:"pointer",fontFamily:"inherit",marginBottom:subsAddOpen?8:0}}>
                   ＋ 新規登録
                 </button>
                 {subsAddOpen&&(
-                  <div style={{background:"rgba(58,106,122,0.05)",borderRadius:8,padding:"10px",marginBottom:10}}>
+                  <div style={{background:"rgba(168,154,0,0.05)",borderRadius:8,padding:"10px",marginBottom:10}}>
                     <div style={{display:"flex",flexDirection:"column",gap:6}}>
                       <select value={subsAddName} onChange={e=>setSubsAddName(e.target.value)}
                         style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}>
@@ -7681,7 +7681,7 @@ function App() {
                         <option value="幹 ノーマル">幹 ノーマル（¥6,900）</option>
                         <option value="幹 スペシャル">幹 スペシャル（¥12,900）</option>
                       </select>
-                      <label style={{fontSize:10,color:"#3a6a7a",fontWeight:600,marginBottom:-2}}>契約日（この日を起点に、翌月の同日が次回更新日として自動設定されます）</label>
+                      <label style={{fontSize:10,color:"#a89a00",fontWeight:600,marginBottom:-2}}>契約日（この日を起点に、翌月の同日が次回更新日として自動設定されます）</label>
                       <input type="date" value={subsAddDate} onChange={e=>setSubsAddDate(e.target.value)}
                         style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
                       <button onClick={()=>{
@@ -7690,7 +7690,7 @@ function App() {
                           fetchSubscriptions();
                           setSubsAddOpen(false);setSubsAddName("");setSubsAddDate("");
                         });
-                      }} style={{fontSize:12,padding:"6px",borderRadius:8,border:"none",background:"#3a6a7a",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
+                      }} style={{fontSize:12,padding:"6px",borderRadius:8,border:"none",background:"#a89a00",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
                         登録
                       </button>
                     </div>
@@ -7716,7 +7716,7 @@ function App() {
                       <div key={i} style={{padding:"10px 0",borderTop:"0.5px solid "+C.border}}>
                         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
                           <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{s.name}</span>
-                          <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:"rgba(58,106,122,0.1)",color:"#3a6a7a",fontWeight:600}}>{s.plan}</span>
+                          <span style={{fontSize:10,padding:"2px 8px",borderRadius:8,background:"rgba(168,154,0,0.1)",color:"#a89a00",fontWeight:600}}>{s.plan}</span>
                         </div>
                         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:4,alignItems:"center"}}>
                           <span style={{fontSize:11,color:C.label}}>契約日：{s.contractDate||"-"}</span>
@@ -7725,16 +7725,16 @@ function App() {
                           <button onClick={()=>{
                             if (subsEditingName===s.name) { setSubsEditingName(null); }
                             else { setSubsEditingName(s.name); setSubsEditContractDate(s.contractDate||""); setSubsEditRenewDate(s.renewDate||""); }
-                          }} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"0.5px solid #3a6a7a",background:subsEditingName===s.name?"#3a6a7a":"#fff",color:subsEditingName===s.name?"#fff":"#3a6a7a",cursor:"pointer",fontFamily:"inherit"}}>
+                          }} style={{fontSize:10,padding:"2px 8px",borderRadius:6,border:"0.5px solid #a89a00",background:subsEditingName===s.name?"#a89a00":"#fff",color:subsEditingName===s.name?"#fff":"#a89a00",cursor:"pointer",fontFamily:"inherit"}}>
                             ✏️ 編集
                           </button>
                         </div>
                         {subsEditingName===s.name && (
-                          <div style={{background:"rgba(58,106,122,0.06)",borderRadius:8,padding:10,marginBottom:8,display:"flex",flexDirection:"column",gap:6}}>
-                            <label style={{fontSize:10,color:"#3a6a7a",fontWeight:600}}>契約日</label>
+                          <div style={{background:"rgba(168,154,0,0.06)",borderRadius:8,padding:10,marginBottom:8,display:"flex",flexDirection:"column",gap:6}}>
+                            <label style={{fontSize:10,color:"#a89a00",fontWeight:600}}>契約日</label>
                             <input type="date" value={subsEditContractDate} onChange={e=>setSubsEditContractDate(e.target.value)}
                               style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
-                            <label style={{fontSize:10,color:"#3a6a7a",fontWeight:600}}>次回更新日</label>
+                            <label style={{fontSize:10,color:"#a89a00",fontWeight:600}}>次回更新日</label>
                             <input type="date" value={subsEditRenewDate} onChange={e=>setSubsEditRenewDate(e.target.value)}
                               style={{fontSize:12,padding:"6px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff"}}/>
                             <div style={{display:"flex",gap:6}}>
@@ -7743,18 +7743,18 @@ function App() {
                                   fetchSubscriptions();
                                   setSubsEditingName(null);
                                 });
-                              }} style={{flex:1,fontSize:12,padding:"6px",borderRadius:8,border:"none",background:"#3a6a7a",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
+                              }} style={{flex:1,fontSize:12,padding:"6px",borderRadius:8,border:"none",background:"#a89a00",color:"#fff",cursor:"pointer",fontFamily:"inherit",fontWeight:600}}>
                                 保存
                               </button>
                               <button onClick={()=>setSubsEditingName(null)}
-                                style={{flex:1,fontSize:12,padding:"6px",borderRadius:8,border:"0.5px solid #3a6a7a",background:"#fff",color:"#3a6a7a",cursor:"pointer",fontFamily:"inherit"}}>
+                                style={{flex:1,fontSize:12,padding:"6px",borderRadius:8,border:"0.5px solid #a89a00",background:"#fff",color:"#a89a00",cursor:"pointer",fontFamily:"inherit"}}>
                                 キャンセル
                               </button>
                             </div>
                           </div>
                         )}
                         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6,alignItems:"center"}}>
-                          <span style={{fontSize:12,fontWeight:700,color:"#3a6a7a"}}>月額 ¥{(s.amount||PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
+                          <span style={{fontSize:12,fontWeight:700,color:"#a89a00"}}>月額 ¥{(s.amount||PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
                         </div>
                         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                           {PLAN_POINTS[s.plan]>0&&(
@@ -7797,7 +7797,7 @@ function App() {
                 <div style={{padding:"10px 0",borderTop:"2px solid "+C.border,marginTop:4}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <span style={{fontSize:12,fontWeight:700,color:C.choco}}>次回支払合計</span>
-                    <span style={{fontSize:14,fontWeight:700,color:"#3a6a7a"}}>
+                    <span style={{fontSize:14,fontWeight:700,color:"#a89a00"}}>
                       ¥{subscriptions.reduce(function(sum,s){
                         var PLAN_AMOUNT2={"蕾気軽サブスク":2400,"蕾気軽サブスク":2400,"幹ノーマル":6900,"幹 ノーマル":6900,"幹スペシャル":12900,"幹 スペシャル":12900};
                         return sum+(PLAN_AMOUNT2[s.plan]||0);
@@ -7825,7 +7825,7 @@ function App() {
               <p style={{fontSize:12,color:"#4B3621",textAlign:"center",padding:12}}>幹サブスク会員が見つかりません（契約日が未記入の可能性もあります）</p>
             ) : (
               <>
-                <p style={{fontSize:10,color:"#3a7a8a",marginBottom:10,lineHeight:1.6}}>
+                <p style={{fontSize:10,color:"#a89a00",marginBottom:10,lineHeight:1.6}}>
                   {subscUsageData.inorionPassed
                     ? "壱祈音〜Inorion〜終了後：演奏診断も個別相談と同じ月次ルールです"
                     : "壱祈音〜Inorion〜（2026/10/17）まで：演奏診断は前倒し・貯蓄が上限なしで可能です"}
@@ -7846,11 +7846,11 @@ function App() {
                     return <span style={{fontSize:10,fontWeight:700,color:conf.fg,background:conf.bg,borderRadius:6,padding:"2px 8px"}}>{conf.label}</span>;
                   };
                   return (
-                    <div key={mrow.name} style={{marginBottom:8,background:"rgba(58,122,138,0.05)",borderRadius:10,border:"1px solid rgba(58,122,138,0.15)",overflow:"hidden"}}>
+                    <div key={mrow.name} style={{marginBottom:8,background:"rgba(168,154,0,0.05)",borderRadius:10,border:"1px solid rgba(168,154,0,0.15)",overflow:"hidden"}}>
                       <div style={{padding:"10px 12px",display:"flex",flexDirection:"column",gap:6}}>
                         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                           <span style={{fontSize:13,fontWeight:700,color:"#4B3621"}}>{mrow.name}</span>
-                          <span style={{fontSize:10,color:"#3a7a8a"}}>{mrow.plan}</span>
+                          <span style={{fontSize:10,color:"#a89a00"}}>{mrow.plan}</span>
                         </div>
                         <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
                           <div style={{display:"flex",alignItems:"center",gap:6}}>
@@ -7860,7 +7860,7 @@ function App() {
                           {mrow.diagnosis && mrow.diagnosis.mode==="bank" && (
                             <div style={{display:"flex",alignItems:"center",gap:6}}>
                               <span style={{fontSize:10,color:"#4B3621"}}>演奏診断（貯蓄）</span>
-                              <span style={{fontSize:10,fontWeight:700,color:"#3a7a8a",background:"#e0f0f4",borderRadius:6,padding:"2px 8px"}}>残り{mrow.diagnosis.balance}回分</span>
+                              <span style={{fontSize:10,fontWeight:700,color:"#a89a00",background:"#e0f0f4",borderRadius:6,padding:"2px 8px"}}>残り{mrow.diagnosis.balance}回分</span>
                             </div>
                           )}
                           {mrow.diagnosis && mrow.diagnosis.mode==="monthly" && (
@@ -7871,8 +7871,8 @@ function App() {
                           )}
                         </div>
                       </div>
-                      <div style={{padding:"0 12px 12px",borderTop:"1px solid rgba(58,122,138,0.15)"}}>
-                        <p style={{fontSize:9,color:"#3a7a8a",margin:"8px 0 4px"}}>契約日：{mrow.contractDate}</p>
+                      <div style={{padding:"0 12px 12px",borderTop:"1px solid rgba(168,154,0,0.15)"}}>
+                        <p style={{fontSize:9,color:"#a89a00",margin:"8px 0 4px"}}>契約日：{mrow.contractDate}</p>
                         <p style={{fontSize:10,fontWeight:700,color:"#4B3621",marginTop:6,marginBottom:4}}>個別相談 月別履歴（契約〜今月）</p>
                         <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
                           {mrow.consultation.history.map(function(h,i){
@@ -7890,7 +7890,7 @@ function App() {
                           </>
                         )}
                         {mrow.diagnosis && mrow.diagnosis.mode==="bank" && (
-                          <p style={{fontSize:9,color:"#3a7a8a",marginTop:6}}>演奏診断は前倒し可のため、契約から今月までの発生数（{mrow.diagnosis.accrued}回）から、実際に受診済みの回数（{mrow.diagnosis.used}回）を引いた残数を表示しています。</p>
+                          <p style={{fontSize:9,color:"#a89a00",marginTop:6}}>演奏診断は前倒し可のため、契約から今月までの発生数（{mrow.diagnosis.accrued}回）から、実際に受診済みの回数（{mrow.diagnosis.used}回）を引いた残数を表示しています。</p>
                         )}
                       </div>
                     </div>
@@ -7905,7 +7905,7 @@ function App() {
           🔓 気軽サブスク 解放管理 {showKigaruUnlock?"▲":"▼"}
         </button>
         {showKigaruUnlock && (
-          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #c8a880",borderRadius:12,padding:"14px",overflowX:"auto"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #d4c877",borderRadius:12,padding:"14px",overflowX:"auto"}}>
             <p style={{fontSize:11,color:C.label,marginBottom:10,lineHeight:1.6}}>気軽サブスク会員のセクション解放管理。◯をタップで切り替え。</p>
             {!allKigaruUnlock ? (
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読込中…</p>
@@ -7918,10 +7918,10 @@ function App() {
                   return (
                     <table style={{borderCollapse:"collapse",fontSize:11,minWidth:"100%"}}>
                       <thead>
-                        <tr style={{background:"rgba(138,90,58,0.1)"}}>
-                          <th style={{padding:"6px 8px",border:"1px solid #d0b890",textAlign:"left",position:"sticky",left:0,background:"rgba(138,90,58,0.15)",zIndex:1,minWidth:90}}>名前</th>
+                        <tr style={{background:"rgba(168,154,0,0.1)"}}>
+                          <th style={{padding:"6px 8px",border:"1px solid #d4c877",textAlign:"left",position:"sticky",left:0,background:"rgba(168,154,0,0.15)",zIndex:1,minWidth:90}}>名前</th>
                           {[1,2,3,4,5,6,7,8,9,10].map(function(n){
-                            return <th key={n} style={{padding:"6px 4px",border:"1px solid #d0b890",minWidth:38,fontSize:10}}>S{n}</th>;
+                            return <th key={n} style={{padding:"6px 4px",border:"1px solid #d4c877",minWidth:38,fontSize:10}}>S{n}</th>;
                           })}
                         </tr>
                       </thead>
@@ -7931,14 +7931,14 @@ function App() {
                           var secs = entry ? entry.sections : {};
                           return (
                             <tr key={m.name}>
-                              <td style={{padding:"6px 8px",border:"1px solid #e0d0b0",fontWeight:600,color:C.choco,position:"sticky",left:0,background:"#fff",zIndex:1}}>{m.name}</td>
+                              <td style={{padding:"6px 8px",border:"1px solid #e0d878",fontWeight:600,color:C.choco,position:"sticky",left:0,background:"#fff",zIndex:1}}>{m.name}</td>
                               {[1,2,3,4,5,6,7,8,9,10].map(function(n){
                                 var key = "section"+n;
                                 var unlocked = !!secs[key];
                                 return (
-                                  <td key={n} style={{padding:0,border:"1px solid #e0d0b0",textAlign:"center"}}>
+                                  <td key={n} style={{padding:0,border:"1px solid #e0d878",textAlign:"center"}}>
                                     <button onClick={()=>toggleKigaruUnlock(m.name, key, !unlocked)}
-                                      style={{width:"100%",height:32,border:"none",background:unlocked?"#8a5a3a":"transparent",color:unlocked?"#fff":"#c0a880",fontSize:14,fontWeight:700,cursor:"pointer"}}>
+                                      style={{width:"100%",height:32,border:"none",background:unlocked?"#a89a00":"transparent",color:unlocked?"#fff":"#b8ac60",fontSize:14,fontWeight:700,cursor:"pointer"}}>
                                       {unlocked?"◯":"・"}
                                     </button>
                                   </td>
