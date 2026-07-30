@@ -7281,12 +7281,13 @@ function App() {
             </div>
           </div>
         </div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 12px",marginBottom:0}}>
         <button onClick={()=>{setScoreEditOpen(function(v){if(!v){if(isInstructor) setScoreEditId("kigaru"); loadScorePatterns(isInstructor?"kigaru":scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
           style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
           🎼 {isInstructor?"気軽サブスク譜面編集":"譜面編集"} {scoreEditOpen?"▲":"▼"}
         </button>
         {scoreEditOpen && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px",overflowY:"auto",maxHeight:"90vh",position:"relative"}}>
+          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #a0c8d4",borderRadius:12,padding:"16px",overflowY:"auto",maxHeight:"90vh",position:"relative",gridColumn:"1 / -1"}}>
             <p style={{fontSize:13,fontWeight:700,color:"#3a6a7a",marginBottom:12}}>🎼 {isInstructor?"気軽サブスク譜面 編集":"譜面データ編集"}</p>
             {/* 曲選択 + 印刷ボタン */}
             <div style={{marginBottom:10}}>
@@ -7353,7 +7354,7 @@ function App() {
         </button>
         )}
         {showSongMasterCard && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:10}}>新曲を追加</p>
             <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>タイトル</label>
             <input value={newSongTitle} onChange={e=>setNewSongTitle(e.target.value)} placeholder="例：新しい風"
@@ -7490,7 +7491,7 @@ function App() {
         </button>
         )}
         {showHPTTable && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <div style={{marginBottom:12,padding:"8px 10px",background:"rgba(112,130,56,0.06)",borderRadius:8}}>
               <p style={{fontSize:10,fontWeight:700,color:C.olive,marginBottom:4}}>換算基準</p>
               <p style={{fontSize:9,color:C.label,lineHeight:1.7}}>
@@ -7553,7 +7554,7 @@ function App() {
         </button>
         )}
         {showHPTHistory && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
               その日・その月に実際に発生したHPT（RTM・レッスン・練習会・イベント・診断・交流会）の増加量のみを集計。サブスク利用月数や功労ボーナスは日付が無いため含まれません。
             </p>
@@ -7616,7 +7617,7 @@ function App() {
               💳 サブスク管理 {showSubs?"▲":"▼"}
             </button>
             {showSubs&&(
-              <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+              <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
                 {/* 新規追加 */}
                 <button onClick={()=>setSubsAddOpen(!subsAddOpen)}
                   style={{fontSize:11,padding:"4px 12px",borderRadius:8,border:"0.5px solid #3a6a7a",background:subsAddOpen?"#3a6a7a":"#fff",color:subsAddOpen?"#fff":"#3a6a7a",cursor:"pointer",fontFamily:"inherit",marginBottom:subsAddOpen?8:0}}>
@@ -7771,7 +7772,7 @@ function App() {
           📊 幹サブスク利用状況（個別相談・演奏診断） {subscUsageTab?"▲":"▼"}
         </button>}
         {subscUsageTab && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #a0c8d4",borderRadius:12,padding:"14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #a0c8d4",borderRadius:12,padding:"14px"}}>
             {!subscUsageData ? (
               <p style={{fontSize:12,color:"#4B3621",textAlign:"center",padding:12}}>読み込み中...</p>
             ) : !Array.isArray(subscUsageData.members) ? (
@@ -7860,7 +7861,7 @@ function App() {
           🔓 気軽サブスク 解放管理 {showKigaruUnlock?"▲":"▼"}
         </button>
         {showKigaruUnlock && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #c8a880",borderRadius:12,padding:"14px",overflowX:"auto"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.95)",border:"1px solid #c8a880",borderRadius:12,padding:"14px",overflowX:"auto"}}>
             <p style={{fontSize:11,color:C.label,marginBottom:10,lineHeight:1.6}}>気軽サブスク会員のセクション解放管理。◯をタップで切り替え。</p>
             {!allKigaruUnlock ? (
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>読込中…</p>
@@ -7937,7 +7938,7 @@ function App() {
             );
           };
           return (
-            <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
               {/* 過去スケジュールボタン */}
               {past.length>0&&(
                 <button onClick={()=>setShowAdminPastScheds(!showAdminPastScheds)}
@@ -7970,7 +7971,7 @@ function App() {
           </button>
         )}
         {!isInstructor && showLogins&&(
-          <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+          <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
             {loginData.length===0?(
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>履歴なし</p>
             ):(
@@ -8006,7 +8007,7 @@ function App() {
           </button>
         )}
         {!isInstructor && showWorkouts&&(
-          <div style={{background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+          <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
             {!workoutHistory ? (
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>
             ) : workoutHistory.length===0 ? (
@@ -8199,7 +8200,7 @@ function App() {
         </button>
         )}
         {showInsightCard && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
               選んだメンバーのRTM履歴・スケジュール・フィードバックのやり取りをテキストにまとめます。分析はコピーして別途チャットで行う想定です。
             </p>
@@ -8236,7 +8237,7 @@ function App() {
         </button>
         )}
         {showAllPoints && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             {/* 未処理リスト */}
             <div style={{marginBottom:14,padding:"10px 12px",background:"rgba(224,60,60,0.05)",border:"1px solid rgba(224,60,60,0.2)",borderRadius:10}}>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
@@ -8306,7 +8307,7 @@ function App() {
           🎤 Zoom交流会（無料）記録 {showExchangeForm?"▲":"▼"}
         </button>
         {showExchangeForm && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
               参加したメンバーを選んで記録すると、各自1回＝5HPTが自動で加算されます（よく参加してる人には「交流賞」も付与）。
             </p>
@@ -8356,7 +8357,7 @@ function App() {
           🧪 練習会データ {showWorkshop?"▲":"▼"}
         </button>
         {showWorkshop && (
-          <div style={{marginBottom:16}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16}}>
             {!workshopLoaded ? (
               <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
             ) : (()=>{
@@ -8549,7 +8550,7 @@ function App() {
           </button>
         )}
         {showSurvey && (
-          <div style={{display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
+          <div style={{gridColumn:"1 / -1",display:"flex",flexDirection:"column",gap:10,marginBottom:16}}>
             {!surveyLoaded ? (
               <p style={{fontSize:13,color:C.label,textAlign:"center",padding:16}}>読み込み中...</p>
             ) : surveyResults.length === 0 ? (
@@ -8595,7 +8596,7 @@ function App() {
           🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
         </button>}
         {inorionTab && (
-          <div style={{marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:12,padding:"14px"}}>
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:12,padding:"14px"}}>
             {/* 追加フォーム */}
             <p style={{fontSize:12,fontWeight:700,color:"#4B3621",marginBottom:10}}>出演者を追加</p>
             <select value={inorionForm.name} onChange={e=>setInorionForm(p=>({...p,name:e.target.value}))}
@@ -8718,6 +8719,7 @@ function App() {
           </div>
         )}
 
+        </div>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {sortKey === "region" ? (
             Object.entries(
