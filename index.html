@@ -8355,13 +8355,13 @@ function App() {
         </button>
         {showExchangeForm && (
           <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+            <p style={{fontSize:9,color:"#222",marginBottom:10,lineHeight:1.6}}>
               参加したメンバーを選んで記録すると、各自1回＝5HPTが自動で加算されます（よく参加してる人には「交流賞」も付与）。
             </p>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>開催日</label>
+            <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>開催日</label>
             <input type="date" value={exchangeDate} onChange={e=>setExchangeDate(e.target.value)}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}/>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>参加メンバー（複数選択可）</label>
+            <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>参加メンバー（複数選択可）</label>
             <div style={{maxHeight:220,overflowY:"auto",border:"1px solid "+C.border,borderRadius:10,padding:"6px 10px",marginBottom:12,background:"#fff"}}>
               {members.map(function(mbr){
                 return (
@@ -8373,13 +8373,13 @@ function App() {
                 );
               })}
             </div>
-            {exchangeMsg && <p style={{fontSize:12,color:exchangeMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{exchangeMsg}</p>}
+            {exchangeMsg && <p style={{fontSize:12,color:exchangeMsg.startsWith("✅")?"#1a9a2c":"#a04030",marginBottom:10}}>{exchangeMsg}</p>}
             <button onClick={submitExchangeRecord} disabled={exchangeSaving}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#2a9d97",color:"#fff",fontSize:13,fontWeight:600,cursor:exchangeSaving?"default":"pointer",opacity:exchangeSaving?0.6:1}}>
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:ADMIN_GROUP_COLORS.member,color:"#fff",fontSize:13,fontWeight:600,cursor:exchangeSaving?"default":"pointer",opacity:exchangeSaving?0.6:1}}>
               {exchangeSaving?"記録中...":"記録する"}
             </button>
             <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid "+C.border}}>
-              <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>過去の記録</p>
+              <p style={{fontSize:11,fontWeight:700,color:"#222",marginBottom:8}}>過去の記録</p>
               {exchangeRecords === null ? (
                 <p style={{fontSize:11,color:C.label,textAlign:"center",padding:8}}>読み込み中...</p>
               ) : exchangeRecords.length === 0 ? (
@@ -8388,7 +8388,7 @@ function App() {
                 <div style={{maxHeight:260,overflowY:"auto"}}>
                   {exchangeRecords.map(function(rec){
                     return (
-                      <div key={rec.date} style={{marginBottom:6,padding:"7px 10px",background:"rgba(42,157,151,0.06)",borderRadius:8,border:"1px solid rgba(42,157,151,0.15)"}}>
+                      <div key={rec.date} style={{marginBottom:6,padding:"7px 10px",background:"rgba(34,201,58,0.06)",borderRadius:8,border:"1px solid rgba(34,201,58,0.2)"}}>
                         <p style={{fontSize:11,fontWeight:700,color:C.choco,marginBottom:2}}>{rec.date}<span style={{fontWeight:400,color:C.label,marginLeft:6}}>（{rec.names.length}名）</span></p>
                         <p style={{fontSize:10,color:C.label}}>{rec.names.join("、")}</p>
                       </div>
