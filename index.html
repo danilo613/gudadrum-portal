@@ -8106,15 +8106,15 @@ function App() {
                 {/* 表示切り替え：全履歴／メンバー別 */}
                 <div style={{display:"flex",gap:6,marginBottom:10}}>
                   <button onClick={()=>setWorkoutViewMode("all")}
-                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="all"?"1px solid #3a7a5a":"1px solid rgba(58,122,90,0.25)",background:workoutViewMode==="all"?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.06)",color:workoutViewMode==="all"?"#fff":"#3a7a5a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="all"?"1px solid #1a9a2c":"1px solid rgba(26,154,44,0.25)",background:workoutViewMode==="all"?"linear-gradient(135deg,#4ad467,#1a9a2c)":"rgba(26,154,44,0.06)",color:workoutViewMode==="all"?"#fff":"#1a9a2c",fontSize:11,fontWeight:600,cursor:"pointer"}}>
                     📋 全履歴
                   </button>
                   <button onClick={()=>setWorkoutViewMode("byMember")}
-                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="byMember"?"1px solid #3a7a5a":"1px solid rgba(58,122,90,0.25)",background:workoutViewMode==="byMember"?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.06)",color:workoutViewMode==="byMember"?"#fff":"#3a7a5a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="byMember"?"1px solid #1a9a2c":"1px solid rgba(26,154,44,0.25)",background:workoutViewMode==="byMember"?"linear-gradient(135deg,#4ad467,#1a9a2c)":"rgba(26,154,44,0.06)",color:workoutViewMode==="byMember"?"#fff":"#1a9a2c",fontSize:11,fontWeight:600,cursor:"pointer"}}>
                     👤 メンバー別
                   </button>
                   <button onClick={()=>setWorkoutViewMode("byDate")}
-                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="byDate"?"1px solid #3a7a5a":"1px solid rgba(58,122,90,0.25)",background:workoutViewMode==="byDate"?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.06)",color:workoutViewMode==="byDate"?"#fff":"#3a7a5a",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                    style={{flex:1,padding:"7px 0",borderRadius:8,border:workoutViewMode==="byDate"?"1px solid #1a9a2c":"1px solid rgba(26,154,44,0.25)",background:workoutViewMode==="byDate"?"linear-gradient(135deg,#4ad467,#1a9a2c)":"rgba(26,154,44,0.06)",color:workoutViewMode==="byDate"?"#fff":"#1a9a2c",fontSize:11,fontWeight:600,cursor:"pointer"}}>
                     📅 日別
                   </button>
                 </div>
@@ -8136,24 +8136,24 @@ function App() {
                       return list.map(function(m, i){
                         var isExpanded = workoutExpandedMember === m.name;
                         return (
-                          <div key={i} style={{marginBottom:6,background:"rgba(58,122,90,0.05)",borderRadius:8,border:"1px solid rgba(58,122,90,0.15)",overflow:"hidden"}}>
+                          <div key={i} style={{marginBottom:6,background:"rgba(26,154,44,0.05)",borderRadius:8,border:"1px solid rgba(26,154,44,0.15)",overflow:"hidden"}}>
                             <button onClick={()=>setWorkoutExpandedMember(isExpanded ? null : m.name)}
                               style={{width:"100%",padding:"9px 10px",background:"transparent",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                               <span style={{fontSize:12,fontWeight:600,color:C.choco}}>{m.name}</span>
                               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                                <span style={{fontSize:10,color:"#3a7a5a"}}>{m.count}回 ／ {m.minutes}分 ／ {m.points}P</span>
-                                <span style={{fontSize:10,color:"rgba(58,122,90,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                                <span style={{fontSize:10,color:"#1a9a2c"}}>{m.count}回 ／ {m.minutes}分 ／ {m.points}P</span>
+                                <span style={{fontSize:10,color:"rgba(26,154,44,0.6)"}}>{isExpanded?"▲":"▼"}</span>
                               </div>
                             </button>
                             {isExpanded && (
-                              <div style={{borderTop:"1px solid rgba(58,122,90,0.15)",padding:"4px 10px 8px"}}>
+                              <div style={{borderTop:"1px solid rgba(26,154,44,0.15)",padding:"4px 10px 8px"}}>
                                 {m.entries.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).map(function(w,j){
                                   return (
                                     <div key={j} style={{display:"flex",alignItems:"center",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(0,0,0,0.05)",fontSize:11}}>
                                       <span style={{color:C.label,minWidth:120,flexShrink:0,fontFamily:"monospace"}}>{String(w.date||"")}</span>
                                       <span style={{color:C.choco,minWidth:36,flexShrink:0,textAlign:"right"}}>{w.minutes}分</span>
                                       <span style={{color:C.label,minWidth:64,flexShrink:0,textAlign:"right",fontFamily:"monospace",fontSize:10}}>{w.startBpm}→{w.endBpm}</span>
-                                      <span style={{color:"#3a7a5a",minWidth:36,flexShrink:0,textAlign:"right",fontWeight:600}}>{w.points}P</span>
+                                      <span style={{color:"#1a9a2c",minWidth:36,flexShrink:0,textAlign:"right",fontWeight:600}}>{w.points}P</span>
                                     </div>
                                   );
                                 })}
@@ -8188,17 +8188,17 @@ function App() {
                         var isExpanded = workoutExpandedMonth === mo.month;
                         var days = mo.days.slice().sort(function(a,b){ return b.date.localeCompare(a.date); });
                         return (
-                          <div key={mo.month} style={{marginBottom:6,background:"rgba(58,122,90,0.05)",borderRadius:8,border:"1px solid rgba(58,122,90,0.15)",overflow:"hidden"}}>
+                          <div key={mo.month} style={{marginBottom:6,background:"rgba(26,154,44,0.05)",borderRadius:8,border:"1px solid rgba(26,154,44,0.15)",overflow:"hidden"}}>
                             <button onClick={()=>setWorkoutExpandedMonth(isExpanded ? null : mo.month)}
                               style={{width:"100%",padding:"9px 10px",background:"transparent",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
                               <span style={{fontSize:12,fontWeight:600,color:C.choco}}>{mo.month.replace("-","年")}月</span>
                               <div style={{display:"flex",alignItems:"center",gap:10}}>
-                                <span style={{fontSize:10,color:"#3a7a5a"}}>計{mo.count}回 ／ {mo.minutes}分</span>
-                                <span style={{fontSize:10,color:"rgba(58,122,90,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                                <span style={{fontSize:10,color:"#1a9a2c"}}>計{mo.count}回 ／ {mo.minutes}分</span>
+                                <span style={{fontSize:10,color:"rgba(26,154,44,0.6)"}}>{isExpanded?"▲":"▼"}</span>
                               </div>
                             </button>
                             {isExpanded && (
-                              <div style={{borderTop:"1px solid rgba(58,122,90,0.15)",padding:"4px 10px 8px"}}>
+                              <div style={{borderTop:"1px solid rgba(26,154,44,0.15)",padding:"4px 10px 8px"}}>
                                 {days.map(function(d){
                                   return (
                                     <div key={d.date} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,padding:"5px 0",borderBottom:"1px solid rgba(0,0,0,0.05)",fontSize:11}}>
@@ -8216,7 +8216,7 @@ function App() {
                   </div>
                 ) : (
                 <div style={{maxHeight:500,overflowY:"auto"}}>
-                <div style={{display:"flex",alignItems:"center",gap:8,padding:"4px 6px",borderBottom:"2px solid rgba(58,122,90,0.3)",fontSize:10,color:"#3a7a5a",fontWeight:700,letterSpacing:1,position:"sticky",top:0,background:"#fff"}}>
+                <div style={{display:"flex",alignItems:"center",gap:8,padding:"4px 6px",borderBottom:"2px solid rgba(26,154,44,0.3)",fontSize:10,color:"#1a9a2c",fontWeight:700,letterSpacing:1,position:"sticky",top:0,background:"#fff"}}>
                   <span style={{minWidth:120,flexShrink:0}}>日時</span>
                   <span style={{minWidth:70,flexShrink:0}}>名前</span>
                   <span style={{minWidth:36,flexShrink:0,textAlign:"right"}}>分</span>
@@ -8230,7 +8230,7 @@ function App() {
                       <span style={{fontWeight:500,color:C.choco,minWidth:70,flexShrink:0}}>{w.name}</span>
                       <span style={{color:C.choco,minWidth:36,flexShrink:0,textAlign:"right"}}>{w.minutes}</span>
                       <span style={{color:C.label,minWidth:64,flexShrink:0,textAlign:"right",fontFamily:"monospace",fontSize:10}}>{w.startBpm}→{w.endBpm}</span>
-                      <span style={{color:"#3a7a5a",minWidth:36,flexShrink:0,textAlign:"right",fontWeight:600}}>{w.points}</span>
+                      <span style={{color:"#1a9a2c",minWidth:36,flexShrink:0,textAlign:"right",fontWeight:600}}>{w.points}</span>
                     </div>
                   );
                 })}
@@ -8248,17 +8248,17 @@ function App() {
         )}
         {showInsightCard && (
           <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <p style={{fontSize:9,color:C.moss,marginBottom:10,lineHeight:1.6}}>
+            <p style={{fontSize:9,color:"#222",marginBottom:10,lineHeight:1.6}}>
               選んだメンバーのRTM履歴・スケジュール・フィードバックのやり取りをテキストにまとめます。分析はコピーして別途チャットで行う想定です。
             </p>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>メンバーを選択</label>
+            <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>メンバーを選択</label>
             <select value={insightMemberName} onChange={e=>{setInsightMemberName(e.target.value);setInsightText("");setInsightCopied(false);}}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:12}}>
               <option value="">選んでください</option>
               {members.map(function(mbr){return <option key={mbr.name} value={mbr.name}>{mbr.name}</option>;})}
             </select>
             <button onClick={fetchMemberInsightData} disabled={!insightMemberName||insightLoading}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#6a4a8a",color:"#fff",fontSize:13,fontWeight:600,cursor:(!insightMemberName||insightLoading)?"default":"pointer",opacity:(!insightMemberName||insightLoading)?0.5:1,marginBottom:12}}>
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:ADMIN_GROUP_COLORS.member,color:"#fff",fontSize:13,fontWeight:600,cursor:(!insightMemberName||insightLoading)?"default":"pointer",opacity:(!insightMemberName||insightLoading)?0.5:1,marginBottom:12}}>
               {insightLoading?"集めています...":"データを集める"}
             </button>
             {insightText && (
@@ -8270,7 +8270,7 @@ function App() {
                       navigator.clipboard.writeText(insightText).then(function(){setInsightCopied(true);setTimeout(function(){setInsightCopied(false);},2500);});
                     }
                   }}
-                  style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #6a4a8a",background:insightCopied?"rgba(106,74,138,0.15)":"#fff",color:"#6a4a8a",fontSize:13,fontWeight:600,cursor:"pointer"}}>
+                  style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+ADMIN_GROUP_COLORS.member,background:insightCopied?"rgba(34,201,58,0.15)":"#fff",color:"#1a9a2c",fontSize:13,fontWeight:600,cursor:"pointer"}}>
                   {insightCopied?"✅ コピーしました":"📋 コピーする"}
                 </button>
               </div>
