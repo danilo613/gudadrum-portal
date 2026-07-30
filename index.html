@@ -6116,7 +6116,7 @@ function App() {
   );
 
   const iconBtn = (label, onClick) => (
-    <button onClick={onClick} style={{background:"#fff",border:"1px solid #e5e5e5",borderRadius:20,padding:"7px 14px",fontSize:12,color:C.olive,cursor:"pointer",fontWeight:600,boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>{label}</button>
+    <button onClick={onClick} style={{background:"#fff",border:"1px solid #e5e5e5",borderRadius:6,padding:"7px 14px",fontSize:12,color:"#222",cursor:"pointer",fontWeight:600,boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>{label}</button>
   );
 
   const filteredMembers = filterSongs.length > 0
@@ -7280,7 +7280,7 @@ function App() {
           </p>
           <div style={{display:"flex",gap:6}}>
             <select value={sortKey} onChange={e=>setSortKey(e.target.value)}
-              style={{fontSize:11,color:C.olive,background:"#fff",border:"1px solid #e5e5e5",borderRadius:20,padding:"7px 12px",cursor:"pointer",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+              style={{fontSize:11,color:"#222",background:"#fff",border:"1px solid #e5e5e5",borderRadius:6,padding:"7px 12px",cursor:"pointer",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
               <option value="level">段階順</option>
               <option value="region">地域順</option>
               <option value="login">ログイン回数順</option>
@@ -7288,7 +7288,7 @@ function App() {
             </select>
             <div style={{position:"relative"}}>
               <button onClick={()=>setShowSongFilter(!showSongFilter)}
-                style={{fontSize:11,color:"#3a7a8a",background:"#fff",border:"1px solid #e5e5e5",borderRadius:20,padding:"7px 12px",cursor:"pointer",whiteSpace:"nowrap",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
+                style={{fontSize:11,color:"#222",background:"#fff",border:"1px solid #e5e5e5",borderRadius:6,padding:"7px 12px",cursor:"pointer",whiteSpace:"nowrap",boxShadow:"0 1px 3px rgba(0,0,0,0.04)"}}>
                 🎵 {filterSongs.length>0?filterSongs.length+"曲選択中":"楽曲で絞込"} {showSongFilter?"▲":"▼"}
               </button>
               {filterSongs.length>0 && (
@@ -7311,7 +7311,7 @@ function App() {
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 12px",marginBottom:0}}>
-        {renderAdminGroupHeader("🎼","譜面・楽曲","譜面・音源・コードなど楽曲関連を管理",ADMIN_GROUP_COLORS.score,groupOpenScore,()=>setGroupOpenScore(!groupOpenScore))}
+        {renderAdminGroupHeader("🎼","譜面・楽曲","譜面編集を行う",ADMIN_GROUP_COLORS.score,groupOpenScore,()=>setGroupOpenScore(!groupOpenScore))}
         {groupOpenScore && (<>
         <button onClick={()=>{setScoreEditOpen(function(v){if(!v){if(isInstructor) setScoreEditId("kigaru"); loadScorePatterns(isInstructor?"kigaru":scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
           style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
