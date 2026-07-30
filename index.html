@@ -3397,21 +3397,16 @@ function SetlistView({ inorionData, onClose, C }) {
                   <tr key={i}><td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td></tr>
                 );
                 var orchCell = null;
-                if(row["オーケストラ"]==="⭕️"||row["オーケストラ"]==="○") {
-                  var songName = row["演目"];
-                  var songEntries = inorionData.filter(function(r){
-                    return r.song===songName || r.song.startsWith(songName+"（") || r.song.startsWith(songName+" ");
-                  });
-                  var confirmed = [...new Set(songEntries.filter(function(r){
-                    return r.status&&(r.status.includes("🔥")||r.status.includes("⭐️")||r.status.includes("💮"));
-                  }).map(function(r){return r.name;}))];
-                  var pending = [...new Set(songEntries.filter(function(r){
-                    return !r.status||(!r.status.includes("🔥")&&!r.status.includes("⭐️")&&!r.status.includes("💮"));
-                  }).map(function(r){return r.name;}))];
+                var songName = row["演目"];
+                var songEntries = inorionData.filter(function(r){
+                  return r.song===songName || r.song.startsWith(songName+"（") || r.song.startsWith(songName+" ");
+                });
+                if (songEntries.length > 0) {
                   orchCell = (
-                    <div style={{fontSize:10,lineHeight:1.6}}>
-                      {confirmed.length>0&&<div><span style={{color:"#3a7a3a",fontWeight:700}}>🔥確定：</span>{confirmed.join("・")}</div>}
-                      {pending.length>0&&<div><span style={{color:"#8a6a00",fontWeight:700}}>⭕️予定：</span>{pending.join("・")}</div>}
+                    <div style={{fontSize:10,lineHeight:1.8}}>
+                      {songEntries.map(function(r,ri){
+                        return <div key={ri}>{r.name}：{r.status||"（未設定）"}</div>;
+                      })}
                     </div>
                   );
                 }
@@ -5546,7 +5541,7 @@ function App() {
       const senderName = isInstructor ? memberFbInstructor : (isFromAdmin ? "DANiLO" : currentMember.name);
       const targetName = currentMember.name;
       const commentText = dateStr + " " + senderName + ": " + value;
-      const data = await gasWrite({action:"addschedulecomment", name:targetName, date:rawDate, type:type, comment:commentText});
+      const data = await gasWrite({action:"addschedulecomment", name:targetName, date:rawDate, type:type, comment:commentText, isMemberFeedback:String(!isInstructor && !isFromAdmin)});
       if (data.error) throw new Error(data.error);
       setMemberFbMsg(p=>({...p,[key]:"✅ 送信しました！"}));
       setMemberFbValue(p=>({...p,[key]:""}));
@@ -7033,6 +7028,18 @@ function App() {
                         var isMC=!row["番号"]&&!row["演目"]||row["演目"]==="MC";
                         if(!row["番号"]&&!row["演目"]) return null;
                         if(isMC) return <tr key={i}><td colSpan={8} style={{padding:"6px 10px",background:"rgba(138,74,106,0.06)",fontSize:11,color:"#8a4a6a",fontWeight:600,fontStyle:"italic",textAlign:"center"}}>— MC —</td></tr>;
+                        var songName3=row["演目"];
+                        var orchCell3=null;
+                        var songEntries3=inorionData.filter(function(r){return r.song===songName3||r.song.startsWith(songName3+"（")||r.song.startsWith(songName3+" ");});
+                        if(songEntries3.length>0){
+                          orchCell3=(
+                            <div style={{fontSize:10,lineHeight:1.8}}>
+                              {songEntries3.map(function(r,ri){
+                                return <div key={ri}>{r.name}：{r.status||"（未設定）"}</div>;
+                              })}
+                            </div>
+                          );
+                        }
                         return (
                           <tr key={i} style={{background:i%2===0?"rgba(255,255,255,0.6)":"rgba(248,240,248,0.6)"}}>
                             <td style={{padding:"8px 10px",color:C2.label,fontWeight:600}}>{row["番号"]}</td>
@@ -7040,7 +7047,7 @@ function App() {
                             <td style={{padding:"8px 10px",color:C2.label,whiteSpace:"pre-wrap",fontSize:11}}>{row["音階・楽器"]}</td>
                             <td style={{padding:"8px 10px",color:C2.choco}}>{row["DANiLO"]}</td>
                             <td style={{padding:"8px 10px",color:"#5a4a8a",fontWeight:row["ゲスト"]?600:400}}>{row["ゲスト"]||"-"}</td>
-                            <td style={{padding:"8px 10px",textAlign:"center"}}>{row["オーケストラ"]?"⭕️":"-"}</td>
+                            <td style={{padding:"8px 10px",minWidth:120}}>{orchCell3||row["オーケストラ"]||"-"}</td>
                             <td style={{padding:"8px 10px",color:C2.choco}}>{row["りか"]||"-"}</td>
                             <td style={{padding:"8px 10px",color:C2.choco}}>{row["優太"]||"-"}</td>
                           </tr>
@@ -9464,13 +9471,12 @@ function App() {
                         );
                         var songName=row["演目"];
                         var orchCell=null;
-                        if(row["オーケストラ"]==="⭕️"||row["オーケストラ"]==="○"){
-                          var entries=inorionData.filter(function(r){return r.song===songName||r.song.startsWith(songName+"（");});
-                          var confirmed=[...new Set(entries.filter(function(r){return r.status&&(r.status.includes("🔥")||r.status.includes("⭐️")||r.status.includes("💮"));}).map(function(r){return r.name;}))];
-                          var pending=[...new Set(entries.filter(function(r){return !r.status||(!r.status.includes("🔥")&&!r.status.includes("⭐️")&&!r.status.includes("💮"));}).map(function(r){return r.name;}))];
-                          orchCell=<div style={{fontSize:10,lineHeight:1.6}}>
-                            {confirmed.length>0&&<div><span style={{color:"#3a7a3a",fontWeight:700}}>🔥</span>{confirmed.join("・")}</div>}
-                            {pending.length>0&&<div><span style={{color:"#8a6a00",fontWeight:700}}>⭕️</span>{pending.join("・")}</div>}
+                        var entries=inorionData.filter(function(r){return r.song===songName||r.song.startsWith(songName+"（")||r.song.startsWith(songName+" ");});
+                        if (entries.length > 0) {
+                          orchCell=<div style={{fontSize:10,lineHeight:1.8}}>
+                            {entries.map(function(r,ri){
+                              return <div key={ri}>{r.name}：{r.status||"（未設定）"}</div>;
+                            })}
                           </div>;
                         }
                         return (
