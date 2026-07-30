@@ -3763,6 +3763,9 @@ function App() {
   const [sectionEditMsg, setSectionEditMsg] = useState("");
   const [confirmDeleteSongId, setConfirmDeleteSongId] = useState(null);
   const [songDeleteMsg, setSongDeleteMsg] = useState("");
+  const [editingSongId, setEditingSongId] = useState(null);
+  const [editingSongTitle, setEditingSongTitle] = useState("");
+  const [songTitleEditMsg, setSongTitleEditMsg] = useState("");
   const [contributionData, setContributionData] = useState(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [orchSchedules, setOrchSchedules] = useState(()=>cachedInit("orchSchedules", []));
@@ -5200,6 +5203,21 @@ function App() {
       }
     } catch(e) { setSongDeleteMsg("❌ 削除に失敗しました"); }
     setTimeout(function(){setSongDeleteMsg("");}, 3000);
+  }
+
+  async function submitSongTitleEdit(scoreId) {
+    if (!editingSongTitle.trim()) { setSongTitleEditMsg("❌ タイトルを入力してください"); return; }
+    try {
+      const res = await gasWrite({ action: "updatesongtitle", scoreId: scoreId, title: editingSongTitle.trim() });
+      if (res && res.success) {
+        setSongTitleEditMsg("✅ 更新しました");
+        setEditingSongId(null);
+        await fetchSongMaster();
+      } else {
+        setSongTitleEditMsg("❌ 更新に失敗しました");
+      }
+    } catch(e) { setSongTitleEditMsg("❌ 更新に失敗しました"); }
+    setTimeout(function(){setSongTitleEditMsg("");}, 3000);
   }
 
   async function fetchMemberInsightData() {
@@ -7828,21 +7846,38 @@ function App() {
                 <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>登録済みの新曲</p>
                 {sectionEditMsg && <p style={{fontSize:11,color:sectionEditMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{sectionEditMsg}</p>}
                 {songDeleteMsg && <p style={{fontSize:11,color:songDeleteMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{songDeleteMsg}</p>}
+                {songTitleEditMsg && <p style={{fontSize:11,color:songTitleEditMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{songTitleEditMsg}</p>}
                 {songMasterList.map(function(s){
+                  var isTitleEditing = editingSongId === s.scoreId;
                   return (
                     <div key={s.scoreId} style={{marginBottom:6,padding:"8px 10px",background:"rgba(58,122,138,0.06)",borderRadius:8,border:"1px solid rgba(58,122,138,0.15)"}}>
-                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
-                        <p style={{fontSize:12,fontWeight:700,color:C.choco}}>{s.title}</p>
-                        {confirmDeleteSongId === s.scoreId ? (
-                          <div style={{display:"flex",gap:4}}>
-                            <button onClick={()=>deleteSong(s.scoreId)}
-                              style={{padding:"3px 8px",borderRadius:6,border:"none",background:"#a04030",color:"#fff",fontSize:9,fontWeight:600,cursor:"pointer"}}>本当に削除</button>
-                            <button onClick={()=>setConfirmDeleteSongId(null)}
-                              style={{padding:"3px 8px",borderRadius:6,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:9,cursor:"pointer"}}>取消</button>
-                          </div>
+                      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4,gap:6}}>
+                        {isTitleEditing ? (
+                          <>
+                            <input value={editingSongTitle} onChange={e=>setEditingSongTitle(e.target.value)}
+                              style={{flex:1,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 8px",fontSize:12,color:C.choco}}/>
+                            <button onClick={()=>submitSongTitleEdit(s.scoreId)}
+                              style={{padding:"4px 10px",borderRadius:6,border:"none",background:"#3a7a8a",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer",flexShrink:0}}>保存</button>
+                            <button onClick={()=>setEditingSongId(null)}
+                              style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:10,cursor:"pointer",flexShrink:0}}>取消</button>
+                          </>
                         ) : (
-                          <button onClick={()=>setConfirmDeleteSongId(s.scoreId)}
-                            style={{padding:"3px 8px",borderRadius:6,border:"1px solid rgba(160,64,48,0.3)",background:"#fff",color:"#a04030",fontSize:9,cursor:"pointer"}}>🗑️削除</button>
+                          <>
+                            <p style={{fontSize:12,fontWeight:700,color:C.choco,flex:1}}>{s.title}</p>
+                            <button onClick={()=>{setEditingSongId(s.scoreId);setEditingSongTitle(s.title);}}
+                              style={{padding:"3px 8px",borderRadius:6,border:"1px solid rgba(58,122,138,0.3)",background:"#fff",color:"#3a7a8a",fontSize:9,cursor:"pointer",flexShrink:0}}>✏️編集</button>
+                            {confirmDeleteSongId === s.scoreId ? (
+                              <div style={{display:"flex",gap:4,flexShrink:0}}>
+                                <button onClick={()=>deleteSong(s.scoreId)}
+                                  style={{padding:"3px 8px",borderRadius:6,border:"none",background:"#a04030",color:"#fff",fontSize:9,fontWeight:600,cursor:"pointer"}}>本当に削除</button>
+                                <button onClick={()=>setConfirmDeleteSongId(null)}
+                                  style={{padding:"3px 8px",borderRadius:6,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:9,cursor:"pointer"}}>取消</button>
+                              </div>
+                            ) : (
+                              <button onClick={()=>setConfirmDeleteSongId(s.scoreId)}
+                                style={{padding:"3px 8px",borderRadius:6,border:"1px solid rgba(160,64,48,0.3)",background:"#fff",color:"#a04030",fontSize:9,cursor:"pointer",flexShrink:0}}>🗑️削除</button>
+                            )}
+                          </>
                         )}
                       </div>
                       <p style={{fontSize:9,color:C.label,marginBottom:6}}>音階:{s.scale} ／ 回転:{s.rotation} ／ セクション{s.sections.length}件{s.bpm>0?" ／ BPM:"+s.bpm:""}</p>
