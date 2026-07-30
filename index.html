@@ -578,6 +578,15 @@ const ADMIN_GROUP_COLORS = {
   collect:"#3355FF",    // 📈 データー収集
   standalone:"#C400E0"  // 独立カード
 };
+// グループの見出しボタン（属性ごとの色で塗りつぶし、押すと配下のカードが開閉する）
+function adminGroupHeaderStyle(groupColor) {
+  return {
+    width:"100%", gridColumn:"1 / -1", padding:"12px 14px", borderRadius:10,
+    background:groupColor, border:"none", color:"#fff",
+    fontSize:13, fontWeight:700, cursor:"pointer", marginBottom:8,
+    textAlign:"left", display:"flex", alignItems:"center", justifyContent:"space-between"
+  };
+}
 function registerCustomSongs(songs) {
   songs.forEach(function(song) {
     SCORE_SECTIONS[song.scoreId] = song.sections.map(function(s){ return [s.key, s.label, s.subdivision]; });
@@ -3768,6 +3777,11 @@ function App() {
   const [insightCopied, setInsightCopied] = useState(false);
   const [songMasterList, setSongMasterList] = useState(null);
   const [showSongMasterCard, setShowSongMasterCard] = useState(false);
+  const [groupOpenScore, setGroupOpenScore] = useState(false);
+  const [groupOpenHpt, setGroupOpenHpt] = useState(false);
+  const [groupOpenSubs, setGroupOpenSubs] = useState(false);
+  const [groupOpenMember, setGroupOpenMember] = useState(false);
+  const [groupOpenCollect, setGroupOpenCollect] = useState(false);
   const [newSongTitle, setNewSongTitle] = useState("");
   const [newSongScale, setNewSongScale] = useState("default");
   const [newSongRotation, setNewSongRotation] = useState(0);
@@ -7282,6 +7296,10 @@ function App() {
           </div>
         </div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"10px 12px",marginBottom:0}}>
+        <button onClick={()=>setGroupOpenScore(!groupOpenScore)} style={adminGroupHeaderStyle(ADMIN_GROUP_COLORS.score)}>
+          <span>🎼 譜面・楽曲</span><span>{groupOpenScore?"▲":"▼"}</span>
+        </button>
+        {groupOpenScore && (<>
         <button onClick={()=>{setScoreEditOpen(function(v){if(!v){if(isInstructor) setScoreEditId("kigaru"); loadScorePatterns(isInstructor?"kigaru":scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
           style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
           🎼 {isInstructor?"気軽サブスク譜面編集":"譜面編集"} {scoreEditOpen?"▲":"▼"}
@@ -7484,6 +7502,11 @@ function App() {
             )}
           </div>
         )}
+        </>)}
+        <button onClick={()=>setGroupOpenHpt(!groupOpenHpt)} style={adminGroupHeaderStyle(ADMIN_GROUP_COLORS.hpt)}>
+          <span>🎯 HPT・貢献度</span><span>{groupOpenHpt?"▲":"▼"}</span>
+        </button>
+        {groupOpenHpt && (<>
         {!isInstructor && (
         <button onClick={()=>{setShowHPTTable(!showHPTTable); if(!showHPTTable && contributionData===null) fetchContributionScores();}}
           style={adminCardStyle(ADMIN_GROUP_COLORS.hpt)}>
@@ -7609,6 +7632,11 @@ function App() {
             )}
           </div>
         )}
+        </>)}
+        <button onClick={()=>setGroupOpenSubs(!groupOpenSubs)} style={adminGroupHeaderStyle(ADMIN_GROUP_COLORS.subs)}>
+          <span>💳 サブスク・課金</span><span>{groupOpenSubs?"▲":"▼"}</span>
+        </button>
+        {groupOpenSubs && (<>
         {/* サブスク管理（DANiLOのみ） */}
         {page==="admin"&&!isInstructor&&(
           <>
@@ -7911,6 +7939,11 @@ function App() {
             )}
           </div>
         )}
+        </>)}
+        <button onClick={()=>setGroupOpenMember(!groupOpenMember)} style={adminGroupHeaderStyle(ADMIN_GROUP_COLORS.member)}>
+          <span>📊 メンバー状況・記録</span><span>{groupOpenMember?"▲":"▼"}</span>
+        </button>
+        {groupOpenMember && (<>
 
         {/* 全メンバースケジュール（DANiLOのみ表示） */}
         {!isInstructor && (
@@ -8352,6 +8385,11 @@ function App() {
             </div>
           </div>
         )}
+        </>)}
+        <button onClick={()=>setGroupOpenCollect(!groupOpenCollect)} style={adminGroupHeaderStyle(ADMIN_GROUP_COLORS.collect)}>
+          <span>📈 データー収集</span><span>{groupOpenCollect?"▲":"▼"}</span>
+        </button>
+        {groupOpenCollect && (<>
         <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
           style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
           🧪 練習会データ {showWorkshop?"▲":"▼"}
@@ -8591,6 +8629,7 @@ function App() {
             ))}
           </div>
         )}
+        </>)}
         {!isInstructor && <button onClick={()=>setInorionTab(!inorionTab)}
           style={adminCardStyle(ADMIN_GROUP_COLORS.standalone)}>
           🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
