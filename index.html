@@ -3815,6 +3815,7 @@ function App() {
   const [editingSongId, setEditingSongId] = useState(null);
   const [editingSongTitle, setEditingSongTitle] = useState("");
   const [songTitleEditMsg, setSongTitleEditMsg] = useState("");
+  const [showRegisteredSongs, setShowRegisteredSongs] = useState(false);
   const [contributionData, setContributionData] = useState(null);
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [orchSchedules, setOrchSchedules] = useState(()=>cachedInit("orchSchedules", []));
@@ -7386,11 +7387,11 @@ function App() {
         )}
         {showSongMasterCard && (
           <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
-            <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:10}}>新曲を追加</p>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>タイトル</label>
+            <p style={{fontSize:11,fontWeight:700,color:"#222",marginBottom:10}}>新曲を追加</p>
+            <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>タイトル</label>
             <input value={newSongTitle} onChange={e=>setNewSongTitle(e.target.value)} placeholder="例：新しい風"
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10,boxSizing:"border-box"}}/>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>音階</label>
+            <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>音階</label>
             <select value={newSongScale} onChange={e=>setNewSongScale(e.target.value)}
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10}}>
               <option value="default">風ノ音（tonus）</option>
@@ -7398,10 +7399,10 @@ function App() {
               <option value="enigma">秘ノ音（enigma）</option>
               <option value="equinox">光ノ音（equinox）</option>
             </select>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>原曲BPM（任意）</label>
+            <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>原曲BPM（任意）</label>
             <input type="number" value={newSongBpm} onChange={e=>setNewSongBpm(e.target.value)} placeholder="例：100"
               style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10,boxSizing:"border-box"}}/>
-            <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>イラストの回転（0〜7）：{newSongRotation}</label>
+            <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>イラストの回転（0〜7）：{newSongRotation}</label>
             <input type="range" min="0" max="7" value={newSongRotation} onChange={e=>setNewSongRotation(parseInt(e.target.value))}
               style={{width:"100%",marginBottom:8}}/>
             <div style={{display:"flex",justifyContent:"center",marginBottom:12}}>
@@ -7417,37 +7418,42 @@ function App() {
             </div>
             {songMasterMsg && <p style={{fontSize:12,color:songMasterMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{songMasterMsg}</p>}
             <button onClick={submitNewSong} disabled={songMasterSaving}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:"#3a7a8a",color:"#fff",fontSize:13,fontWeight:600,cursor:songMasterSaving?"default":"pointer",opacity:songMasterSaving?0.6:1,marginBottom:16}}>
+              style={{width:"100%",padding:"10px",borderRadius:10,border:"none",background:ADMIN_GROUP_COLORS.score,color:"#fff",fontSize:13,fontWeight:600,cursor:songMasterSaving?"default":"pointer",opacity:songMasterSaving?0.6:1,marginBottom:16}}>
               {songMasterSaving?"追加中...":"新曲を追加する"}
             </button>
 
             <div style={{borderTop:"1px solid "+C.border,paddingTop:12}}>
-              <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:10}}>セクションを追加</p>
-              <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>曲を選択</label>
+              <p style={{fontSize:11,fontWeight:700,color:"#222",marginBottom:10}}>セクションを追加</p>
+              <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>曲を選択</label>
               <select value={newSectionScoreId} onChange={e=>setNewSectionScoreId(e.target.value)}
                 style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10}}>
                 <option value="">選んでください</option>
                 {(songMasterList||[]).map(function(s){return <option key={s.scoreId} value={s.scoreId}>{s.title}</option>;})}
               </select>
-              <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>セクション名</label>
+              <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>セクション名</label>
               <input value={newSectionLabel} onChange={e=>setNewSectionLabel(e.target.value)} placeholder="例：イントロ"
                 style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10,boxSizing:"border-box"}}/>
-              <label style={{fontSize:10,color:C.olive,display:"block",marginBottom:4,fontWeight:600}}>拍種別</label>
+              <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>拍種別</label>
               <select value={newSectionSubdiv} onChange={e=>setNewSectionSubdiv(e.target.value)}
                 style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10}}>
-                <option value="triplet">三連</option>
-                <option value="16th">16th</option>
+                <option value="triplet">三連符ベース</option>
+                <option value="16th">16分音符ベース</option>
               </select>
               {sectionAddMsg && <p style={{fontSize:12,color:sectionAddMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:10}}>{sectionAddMsg}</p>}
               <button onClick={submitNewSection}
-                style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a8a",background:"#fff",color:"#3a7a8a",fontSize:13,fontWeight:600,cursor:"pointer",marginBottom:16}}>
+                style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+ADMIN_GROUP_COLORS.score,background:"#fff",color:ADMIN_GROUP_COLORS.score,fontSize:13,fontWeight:600,cursor:"pointer",marginBottom:16}}>
                 セクションを追加する
               </button>
             </div>
 
             {songMasterList && songMasterList.length > 0 && (
               <div style={{borderTop:"1px solid "+C.border,paddingTop:12}}>
-                <p style={{fontSize:11,fontWeight:700,color:C.olive,marginBottom:8}}>登録済みの新曲</p>
+                <button onClick={()=>setShowRegisteredSongs(!showRegisteredSongs)}
+                  style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:0,background:"transparent",border:"none",cursor:"pointer",marginBottom:8}}>
+                  <span style={{fontSize:11,fontWeight:700,color:"#222"}}>登録済みの新曲（{songMasterList.length}件）</span>
+                  <span style={{fontSize:11,color:"#222"}}>{showRegisteredSongs?"▲":"▼"}</span>
+                </button>
+                {showRegisteredSongs && (<>
                 {sectionEditMsg && <p style={{fontSize:11,color:sectionEditMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{sectionEditMsg}</p>}
                 {songDeleteMsg && <p style={{fontSize:11,color:songDeleteMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{songDeleteMsg}</p>}
                 {songTitleEditMsg && <p style={{fontSize:11,color:songTitleEditMsg.startsWith("✅")?C.olive:"#a04030",marginBottom:8}}>{songTitleEditMsg}</p>}
@@ -7511,6 +7517,7 @@ function App() {
                     </div>
                   );
                 })}
+                </>)}
               </div>
             )}
           </div>
