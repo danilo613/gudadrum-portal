@@ -558,6 +558,26 @@ const SCORE_SECTIONS = {
 };
 
 // 楽曲マスターから読み込んだ新曲を、既存の仕組み（SCORE_SECTIONS等）に動的に追加する
+// 管理画面カードの共通スタイル（白背景固定＋左に太めの色帯。属性ごとに色分けする）
+function adminCardStyle(groupColor) {
+  return {
+    width:"100%", padding:"10px 12px", borderRadius:10,
+    background:"#fff",
+    border:"1px solid #e8e8e8",
+    borderLeft:"5px solid "+groupColor,
+    color:"#4a4a4a",
+    fontSize:12, fontWeight:600, cursor:"pointer", marginBottom:8,
+    textAlign:"left"
+  };
+}
+const ADMIN_GROUP_COLORS = {
+  score:"#00B8D9",      // 🎼 譜面・楽曲（少し落ち着かせた水色）
+  hpt:"#FF9900",        // 🎯 HPT・貢献度
+  subs:"#D4C400",       // 💳 サブスク・課金（純色の黄色は白背景で見えにくいため少し濃く）
+  member:"#22C93A",     // 📊 メンバー状況・記録
+  collect:"#3355FF",    // 📈 データー収集
+  standalone:"#C400E0"  // 独立カード
+};
 function registerCustomSongs(songs) {
   songs.forEach(function(song) {
     SCORE_SECTIONS[song.scoreId] = song.sections.map(function(s){ return [s.key, s.label, s.subdivision]; });
@@ -7263,7 +7283,7 @@ function App() {
         </div>
         {(
           <button onClick={()=>{setShowSurvey(!showSurvey); if(!surveyLoaded) fetchSurvey();}}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid "+C.olive,background:showSurvey?"linear-gradient(135deg,#b8c86a,#8a9a3a)":"rgba(112,130,56,0.1)",color:showSurvey?"#fff":C.olive,fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
             📊 アンケート結果 {showSurvey?"▲":"▼"}
           </button>
         )}
@@ -7310,7 +7330,7 @@ function App() {
           </div>
         )}
         <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a6a8a",background:showWorkshop?"linear-gradient(135deg,#7a8aba,#5a6a8a)":"rgba(90,106,138,0.1)",color:showWorkshop?"#fff":"#5a6a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
           🧪 練習会データ {showWorkshop?"▲":"▼"}
         </button>
         {showWorkshop && (
@@ -7502,7 +7522,7 @@ function App() {
         )}
         {!isInstructor && (
         <button onClick={()=>{setShowAllPoints(!showAllPoints); if(!allPointsLoaded) fetchAllPointHistory(); if(unprocessedPoints===null) fetchUnprocessedPoints();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showAllPoints?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showAllPoints?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
           🎁 全ポイント履歴 {showAllPoints?"▲":"▼"}
         </button>
         )}
@@ -7573,7 +7593,7 @@ function App() {
           </div>
         )}
         <button onClick={()=>{setShowExchangeForm(!showExchangeForm); if(!showExchangeForm && exchangeRecords===null) fetchExchangeRecords();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #2a9d97",background:showExchangeForm?"linear-gradient(135deg,#5ac4bd,#2a9d97)":"rgba(42,157,151,0.1)",color:showExchangeForm?"#fff":"#2a9d97",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
           🎤 Zoom交流会（無料）記録 {showExchangeForm?"▲":"▼"}
         </button>
         {showExchangeForm && (
@@ -7624,7 +7644,7 @@ function App() {
         )}
         {!isInstructor && (
         <button onClick={()=>{setShowHPTTable(!showHPTTable); if(!showHPTTable && contributionData===null) fetchContributionScores();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #708238",background:showHPTTable?"linear-gradient(135deg,#9ab868,#708238)":"rgba(112,130,56,0.1)",color:showHPTTable?"#fff":"#708238",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.hpt)}>
           📊 全メンバー HPT一覧 {showHPTTable?"▲":"▼"}
         </button>
         )}
@@ -7687,7 +7707,7 @@ function App() {
         )}
         {!isInstructor && (
         <button onClick={()=>{setShowHPTHistory(!showHPTHistory); if(!showHPTHistory && hptHistory===null) fetchHPTHistory();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #b8860b",background:showHPTHistory?"linear-gradient(135deg,#e8c84a,#b8960a)":"rgba(184,134,11,0.1)",color:showHPTHistory?"#fff":"#b8860b",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.hpt)}>
           🔥 HPT増加量の履歴（熱量チェック） {showHPTHistory?"▲":"▼"}
         </button>
         )}
@@ -7749,7 +7769,7 @@ function App() {
         )}
         {!isInstructor && (
         <button onClick={()=>setShowInsightCard(!showInsightCard)}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #6a4a8a",background:showInsightCard?"linear-gradient(135deg,#a878c8,#6a4a8a)":"rgba(106,74,138,0.1)",color:showInsightCard?"#fff":"#6a4a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
           🤖 メンバー状況データ収集 {showInsightCard?"▲":"▼"}
         </button>
         )}
@@ -7786,7 +7806,7 @@ function App() {
         )}
         {!isInstructor && (
         <button onClick={()=>{setShowSongMasterCard(!showSongMasterCard); if(!showSongMasterCard && songMasterList===null) fetchSongMaster();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a8a",background:showSongMasterCard?"linear-gradient(135deg,#5aaac4,#3a7a8a)":"rgba(58,122,138,0.1)",color:showSongMasterCard?"#fff":"#3a7a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
           🎼 新曲・セクション追加 {showSongMasterCard?"▲":"▼"}
         </button>
         )}
@@ -7922,7 +7942,7 @@ function App() {
           </div>
         )}
         <button onClick={()=>{setScoreEditOpen(function(v){if(!v){if(isInstructor) setScoreEditId("kigaru"); loadScorePatterns(isInstructor?"kigaru":scoreEditId);setEditFullscreen(true);}else{setEditFullscreen(false);}return !v;}); }}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a6a7a",background:scoreEditOpen?"linear-gradient(135deg,#5a9aaa,#3a6a7a)":"rgba(58,106,122,0.1)",color:scoreEditOpen?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
           🎼 {isInstructor?"気軽サブスク譜面編集":"譜面編集"} {scoreEditOpen?"▲":"▼"}
         </button>
         {scoreEditOpen && (
@@ -7987,7 +8007,7 @@ function App() {
         )}
 
         {!isInstructor && <button onClick={()=>setInorionTab(!inorionTab)}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a4a6a",background:inorionTab?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionTab?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.standalone)}>
           🎭 壱祈音〜Inorion〜 出演管理 {inorionTab?"▲":"▼"}
         </button>}
         {inorionTab && (
@@ -8118,7 +8138,7 @@ function App() {
         {page==="admin"&&!isInstructor&&(
           <>
             <button onClick={()=>{setShowSubs(!showSubs);if(!subsLoaded)fetchSubscriptions();}}
-              style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a8a9a",background:showSubs?"linear-gradient(135deg,#5a8a9a,#3a6a7a)":"rgba(58,106,122,0.1)",color:showSubs?"#fff":"#3a6a7a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+              style={adminCardStyle(ADMIN_GROUP_COLORS.subs)}>
               💳 サブスク管理 {showSubs?"▲":"▼"}
             </button>
             {showSubs&&(
@@ -8273,7 +8293,7 @@ function App() {
         )}
         {/* 幹サブスク利用状況（個別相談・演奏診断） */}
         {!isInstructor && <button onClick={()=>{setSubscUsageTab(!subscUsageTab); if(!subscUsageTab) fetchSubscUsage();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a8a",background:subscUsageTab?"linear-gradient(135deg,#6ab0c0,#3a7a8a)":"rgba(58,122,138,0.1)",color:subscUsageTab?"#fff":"#3a7a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:12}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.subs)}>
           📊 幹サブスク利用状況（個別相談・演奏診断） {subscUsageTab?"▲":"▼"}
         </button>}
         {subscUsageTab && (
@@ -8362,7 +8382,7 @@ function App() {
           </div>
         )}
         <button onClick={()=>{setShowKigaruUnlock(!showKigaruUnlock); if(!showKigaruUnlock && !allKigaruUnlock) fetchAllKigaruUnlock();}}
-          style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #8a5a3a",background:showKigaruUnlock?"linear-gradient(135deg,#b88a5a,#8a5a3a)":"rgba(138,90,58,0.1)",color:showKigaruUnlock?"#fff":"#8a5a3a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+          style={adminCardStyle(ADMIN_GROUP_COLORS.subs)}>
           🔓 気軽サブスク 解放管理 {showKigaruUnlock?"▲":"▼"}
         </button>
         {showKigaruUnlock && (
@@ -8420,7 +8440,7 @@ function App() {
         {/* 全メンバースケジュール（DANiLOのみ表示） */}
         {!isInstructor && (
           <button onClick={()=>setShowAllScheds(!showAllScheds)}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #7a6a3a",background:showAllScheds?"linear-gradient(135deg,#a08040,#7a6a3a)":"rgba(122,106,58,0.1)",color:showAllScheds?"#fff":"#7a6a3a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
             📅 全メンバースケジュール {showAllScheds?"▲":"▼"}
           </button>
         )}
@@ -8471,7 +8491,7 @@ function App() {
         {/* ログイン履歴（DANiLOのみ） */}
         {!isInstructor && (
           <button onClick={()=>setShowLogins(!showLogins)}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #5a4a8a",background:showLogins?"linear-gradient(135deg,#7a6aaa,#5a4a8a)":"rgba(90,74,138,0.1)",color:showLogins?"#fff":"#5a4a8a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
             🔐 ログイン履歴 {showLogins?"▲":"▼"}
           </button>
         )}
@@ -8507,7 +8527,7 @@ function App() {
         {/* 筋トレ履歴（DANiLOのみ） */}
         {!isInstructor && (
           <button onClick={()=>{setShowWorkouts(!showWorkouts); if(!showWorkouts && !workoutHistory) fetchAllWorkouts();}}
-            style={{width:"100%",padding:"10px",borderRadius:10,border:"1px solid #3a7a5a",background:showWorkouts?"linear-gradient(135deg,#5aaa7a,#3a7a5a)":"rgba(58,122,90,0.1)",color:showWorkouts?"#fff":"#3a7a5a",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:8}}>
+            style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
             💪 筋トレ履歴 {showWorkouts?"▲":"▼"}
           </button>
         )}
