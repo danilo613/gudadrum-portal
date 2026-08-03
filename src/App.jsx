@@ -3917,6 +3917,7 @@ function App() {
   const [subsEditingName, setSubsEditingName] = useState(null);
   const [subsPointNote, setSubsPointNote] = useState({});
   const [subsPointMsg, setSubsPointMsg] = useState({});
+  const [subsPointBusy, setSubsPointBusy] = useState({});
   const [subsEditContractDate, setSubsEditContractDate] = useState("");
   const [subsEditRenewDate, setSubsEditRenewDate] = useState("");
   const [mapPage, setMapPage] = useState(false);
@@ -7959,27 +7960,35 @@ function App() {
                         {subsPointMsg[s.name] && <p style={{fontSize:10,color:"#708238",marginBottom:4}}>{subsPointMsg[s.name]}</p>}
                         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                           {PLAN_POINTS[s.plan]>0&&(
-                            <button onClick={()=>{
+                            <button disabled={!!subsPointBusy[s.name+"_monthly"]} onClick={()=>{
+                              if (subsPointBusy[s.name+"_monthly"]) return; // 二重送信を防ぐ
+                              setSubsPointBusy(prev=>({...prev,[s.name+"_monthly"]:true}));
                               var pts=PLAN_POINTS[s.plan];
                               var note=(subsPointNote[s.name]!==undefined?subsPointNote[s.name]:pointLabel)||pointLabel;
                               gasWrite({action:"addpoints",name:s.name,points:String(pts),note:note,recorder:"DANiLO"}).then(function(){
                                 setSubsPointMsg(prev=>({...prev,[s.name]:"✅ "+pts+"pt付与しました（"+note+"）"}));
                                 setTimeout(()=>setSubsPointMsg(prev=>({...prev,[s.name]:""})),4000);
+                              }).finally(function(){
+                                setSubsPointBusy(prev=>({...prev,[s.name+"_monthly"]:false}));
                               });
-                            }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #708238",background:"#fff",color:"#708238",cursor:"pointer",fontFamily:"inherit"}}>
-                              🎁 月次ポイント（{PLAN_POINTS[s.plan].toLocaleString()}pt）
+                            }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #708238",background:"#fff",color:"#708238",cursor:subsPointBusy[s.name+"_monthly"]?"default":"pointer",fontFamily:"inherit",opacity:subsPointBusy[s.name+"_monthly"]?0.5:1}}>
+                              {subsPointBusy[s.name+"_monthly"]?"処理中...":"🎁 月次ポイント（"+PLAN_POINTS[s.plan].toLocaleString()+"pt）"}
                             </button>
                           )}
                           {PLAN_POINTS[s.plan]>0&&(
-                            <button onClick={()=>{
+                            <button disabled={!!subsPointBusy[s.name+"_lump"]} onClick={()=>{
+                              if (subsPointBusy[s.name+"_lump"]) return; // 二重送信を防ぐ
+                              setSubsPointBusy(prev=>({...prev,[s.name+"_lump"]:true}));
                               var pts=PLAN_POINTS[s.plan]*3;
                               var note=(subsPointNote[s.name]!==undefined?subsPointNote[s.name]:planLabel+"プラン一括払いポイント")||(planLabel+"プラン一括払いポイント");
                               gasWrite({action:"addpoints",name:s.name,points:String(pts),note:note,recorder:"DANiLO"}).then(function(){
                                 setSubsPointMsg(prev=>({...prev,[s.name]:"✅ "+pts+"pt付与しました（"+note+"）"}));
                                 setTimeout(()=>setSubsPointMsg(prev=>({...prev,[s.name]:""})),4000);
+                              }).finally(function(){
+                                setSubsPointBusy(prev=>({...prev,[s.name+"_lump"]:false}));
                               });
-                            }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #5a8a9a",background:"#fff",color:"#5a8a9a",cursor:"pointer",fontFamily:"inherit"}}>
-                              💰 一括払い（3ヶ月・{(PLAN_POINTS[s.plan]*3).toLocaleString()}pt）
+                            }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #5a8a9a",background:"#fff",color:"#5a8a9a",cursor:subsPointBusy[s.name+"_lump"]?"default":"pointer",fontFamily:"inherit",opacity:subsPointBusy[s.name+"_lump"]?0.5:1}}>
+                              {subsPointBusy[s.name+"_lump"]?"処理中...":"💰 一括払い（3ヶ月・"+(PLAN_POINTS[s.plan]*3).toLocaleString()+"pt）"}
                             </button>
                           )}
                           <button onClick={()=>{
