@@ -6428,6 +6428,15 @@ function App() {
               <span>50</span><span>180</span>
             </div>
           </div>
+          {/* VOLUME */}
+          <div style={{marginBottom:16,padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <span style={{fontSize:12,color:"rgba(180,255,220,0.9)",letterSpacing:1,fontWeight:400,minWidth:76,flexShrink:0}}>音量 {(metroVol*100).toFixed(0)}%</span>
+              <input type="range" min="0" max="1" step="0.05" value={metroVol} onChange={e=>setMetroVol(parseFloat(e.target.value))}
+                className="oval-slider" style={{flex:1,accentColor:"#a0e8c0",cursor:"pointer",height:6}}/>
+            </div>
+          </div>
+
           {/* 基本設定（音符・拍子・頭チーン・音色をまとめて開閉） */}
           <div style={{marginBottom:16,padding:"14px 18px",background:"linear-gradient(180deg, rgba(20,40,30,0.6), rgba(10,20,15,0.8))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:14}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:metroBasicOpen?16:0}}>
@@ -6498,15 +6507,6 @@ function App() {
               </div>
               </>
             )}
-          </div>
-
-          {/* VOLUME */}
-          <div style={{marginBottom:16,padding:"14px 18px",background:"linear-gradient(180deg, rgba(10,20,15,0.6), rgba(5,10,8,0.8))",border:"1px solid rgba(150,220,180,0.1)",borderRadius:14}}>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <span style={{fontSize:12,color:"rgba(180,255,220,0.9)",letterSpacing:1,fontWeight:400,minWidth:76,flexShrink:0}}>音量 {(metroVol*100).toFixed(0)}%</span>
-              <input type="range" min="0" max="1" step="0.05" value={metroVol} onChange={e=>setMetroVol(parseFloat(e.target.value))}
-                className="oval-slider" style={{flex:1,accentColor:"#a0e8c0",cursor:"pointer",height:6}}/>
-            </div>
           </div>
 
           {/* RHYTHM TRAINING MODE */}
