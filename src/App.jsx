@@ -7461,7 +7461,7 @@ function App() {
           fetchSetlist();
         }),
         iconBtn("🗾 MAP",()=>{ fetchMemberMap(); setMapPage(true); }),
-        iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
+        iconBtn("🔄 更新",()=>{ autoFetch(); fetchSchedules(); fetchLogins(); fetchOrchestra(); fetchInorion(); fetchSubscriptions(); setRefreshMsg("✅ 更新されました！"); setTimeout(()=>setRefreshMsg(""),2500); }),
         iconBtn("ログアウト",()=>setPage("login")),
       ])}
       <div style={{padding:"24px",maxWidth:scoreEditOpen?1200:720,margin:"0 auto",transition:"max-width 0.3s",overflow:"visible"}}>
@@ -7848,7 +7848,7 @@ function App() {
         {/* サブスク管理（DANiLOのみ） */}
         {page==="admin"&&!isInstructor&&(
           <>
-            <button onClick={()=>{setShowSubs(!showSubs);if(!subsLoaded)fetchSubscriptions();}}
+            <button onClick={()=>{setShowSubs(!showSubs);if(!subsLoaded||subscriptions.length===0)fetchSubscriptions();}}
               style={adminCardStyle(ADMIN_GROUP_COLORS.subs)}>
               💳 サブスク管理 {showSubs?"▲":"▼"}
             </button>
