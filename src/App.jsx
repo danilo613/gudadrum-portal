@@ -6077,13 +6077,24 @@ function App() {
       for(var i=0;i<barSpb;i++){
         var s=barStart+i;
         var ibs=i===0, ib=nt==="16th"?i%4===0:i%3===0, i8=nt==="16th"&&i%2===0&&i%4!==0;
-        var lC=null, rC=null;
-        COLORS_P.forEach(function(c){ if(L[c]&&L[c][s]) lC=c; if(R[c]&&R[c][s]) rC=c; });
+        var lFu=[], rFu=[];
+        COLORS_P.forEach(function(c){ if(L[c]&&L[c][s]) lFu.push(c); if(R[c]&&R[c][s]) rFu.push(c); });
+        var lHi=[], rHi=[];
+        if (hasInst2) {
+          COLORS_P2.forEach(function(c){ if(L2[c]&&L2[c][s]) lHi.push(c); if(R2[c]&&R2[c][s]) rHi.push(c); });
+        }
+        function cellBg(fu, hi){
+          if (hi.length>0 && fu.length>0) return "linear-gradient(to bottom, "+SCORE_HIBIKI_COLORS[hi[0]]+" 50%, "+SCORE_DOT_COLORS[fu[0]]+" 50%)";
+          if (hi.length>0) return hi.length>=2?("linear-gradient(to bottom, "+SCORE_HIBIKI_COLORS[hi[0]]+" 50%, "+SCORE_HIBIKI_COLORS[hi[1]]+" 50%)"):SCORE_HIBIKI_COLORS[hi[0]];
+          if (fu.length>0) return fu.length>=2?("linear-gradient(to bottom, "+SCORE_DOT_COLORS[fu[0]]+" 50%, "+SCORE_DOT_COLORS[fu[1]]+" 50%)"):SCORE_DOT_COLORS[fu[0]];
+          return "#e8e8e8";
+        }
+        var lBg=cellBg(lFu,lHi), rBg=cellBg(rFu,rHi);
         var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
         rows+='<div style="display:flex;height:'+(CELL_P+GAP_P)+'px;align-items:center;background:'+bg+'">'
-          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(lC?SCORE_DOT_COLORS[lC]:"#e8e8e8")+';border-radius:3px;margin-right:1px"></div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+lBg+';border-radius:3px;margin-right:1px"></div>'
           +'<div style="width:8px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
-          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(rC?SCORE_DOT_COLORS[rC]:"#e8e8e8")+';border-radius:3px;margin-left:1px"></div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+rBg+';border-radius:3px;margin-left:1px"></div>'
           +'</div>';
       }
       barsArr.push('<div style="display:inline-block;margin:3px;background:#fff;border-radius:6px;padding:5px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">'
@@ -6095,36 +6106,6 @@ function App() {
       for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) gridHtml+=barsArr[bb]||"";
       gridHtml+='</div>';
     }
-    // 2台目（響ノ音側）のグリッド
-    var barsArr2 = [];
-    if (hasInst2) {
-      for(var bi3=0;bi3<nb;bi3++){
-        var barSpb3=getBL(bi3); var barStart3=getBLStart(bi3);
-        var rows3 = "";
-        for(var i3=0;i3<barSpb3;i3++){
-          var s3=barStart3+i3;
-          var ibs3=i3===0, ib3=nt==="16th"?i3%4===0:i3%3===0, i83=nt==="16th"&&i3%2===0&&i3%4!==0;
-          var lC3=null, rC3=null;
-          COLORS_P2.forEach(function(c){ if(L2[c]&&L2[c][s3]) lC3=c; if(R2[c]&&R2[c][s3]) rC3=c; });
-          var bg3=ibs3?"rgba(0,0,0,0.1)":ib3?"rgba(0,0,0,0.05)":"transparent";
-          rows3+='<div style="display:flex;height:'+(CELL_P+GAP_P)+'px;align-items:center;background:'+bg3+'">'
-            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(lC3?SCORE_HIBIKI_COLORS[lC3]:"#e8e8e8")+';border-radius:3px;margin-right:1px"></div>'
-            +'<div style="width:8px;display:flex;align-items:center;justify-content:center">'+(i83?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
-            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(rC3?SCORE_HIBIKI_COLORS[rC3]:"#e8e8e8")+';border-radius:3px;margin-left:1px"></div>'
-            +'</div>';
-        }
-        barsArr2.push('<div style="display:inline-block;margin:3px;background:#fff;border-radius:6px;padding:5px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">'
-          +'<div style="font-size:9px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(bi3+1)+'</div>'+rows3+'</div>');
-      }
-    }
-    var gridHtml2="";
-    if (hasInst2) {
-      for(var rr2=0;rr2<Math.ceil(nb/8);rr2++){
-        gridHtml2+='<div style="display:flex;flex-wrap:nowrap;gap:1px;margin-bottom:4px">';
-        for(var bb2=rr2*8;bb2<Math.min((rr2+1)*8,nb);bb2++) gridHtml2+=barsArr2[bb2]||"";
-        gridHtml2+='</div>';
-      }
-    }
         // 大きいイラスト（グリッド左用）
     var svgDLarge="";
     Object.keys(DOTS_P).forEach(function(color){
@@ -6133,7 +6114,7 @@ function App() {
       var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
       svgDLarge+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="13" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
     });
-    var svgLarge='<svg viewBox="0 0 140 166" width="280" height="331" style="flex-shrink:0">'
+    var svgLarge='<svg viewBox="0 0 140 166" width="'+(hasInst2?200:280)+'" height="'+(hasInst2?237:331)+'" style="flex-shrink:0">'
       +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
       +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
       +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>'
@@ -6147,19 +6128,17 @@ function App() {
         var fill=usedC2[color]?SCORE_HIBIKI_COLORS[color]:"#e8e6e2";
         svgDLarge2+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="13" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
       });
-      svgLarge2='<svg viewBox="0 0 140 166" width="280" height="331" style="flex-shrink:0">'
+      svgLarge2='<svg viewBox="0 0 140 166" width="200" height="237" style="flex-shrink:0">'
         +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
         +svgDLarge2+'</svg>';
     }
-    var row1='<div style="display:flex;gap:16px;align-items:center;margin-top:4px">'
-        +svgLarge
+    var illustrationsHtml = swapLR2
+      ? ('<div style="display:flex;flex-direction:column;gap:8px">'+svgLarge2+svgLarge+'</div>')
+      : ('<div style="display:flex;flex-direction:column;gap:8px">'+svgLarge+(hasInst2?svgLarge2:"")+'</div>');
+    var rowsCombined = '<div style="display:flex;gap:16px;align-items:flex-start;margin-top:4px">'
+        +illustrationsHtml
         +'<div style="padding-left:16px">'+gridHtml+'</div>'
       +'</div>';
-    var row2=hasInst2?('<div style="display:flex;gap:16px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ddd">'
-        +svgLarge2
-        +'<div style="padding-left:16px">'+gridHtml2+'</div>'
-      +'</div>'):"";
-    var rowsCombined = hasInst2 ? (swapLR2 ? (row2+row1) : (row1+row2)) : row1;
     return ''
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0">'
         +'<div>'
