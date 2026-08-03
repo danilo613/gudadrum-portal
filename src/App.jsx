@@ -6132,23 +6132,31 @@ function App() {
         +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
         +svgDLarge2+'</svg>';
     }
-    var illustrationsHtml = swapLR2
-      ? ('<div style="display:flex;flex-direction:column;gap:8px">'+svgLarge2+svgLarge+'</div>')
-      : ('<div style="display:flex;flex-direction:column;gap:8px">'+svgLarge+(hasInst2?svgLarge2:"")+'</div>');
-    var rowsCombined = '<div style="display:flex;gap:16px;align-items:flex-start;margin-top:4px">'
-        +illustrationsHtml
-        +'<div style="padding-left:16px">'+gridHtml+'</div>'
+    var labeled1='<div style="text-align:center">'
+        +'<div style="font-size:9px;color:#888;margin-bottom:2px">'+(hasInst2?"風ノ音":"")+'</div>'
+        +svgLarge
       +'</div>';
+    var labeled2=hasInst2?('<div style="text-align:center">'
+        +'<div style="font-size:9px;color:#888;margin-bottom:2px">響ノ音</div>'
+        +svgLarge2
+      +'</div>'):"";
+    var illustrationsHtml = '<div style="display:flex;justify-content:center;gap:16px;margin-bottom:8px">'
+        +(swapLR2 ? (labeled1+labeled2) : (labeled2+labeled1))
+      +'</div>';
+    var rowsCombined = illustrationsHtml
+      +'<div>'+gridHtml+'</div>';
     return ''
-      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0">'
-        +'<div>'
-          +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+scoreTitle+'</div>'
-          +'<div style="font-size:11px;color:#666;margin-bottom:6px">Composed by DANiLO</div>'
-          +'<div style="margin-bottom:8px;line-height:1.8">'+secListHtml+'</div>'
-          +'<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:2px">'+secLabel+'</div>'
-          +'<div style="font-size:11px;color:#888">'+nb+'小節'+(st?' ／ '+st+'〜':'')+'</div>'
+      +'<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0">'
+        +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
+          +'<div>'
+            +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+scoreTitle+'</div>'
+            +'<div style="font-size:11px;color:#666;margin-bottom:6px">Composed by DANiLO</div>'
+            +'<div style="margin-bottom:8px;line-height:1.8">'+secListHtml+'</div>'
+            +'<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:2px">'+secLabel+'</div>'
+            +'<div style="font-size:11px;color:#888">'+nb+'小節'+(st?' ／ '+st+'〜':'')+'</div>'
+          +'</div>'
+          +'<div style="font-size:8px;color:#ccc;text-align:right;line-height:1.6">© 2026 by オフィススターシーヅ・<br>「GUDAdrum」はオフィススターシーヅ・の登録商標です<br>（登録第6018643号）</div>'
         +'</div>'
-        +'<div style="font-size:8px;color:#ccc;text-align:right;line-height:1.6">© 2026 by オフィススターシーヅ・<br>「GUDAdrum」はオフィススターシーヅ・の登録商標です<br>（登録第6018643号）</div>'
       +'</div>'
       +rowsCombined;
   }
