@@ -1438,6 +1438,9 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
 
   function handlePrint(){
     var DOTS=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+    var hasInst2=!!instrument2;
+    var DOT_COLORS2=instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
+    var DOTS2=hasInst2?getEffectiveDots2(scoreId, sectionKey, scale, instrument2):null;
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb=subdiv==="16th"?16:12;
     var CELL_P=20, GAP_P=1;
@@ -1448,6 +1451,14 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
       }
     });
+    var usedColors2={};
+    if(hasInst2){
+      COLORS_ALL.forEach(function(c){
+        for(var i=0;i<nb*spb;i++){
+          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ usedColors2[c]=true; break; }
+        }
+      });
+    }
     var displayTime=secTime||"";
     if(displayTime&&displayTime.includes("GMT")){
       var d=new Date(displayTime);
@@ -1481,8 +1492,37 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
         +'<div style="font-size:9px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(barIdx+1)+'</div>'
         +rows+'</div>';
     }
+    function barHtml2(barIdx){
+      var barSpb=getBarSpb(barIdx);
+      var barStart=getBarStart(barIdx);
+      var rows="";
+      for(var i=0;i<barSpb;i++){
+        var s=barStart+i;
+        var ibs=i===0;
+        var ib=subdiv==="16th"?i%4===0:i%3===0;
+        var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
+        var lColor=null, rColor=null;
+        COLORS_ALL.forEach(function(c){
+          if(left2[c]&&left2[c][s]) lColor=c;
+          if(right2[c]&&right2[c][s]) rColor=c;
+        });
+        var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+        var lBg=lColor?DOT_COLORS2[lColor]:"#e8e8e8";
+        var rBg=rColor?DOT_COLORS2[rColor]:"#e8e8e8";
+        rows+='<div style="display:flex;height:'+stepH+'px;align-items:center;background:'+bg+'">'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+lBg+';border-radius:3px;margin-right:'+GAP_P+'px"></div>'
+          +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+rBg+';border-radius:3px;margin-left:'+GAP_P+'px"></div>'
+          +'</div>';
+      }
+      return '<div style="display:inline-block;margin:3px;background:#fff;border-radius:6px;padding:5px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">'
+        +'<div style="font-size:9px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(barIdx+1)+'</div>'
+        +rows+'</div>';
+    }
     var barsHtml=[];
     for(var bi=0;bi<nb;bi++) barsHtml.push(barHtml(bi));
+    var barsHtml2=[];
+    if(hasInst2) for(var bi2=0;bi2<nb;bi2++) barsHtml2.push(barHtml2(bi2));
     var svgDots="";
     var _lbls=getDrumLabels(scoreId, sectionKey, scale);var highLabel=scale==="nostalgic"?"高音":_lbls.top;var lowLabel=scale==="nostalgic"?"低音":_lbls.bottom;
     Object.keys(DOTS).forEach(function(color){
@@ -1496,36 +1536,59 @@ function ScorePlayer({ scoreId, sectionKey, sectionLabel, patternData, canEdit, 
       +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
       +'<text x="70" y="162" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+lowLabel+'</text>'
       +svgDots+'</svg>';
+    var svgHtml2="";
+    if(hasInst2){
+      var svgDots2="";
+      Object.keys(DOTS2).forEach(function(color){
+        var pos=DOTS2[color];
+        var fill=usedColors2[color]?DOT_COLORS2[color]:"#e8e6e2";
+        svgDots2+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+      });
+      svgHtml2='<svg viewBox="0 0 140 166" width="110" height="130" style="flex-shrink:0">'
+        +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
+        +svgDots2+'</svg>';
+    }
     var sections=SCORE_SECTIONS[scoreId]||[];
     var secListHtml=sections.map(function(s){
       var isCurrent=s[0]===sectionKey;
       return '<span style="font-size:9px;color:'+(isCurrent?"#1a3a2a":"#aaa")+';font-weight:'+(isCurrent?"700":"400")+';margin-right:6px">'+(isCurrent?"▶ ":"")+s[1]+'</span>';
     }).join("");
-    var gridHtml=(function(){
+    function buildGridHtml(bh){
       var rowsHtml="";
       for(var rr=0;rr<Math.ceil(nb/8);rr++){
         rowsHtml+='<div style="display:flex;flex-wrap:nowrap;gap:1px;margin-bottom:4px">';
-        for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) rowsHtml+=barsHtml[bb]||"";
+        for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) rowsHtml+=bh[bb]||"";
         rowsHtml+='</div>';
       }
       return rowsHtml;
-    })();
+    }
+    var gridHtml=buildGridHtml(barsHtml);
+    var gridHtml2=hasInst2?buildGridHtml(barsHtml2):"";
     var songTitle=SCORE_ID_TO_NAME[scoreId]||scoreId;
+    var instrumentBlock1='<div style="flex:1;min-width:0">'
+        +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+songTitle+'</div>'
+        +'<div style="font-size:11px;color:#666;margin-bottom:6px">Composed by DANiLO</div>'
+        +'<div style="margin-bottom:8px;line-height:1.8">'+secListHtml+'</div>'
+        +'<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:2px">'+sectionLabel+'</div>'
+        +'<div style="font-size:11px;color:#888">'+nb+'小節'+(displayTime?' ／ '+displayTime+'〜':'')+'</div>'
+      +'</div>'
+      +svgHtml;
+    var instrumentBlock2=hasInst2?svgHtml2:"";
+    var headerHtml=swapLR
+      ? ('<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'+instrumentBlock2+instrumentBlock1+'</div>')
+      : ('<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'+instrumentBlock1+instrumentBlock2+'</div>');
+    var gridsHtml=hasInst2
+      ? ('<div style="display:flex;flex-direction:column;gap:10px">'
+          +'<div>'+(swapLR?gridHtml2:gridHtml)+'</div>'
+          +'<div style="border-top:1px dashed #ddd;padding-top:8px">'+(swapLR?gridHtml:gridHtml2)+'</div>'
+        +'</div>')
+      : ('<div>'+gridHtml+'</div>');
     var win=window.open("","_blank");
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
       +'<title>'+songTitle+' - '+sectionLabel+'</title>'
       +'<style>@page{size:A4 landscape;margin:8mm}body{font-family:sans-serif;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>'
-      +'<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+songTitle+'</div>'
-          +'<div style="font-size:11px;color:#666;margin-bottom:6px">Composed by DANiLO</div>'
-          +'<div style="margin-bottom:8px;line-height:1.8">'+secListHtml+'</div>'
-          +'<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:2px">'+sectionLabel+'</div>'
-          +'<div style="font-size:11px;color:#888">'+nb+'小節'+(displayTime?' ／ '+displayTime+'〜':'')+'</div>'
-        +'</div>'
-        +svgHtml
-      +'</div>'
-      +'<div>'+gridHtml+'</div>'
+      +headerHtml
+      +gridsHtml
       +'<div style="margin-top:8px;font-size:8px;color:#bbb;text-align:center">© DANiLO / グーダドラムオーケストラ 響合〜hibikiai〜 All Rights Reserved.</div>'
       +'</body></html>');
     win.document.close();
@@ -2210,6 +2273,9 @@ function renderSideGrid2(barIdx, side){
 
   function handlePrint(){
     var DOTS=getEffectiveDots(scoreId, sectionKey, scale, instrument2);
+    var hasInst2=!!instrument2;
+    var DOT_COLORS2=instrument2==="arcane"?SCORE_HIBIKI_COLORS:SCORE_DOT_COLORS;
+    var DOTS2=hasInst2?getEffectiveDots2(scoreId, sectionKey, scale, instrument2):null;
     var nb=Math.max(2,Math.min(parseInt(bars)||8,32));
     var spb=subdiv==="16th"?16:12;
     var CELL_P=20, GAP_P=1;
@@ -2220,6 +2286,14 @@ function renderSideGrid2(barIdx, side){
         if((left[c]&&left[c][i])||(right[c]&&right[c][i])){ usedColors[c]=true; break; }
       }
     });
+    var usedColors2={};
+    if(hasInst2){
+      COLORS_ALL.forEach(function(c){
+        for(var i=0;i<nb*spb;i++){
+          if((left2[c]&&left2[c][i])||(right2[c]&&right2[c][i])){ usedColors2[c]=true; break; }
+        }
+      });
+    }
     var displayTime=secTime||"";
     if(displayTime&&displayTime.includes("GMT")){
       var d=new Date(displayTime);
@@ -2253,8 +2327,37 @@ function renderSideGrid2(barIdx, side){
         +'<div style="font-size:9px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(barIdx+1)+'</div>'
         +rows+'</div>';
     }
+    function barHtml2(barIdx){
+      var barSpb=getBarSpb(barIdx);
+      var barStart=getBarStart(barIdx);
+      var rows="";
+      for(var i=0;i<barSpb;i++){
+        var s=barStart+i;
+        var ibs=i===0;
+        var ib=subdiv==="16th"?i%4===0:i%3===0;
+        var i8=subdiv==="16th"&&i%2===0&&i%4!==0;
+        var lColor=null, rColor=null;
+        COLORS_ALL.forEach(function(c){
+          if(left2[c]&&left2[c][s]) lColor=c;
+          if(right2[c]&&right2[c][s]) rColor=c;
+        });
+        var bg=ibs?"rgba(0,0,0,0.1)":ib?"rgba(0,0,0,0.05)":"transparent";
+        var lBg=lColor?DOT_COLORS2[lColor]:"#e8e8e8";
+        var rBg=rColor?DOT_COLORS2[rColor]:"#e8e8e8";
+        rows+='<div style="display:flex;height:'+stepH+'px;align-items:center;background:'+bg+'">'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+lBg+';border-radius:3px;margin-right:'+GAP_P+'px"></div>'
+          +'<div style="width:8px;height:4px;display:flex;align-items:center;justify-content:center">'+(i8?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+          +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+rBg+';border-radius:3px;margin-left:'+GAP_P+'px"></div>'
+          +'</div>';
+      }
+      return '<div style="display:inline-block;margin:3px;background:#fff;border-radius:6px;padding:5px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">'
+        +'<div style="font-size:9px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(barIdx+1)+'</div>'
+        +rows+'</div>';
+    }
     var barsHtml=[];
     for(var bi=0;bi<nb;bi++) barsHtml.push(barHtml(bi));
+    var barsHtml2=[];
+    if(hasInst2) for(var bi2=0;bi2<nb;bi2++) barsHtml2.push(barHtml2(bi2));
     var svgDots="";
     var _lbls=getDrumLabels(scoreId, sectionKey, scale);var highLabel=scale==="nostalgic"?"高音":_lbls.top;var lowLabel=scale==="nostalgic"?"低音":_lbls.bottom;
     Object.keys(DOTS).forEach(function(color){
@@ -2268,36 +2371,59 @@ function renderSideGrid2(barIdx, side){
       +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
       +'<text x="70" y="162" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+lowLabel+'</text>'
       +svgDots+'</svg>';
+    var svgHtml2="";
+    if(hasInst2){
+      var svgDots2="";
+      Object.keys(DOTS2).forEach(function(color){
+        var pos=DOTS2[color];
+        var fill=usedColors2[color]?DOT_COLORS2[color]:"#e8e6e2";
+        svgDots2+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+      });
+      svgHtml2='<svg viewBox="0 0 140 166" width="110" height="130" style="flex-shrink:0">'
+        +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
+        +svgDots2+'</svg>';
+    }
     var sections=SCORE_SECTIONS[scoreId]||[];
     var secListHtml=sections.map(function(s){
       var isCurrent=s[0]===sectionKey;
       return '<span style="font-size:9px;color:'+(isCurrent?"#1a3a2a":"#aaa")+';font-weight:'+(isCurrent?"700":"400")+';margin-right:6px">'+(isCurrent?"▶ ":"")+s[1]+'</span>';
     }).join("");
-    var gridHtml=(function(){
+    function buildGridHtml(bh){
       var rowsHtml="";
       for(var rr=0;rr<Math.ceil(nb/8);rr++){
         rowsHtml+='<div style="display:flex;flex-wrap:nowrap;gap:1px;margin-bottom:4px">';
-        for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) rowsHtml+=barsHtml[bb]||"";
+        for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) rowsHtml+=bh[bb]||"";
         rowsHtml+='</div>';
       }
       return rowsHtml;
-    })();
+    }
+    var gridHtml=buildGridHtml(barsHtml);
+    var gridHtml2=hasInst2?buildGridHtml(barsHtml2):"";
     var songTitle=SCORE_ID_TO_NAME[scoreId]||scoreId;
+    var instrumentBlock1='<div style="flex:1;min-width:0">'
+        +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+songTitle+'</div>'
+        +'<div style="font-size:11px;color:#666;margin-bottom:6px">Composed by DANiLO</div>'
+        +'<div style="margin-bottom:8px;line-height:1.8">'+secListHtml+'</div>'
+        +'<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:2px">'+sectionLabel+'</div>'
+        +'<div style="font-size:11px;color:#888">'+nb+'小節'+(displayTime?' ／ '+displayTime+'〜':'')+'</div>'
+      +'</div>'
+      +svgHtml;
+    var instrumentBlock2=hasInst2?svgHtml2:"";
+    var headerHtml=swapLR
+      ? ('<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'+instrumentBlock2+instrumentBlock1+'</div>')
+      : ('<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'+instrumentBlock1+instrumentBlock2+'</div>');
+    var gridsHtml=hasInst2
+      ? ('<div style="display:flex;flex-direction:column;gap:10px">'
+          +'<div>'+(swapLR?gridHtml2:gridHtml)+'</div>'
+          +'<div style="border-top:1px dashed #ddd;padding-top:8px">'+(swapLR?gridHtml:gridHtml2)+'</div>'
+        +'</div>')
+      : ('<div>'+gridHtml+'</div>');
     var win=window.open("","_blank");
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8">'
       +'<title>'+songTitle+' - '+sectionLabel+'</title>'
       +'<style>@page{size:A4 landscape;margin:8mm}body{font-family:sans-serif;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>'
-      +'<div style="display:flex;gap:16px;align-items:flex-start;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #e0e0e0">'
-        +'<div style="flex:1;min-width:0">'
-          +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+songTitle+'</div>'
-          +'<div style="font-size:11px;color:#666;margin-bottom:6px">Composed by DANiLO</div>'
-          +'<div style="margin-bottom:8px;line-height:1.8">'+secListHtml+'</div>'
-          +'<div style="font-size:14px;font-weight:700;color:#333;margin-bottom:2px">'+sectionLabel+'</div>'
-          +'<div style="font-size:11px;color:#888">'+nb+'小節'+(displayTime?' ／ '+displayTime+'〜':'')+'</div>'
-        +'</div>'
-        +svgHtml
-      +'</div>'
-      +'<div>'+gridHtml+'</div>'
+      +headerHtml
+      +gridsHtml
       +'<div style="margin-top:8px;font-size:8px;color:#bbb;text-align:center">© DANiLO / グーダドラムオーケストラ 響合〜hibikiai〜 All Rights Reserved.</div>'
       +'</body></html>');
     win.document.close();
@@ -5155,8 +5281,7 @@ function App() {
       const res = await gasWrite({ action: "recalcallpoints" });
       if (res && res.success) {
         setRecalcResult({ ok: true, updatedCount: res.updatedCount, changes: res.changes || [] });
-        autoFetch();
-        fetchAllPointHistory();
+        autoFetch(); // メンバー一覧のポイント表示も最新化する
       } else {
         setRecalcResult({ ok: false, error: (res && res.error) || "不明なエラー" });
       }
@@ -5887,6 +6012,9 @@ function App() {
     var sections = SCORE_SECTIONS[scoreId]||SCORE_SECTIONS.waterlily;
     var spb = nt==="16th"?16:12;
     var nb = pd&&pd.meta&&pd.meta.bars?Math.max(2,Math.min(parseInt(pd.meta.bars)||8,32)):8;
+    // 2台編成（響ノ音側）かどうか
+    var hasInst2 = (scoreId==="megumi"||scoreId==="inori"||scoreId==="regrace");
+    var swapLR2 = (scoreId==="regrace");
     // barLengths対応
     var bl = pd&&pd.meta&&pd.meta.barLengths?JSON.parse(pd.meta.barLengths):null;
     function getBL(i){ return (bl&&bl.length===nb)?bl[i]:spb; }
@@ -5900,8 +6028,11 @@ function App() {
     }
     var L = pd&&pd.left||{};
     var R = pd&&pd.right||{};
+    var L2 = pd&&pd.left2||{};
+    var R2 = pd&&pd.right2||{};
     var COLORS_P = ["orange","red","lime","green","yellow","purple","cyan","pink","brown"];
     if (scoreId==="aoi"||scoreId==="kigaru") COLORS_P = COLORS_P.concat(["attack"]);
+    var COLORS_P2 = SCORE_HIBIKI_COLORS_ORDER;
     var CELL_P = 20, GAP_P = 1;
     // 使用色
     var usedC = {};
@@ -5910,6 +6041,14 @@ function App() {
         if((L[c]&&L[c][i])||(R[c]&&R[c][i])){ usedC[c]=true; break; }
       }
     });
+    var usedC2 = {};
+    if (hasInst2) {
+      COLORS_P2.forEach(function(c){
+        for(var i=0;i<nb*spb;i++){
+          if((L2[c]&&L2[c][i])||(R2[c]&&R2[c][i])){ usedC2[c]=true; break; }
+        }
+      });
+    }
     // SVGドット
     var svgD = "";
     var highLabel=(scoreId==="dreamy"||scoreId==="aoi"||scoreId==="megumi"||scoreId==="inori"||scoreId==="regrace")?"低音":"高音";
@@ -5956,6 +6095,36 @@ function App() {
       for(var bb=rr*8;bb<Math.min((rr+1)*8,nb);bb++) gridHtml+=barsArr[bb]||"";
       gridHtml+='</div>';
     }
+    // 2台目（響ノ音側）のグリッド
+    var barsArr2 = [];
+    if (hasInst2) {
+      for(var bi3=0;bi3<nb;bi3++){
+        var barSpb3=getBL(bi3); var barStart3=getBLStart(bi3);
+        var rows3 = "";
+        for(var i3=0;i3<barSpb3;i3++){
+          var s3=barStart3+i3;
+          var ibs3=i3===0, ib3=nt==="16th"?i3%4===0:i3%3===0, i83=nt==="16th"&&i3%2===0&&i3%4!==0;
+          var lC3=null, rC3=null;
+          COLORS_P2.forEach(function(c){ if(L2[c]&&L2[c][s3]) lC3=c; if(R2[c]&&R2[c][s3]) rC3=c; });
+          var bg3=ibs3?"rgba(0,0,0,0.1)":ib3?"rgba(0,0,0,0.05)":"transparent";
+          rows3+='<div style="display:flex;height:'+(CELL_P+GAP_P)+'px;align-items:center;background:'+bg3+'">'
+            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(lC3?SCORE_HIBIKI_COLORS[lC3]:"#e8e8e8")+';border-radius:3px;margin-right:1px"></div>'
+            +'<div style="width:8px;display:flex;align-items:center;justify-content:center">'+(i83?'<div style="width:3px;height:3px;border-radius:50%;background:#ccc"></div>':'')+'</div>'
+            +'<div style="width:'+CELL_P+'px;height:'+(CELL_P-1)+'px;background:'+(rC3?SCORE_HIBIKI_COLORS[rC3]:"#e8e8e8")+';border-radius:3px;margin-left:1px"></div>'
+            +'</div>';
+        }
+        barsArr2.push('<div style="display:inline-block;margin:3px;background:#fff;border-radius:6px;padding:5px;box-shadow:0 1px 3px rgba(0,0,0,0.1)">'
+          +'<div style="font-size:9px;font-weight:700;color:#888;margin-bottom:2px;text-align:center">'+(bi3+1)+'</div>'+rows3+'</div>');
+      }
+    }
+    var gridHtml2="";
+    if (hasInst2) {
+      for(var rr2=0;rr2<Math.ceil(nb/8);rr2++){
+        gridHtml2+='<div style="display:flex;flex-wrap:nowrap;gap:1px;margin-bottom:4px">';
+        for(var bb2=rr2*8;bb2<Math.min((rr2+1)*8,nb);bb2++) gridHtml2+=barsArr2[bb2]||"";
+        gridHtml2+='</div>';
+      }
+    }
         // 大きいイラスト（グリッド左用）
     var svgDLarge="";
     Object.keys(DOTS_P).forEach(function(color){
@@ -5969,6 +6138,28 @@ function App() {
       +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
       +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>'
       +svgDLarge+'</svg>';
+    // 2台目の大きいイラスト
+    var svgLarge2="";
+    if (hasInst2) {
+      var svgDLarge2="";
+      Object.keys(SCORE_DOTS_HIBIKI).forEach(function(color){
+        var pos=SCORE_DOTS_HIBIKI[color];
+        var fill=usedC2[color]?SCORE_HIBIKI_COLORS[color]:"#e8e6e2";
+        svgDLarge2+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="13" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
+      });
+      svgLarge2='<svg viewBox="0 0 140 166" width="280" height="331" style="flex-shrink:0">'
+        +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
+        +svgDLarge2+'</svg>';
+    }
+    var row1='<div style="display:flex;gap:16px;align-items:center;margin-top:4px">'
+        +svgLarge
+        +'<div style="padding-left:16px">'+gridHtml+'</div>'
+      +'</div>';
+    var row2=hasInst2?('<div style="display:flex;gap:16px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px dashed #ddd">'
+        +svgLarge2
+        +'<div style="padding-left:16px">'+gridHtml2+'</div>'
+      +'</div>'):"";
+    var rowsCombined = hasInst2 ? (swapLR2 ? (row2+row1) : (row1+row2)) : row1;
     return ''
       +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0">'
         +'<div>'
@@ -5980,10 +6171,7 @@ function App() {
         +'</div>'
         +'<div style="font-size:8px;color:#ccc;text-align:right;line-height:1.6">© 2026 by オフィススターシーヅ・<br>「GUDAdrum」はオフィススターシーヅ・の登録商標です<br>（登録第6018643号）</div>'
       +'</div>'
-      +'<div style="display:flex;gap:16px;align-items:center;margin-top:4px">'
-        +svgLarge
-        +'<div style="padding-left:16px">'+gridHtml+'</div>'
-      +'</div>';
+      +rowsCombined;
   }
 
   function printSection(scoreId, secKey, secLabel, nt, pd, allPatterns) {
