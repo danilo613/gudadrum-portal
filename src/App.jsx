@@ -5024,16 +5024,16 @@ function App() {
 
   useEffect(() => {
     autoFetch();
-    fetchSchedules();
-    fetchOrchestra();
-    fetchInorion();
-    fetchSongMaster();
-    setTimeout(()=>{ fetchBgmInfo(); }, 800); // 表示上そこまで急がないので、最初のバッチより少し遅らせる
+    setTimeout(()=>{ fetchSchedules(); }, 150);
+    setTimeout(()=>{ fetchOrchestra(); }, 300);
+    setTimeout(()=>{ fetchInorion(); }, 450);
+    setTimeout(()=>{ fetchSongMaster(); }, 600);
+    setTimeout(()=>{ fetchBgmInfo(); }, 900); // 表示上そこまで急がないので、最初のバッチより少し遅らせる
     const timer = setInterval(() => {
       autoFetch();
-      fetchSchedules();
-      fetchOrchestra();
-      fetchInorion();
+      setTimeout(()=>{ fetchSchedules(); }, 150);
+      setTimeout(()=>{ fetchOrchestra(); }, 300);
+      setTimeout(()=>{ fetchInorion(); }, 450);
     }, 5 * 60 * 1000);
     return () => clearInterval(timer);
   }, []);
@@ -6090,19 +6090,30 @@ function App() {
     setScorePatterns(function(prev){var n=Object.assign({},prev);n[scoreId]=Object.assign({},prev[scoreId]);n[scoreId][section]=updated;return n;});
   }
 
-  async function gasWrite(params) {
+  async function gasWrite(params, _retryCount) {
+    _retryCount = _retryCount || 0;
     // 短いリクエストはGET、長いものはPOSTで送る
     const query = new URLSearchParams(params).toString();
-    if (query.length < 1500) {
-      const res = await fetch("/api/gas?" + query);
+    try {
+      let res;
+      if (query.length < 1500) {
+        res = await fetch("/api/gas?" + query);
+      } else {
+        res = await fetch("/api/gas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(params)
+        });
+      }
+      if (!res.ok) throw new Error("HTTP " + res.status);
       return await res.json();
-    } else {
-      const res = await fetch("/api/gas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(params)
-      });
-      return await res.json();
+    } catch (err) {
+      // 一時的な混雑（504タイムアウトなど）の可能性があるため、1回だけ間を置いて再試行する
+      if (_retryCount < 1) {
+        await new Promise(r => setTimeout(r, 1200));
+        return gasWrite(params, _retryCount + 1);
+      }
+      throw err;
     }
   }
 
