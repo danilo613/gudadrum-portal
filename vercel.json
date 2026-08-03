@@ -1,4 +1,5 @@
 {
-  "rewrites": [{"source": "/api/gas", "destination": "https://script.google.com/macros/s/AKfycbxtaT5EY4L-ujWzUz1Gx-o1zdakyKZ9TyOIVBelqADYi2mrUitHjI8VnnlEW6glGGQMjQ/exec"}],
-  "functions": {"api/gas.js": {"maxDuration": 30}}
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
 }
