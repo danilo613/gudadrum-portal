@@ -3915,6 +3915,8 @@ function App() {
   const [subsAddPlan, setSubsAddPlan] = useState("蕾気軽サブスク");
   const [subsAddDate, setSubsAddDate] = useState("");
   const [subsEditingName, setSubsEditingName] = useState(null);
+  const [subsPointNote, setSubsPointNote] = useState({});
+  const [subsPointMsg, setSubsPointMsg] = useState({});
   const [subsEditContractDate, setSubsEditContractDate] = useState("");
   const [subsEditRenewDate, setSubsEditRenewDate] = useState("");
   const [mapPage, setMapPage] = useState(false);
@@ -7879,7 +7881,7 @@ function App() {
                   <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>登録者なし</p>
                 ):(
                   subscriptions.map(function(s,i){
-                    const PLAN_POINTS={"蕾気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":13500};
+                    const PLAN_POINTS={"蕾気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":15300};
                     const PLAN_AMOUNT={"蕾気軽サブスク":2400,"幹 ノーマル":6900,"幹 スペシャル":12900};
                     const PLAN_LABEL={"蕾気軽サブスク":"蕾","幹 ノーマル":"幹ノーマル","幹 スペシャル":"幹スペシャル"};
                     var nextPayDate=s.nextPayDate||"";
@@ -7890,7 +7892,7 @@ function App() {
                       monthCount=Math.max(0,(now.getFullYear()-sd2.getFullYear())*12+(now.getMonth()-sd2.getMonth()));
                     }
                     var planLabel=PLAN_LABEL[s.plan]||s.plan;
-                    var pointLabel=planLabel+"プランポイント"+["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"][monthCount]||"";
+                    var pointLabel=planLabel+"プランポイント"+(["①","②","③","④","⑤","⑥","⑦","⑧","⑨","⑩","⑪","⑫"][monthCount]||"");
                     return (
                       <div key={i} style={{padding:"10px 0",borderTop:"0.5px solid "+C.border}}>
                         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:4}}>
@@ -7935,26 +7937,38 @@ function App() {
                         <div style={{display:"flex",gap:8,flexWrap:"wrap",marginBottom:6,alignItems:"center"}}>
                           <span style={{fontSize:12,fontWeight:700,color:"#a89a00"}}>月額 ¥{(s.amount||PLAN_AMOUNT[s.plan]||0).toLocaleString()}</span>
                         </div>
+                        {PLAN_POINTS[s.plan]>0&&(
+                          <div style={{marginBottom:6}}>
+                            <input value={subsPointNote[s.name]!==undefined?subsPointNote[s.name]:pointLabel}
+                              onChange={e=>setSubsPointNote(prev=>({...prev,[s.name]:e.target.value}))}
+                              placeholder="備考"
+                              style={{width:"100%",fontSize:11,padding:"5px 8px",borderRadius:6,border:"0.5px solid "+C.border,background:"#fff",boxSizing:"border-box"}}/>
+                          </div>
+                        )}
+                        {subsPointMsg[s.name] && <p style={{fontSize:10,color:"#708238",marginBottom:4}}>{subsPointMsg[s.name]}</p>}
                         <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
                           {PLAN_POINTS[s.plan]>0&&(
                             <button onClick={()=>{
                               var pts=PLAN_POINTS[s.plan];
-                              gasWrite({action:"addpoints",name:s.name,points:String(pts),reason:pointLabel,recorder:"DANiLO"}).then(function(){
-                                alert(s.name+"に"+pts+"pt付与しました（"+pointLabel+"）");
+                              var note=(subsPointNote[s.name]!==undefined?subsPointNote[s.name]:pointLabel)||pointLabel;
+                              gasWrite({action:"addpoints",name:s.name,points:String(pts),note:note,recorder:"DANiLO"}).then(function(){
+                                setSubsPointMsg(prev=>({...prev,[s.name]:"✅ "+pts+"pt付与しました（"+note+"）"}));
+                                setTimeout(()=>setSubsPointMsg(prev=>({...prev,[s.name]:""})),4000);
                               });
                             }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #708238",background:"#fff",color:"#708238",cursor:"pointer",fontFamily:"inherit"}}>
-                              🎁 月次ポイント
+                              🎁 月次ポイント（{PLAN_POINTS[s.plan].toLocaleString()}pt）
                             </button>
                           )}
                           {PLAN_POINTS[s.plan]>0&&(
                             <button onClick={()=>{
                               var pts=PLAN_POINTS[s.plan]*3;
-                              var label=planLabel+"プラン一括払いポイント";
-                              gasWrite({action:"addpoints",name:s.name,points:String(pts),reason:label,recorder:"DANiLO"}).then(function(){
-                                alert(s.name+"に"+pts+"pt付与しました（"+label+"）");
+                              var note=(subsPointNote[s.name]!==undefined?subsPointNote[s.name]:planLabel+"プラン一括払いポイント")||(planLabel+"プラン一括払いポイント");
+                              gasWrite({action:"addpoints",name:s.name,points:String(pts),note:note,recorder:"DANiLO"}).then(function(){
+                                setSubsPointMsg(prev=>({...prev,[s.name]:"✅ "+pts+"pt付与しました（"+note+"）"}));
+                                setTimeout(()=>setSubsPointMsg(prev=>({...prev,[s.name]:""})),4000);
                               });
                             }} style={{fontSize:10,padding:"3px 10px",borderRadius:8,border:"0.5px solid #5a8a9a",background:"#fff",color:"#5a8a9a",cursor:"pointer",fontFamily:"inherit"}}>
-                              💰 一括払い（3ヶ月）
+                              💰 一括払い（3ヶ月・{(PLAN_POINTS[s.plan]*3).toLocaleString()}pt）
                             </button>
                           )}
                           <button onClick={()=>{
