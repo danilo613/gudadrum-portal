@@ -7892,9 +7892,9 @@ function App() {
                   <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>登録者なし</p>
                 ):(
                   subscriptions.map(function(s,i){
-                    const PLAN_POINTS={"蕾気軽サブスク":0,"幹 ノーマル":8000,"幹 スペシャル":15300};
-                    const PLAN_AMOUNT={"蕾気軽サブスク":2400,"幹 ノーマル":6900,"幹 スペシャル":12900};
-                    const PLAN_LABEL={"蕾気軽サブスク":"蕾","幹 ノーマル":"幹ノーマル","幹 スペシャル":"幹スペシャル"};
+                    const PLAN_POINTS={"蕾気軽サブスク":0,"蕾 気軽サブスク":0,"幹ノーマル":8000,"幹 ノーマル":8000,"幹スペシャル":15300,"幹 スペシャル":15300};
+                    const PLAN_AMOUNT={"蕾気軽サブスク":2400,"蕾 気軽サブスク":2400,"幹ノーマル":6900,"幹 ノーマル":6900,"幹スペシャル":12900,"幹 スペシャル":12900};
+                    const PLAN_LABEL={"蕾気軽サブスク":"蕾","蕾 気軽サブスク":"蕾","幹ノーマル":"幹ノーマル","幹 ノーマル":"幹ノーマル","幹スペシャル":"幹スペシャル","幹 スペシャル":"幹スペシャル"};
                     var nextPayDate=s.nextPayDate||"";
                     var monthCount=0;
                     if(s.renewDate){
