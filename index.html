@@ -570,6 +570,18 @@ function adminCardStyle(groupColor) {
     textAlign:"left"
   };
 }
+const INORION_TICKET_TYPES = ["スペシャル席","一般席","遠目席","ライブ配信","招待席","スポンサー"];
+const INORION_TICKET_PRICES = {
+  "スペシャル席": 11000,
+  "一般席": 4500,
+  "遠目席": 3800,
+  "ライブ配信": 3300,
+  "招待席": 0,
+};
+function inorionParticipantAmount(p) {
+  if (p.ticketType === "スポンサー") return p.supportAmount || 0;
+  return (INORION_TICKET_PRICES[p.ticketType] || 0) * (p.count || 1);
+}
 const ADMIN_GROUP_COLORS = {
   score:"#00B8D9",      // 🎼 譜面・楽曲（少し落ち着かせた水色）
   hpt:"#FF9900",        // 🎯 HPT・貢献度
@@ -3838,13 +3850,14 @@ function App() {
   const [inorionData, setInorionData] = useState(()=>cachedInit("inorionData", []));
   const [inorionParticipants, setInorionParticipants] = useState(null);
   const [inorionParticipantsOpen, setInorionParticipantsOpen] = useState(false);
-  const [newParticipant, setNewParticipant] = useState({name:"",ticketType:"",referrer:"",appliedDate:"",count:"1"});
+  const [newParticipant, setNewParticipant] = useState({name:"",ticketType:"",referrer:"",appliedDate:"",count:"1",supportAmount:""});
   const [editingParticipantRow, setEditingParticipantRow] = useState(null);
   const [editingParticipantData, setEditingParticipantData] = useState({});
   const [participantMsg, setParticipantMsg] = useState("");
   const [inorionOutreach, setInorionOutreach] = useState(null);
   const [inorionOutreachOpen, setInorionOutreachOpen] = useState(false);
   const [newOutreachName, setNewOutreachName] = useState("");
+  const [newOutreachAssignee, setNewOutreachAssignee] = useState("");
   const [outreachMsg, setOutreachMsg] = useState("");
   const [inorionPage, setInorionPage] = useState(false);
   const [inorionMyOpen, setInorionMyOpen] = useState(false);
@@ -5530,10 +5543,11 @@ function App() {
     try {
       const res = await gasWrite({ action: "addinorionparticipant",
         name: newParticipant.name.trim(), ticketType: newParticipant.ticketType,
-        referrer: newParticipant.referrer, appliedDate: newParticipant.appliedDate, count: newParticipant.count || "1" });
+        referrer: newParticipant.referrer, appliedDate: newParticipant.appliedDate, count: newParticipant.count || "1",
+        supportAmount: newParticipant.supportAmount || "0" });
       if (res && res.success) {
         setParticipantMsg("✅ 追加しました");
-        setNewParticipant({name:"",ticketType:"",referrer:"",appliedDate:"",count:"1"});
+        setNewParticipant({name:"",ticketType:"",referrer:"",appliedDate:"",count:"1",supportAmount:""});
         await fetchInorionParticipants();
       } else {
         setParticipantMsg("❌ 追加に失敗しました");
@@ -5546,7 +5560,8 @@ function App() {
     try {
       const d = editingParticipantData;
       const res = await gasWrite({ action: "updateinorionparticipant", rowIndex: String(rowIndex),
-        name: d.name, ticketType: d.ticketType, referrer: d.referrer, appliedDate: d.appliedDate, count: d.count || "1" });
+        name: d.name, ticketType: d.ticketType, referrer: d.referrer, appliedDate: d.appliedDate, count: d.count || "1",
+        supportAmount: d.supportAmount || "0" });
       if (res && res.success) {
         setParticipantMsg("✅ 更新しました");
         setEditingParticipantRow(null);
@@ -5574,8 +5589,9 @@ function App() {
 
   async function submitNewOutreach() {
     if (!newOutreachName.trim()) { setOutreachMsg("❌ 名前を入力してください"); return; }
+    if (!newOutreachAssignee) { setOutreachMsg("❌ 担当者を選んでください"); return; }
     try {
-      const res = await gasWrite({ action: "addinorionoutreach", name: newOutreachName.trim() });
+      const res = await gasWrite({ action: "addinorionoutreach", name: newOutreachName.trim(), assignee: newOutreachAssignee });
       if (res && res.success) {
         setOutreachMsg("✅ 追加しました");
         setNewOutreachName("");
@@ -9659,18 +9675,29 @@ function App() {
             })()}
           </div>
 
-          {/* 参加者管理・声掛けリスト（DANiLOの管理画面専用） */}
-          {page==="admin" && !isInstructor && (
+          {/* 参加者管理・声掛けリスト（DANiLO＋講師陣） */}
+          {page==="admin" && (
             <>
             <div style={boxStyle}>
               {headerBtn("🎫 参加者管理", inorionParticipantsOpen, ()=>{setInorionParticipantsOpen(!inorionParticipantsOpen); if(inorionParticipants===null) fetchInorionParticipants();})}
               {inorionParticipantsOpen && (
                 <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
+                  {!isInstructor && (
+                  <>
                   <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:10}}>
                     <input placeholder="名前" value={newParticipant.name} onChange={e=>setNewParticipant({...newParticipant,name:e.target.value})}
                       style={{padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12}}/>
-                    <input placeholder="チケット種類" value={newParticipant.ticketType} onChange={e=>setNewParticipant({...newParticipant,ticketType:e.target.value})}
-                      style={{padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12}}/>
+                    <select value={newParticipant.ticketType} onChange={e=>setNewParticipant({...newParticipant,ticketType:e.target.value})}
+                      style={{padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12,background:"#fff"}}>
+                      <option value="">チケット種類を選択</option>
+                      {INORION_TICKET_TYPES.map(function(t){
+                        return <option key={t} value={t}>{t}{INORION_TICKET_PRICES[t]?"（"+INORION_TICKET_PRICES[t].toLocaleString()+"円）":INORION_TICKET_PRICES[t]===0?"（無料）":""}</option>;
+                      })}
+                    </select>
+                    {newParticipant.ticketType === "スポンサー" && (
+                      <input type="number" min="0" placeholder="支援金額（円）" value={newParticipant.supportAmount} onChange={e=>setNewParticipant({...newParticipant,supportAmount:e.target.value})}
+                        style={{padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12}}/>
+                    )}
                     <input placeholder="紹介者" value={newParticipant.referrer} onChange={e=>setNewParticipant({...newParticipant,referrer:e.target.value})}
                       style={{padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12}}/>
                     <div style={{display:"flex",gap:6}}>
@@ -9685,13 +9712,19 @@ function App() {
                     style={{width:"100%",padding:"9px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",marginBottom:14}}>
                     ＋ 参加者を追加
                   </button>
+                  </>
+                  )}
+                  {isInstructor && <p style={{fontSize:10,color:"#8a6a7a",marginBottom:10}}>※ 確認のみ（編集はDANiLOのみ可能）</p>}
                   {inorionParticipants === null ? (
                     <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>読み込み中...</p>
                   ) : inorionParticipants.length === 0 ? (
                     <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>まだ登録がありません</p>
                   ) : (
                     <>
-                    <p style={{fontSize:11,color:"#8a4a6a",marginBottom:8}}>合計申込人数：{inorionParticipants.reduce(function(s,p){return s+p.count;},0)}名</p>
+                    <div style={{marginBottom:8,padding:"8px 10px",background:"rgba(138,74,106,0.08)",borderRadius:8}}>
+                      <p style={{fontSize:11,color:"#8a4a6a"}}>合計申込人数：{inorionParticipants.reduce(function(s,p){return s+p.count;},0)}名</p>
+                      <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a"}}>合計金額：{inorionParticipants.reduce(function(s,p){return s+inorionParticipantAmount(p);},0).toLocaleString()}円</p>
+                    </div>
                     <div style={{display:"flex",flexDirection:"column",gap:8}}>
                       {inorionParticipants.map(function(p){
                         var isEditing = editingParticipantRow === p.rowIndex;
@@ -9701,8 +9734,17 @@ function App() {
                               <div style={{display:"flex",flexDirection:"column",gap:6}}>
                                 <input value={editingParticipantData.name} onChange={e=>setEditingParticipantData({...editingParticipantData,name:e.target.value})}
                                   style={{padding:"6px 8px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",fontSize:11}}/>
-                                <input value={editingParticipantData.ticketType} onChange={e=>setEditingParticipantData({...editingParticipantData,ticketType:e.target.value})}
-                                  placeholder="チケット種類" style={{padding:"6px 8px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",fontSize:11}}/>
+                                <select value={editingParticipantData.ticketType} onChange={e=>setEditingParticipantData({...editingParticipantData,ticketType:e.target.value})}
+                                  style={{padding:"6px 8px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",fontSize:11,background:"#fff"}}>
+                                  <option value="">チケット種類を選択</option>
+                                  {INORION_TICKET_TYPES.map(function(t){
+                                    return <option key={t} value={t}>{t}{INORION_TICKET_PRICES[t]?"（"+INORION_TICKET_PRICES[t].toLocaleString()+"円）":INORION_TICKET_PRICES[t]===0?"（無料）":""}</option>;
+                                  })}
+                                </select>
+                                {editingParticipantData.ticketType === "スポンサー" && (
+                                  <input type="number" min="0" placeholder="支援金額（円）" value={editingParticipantData.supportAmount} onChange={e=>setEditingParticipantData({...editingParticipantData,supportAmount:e.target.value})}
+                                    style={{padding:"6px 8px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",fontSize:11}}/>
+                                )}
                                 <input value={editingParticipantData.referrer} onChange={e=>setEditingParticipantData({...editingParticipantData,referrer:e.target.value})}
                                   placeholder="紹介者" style={{padding:"6px 8px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",fontSize:11}}/>
                                 <div style={{display:"flex",gap:6}}>
@@ -9722,17 +9764,19 @@ function App() {
                               <>
                                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:2}}>
                                   <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a"}}>{p.name}</span>
-                                  <span style={{fontSize:12,fontWeight:700,color:"#8a4a6a"}}>{p.count}名</span>
+                                  <span style={{fontSize:12,fontWeight:700,color:"#8a4a6a"}}>{p.count}名 ／ {inorionParticipantAmount(p).toLocaleString()}円</span>
                                 </div>
                                 <p style={{fontSize:10,color:"#8a6a7a",marginBottom:6}}>
-                                  {p.ticketType&&"🎫"+p.ticketType+" "}{p.referrer&&"／ 紹介："+p.referrer+" "}{p.appliedDate&&"／ 申込："+p.appliedDate}
+                                  {p.ticketType&&"🎫"+p.ticketType+" "}{p.ticketType==="スポンサー"&&p.supportAmount>0&&"（支援金額："+p.supportAmount.toLocaleString()+"円） "}{p.referrer&&"／ 紹介："+p.referrer+" "}{p.appliedDate&&"／ 申込："+p.appliedDate}
                                 </p>
+                                {!isInstructor && (
                                 <div style={{display:"flex",gap:6}}>
-                                  <button onClick={()=>{setEditingParticipantRow(p.rowIndex);setEditingParticipantData({name:p.name,ticketType:p.ticketType,referrer:p.referrer,appliedDate:p.appliedDate,count:String(p.count)});}}
+                                  <button onClick={()=>{setEditingParticipantRow(p.rowIndex);setEditingParticipantData({name:p.name,ticketType:p.ticketType,referrer:p.referrer,appliedDate:p.appliedDate,count:String(p.count),supportAmount:String(p.supportAmount||"")});}}
                                     style={{padding:"4px 10px",borderRadius:6,border:"1px solid rgba(138,74,106,0.3)",background:"#fff",color:"#8a4a6a",fontSize:10,cursor:"pointer"}}>✏️編集</button>
                                   <button onClick={()=>deleteParticipant(p.rowIndex)}
                                     style={{padding:"4px 10px",borderRadius:6,border:"1px solid rgba(160,64,48,0.3)",background:"#fff",color:"#a04030",fontSize:10,cursor:"pointer"}}>🗑️削除</button>
                                 </div>
+                                )}
                               </>
                             )}
                           </div>
@@ -9746,45 +9790,76 @@ function App() {
             </div>
 
             <div style={boxStyle}>
-              {headerBtn("📣 声掛けリスト", inorionOutreachOpen, ()=>{setInorionOutreachOpen(!inorionOutreachOpen); if(inorionOutreach===null) fetchInorionOutreach();})}
+              {headerBtn("📣 声掛けリスト", inorionOutreachOpen, ()=>{setInorionOutreachOpen(!inorionOutreachOpen); if(inorionOutreach===null) fetchInorionOutreach(); if(!newOutreachAssignee) setNewOutreachAssignee(isInstructor?(instructorName||""):"DANiLO");})}
               {inorionOutreachOpen && (
                 <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"16px"}}>
-                  <div style={{display:"flex",gap:6,marginBottom:10}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:6,marginBottom:10}}>
                     <input placeholder="名前" value={newOutreachName} onChange={e=>setNewOutreachName(e.target.value)}
-                      style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12}}/>
-                    <button onClick={submitNewOutreach}
-                      style={{padding:"8px 14px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
-                      ＋ 追加
-                    </button>
+                      style={{padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12}}/>
+                    <div style={{display:"flex",gap:6}}>
+                      <select value={newOutreachAssignee} onChange={e=>setNewOutreachAssignee(e.target.value)}
+                        style={{flex:1,padding:"8px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",fontSize:12,background:"#fff"}}>
+                        <option value="">担当者を選択</option>
+                        {["DANiLO","Yamashita Noriko","hiroko","灯音(to•o•n)"].map(function(n){
+                          return <option key={n} value={n}>{n}</option>;
+                        })}
+                      </select>
+                      <button onClick={submitNewOutreach}
+                        style={{padding:"8px 14px",borderRadius:8,border:"none",background:"linear-gradient(135deg,#c87aaa,#8a4a6a)",color:"#fff",fontSize:12,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
+                        ＋ 追加
+                      </button>
+                    </div>
                   </div>
                   {outreachMsg && <p style={{fontSize:11,color:outreachMsg.startsWith("✅")?"#2a7a3a":"#a04030",marginBottom:8}}>{outreachMsg}</p>}
                   {inorionOutreach === null ? (
                     <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>読み込み中...</p>
                   ) : inorionOutreach.length === 0 ? (
                     <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>まだ登録がありません</p>
-                  ) : (
-                    <div style={{display:"flex",flexDirection:"column",gap:6}}>
-                      {inorionOutreach.map(function(o){
-                        return (
-                          <div key={o.rowIndex} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",background:"rgba(138,74,106,0.05)",borderRadius:8,border:"1px solid rgba(138,74,106,0.15)"}}>
-                            <span style={{fontSize:12,fontWeight:600,color:"#6a2a4a",flex:1}}>{o.name}</span>
-                            <button onClick={()=>toggleOutreachContacted(o.rowIndex,o.contacted)}
-                              style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+(o.contacted?"#2a7a3a":"rgba(138,74,106,0.3)"),background:o.contacted?"rgba(42,122,58,0.1)":"#fff",color:o.contacted?"#2a7a3a":"#8a6a7a",fontSize:10,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
-                              {o.contacted?"✅声掛け済":"声掛け未"}
-                            </button>
-                            <select value={o.status} onChange={e=>setOutreachStatus(o.rowIndex,e.target.value)}
-                              style={{fontSize:10,padding:"4px 6px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",color:o.status==="参加"?"#2a7a3a":o.status==="不参加"?"#a04030":"#8a6a7a"}}>
-                              <option value="未定">未定</option>
-                              <option value="参加">参加</option>
-                              <option value="不参加">不参加</option>
-                            </select>
-                            <button onClick={()=>deleteOutreach(o.rowIndex)}
-                              style={{padding:"4px 8px",borderRadius:6,border:"1px solid rgba(160,64,48,0.3)",background:"#fff",color:"#a04030",fontSize:10,cursor:"pointer"}}>🗑️</button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                  ) : (function(){
+                    var groups = {};
+                    inorionOutreach.forEach(function(o){
+                      var key = o.assignee || "未設定";
+                      if (!groups[key]) groups[key] = [];
+                      groups[key].push(o);
+                    });
+                    var assigneeNames = Object.keys(groups);
+                    return (
+                      <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:6}}>
+                        {assigneeNames.map(function(assignee){
+                          return (
+                            <div key={assignee} style={{minWidth:180,flexShrink:0}}>
+                              <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:6,padding:"4px 8px",background:"rgba(138,74,106,0.1)",borderRadius:6,textAlign:"center"}}>
+                                {assignee}（{groups[assignee].length}名）
+                              </p>
+                              <div style={{display:"flex",flexDirection:"column",gap:6}}>
+                                {groups[assignee].map(function(o){
+                                  return (
+                                    <div key={o.rowIndex} style={{padding:"7px 8px",background:"rgba(138,74,106,0.05)",borderRadius:8,border:"1px solid rgba(138,74,106,0.15)"}}>
+                                      <p style={{fontSize:12,fontWeight:600,color:"#6a2a4a",marginBottom:6}}>{o.name}</p>
+                                      <div style={{display:"flex",gap:4,marginBottom:4}}>
+                                        <button onClick={()=>toggleOutreachContacted(o.rowIndex,o.contacted)}
+                                          style={{flex:1,padding:"4px 6px",borderRadius:6,border:"1px solid "+(o.contacted?"#2a7a3a":"rgba(138,74,106,0.3)"),background:o.contacted?"rgba(42,122,58,0.1)":"#fff",color:o.contacted?"#2a7a3a":"#8a6a7a",fontSize:9,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
+                                          {o.contacted?"✅声掛け済":"声掛け未"}
+                                        </button>
+                                        <button onClick={()=>deleteOutreach(o.rowIndex)}
+                                          style={{padding:"4px 6px",borderRadius:6,border:"1px solid rgba(160,64,48,0.3)",background:"#fff",color:"#a04030",fontSize:9,cursor:"pointer"}}>🗑️</button>
+                                      </div>
+                                      <select value={o.status} onChange={e=>setOutreachStatus(o.rowIndex,e.target.value)}
+                                        style={{width:"100%",fontSize:10,padding:"4px 6px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",color:o.status==="参加"?"#2a7a3a":o.status==="不参加"?"#a04030":"#8a6a7a"}}>
+                                        <option value="未定">未定</option>
+                                        <option value="参加">参加</option>
+                                        <option value="不参加">不参加</option>
+                                      </select>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
             </div>
