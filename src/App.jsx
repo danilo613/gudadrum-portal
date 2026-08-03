@@ -5146,8 +5146,11 @@ function App() {
     try {
       const res = await fetch("/api/gas?action=getpoints");
       const data = await res.json();
-      if (data.history) { setAllPointHistory(data.history); setAllPointsLoaded(true); }
-    } catch(e) {}
+      setAllPointHistory(data.history || []);
+    } catch(e) {
+      setAllPointHistory([]);
+    }
+    setAllPointsLoaded(true);
   }
 
   async function fetchUnprocessedPoints() {
@@ -5430,8 +5433,11 @@ function App() {
   async function fetchSubscriptions() {
     try {
       const res = await gasRead({ action: "getsubscriptions" });
-      if (res.subscriptions) { setSubscriptions(res.subscriptions); setSubsLoaded(true); }
-    } catch(e) {}
+      setSubscriptions((res && res.subscriptions) || []);
+    } catch(e) {
+      setSubscriptions([]);
+    }
+    setSubsLoaded(true);
   }
 
   async function fetchNotices() {
@@ -5457,8 +5463,11 @@ function App() {
   async function fetchSetlist() {
     try {
       const res = await gasRead({ action: "getsetlist" });
-      if (res.rows) { setSetlistRows(res.rows); setSetlistLoaded(true); }
-    } catch(e) {}
+      setSetlistRows((res && res.rows) || []);
+    } catch(e) {
+      setSetlistRows([]);
+    }
+    setSetlistLoaded(true);
   }
 
   async function fetchPractice() {
@@ -5467,10 +5476,13 @@ function App() {
         gasRead({ action: "getpracticesessions" }),
         gasRead({ action: "getpracticeanswers" })
       ]);
-      if (s.sessions) setPracticeSessions(s.sessions);
-      if (a.answers) setPracticeAnswers(a.answers);
-      setPracticeLoaded(true);
-    } catch(e) {}
+      setPracticeSessions((s && s.sessions) || []);
+      setPracticeAnswers((a && a.answers) || []);
+    } catch(e) {
+      setPracticeSessions([]);
+      setPracticeAnswers([]);
+    }
+    setPracticeLoaded(true);
   }
 
   async function fetchMemberMap() {
@@ -5519,8 +5531,10 @@ function App() {
   async function fetchInorionParticipants() {
     try {
       const res = await gasWrite({ action: "getinorionparticipants" });
-      if (res && res.rows) setInorionParticipants(res.rows);
-    } catch(e) {}
+      setInorionParticipants((res && res.rows) || []);
+    } catch(e) {
+      setInorionParticipants([]);
+    }
   }
 
   async function submitNewParticipant() {
@@ -5568,8 +5582,10 @@ function App() {
   async function fetchInorionOutreach() {
     try {
       const res = await gasWrite({ action: "getinorionoutreach" });
-      if (res && res.rows) setInorionOutreach(res.rows);
-    } catch(e) {}
+      setInorionOutreach((res && res.rows) || []);
+    } catch(e) {
+      setInorionOutreach([]);
+    }
   }
 
   async function submitNewOutreach() {
@@ -5816,34 +5832,9 @@ function App() {
   }
 
   async function gasRead(params) {
-    return new Promise(function(resolve, reject) {
-      var cbName = "gasCb_" + Date.now() + "_" + Math.random().toString(36).slice(2);
-      window[cbName] = function(data) {
-        delete window[cbName];
-        var el = document.getElementById(cbName);
-        if(el) el.remove();
-        resolve(data);
-      };
-      var script = document.createElement("script");
-      script.id = cbName;
-      var urlParams = new URLSearchParams(params);
-      urlParams.set("callback", cbName);
-      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?" + urlParams.toString();
-      script.onerror = function() {
-        delete window[cbName];
-        script.remove();
-        reject(new Error("GAS request failed"));
-      };
-      document.body.appendChild(script);
-      setTimeout(function() {
-        if(window[cbName]) {
-          delete window[cbName];
-          var el = document.getElementById(cbName);
-          if(el) el.remove();
-          reject(new Error("GAS timeout"));
-        }
-      }, 15000);
-    });
+    // 以前は別の（古い・不安定な）GASプロジェクトをJSONPで呼んでいたが、
+    // 同じ機能がすべて新しい方（gasWrite / /api/gas）に実装済みのため、そちらに一本化する。
+    return await gasWrite(params);
   }
 
   async function loadPurchasedScores(name) {
@@ -7987,7 +7978,7 @@ function App() {
                     <span style={{fontSize:12,fontWeight:700,color:C.choco}}>次回支払合計</span>
                     <span style={{fontSize:14,fontWeight:700,color:"#a89a00"}}>
                       ¥{subscriptions.reduce(function(sum,s){
-                        var PLAN_AMOUNT2={"蕾気軽サブスク":2400,"蕾気軽サブスク":2400,"幹ノーマル":6900,"幹 ノーマル":6900,"幹スペシャル":12900,"幹 スペシャル":12900};
+                        var PLAN_AMOUNT2={"蕾気軽サブスク":2400,"蕾 気軽サブスク":2400,"幹ノーマル":6900,"幹 ノーマル":6900,"幹スペシャル":12900,"幹 スペシャル":12900};
                         return sum+(PLAN_AMOUNT2[s.plan]||0);
                       },0).toLocaleString()}
                     </span>
