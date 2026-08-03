@@ -5155,7 +5155,8 @@ function App() {
       const res = await gasWrite({ action: "recalcallpoints" });
       if (res && res.success) {
         setRecalcResult({ ok: true, updatedCount: res.updatedCount, changes: res.changes || [] });
-        autoFetch(); // メンバー一覧のポイント表示も最新化する
+        autoFetch();
+        fetchAllPointHistory();
       } else {
         setRecalcResult({ ok: false, error: (res && res.error) || "不明なエラー" });
       }
