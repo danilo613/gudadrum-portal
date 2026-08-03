@@ -6114,7 +6114,7 @@ function App() {
       var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
       svgDLarge+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="13" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
     });
-    var svgLarge='<svg viewBox="0 0 140 166" width="'+(hasInst2?200:280)+'" height="'+(hasInst2?237:331)+'" style="flex-shrink:0">'
+    var svgLarge='<svg viewBox="0 0 140 166" width="'+(hasInst2?170:280)+'" height="'+(hasInst2?201:331)+'" style="flex-shrink:0">'
       +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
       +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
       +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>'
@@ -6128,23 +6128,25 @@ function App() {
         var fill=usedC2[color]?SCORE_HIBIKI_COLORS[color]:"#e8e6e2";
         svgDLarge2+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="13" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
       });
-      svgLarge2='<svg viewBox="0 0 140 166" width="200" height="237" style="flex-shrink:0">'
+      svgLarge2='<svg viewBox="0 0 140 166" width="170" height="201" style="flex-shrink:0">'
         +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
+        +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
+        +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>'
         +svgDLarge2+'</svg>';
     }
-    var labeled1='<div style="text-align:center">'
+    var labeled1='<div style="text-align:center;flex-shrink:0">'
         +'<div style="font-size:9px;color:#888;margin-bottom:2px">'+(hasInst2?"風ノ音":"")+'</div>'
         +svgLarge
       +'</div>';
-    var labeled2=hasInst2?('<div style="text-align:center">'
+    var labeled2=hasInst2?('<div style="text-align:center;flex-shrink:0">'
         +'<div style="font-size:9px;color:#888;margin-bottom:2px">響ノ音</div>'
         +svgLarge2
       +'</div>'):"";
-    var illustrationsHtml = '<div style="display:flex;justify-content:center;gap:16px;margin-bottom:8px">'
-        +(swapLR2 ? (labeled1+labeled2) : (labeled2+labeled1))
+    var illustrationsHtml=(swapLR2 ? (labeled1+labeled2) : (labeled2+labeled1));
+    var rowsCombined = '<div style="display:flex;align-items:flex-start;gap:16px">'
+        +illustrationsHtml
+        +'<div style="flex:1;min-width:0">'+gridHtml+'</div>'
       +'</div>';
-    var rowsCombined = illustrationsHtml
-      +'<div>'+gridHtml+'</div>';
     return ''
       +'<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0">'
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
