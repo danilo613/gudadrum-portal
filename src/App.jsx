@@ -3918,6 +3918,9 @@ function App() {
   const [subsPointNote, setSubsPointNote] = useState({});
   const [subsPointMsg, setSubsPointMsg] = useState({});
   const [subsPointBusy, setSubsPointBusy] = useState({});
+  const [recalcConfirming, setRecalcConfirming] = useState(false);
+  const [recalcRunning, setRecalcRunning] = useState(false);
+  const [recalcResult, setRecalcResult] = useState(null);
   const [subsEditContractDate, setSubsEditContractDate] = useState("");
   const [subsEditRenewDate, setSubsEditRenewDate] = useState("");
   const [mapPage, setMapPage] = useState(false);
@@ -5143,6 +5146,24 @@ function App() {
       const data = await res.json();
       if (data.history) setPointHistory(data.history);
     } catch(e) {}
+  }
+
+  async function recalcAllMemberPoints() {
+    setRecalcRunning(true);
+    setRecalcResult(null);
+    try {
+      const res = await gasWrite({ action: "recalcallpoints" });
+      if (res && res.success) {
+        setRecalcResult({ ok: true, updatedCount: res.updatedCount, changes: res.changes || [] });
+        autoFetch(); // メンバー一覧のポイント表示も最新化する
+      } else {
+        setRecalcResult({ ok: false, error: (res && res.error) || "不明なエラー" });
+      }
+    } catch(e) {
+      setRecalcResult({ ok: false, error: "通信に失敗しました" });
+    }
+    setRecalcRunning(false);
+    setRecalcConfirming(false);
   }
 
   async function fetchAllPointHistory() {
@@ -8498,6 +8519,49 @@ function App() {
         )}
         {showAllPoints && (
           <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            {/* 全メンバーのポイント再計算（ポイント履歴を手動で修正した後などに使う） */}
+            <div style={{marginBottom:14,padding:"10px 12px",background:"rgba(112,130,56,0.06)",border:"1px solid rgba(112,130,56,0.2)",borderRadius:10}}>
+              <p style={{fontSize:11,color:"#708238",marginBottom:8,lineHeight:1.6}}>
+                ポイント履歴シートの行を手動で削除・修正した場合、メンバー記録側の保有ポイント数は自動では更新されません。ここから、全メンバー分を履歴に基づいて正しく計算し直せます（「調整」の記録は上書きとして正しく扱われます）。
+              </p>
+              {recalcResult && (
+                recalcResult.ok ? (
+                  <div style={{marginBottom:8}}>
+                    <p style={{fontSize:12,fontWeight:700,color:"#708238",marginBottom:6}}>✅ 完了：{recalcResult.updatedCount}名分を更新しました</p>
+                    {recalcResult.changes.length > 0 && (
+                      <div style={{maxHeight:160,overflowY:"auto"}}>
+                        {recalcResult.changes.map(function(c,i){
+                          return (
+                            <p key={i} style={{fontSize:10,color:C.label}}>
+                              {c.name}：{c.before.toLocaleString()} → <span style={{fontWeight:700,color:"#708238"}}>{c.after.toLocaleString()}</span>
+                            </p>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p style={{fontSize:12,color:"#a04030",marginBottom:8}}>❌ {recalcResult.error}</p>
+                )
+              )}
+              {recalcConfirming ? (
+                <div style={{display:"flex",gap:6}}>
+                  <button onClick={recalcAllMemberPoints} disabled={recalcRunning}
+                    style={{flex:1,fontSize:12,padding:"7px 0",borderRadius:8,border:"none",background:"#a04030",color:"#fff",cursor:recalcRunning?"default":"pointer",fontWeight:600,opacity:recalcRunning?0.6:1}}>
+                    {recalcRunning?"計算中...":"本当に実行する"}
+                  </button>
+                  <button onClick={()=>setRecalcConfirming(false)} disabled={recalcRunning}
+                    style={{flex:1,fontSize:12,padding:"7px 0",borderRadius:8,border:"1px solid "+C.border,background:"#fff",color:C.label,cursor:"pointer"}}>
+                    取消
+                  </button>
+                </div>
+              ) : (
+                <button onClick={()=>{setRecalcConfirming(true);setRecalcResult(null);}}
+                  style={{width:"100%",fontSize:12,padding:"7px 0",borderRadius:8,border:"1px solid #708238",background:"#fff",color:"#708238",cursor:"pointer",fontWeight:600}}>
+                  🔄 全メンバーのポイントを再計算する
+                </button>
+              )}
+            </div>
             {/* 未処理リスト */}
             <div style={{marginBottom:14,padding:"10px 12px",background:"rgba(224,60,60,0.05)",border:"1px solid rgba(224,60,60,0.2)",borderRadius:10}}>
               <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
