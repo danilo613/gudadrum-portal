@@ -5018,6 +5018,7 @@ function App() {
 
   const [scorePatterns,  setScorePatterns]  = useState({});
   const [scoreLoading,   setScoreLoading]   = useState(false);
+  const [scoreLoadError, setScoreLoadError] = useState(null);
   const [currentScoreId, setCurrentScoreId] = useState("waterlily");
   const [scoreEditOpen,  setScoreEditOpen]  = useState(false);
   const [editFullscreen, setEditFullscreen] = useState(false);
@@ -6021,9 +6022,11 @@ function App() {
     // 既にキャッシュがあればスキップ
     if(scorePatterns[scoreId] && Object.keys(scorePatterns[scoreId]).length > 0) return;
     setScoreLoading(true);
+    setScoreLoadError(null);
     try {
       const sheetName = SCORE_SHEET_MAP[scoreId]||"SCORE";
       const res = await gasRead({ action:"getscores", score_id:scoreId, sheet_name:sheetName });
+      if (!res) throw new Error("応答がありませんでした");
       const rows = res.rows || [];
       const patterns = {};
       rows.forEach(function(r) {
@@ -6038,7 +6041,10 @@ function App() {
       setScorePatterns(function(prev){
         return Object.assign({}, prev, {[scoreId]: patterns});
       });
-    } catch(e) { console.warn("loadScorePatterns error:", e); }
+    } catch(e) {
+      console.warn("loadScorePatterns error:", e);
+      setScoreLoadError(scoreId); // 画面側で「読み込みに失敗しました。再読み込み」を出せるようにする
+    }
     setScoreLoading(false);
   }
 
@@ -6984,6 +6990,15 @@ function App() {
       {/* ScorePlayer */}
       <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
         {scoreLoading && <p style={{textAlign:"center",color:C.label,fontSize:12,padding:8}}>読込中…</p>}
+        {!scoreLoading && scoreLoadError===currentScoreId && (
+          <div style={{textAlign:"center",padding:16}}>
+            <p style={{color:"#a04030",fontSize:12,marginBottom:8}}>譜面の読み込みに失敗しました。通信が混み合っている可能性があります。</p>
+            <button onClick={()=>loadScorePatterns(currentScoreId)}
+              style={{padding:"8px 20px",borderRadius:10,border:"1px solid #708238",background:"#fff",color:"#708238",fontSize:13,fontWeight:600,cursor:"pointer"}}>
+              🔄 もう一度読み込む
+            </button>
+          </div>
+        )}
         <ScorePlayer
           key={currentScoreId}
           scoreId={currentScoreId}
