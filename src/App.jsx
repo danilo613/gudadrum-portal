@@ -6022,8 +6022,7 @@ function App() {
         +svgLarge2
       +'</div>'):"";
     var illustrationsHtml=(swapLR2 ? (labeled1+labeled2) : (labeled2+labeled1));
-    return ''
-      +'<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0">'
+    var headerFullHtml = '<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0">'
         +'<div style="display:flex;justify-content:space-between;align-items:flex-start">'
           +'<div>'
             +'<div style="font-size:18px;font-weight:700;color:#1a3a2a;margin-bottom:2px">'+scoreTitle+'</div>'
@@ -6034,11 +6033,30 @@ function App() {
           +'</div>'
           +'<div style="font-size:8px;color:#ccc;text-align:right;line-height:1.6">© 2026 by オフィススターシーヅ・<br>「GUDAdrum」はオフィススターシーヅ・の登録商標です<br>（登録第6018643号）</div>'
         +'</div>'
-      +'</div>'
-      +'<div style="display:flex;align-items:flex-start;gap:16px">'
-        +illustrationsHtml
-        +'<div style="flex:1;min-width:0">'+gridHtml+'</div>'
       +'</div>';
+    // 8小節ごとに、ページを分けて出力する（イラストは各ページに毎回載せる）
+    var numPages = Math.ceil(nb/8);
+    var pagesHtml = "";
+    for(var pg=0; pg<numPages; pg++){
+      var pageGridHtml = '<div style="display:flex;flex-wrap:nowrap;gap:1px;margin-bottom:4px">';
+      for(var pb=pg*8; pb<Math.min((pg+1)*8,nb); pb++) pageGridHtml += barsArr[pb]||"";
+      pageGridHtml += '</div>';
+      var headerHtml = (pg===0)
+        ? headerFullHtml
+        : ('<div style="margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #e0e0e0;display:flex;justify-content:space-between;align-items:baseline">'
+            +'<div style="font-size:14px;font-weight:700;color:#1a3a2a">'+scoreTitle+' － '+secLabel+'</div>'
+            +'<div style="font-size:10px;color:#999">（'+(pg+1)+'/'+numPages+'）</div>'
+          +'</div>');
+      var pageBreakStyle = (pg < numPages-1) ? 'page-break-after:always;' : '';
+      pagesHtml += '<div style="'+pageBreakStyle+'">'
+          +headerHtml
+          +'<div style="display:flex;align-items:flex-start;gap:16px">'
+            +illustrationsHtml
+            +'<div style="flex:1;min-width:0">'+pageGridHtml+'</div>'
+          +'</div>'
+        +'</div>';
+    }
+    return pagesHtml;
   }
 
   function printSection(scoreId, secKey, secLabel, nt, pd, allPatterns) {
