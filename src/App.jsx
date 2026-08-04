@@ -8378,7 +8378,7 @@ function App() {
         {!isInstructor && (
           <button onClick={()=>{setShowWorkouts(!showWorkouts); if(!showWorkouts && !workoutHistory) fetchAllWorkouts();}}
             style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
-            💪 筋トレ履歴 {showWorkouts?"▲":"▼"}
+            💪 筋トレ履歴（直近1ヶ月） {showWorkouts?"▲":"▼"}
           </button>
         )}
         {!isInstructor && showWorkouts&&(
