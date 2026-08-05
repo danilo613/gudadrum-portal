@@ -3124,9 +3124,9 @@ function renderSideGrid2(barIdx, side){
             {instrument2&&!swapLR&&(
               <div style={{textAlign:"center"}}>
                 <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                <svg viewBox={scale==="nostalgic"?"-16 0 172 166":"0 0 140 166"} width="140" height="166">
+                <svg viewBox={scale==="nostalgic"?"-32 0 204 166":"0 0 140 166"} width="140" height="166">
                   <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                  {scale==="nostalgic" ? <><text x="-12" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="152" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                  {scale==="nostalgic" ? <><text x="-26" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="166" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
                   {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                   {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                       var pos=SCORE_DOTS_HIBIKI[color];
@@ -3154,12 +3154,12 @@ function renderSideGrid2(barIdx, side){
             <div style={{textAlign:"center"}}>
               {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
               <div style={{width:140}}>
-              <svg viewBox={scale==="nostalgic"?"-16 0 172 166":"0 0 140 166"} width="140" height="166">
+              <svg viewBox={scale==="nostalgic"?"-32 0 204 166":"0 0 140 166"} width="140" height="166">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {scale==="nostalgic" ? (
                 <>
-                  <text x="-12" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
-                  <text x="152" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
+                  <text x="-26" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>
+                  <text x="166" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>
                 </>
               ) : (
                 <>
@@ -3206,9 +3206,9 @@ function renderSideGrid2(barIdx, side){
           {instrument2&&swapLR&&(
             <div style={{textAlign:"center"}}>
               <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-              <svg viewBox={scale==="nostalgic"?"-16 0 172 166":"0 0 140 166"} width="140" height="166">
+              <svg viewBox={scale==="nostalgic"?"-32 0 204 166":"0 0 140 166"} width="140" height="166">
                 <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                {scale==="nostalgic" ? <><text x="-12" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="152" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                {scale==="nostalgic" ? <><text x="-26" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="166" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
                 {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                 {Object.keys(SCORE_DOTS_HIBIKI).map(function(color){
                   var pos=SCORE_DOTS_HIBIKI[color];
@@ -3268,9 +3268,9 @@ function renderSideGrid2(barIdx, side){
               return (
                 <div style={{textAlign:"center"}}>
                   <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                  <svg viewBox={scale==="nostalgic"?"-16 0 172 166":"0 0 140 166"} width="120" height="142">
+                  <svg viewBox={scale==="nostalgic"?"-32 0 204 166":"0 0 140 166"} width="120" height="142">
                     <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                    {scale==="nostalgic" ? <><text x="-12" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="152" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                    {scale==="nostalgic" ? <><text x="-26" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="166" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
                     {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                     {(function(){
                       var used2={};
@@ -3305,12 +3305,12 @@ function renderSideGrid2(barIdx, side){
             })()}
             <div style={{textAlign:"center"}}>
               {instrument2&&<div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>風ノ音</div>}
-              <svg viewBox={scale==="nostalgic"?"-16 0 172 166":"0 0 140 166"} width="120" height="142">
+              <svg viewBox={scale==="nostalgic"?"-32 0 204 166":"0 0 140 166"} width="120" height="142">
               <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
               {scale==="nostalgic" ? (
                 <>
-                  <text x="-12" y="86" textAnchor="start" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
-                  <text x="152" y="86" textAnchor="end" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
+                  <text x="-26" y="86" textAnchor="start" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">高音</text>
+                  <text x="166" y="86" textAnchor="end" fontSize="9" fontWeight="500" fill="#999" fontFamily="sans-serif">低音</text>
                 </>
               ) : (
                 <>
@@ -3359,9 +3359,9 @@ function renderSideGrid2(barIdx, side){
               return (
                 <div style={{textAlign:"center"}}>
                   <div style={{fontSize:11,color:C.label,marginBottom:4,fontWeight:600}}>響ノ音</div>
-                  <svg viewBox={scale==="nostalgic"?"-16 0 172 166":"0 0 140 166"} width="120" height="142">
+                  <svg viewBox={scale==="nostalgic"?"-32 0 204 166":"0 0 140 166"} width="120" height="142">
                     <circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" strokeWidth="0.4"/>
-                    {scale==="nostalgic" ? <><text x="-12" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="152" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
+                    {scale==="nostalgic" ? <><text x="-26" y="86" textAnchor="start" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text><text x="166" y="86" textAnchor="end" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text></> : <text x="70" y="10" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">低音</text>}
                     {scale!=="nostalgic" && <text x="70" y="162" textAnchor="middle" fontSize="10" fontFamily="sans-serif" fill="#999">高音</text>}
                     {Object.keys(DOTS_I).map(function(color){
                       var pos=DOTS_I[color];
@@ -5944,10 +5944,10 @@ function App() {
       var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
       svgD+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="12" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
     });
-    var svgHtml='<svg viewBox="'+(isRotatedAxis?"-16 0 172 166":"0 0 140 166")+'" width="110" height="130" style="flex-shrink:0">'
+    var svgHtml='<svg viewBox="'+(isRotatedAxis?"-32 0 204 166":"0 0 140 166")+'" width="110" height="130" style="flex-shrink:0">'
       +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
       +(isRotatedAxis
-        ? '<text x="-12" y="86" text-anchor="start" font-size="10" font-family="sans-serif" fill="#999">高音</text><text x="152" y="86" text-anchor="end" font-size="9" fill="#999">低音</text>'
+        ? '<text x="-26" y="86" text-anchor="start" font-size="10" font-family="sans-serif" fill="#999">高音</text><text x="166" y="86" text-anchor="end" font-size="9" fill="#999">低音</text>'
         : '<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
           +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>')
       +svgD+'</svg>';
@@ -6001,10 +6001,10 @@ function App() {
       var fill=usedC[color]?SCORE_DOT_COLORS[color]:SCORE_PALE_COLORS[color];
       svgDLarge+='<circle cx="'+pos.cx+'" cy="'+pos.cy+'" r="13" fill="'+fill+'" stroke="white" stroke-width="1.5"/>';
     });
-    var svgLarge='<svg viewBox="'+(isRotatedAxis?"-16 0 172 166":"0 0 140 166")+'" width="'+(hasInst2?170:280)+'" height="'+(hasInst2?201:331)+'" style="flex-shrink:0">'
+    var svgLarge='<svg viewBox="'+(isRotatedAxis?"-32 0 204 166":"0 0 140 166")+'" width="'+(hasInst2?170:280)+'" height="'+(hasInst2?201:331)+'" style="flex-shrink:0">'
       +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
       +(isRotatedAxis
-        ? '<text x="-12" y="86" text-anchor="start" font-size="10" font-family="sans-serif" fill="#999">高音</text><text x="152" y="86" text-anchor="end" font-size="9" fill="#999">低音</text>'
+        ? '<text x="-26" y="86" text-anchor="start" font-size="10" font-family="sans-serif" fill="#999">高音</text><text x="166" y="86" text-anchor="end" font-size="9" fill="#999">低音</text>'
         : '<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
           +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>')
       +svgDLarge+'</svg>';
