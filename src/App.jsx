@@ -10036,6 +10036,17 @@ function App() {
                       if (!groups[key]) groups[key] = [];
                       groups[key].push(o);
                     });
+                    // 並び替え：①参加確定の人を最優先 →②声掛け完了の人 →③それ以外
+                    Object.keys(groups).forEach(function(key){
+                      groups[key].sort(function(a,b){
+                        var scoreOf = function(o){
+                          if (o.status === "参加") return 0;
+                          if (o.contacted) return 1;
+                          return 2;
+                        };
+                        return scoreOf(a) - scoreOf(b);
+                      });
+                    });
                     var assigneeNames = Object.keys(groups);
                     return (
                       <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:6}}>
