@@ -366,11 +366,7 @@ function getSoundUrls(scoreId, soundType) {
   if(CUSTOM_SONGS[scoreId]) return SCORE_SOUND_URLS[CUSTOM_SONGS[scoreId].scale] || SCORE_SOUND_URLS.default;
   return SCORE_SOUND_URLS.default;
 }
-const SCORE_SHEET_MAP = {
-  // scoreId: GASのシート名（未定義の場合はデフォルトの"SCORE"シートを使用）
-  inori: "SCORE_inori",
-  kigaru: "SCORE_kigaru",
-};
+// SCORE_SHEET_MAP は廃止（GAS側で曲IDから自動的にシート名を決めるようになったため、手動登録は不要になった）
 
 const SCORE_DEFAULT_BPM = {
   waterlily: 97,
@@ -6093,8 +6089,7 @@ function App() {
     setScoreLoading(true);
     setScoreLoadError(null);
     try {
-      const sheetName = SCORE_SHEET_MAP[scoreId]||"SCORE";
-      const res = await gasRead({ action:"getscores", score_id:scoreId, sheet_name:sheetName });
+      const res = await gasRead({ action:"getscores", score_id:scoreId });
       if (!res) throw new Error("応答がありませんでした");
       const rows = res.rows || [];
       const patterns = {};
@@ -6163,8 +6158,7 @@ function App() {
     try {
       for(var i=0;i<calls.length;i++){
         var c=calls[i];
-        var sn=SCORE_SHEET_MAP[scoreId]||"SCORE";
-        await gasRead({action:"savescore",score_id:scoreId,section:section,hand:c.hand,color:c.color,pattern:c.pattern,sheet_name:sn});
+        await gasRead({action:"savescore",score_id:scoreId,section:section,hand:c.hand,color:c.color,pattern:c.pattern});
       }
     } catch(e) {
       console.error("GAS保存エラー:", e);
@@ -9341,7 +9335,7 @@ function App() {
             <h3 style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>🎼 譜面購入設定</h3>
             <p style={{fontSize:13,color:C.label,marginBottom:16}}>対象：<strong>{scoreModal.name}</strong></p>
             <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:16}}>
-              {[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].map(([id,lbl]) => {
+              {[["waterlily","water lily〜水面〜"],["waterlily2","water lily"],["nostalgic","NoStAlGiE"],["holychild","holy child"],["dreamy","dreamy EYES"],["aoi","蒼〜aoi〜"],["iridescence","iridescence"],["megumi","めぐみの空"],["inori","祈音〜Inorion〜"],["regrace","Re:Grace"]].concat((songMasterList||[]).map(function(s){return [s.scoreId, s.title];})).map(([id,lbl]) => {
                 const isPurchased = scoreModal.purchased.includes(id);
                 return (
                   <div key={id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 12px",borderRadius:10,background:isPurchased?"rgba(112,130,56,0.12)":"rgba(0,0,0,0.03)",border:"1px solid "+(isPurchased?C.olive:C.border)}}>
