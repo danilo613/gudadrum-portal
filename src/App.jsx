@@ -10008,10 +10008,11 @@ function App() {
                     Object.keys(groups).forEach(function(key){
                       groups[key].sort(function(a,b){
                         var scoreOf = function(o){
-                          if (o.status === "不参加") return 3;
-                          if (o.status === "参加") return 0;
-                          if (o.contacted) return 1;
-                          return 2;
+                          if (o.status === "不参加") return 4;
+                          if (o.status === "申し込み済み") return 0;
+                          if (o.status === "参加") return 1;
+                          if (o.contacted) return 2;
+                          return 3;
                         };
                         var sa=scoreOf(a), sb=scoreOf(b);
                         if (sa !== sb) return sa - sb;
@@ -10031,11 +10032,11 @@ function App() {
                               </p>
                               <div style={{display:"flex",flexDirection:"column",gap:6}}>
                                 {groups[assignee].map(function(o){
-                                  var boxBg = o.status==="参加" ? "rgba(42,122,58,0.12)" : o.status==="不参加" ? "rgba(160,64,48,0.1)" : "rgba(138,74,106,0.05)";
-                                  var boxBorder = o.status==="参加" ? "1px solid rgba(42,122,58,0.4)" : o.status==="不参加" ? "1px solid rgba(160,64,48,0.35)" : "1px solid rgba(138,74,106,0.15)";
+                                  var boxBg = o.status==="申し込み済み" ? "rgba(216,160,20,0.15)" : o.status==="参加" ? "rgba(42,122,58,0.12)" : o.status==="不参加" ? "rgba(160,64,48,0.1)" : "rgba(138,74,106,0.05)";
+                                  var boxBorder = o.status==="申し込み済み" ? "1px solid rgba(216,160,20,0.45)" : o.status==="参加" ? "1px solid rgba(42,122,58,0.4)" : o.status==="不参加" ? "1px solid rgba(160,64,48,0.35)" : "1px solid rgba(138,74,106,0.15)";
                                   return (
                                     <div key={o.rowIndex} style={{padding:"7px 8px",background:boxBg,borderRadius:8,border:boxBorder}}>
-                                      <p style={{fontSize:12,fontWeight:600,color:"#6a2a4a",marginBottom:6}}>{o.name}</p>
+                                      <p style={{fontSize:12,fontWeight:600,color:"#6a2a4a",marginBottom:6}}>{o.status==="申し込み済み"&&"💮 "}{o.name}</p>
                                       <div style={{display:"flex",gap:4,marginBottom:4}}>
                                         <button onClick={()=>toggleOutreachContacted(o.rowIndex,o.contacted)}
                                           style={{flex:1,padding:"4px 6px",borderRadius:6,border:"1px solid "+(o.contacted?"#2a7a3a":"rgba(138,74,106,0.3)"),background:o.contacted?"rgba(42,122,58,0.1)":"#fff",color:o.contacted?"#2a7a3a":"#8a6a7a",fontSize:9,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
@@ -10045,9 +10046,10 @@ function App() {
                                           style={{padding:"4px 6px",borderRadius:6,border:"1px solid rgba(160,64,48,0.3)",background:"#fff",color:"#a04030",fontSize:9,cursor:"pointer"}}>🗑️</button>
                                       </div>
                                       <select value={o.status} onChange={e=>setOutreachStatus(o.rowIndex,e.target.value)}
-                                        style={{width:"100%",fontSize:10,padding:"4px 6px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",color:o.status==="参加"?"#2a7a3a":o.status==="不参加"?"#a04030":"#8a6a7a"}}>
+                                        style={{width:"100%",fontSize:10,padding:"4px 6px",borderRadius:6,border:"1px solid rgba(138,74,106,0.25)",color:o.status==="申し込み済み"?"#a87a00":o.status==="参加"?"#2a7a3a":o.status==="不参加"?"#a04030":"#8a6a7a"}}>
                                         <option value="未定">未定</option>
                                         <option value="参加">参加</option>
+                                        <option value="申し込み済み">申し込み済み</option>
                                         <option value="不参加">不参加</option>
                                       </select>
                                     </div>
