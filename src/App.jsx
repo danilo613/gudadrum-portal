@@ -4595,7 +4595,13 @@ function App() {
       fetchWorkoutStats();
       fetchCharacterGrowth();
     } catch(e) {
-      alert("記録の保存に失敗しました");
+      // 通信の応答が遅れただけで、実際には記録が成功している場合があるため、
+      // 「失敗した」と決めつけずに、少し待ってから実際の記録状況を確認しにいく。
+      alert("保存できたか確認できませんでした。少し時間を置いてから、記録が反映されているか確認しています…");
+      setTimeout(function(){
+        fetchWorkoutStats();
+        fetchCharacterGrowth();
+      }, 2000);
     }
   }
 
@@ -9990,14 +9996,28 @@ function App() {
                       groups[key].push(o);
                     });
                     // 並び替え：①参加確定の人を最優先 →②声掛け完了の人 →③それ以外
+                    // 同じ優先度の中では、日本語名は五十音順、アルファベット名はABC順（日本語名が先）に並べる
+                    function isJapaneseChar(c){
+                      var code = c.charCodeAt(0);
+                      return (code>=0x3040&&code<=0x30FF)||(code>=0x4E00&&code<=0x9FFF)||(code>=0xFF66&&code<=0xFF9D);
+                    }
+                    function nameGroupOf(name){
+                      var s = String(name||"").trim();
+                      return (s.length>0 && isJapaneseChar(s[0])) ? 0 : 1; // 0=日本語名、1=アルファベット名
+                    }
                     Object.keys(groups).forEach(function(key){
                       groups[key].sort(function(a,b){
                         var scoreOf = function(o){
+                          if (o.status === "不参加") return 3;
                           if (o.status === "参加") return 0;
                           if (o.contacted) return 1;
                           return 2;
                         };
-                        return scoreOf(a) - scoreOf(b);
+                        var sa=scoreOf(a), sb=scoreOf(b);
+                        if (sa !== sb) return sa - sb;
+                        var ga=nameGroupOf(a.name), gb=nameGroupOf(b.name);
+                        if (ga !== gb) return ga - gb;
+                        return String(a.name||"").localeCompare(String(b.name||""), ga===0?"ja":"en");
                       });
                     });
                     var assigneeNames = Object.keys(groups);
@@ -10011,8 +10031,10 @@ function App() {
                               </p>
                               <div style={{display:"flex",flexDirection:"column",gap:6}}>
                                 {groups[assignee].map(function(o){
+                                  var boxBg = o.status==="参加" ? "rgba(42,122,58,0.12)" : o.status==="不参加" ? "rgba(160,64,48,0.1)" : "rgba(138,74,106,0.05)";
+                                  var boxBorder = o.status==="参加" ? "1px solid rgba(42,122,58,0.4)" : o.status==="不参加" ? "1px solid rgba(160,64,48,0.35)" : "1px solid rgba(138,74,106,0.15)";
                                   return (
-                                    <div key={o.rowIndex} style={{padding:"7px 8px",background:"rgba(138,74,106,0.05)",borderRadius:8,border:"1px solid rgba(138,74,106,0.15)"}}>
+                                    <div key={o.rowIndex} style={{padding:"7px 8px",background:boxBg,borderRadius:8,border:boxBorder}}>
                                       <p style={{fontSize:12,fontWeight:600,color:"#6a2a4a",marginBottom:6}}>{o.name}</p>
                                       <div style={{display:"flex",gap:4,marginBottom:4}}>
                                         <button onClick={()=>toggleOutreachContacted(o.rowIndex,o.contacted)}
