@@ -5926,6 +5926,7 @@ function App() {
     }
     // SVGドット
     var svgD = "";
+    var isRotatedAxis = (scoreId==="nostalgic"||scoreId==="holychild"); // 高音・低音が上下でなく左右の曲
     var highLabel=(scoreId==="dreamy"||scoreId==="aoi"||scoreId==="megumi"||scoreId==="inori"||scoreId==="regrace")?"低音":"高音";
     var lowLabel=(scoreId==="dreamy"||scoreId==="aoi"||scoreId==="megumi"||scoreId==="inori"||scoreId==="regrace")?"高音":"低音";
     Object.keys(DOTS_P).forEach(function(color){
@@ -5936,8 +5937,10 @@ function App() {
     });
     var svgHtml='<svg viewBox="0 0 140 166" width="110" height="130" style="flex-shrink:0">'
       +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
-      +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
-      +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>'
+      +(isRotatedAxis
+        ? '<text x="6" y="86" text-anchor="start" font-size="10" font-family="sans-serif" fill="#999">高音</text><text x="134" y="86" text-anchor="end" font-size="9" fill="#999">低音</text>'
+        : '<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
+          +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>')
       +svgD+'</svg>';
     // セクション一覧
     var secListHtml = sections.map(function(s){
@@ -5991,8 +5994,10 @@ function App() {
     });
     var svgLarge='<svg viewBox="0 0 140 166" width="'+(hasInst2?170:280)+'" height="'+(hasInst2?201:331)+'" style="flex-shrink:0">'
       +'<circle cx="70" cy="83" r="67" fill="transparent" stroke="#a09890" stroke-width="0.4"/>'
-      +'<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
-      +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>'
+      +(isRotatedAxis
+        ? '<text x="6" y="86" text-anchor="start" font-size="10" font-family="sans-serif" fill="#999">高音</text><text x="134" y="86" text-anchor="end" font-size="9" fill="#999">低音</text>'
+        : '<text x="70" y="10" text-anchor="middle" font-size="10" font-family="sans-serif" fill="#999">'+highLabel+'</text>'
+          +'<text x="70" y="162" text-anchor="middle" font-size="9" fill="#999">'+lowLabel+'</text>')
       +svgDLarge+'</svg>';
     // 大きいイラスト（2台目：響ノ音側）
     var svgLarge2="";
