@@ -3410,12 +3410,9 @@ function renderSideGrid2(barIdx, side){
 function SetlistView({ inorionData, onClose, C }) {
   var [rows, setRows] = React.useState([]);
   React.useEffect(function(){
-    var cb="slCb_"+Date.now();
-    window[cb]=function(d){delete window[cb];if(d.rows)setRows(d.rows);};
-    var s=document.createElement("script");
-    s.src="https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=getsetlist&callback="+cb;
-    s.onerror=function(){delete window[cb];};
-    document.body.appendChild(s);
+    fetch("/api/gas?action=getsetlist").then(function(res){return res.json();}).then(function(d){
+      if(d && d.rows) setRows(d.rows);
+    }).catch(function(){});
   },[]);
   return (
     <div style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:1000,background:"rgba(255,255,255,0.98)",overflowY:"auto",padding:"16px"}}>
@@ -5081,70 +5078,26 @@ function App() {
 
   function autoFetch() {
     fetchNotices();
-    return new Promise((resolve) => {
-      const cbName = "gasCb_" + Date.now();
-      window[cbName] = function(data) {
-        try {
-          const all = data.map(rowToMember).filter(m => m.name);
-          if (all.length > 0) { setMembers([...all]); setIsDemo(false); setFetchMsg(""); }
-        } catch(e) { setFetchMsg("✗ " + e.message); }
-        delete window[cbName];
-        const el = document.getElementById(cbName);
-        if (el) el.remove();
-        resolve();
-      };
-      const script = document.createElement("script");
-      script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?callback=" + cbName;
-      script.onerror = function() {
-        setFetchMsg("✗ データ取得失敗");
-        delete window[cbName];
-        resolve();
-      };
-      document.body.appendChild(script);
+    return gasWrite({}).then(function(data){
+      try {
+        const all = data.map(rowToMember).filter(m => m.name);
+        if (all.length > 0) { setMembers([...all]); setIsDemo(false); setFetchMsg(""); }
+      } catch(e) { setFetchMsg("✗ " + e.message); }
+    }).catch(function(){
+      setFetchMsg("✗ データ取得失敗");
     });
   }
 
   function fetchNotion() {
-    return new Promise((resolve) => {
-      const cbName = "notionCb_" + Date.now();
-      window[cbName] = function(data) {
-        if (data.items) setNotionItems(data.items);
-        delete window[cbName];
-        const el = document.getElementById(cbName);
-        if (el) el.remove();
-        resolve();
-      };
-      const script = document.createElement("script");
-      script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=notion&callback=" + cbName;
-      script.onerror = function() {
-        delete window[cbName];
-        resolve();
-      };
-      document.body.appendChild(script);
-    });
+    return gasWrite({action:"notion"}).then(function(data){
+      if (data && data.items) setNotionItems(data.items);
+    }).catch(function(){});
   }
 
   function fetchFaq() {
-    return new Promise((resolve) => {
-      const cbName = "faqCb_" + Date.now();
-      window[cbName] = function(data) {
-        if (data.items) setFaqItems(data.items);
-        delete window[cbName];
-        const el = document.getElementById(cbName);
-        if (el) el.remove();
-        resolve();
-      };
-      const script = document.createElement("script");
-      script.id = cbName;
-      script.src = "https://script.google.com/macros/s/AKfycbzQwptiq5auDovIBQjqPOWm7xQg3ga3IFstCVt1V3VIRhr4EuEjR5wvGxst-Xq4PESiiw/exec?action=faq&callback=" + cbName;
-      script.onerror = function() {
-        delete window[cbName];
-        resolve();
-      };
-      document.body.appendChild(script);
-    });
+    return gasWrite({action:"faq"}).then(function(data){
+      if (data && data.items) setFaqItems(data.items);
+    }).catch(function(){});
   }
 
   async function fetchPointHistory(name) {
