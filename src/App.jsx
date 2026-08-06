@@ -10041,7 +10041,7 @@ function App() {
                               <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:2,padding:"4px 8px",background:"rgba(138,74,106,0.1)",borderRadius:6,textAlign:"center"}}>
                                 {assignee}（{list.length}名）
                               </p>
-                              <div style={{display:"flex",gap:4,marginBottom:6,fontSize:9,justifyContent:"center",flexWrap:"wrap"}}>
+                              <div style={{display:"flex",gap:4,marginBottom:6,fontSize:12,justifyContent:"center",flexWrap:"wrap"}}>
                                 <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(216,160,20,0.18)",color:"#a87a00",fontWeight:600}}>💮{cApplied}</span>
                                 <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(42,122,58,0.15)",color:"#2a7a3a",fontWeight:600}}>参加{cJoin}</span>
                                 <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(138,74,106,0.1)",color:"#8a6a7a",fontWeight:600}}>未定{cPending}</span>
