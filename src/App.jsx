@@ -10030,11 +10030,22 @@ function App() {
                     return (
                       <div style={{display:"flex",gap:10,overflowX:"auto",paddingBottom:6}}>
                         {assigneeNames.map(function(assignee){
+                          var list = groups[assignee];
+                          var cApplied = list.filter(function(o){return o.status==="申し込み済み";}).length;
+                          var cJoin = list.filter(function(o){return o.status==="参加";}).length;
+                          var cPending = list.filter(function(o){return o.status!=="申し込み済み"&&o.status!=="参加"&&o.status!=="不参加";}).length;
+                          var cNo = list.filter(function(o){return o.status==="不参加";}).length;
                           return (
                             <div key={assignee} style={{minWidth:180,flexShrink:0}}>
-                              <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:6,padding:"4px 8px",background:"rgba(138,74,106,0.1)",borderRadius:6,textAlign:"center"}}>
-                                {assignee}（{groups[assignee].length}名）
+                              <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:2,padding:"4px 8px",background:"rgba(138,74,106,0.1)",borderRadius:6,textAlign:"center"}}>
+                                {assignee}（{list.length}名）
                               </p>
+                              <div style={{display:"flex",gap:4,marginBottom:6,fontSize:9,justifyContent:"center",flexWrap:"wrap"}}>
+                                <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(216,160,20,0.18)",color:"#a87a00",fontWeight:600}}>💮{cApplied}</span>
+                                <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(42,122,58,0.15)",color:"#2a7a3a",fontWeight:600}}>参加{cJoin}</span>
+                                <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(138,74,106,0.1)",color:"#8a6a7a",fontWeight:600}}>未定{cPending}</span>
+                                <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(160,64,48,0.12)",color:"#a04030",fontWeight:600}}>不参加{cNo}</span>
+                              </div>
                               <div style={{display:"flex",flexDirection:"column",gap:6}}>
                                 {groups[assignee].map(function(o){
                                   var boxBg = o.status==="申し込み済み" ? "rgba(216,160,20,0.15)" : o.status==="参加" ? "rgba(42,122,58,0.12)" : o.status==="不参加" ? "rgba(160,64,48,0.1)" : "rgba(138,74,106,0.05)";
