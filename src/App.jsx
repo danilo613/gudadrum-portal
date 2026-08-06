@@ -3769,6 +3769,7 @@ function App() {
   const [isGuest, setIsGuest] = useState(false);
   const [bgmPlayed, setBgmPlayed] = useState(false);
   const bgmRef = React.useRef(null);
+  const pointHistoryFetchGen = React.useRef(0); // 古い応答が、後から来た正しい応答を上書きしないようにするためのガード
   const [myMemo, setMyMemo] = useState("");
   const [myGoal, setMyGoal] = useState("");
   const [goalOpen, setGoalOpen] = useState(false);
@@ -5107,9 +5108,12 @@ function App() {
   }
 
   async function fetchPointHistory(name) {
+    const myGen = ++pointHistoryFetchGen.current; // このリクエストの世代番号を記録
     try {
       const res = await fetch("/api/gas?" + new URLSearchParams({action:"getpoints", name:name}));
       const data = await res.json();
+      // 自分より新しいリクエストが既に発行されていたら、この（古い）応答は無視する
+      if (myGen !== pointHistoryFetchGen.current) return;
       if (data.history) setPointHistory(data.history);
     } catch(e) {}
   }
