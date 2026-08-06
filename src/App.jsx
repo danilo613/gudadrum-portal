@@ -3893,7 +3893,8 @@ function App() {
   async function fetchAllPurchasedScores(){
     try {
       const res = await gasWrite({action:"getallpurchasedscores"});
-      if (res && res.rows) setPurchasedScoresData(res.rows);
+      const excludeNames = ["ダニー", "あんじ"];
+      if (res && res.rows) setPurchasedScoresData(res.rows.filter(function(r){return !excludeNames.includes(r.name);}));
       else setPurchasedScoresData([]);
     } catch(e){ setPurchasedScoresData([]); }
   }
