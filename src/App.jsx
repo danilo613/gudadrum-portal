@@ -3879,12 +3879,23 @@ function App() {
   const [workoutExpandedMonth, setWorkoutExpandedMonth] = useState(null);
   const [workoutExpandedMember, setWorkoutExpandedMember] = useState(null);
   const [workoutHistory, setWorkoutHistory] = useState(null);
+  const [showPurchasedScores, setShowPurchasedScores] = useState(false);
+  const [purchasedScoresData, setPurchasedScoresData] = useState(null);
+  const [purchasedScoresView, setPurchasedScoresView] = useState("summary"); // summary / bysong / bymember
+  const [purchasedScoresExpanded, setPurchasedScoresExpanded] = useState(null);
   async function fetchAllWorkouts(){
     try {
       const res = await gasRead({action:"getallworkouts"});
       if (res && res.workouts) setWorkoutHistory(res.workouts);
       else setWorkoutHistory([]);
     } catch(e){ setWorkoutHistory([]); }
+  }
+  async function fetchAllPurchasedScores(){
+    try {
+      const res = await gasWrite({action:"getallpurchasedscores"});
+      if (res && res.rows) setPurchasedScoresData(res.rows);
+      else setPurchasedScoresData([]);
+    } catch(e){ setPurchasedScoresData([]); }
   }
   const [showAdminPastScheds, setShowAdminPastScheds] = useState(false);
   const [playerMode, setPlayerMode] = useState("single");
@@ -8580,6 +8591,149 @@ function App() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+        {/* 譜面プレイヤー保有記録（DANiLOのみ） */}
+        {!isInstructor && (
+          <button onClick={()=>{setShowPurchasedScores(!showPurchasedScores); if(!showPurchasedScores && purchasedScoresData===null) fetchAllPurchasedScores(); if(!showPurchasedScores && songMasterList===null) fetchSongMaster();}}
+            style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+            🎼 譜面プレイヤー保有記録 {showPurchasedScores?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showPurchasedScores&&(
+          <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+            {!purchasedScoresData ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>
+            ) : purchasedScoresData.length===0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>保有記録なし</p>
+            ) : (function(){
+              // scoreId → 曲名 の変換表（コード内の曲＋管理画面から追加したカスタム曲）
+              var scoreIdToTitle = Object.assign({}, {
+                waterlily:"water lily〜水面〜", waterlily2:"water lily", nostalgic:"NoStAlGiE", holychild:"holy child",
+                dreamy:"dreamy EYES", aoi:"蒼〜aoi〜", iridescence:"iridescence", megumi:"めぐみの空",
+                inori:"祈音〜Inorion〜", regrace:"Re:Grace", kigaru:"気軽サブスク譜面"
+              });
+              (songMasterList||[]).forEach(function(s){ scoreIdToTitle[s.scoreId] = s.title; });
+              function titleOf(id){ return scoreIdToTitle[id] || id; }
+
+              // 楽曲ごとの集計
+              var bySong = {};
+              purchasedScoresData.forEach(function(r){
+                if (!bySong[r.score_id]) bySong[r.score_id] = [];
+                bySong[r.score_id].push(r);
+              });
+              var songList = Object.keys(bySong).map(function(id){return {id:id, title:titleOf(id), owners:bySong[id]};}).sort(function(a,b){return b.owners.length - a.owners.length;});
+
+              // メンバーごとの集計
+              var byMember = {};
+              purchasedScoresData.forEach(function(r){
+                if (!byMember[r.name]) byMember[r.name] = [];
+                byMember[r.name].push(r);
+              });
+              var memberList = Object.keys(byMember).map(function(name){return {name:name, scores:byMember[name]};}).sort(function(a,b){return b.scores.length - a.scores.length;});
+
+              return (
+                <>
+                  <div style={{display:"flex",gap:6,marginBottom:10}}>
+                    <button onClick={()=>setPurchasedScoresView("summary")}
+                      style={{flex:1,padding:"7px 0",borderRadius:8,border:purchasedScoresView==="summary"?"1px solid #1a9a2c":"1px solid rgba(26,154,44,0.25)",background:purchasedScoresView==="summary"?"linear-gradient(135deg,#4ad467,#1a9a2c)":"rgba(26,154,44,0.06)",color:purchasedScoresView==="summary"?"#fff":"#1a9a2c",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                      📊 総数
+                    </button>
+                    <button onClick={()=>setPurchasedScoresView("bysong")}
+                      style={{flex:1,padding:"7px 0",borderRadius:8,border:purchasedScoresView==="bysong"?"1px solid #1a9a2c":"1px solid rgba(26,154,44,0.25)",background:purchasedScoresView==="bysong"?"linear-gradient(135deg,#4ad467,#1a9a2c)":"rgba(26,154,44,0.06)",color:purchasedScoresView==="bysong"?"#fff":"#1a9a2c",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                      🎵 楽曲別
+                    </button>
+                    <button onClick={()=>setPurchasedScoresView("bymember")}
+                      style={{flex:1,padding:"7px 0",borderRadius:8,border:purchasedScoresView==="bymember"?"1px solid #1a9a2c":"1px solid rgba(26,154,44,0.25)",background:purchasedScoresView==="bymember"?"linear-gradient(135deg,#4ad467,#1a9a2c)":"rgba(26,154,44,0.06)",color:purchasedScoresView==="bymember"?"#fff":"#1a9a2c",fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                      👤 メンバー別
+                    </button>
+                  </div>
+
+                  {purchasedScoresView === "summary" && (
+                    <div style={{marginBottom:4,padding:"10px 12px",background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 100%)",border:"1px solid #d4a040",borderRadius:8}}>
+                      <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:8}}>
+                        <span style={{fontSize:14}}>🎼</span>
+                        <span style={{fontSize:11,fontWeight:700,color:"#7a5020",letterSpacing:0.5}}>販売した譜面プレイヤーの総数：{purchasedScoresData.length}件</span>
+                      </div>
+                      <div style={{display:"flex",flexDirection:"column",gap:4}}>
+                        {songList.map(function(s,i){
+                          return (
+                            <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 8px",background:"rgba(255,255,255,0.5)",borderRadius:6}}>
+                              <span style={{fontSize:11,color:"#7a5020",fontWeight:600}}>{s.title}</span>
+                              <span style={{fontSize:11,color:"#a8801a",fontWeight:700}}>{s.owners.length}人</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {purchasedScoresView === "bysong" && (
+                    <div style={{maxHeight:500,overflowY:"auto"}}>
+                      {songList.map(function(s,i){
+                        var isExpanded = purchasedScoresExpanded === ("song_"+s.id);
+                        return (
+                          <div key={i} style={{marginBottom:6,background:"rgba(26,154,44,0.05)",borderRadius:8,border:"1px solid rgba(26,154,44,0.15)",overflow:"hidden"}}>
+                            <button onClick={()=>setPurchasedScoresExpanded(isExpanded ? null : ("song_"+s.id))}
+                              style={{width:"100%",padding:"9px 10px",background:"transparent",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                              <span style={{fontSize:12,fontWeight:600,color:C.choco}}>{s.title}</span>
+                              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                <span style={{fontSize:10,color:"#1a9a2c"}}>{s.owners.length}人が保有</span>
+                                <span style={{fontSize:10,color:"rgba(26,154,44,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                              </div>
+                            </button>
+                            {isExpanded && (
+                              <div style={{padding:"0 10px 10px"}}>
+                                {s.owners.map(function(o,j){
+                                  return (
+                                    <div key={j} style={{display:"flex",justifyContent:"space-between",padding:"4px 8px",fontSize:11,color:C.choco,borderTop:j===0?"1px solid rgba(26,154,44,0.15)":"none",paddingTop:j===0?8:4}}>
+                                      <span>{o.name}</span>
+                                      <span style={{color:C.label,fontSize:10}}>{o.date}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {purchasedScoresView === "bymember" && (
+                    <div style={{maxHeight:500,overflowY:"auto"}}>
+                      {memberList.map(function(m,i){
+                        var isExpanded = purchasedScoresExpanded === ("member_"+m.name);
+                        return (
+                          <div key={i} style={{marginBottom:6,background:"rgba(26,154,44,0.05)",borderRadius:8,border:"1px solid rgba(26,154,44,0.15)",overflow:"hidden"}}>
+                            <button onClick={()=>setPurchasedScoresExpanded(isExpanded ? null : ("member_"+m.name))}
+                              style={{width:"100%",padding:"9px 10px",background:"transparent",border:"none",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                              <span style={{fontSize:12,fontWeight:600,color:C.choco}}>{m.name}</span>
+                              <div style={{display:"flex",alignItems:"center",gap:10}}>
+                                <span style={{fontSize:10,color:"#1a9a2c"}}>{m.scores.length}曲を保有</span>
+                                <span style={{fontSize:10,color:"rgba(26,154,44,0.6)"}}>{isExpanded?"▲":"▼"}</span>
+                              </div>
+                            </button>
+                            {isExpanded && (
+                              <div style={{padding:"0 10px 10px"}}>
+                                {m.scores.map(function(o,j){
+                                  return (
+                                    <div key={j} style={{display:"flex",justifyContent:"space-between",padding:"4px 8px",fontSize:11,color:C.choco,borderTop:j===0?"1px solid rgba(26,154,44,0.15)":"none",paddingTop:j===0?8:4}}>
+                                      <span>{titleOf(o.score_id)}</span>
+                                      <span style={{color:C.label,fontSize:10}}>{o.date}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
         {!isInstructor && (
