@@ -5692,7 +5692,12 @@ function App() {
 
   async function recordLogin(name) {
     try {
-      await fetch("/api/gas?" + new URLSearchParams({action:"addlogin", name:name}));
+      const res = await fetch("/api/gas?" + new URLSearchParams({action:"addlogin", name:name}));
+      const data = await res.json();
+      if (data && data.firstLoginBonus) {
+        alert("🎉 ようこそ！初回ログインボーナスとして500ptを獲得しました！");
+        autoFetch();
+      }
     } catch(e) {}
   }
 
@@ -6720,7 +6725,7 @@ function App() {
           {/* トレーニング履歴（サブスク会員のみ） */}
           {currentMember && currentMember.subscType && currentMember.subscType !== "種" && (
             <div style={{marginTop:14,padding:"16px 18px",background:"linear-gradient(180deg, rgba(20,40,30,0.6), rgba(10,20,15,0.8))",border:"1px solid rgba(150,220,180,0.15)",borderRadius:14}}>
-              <div style={{fontSize:11,color:"rgba(150,220,180,0.7)",letterSpacing:3,fontWeight:300,marginBottom:14}}>トレーニング履歴</div>
+              <div style={{fontSize:13,color:"rgba(180,255,220,0.9)",letterSpacing:3,fontWeight:400,marginBottom:14}}>トレーニング履歴</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>今月の練習時間</div>
