@@ -10668,13 +10668,13 @@ function App() {
                       誰かに強制されてじゃなく、自分自身の意志で今日も一歩を踏み出す——その自発性の一つひとつの積み重ねこそが、数字には表れない、このコミュニティの本当の結束力を育てている。
                     </p>
                     )}
-                    <div style={{marginBottom:10,borderRadius:14,overflow:"hidden",position:"relative",backgroundImage:"url('/growth-bg.png')",backgroundSize:"cover",backgroundPosition:"center",padding:"20px 14px 16px"}}>
+                    <div style={{marginBottom:10,marginLeft:-16,marginRight:-16,borderRadius:14,overflow:"hidden",position:"relative",backgroundImage:"url('/growth-bg.png')",backgroundSize:"cover",backgroundPosition:"center",padding:"20px 8px 12px"}}>
                       <div style={{position:"absolute",top:0,left:0,right:0,height:100,background:"linear-gradient(to bottom, rgba(10,20,15,0.20), transparent)",pointerEvents:"none"}}/>
                       <div style={{position:"absolute",bottom:0,left:0,right:0,height:140,background:"linear-gradient(to top, rgba(10,20,15,0.35), transparent)",pointerEvents:"none"}}/>
-                      <div style={{position:"relative",textAlign:"center",marginBottom:16}}>
+                      <div style={{position:"relative",textAlign:"center",marginBottom:12}}>
                         <p style={{fontSize:17,fontWeight:700,letterSpacing:2,color:"#fff",textShadow:"0 0 14px rgba(150,255,190,0.7), 0 2px 6px rgba(0,0,0,0.7)",marginBottom:2}}>LEV{curLevel.lv}</p>
                         <p style={{fontSize:26,fontWeight:700,letterSpacing:1,color:"#fff",textShadow:"0 0 20px rgba(150,255,190,0.5), 0 3px 10px rgba(0,0,0,0.7)",marginBottom:12}}>「{curLevel.name}」</p>
-                        <div style={{display:"inline-flex",flexDirection:"column",alignItems:"center",background:"rgba(10,25,18,0.45)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",border:"1px solid rgba(168,232,192,0.35)",borderRadius:14,padding:"10px 22px 12px",maxWidth:"90%"}}>
+                        <div style={{display:"flex",flexDirection:"column",alignItems:"center",background:"rgba(10,25,18,0.45)",backdropFilter:"blur(6px)",WebkitBackdropFilter:"blur(6px)",border:"1px solid rgba(168,232,192,0.35)",borderRadius:14,padding:"10px 16px 12px",width:"100%",maxWidth:280,margin:"0 auto",boxSizing:"border-box"}}>
                           <p style={{fontSize:11,color:"#a8e8c0",letterSpacing:1,marginBottom:8,paddingBottom:8,borderBottom:"1px solid rgba(168,232,192,0.25)",width:"100%"}}>
                             全体経験値　<b style={{fontSize:14,color:"#fff",marginLeft:4}}>{totalHPT}HPT</b>
                           </p>
@@ -10683,7 +10683,7 @@ function App() {
                               <p style={{fontSize:11,color:"rgba(255,255,255,0.75)",marginBottom:6}}>
                                 次のLEV{nextLevel.lv}<span style={{fontSize:14,fontWeight:700,color:"#fff"}}>「{nextLevel.name}」</span>まで
                               </p>
-                              <div style={{width:220,height:8,borderRadius:6,background:"rgba(255,255,255,0.15)",overflow:"hidden",marginBottom:6}}>
+                              <div style={{width:"100%",height:8,borderRadius:6,background:"rgba(255,255,255,0.15)",overflow:"hidden",marginBottom:6}}>
                                 <div style={{height:"100%",width:Math.min(100,Math.round((totalHPT-curLevel.req)/(nextLevel.req-curLevel.req)*100))+"%",background:"linear-gradient(90deg, #6adf9a, #a8e8c0)",boxShadow:"0 0 10px rgba(150,255,190,0.7)",borderRadius:6}}/>
                               </div>
                               <p style={{fontSize:13,color:"#fff",fontWeight:600}}>あと {nextLevel.req-totalHPT} HPT</p>
@@ -10694,9 +10694,9 @@ function App() {
                         </div>
                       </div>
                       {characterGrowth && (
-                        <div style={{position:"relative",textAlign:"center",marginBottom:16}}>
+                        <div style={{position:"relative",textAlign:"center",marginBottom:10}}>
                           <style>{"@keyframes growthCharFloat { 0%,100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }"}</style>
-                          <div style={{width:96,height:96,margin:"0 auto 6px",animation:"growthCharFloat 4s ease-in-out infinite"}}>
+                          <div style={{width:126,height:126,margin:"0 auto 2px",animation:"growthCharFloat 4s ease-in-out infinite"}}>
                             <img src={"/character/stage"+String(characterGrowth.rank).padStart(2,"0")+".png"} alt="" style={{width:"100%",height:"100%",objectFit:"contain"}} onError={e=>{e.target.style.display="none";}}/>
                           </div>
                           <p style={{display:"inline-block",background:"rgba(10,25,18,0.5)",backdropFilter:"blur(4px)",color:"#fff",fontSize:12,fontWeight:700,padding:"3px 14px",borderRadius:20,border:"1px solid rgba(168,232,192,0.4)",letterSpacing:1}}>
@@ -10704,24 +10704,24 @@ function App() {
                           </p>
                         </div>
                       )}
-                      <div style={{position:"relative",display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
-                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(168,232,192,0.3)",borderRadius:14,padding:"11px 10px",minHeight:78,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
-                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:1,marginBottom:4}}>メンバー数</p>
-                          <p style={{fontSize:20,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(150,255,190,0.4)"}}>{memberCount}<span style={{fontSize:12,opacity:0.6}}> /{memberTarget}</span></p>
-                          <p style={{fontSize:10,color:"#a8e8c0",marginTop:2}}>目標まであと{Math.max(0,memberTarget-memberCount)}人</p>
+                      <div style={{position:"relative",display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(168,232,192,0.3)",borderRadius:12,padding:"7px 8px",minHeight:56,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:0.5,marginBottom:2}}>メンバー数</p>
+                          <p style={{fontSize:16,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(150,255,190,0.4)"}}>{memberCount}<span style={{fontSize:10,opacity:0.6}}> /{memberTarget}</span></p>
+                          <p style={{fontSize:8,color:"#a8e8c0",marginTop:1}}>目標まであと{Math.max(0,memberTarget-memberCount)}人</p>
                         </div>
-                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(168,232,192,0.3)",borderRadius:14,padding:"11px 10px",minHeight:78,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
-                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:1,marginBottom:4}}>🎵 グーダドラム総数</p>
-                          <p style={{fontSize:20,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(150,255,190,0.4)"}}>{scaleTotal}<span style={{fontSize:12,opacity:0.6}}>台</span></p>
+                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(168,232,192,0.3)",borderRadius:12,padding:"7px 8px",minHeight:56,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:0.5,marginBottom:2}}>🎵 グーダドラム総数</p>
+                          <p style={{fontSize:16,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(150,255,190,0.4)"}}>{scaleTotal}<span style={{fontSize:10,opacity:0.6}}>台</span></p>
                         </div>
-                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(168,232,192,0.3)",borderRadius:14,padding:"11px 10px",minHeight:78,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
-                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:1,marginBottom:4}}>柱候補の人数</p>
-                          <p style={{fontSize:20,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(150,255,190,0.4)"}}>{candidateCount}<span style={{fontSize:12,opacity:0.6}}>人</span></p>
+                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(168,232,192,0.3)",borderRadius:12,padding:"7px 8px",minHeight:56,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:0.5,marginBottom:2}}>柱候補の人数</p>
+                          <p style={{fontSize:16,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(150,255,190,0.4)"}}>{candidateCount}<span style={{fontSize:10,opacity:0.6}}>人</span></p>
                         </div>
-                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(255,210,120,0.5)",borderRadius:14,padding:"11px 10px",minHeight:78,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
-                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:1,marginBottom:4}}>柱の人数</p>
-                          <p style={{fontSize:20,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(255,210,120,0.6)"}}>{pillarCount}<span style={{fontSize:12,opacity:0.6}}> /{pillarTarget}</span></p>
-                          <p style={{fontSize:10,color:"#a8e8c0",marginTop:2}}>達成率{Math.round(pillarCount/pillarTarget*100)}%</p>
+                        <div style={{background:"rgba(10,25,18,0.5)",backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)",border:"1px solid rgba(255,210,120,0.5)",borderRadius:12,padding:"7px 8px",minHeight:56,textAlign:"center",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                          <p style={{fontFamily:"'Hiragino Sans','Noto Sans JP','Yu Gothic',sans-serif",fontSize:10,fontWeight:700,color:"rgba(255,255,255,0.85)",letterSpacing:0.5,marginBottom:2}}>柱の人数</p>
+                          <p style={{fontSize:16,fontWeight:700,color:"#fff",textShadow:"0 0 10px rgba(255,210,120,0.6)"}}>{pillarCount}<span style={{fontSize:10,opacity:0.6}}> /{pillarTarget}</span></p>
+                          <p style={{fontSize:8,color:"#a8e8c0",marginTop:1}}>達成率{Math.round(pillarCount/pillarTarget*100)}%</p>
                         </div>
                       </div>
                     </div>
