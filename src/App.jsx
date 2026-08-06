@@ -5695,8 +5695,9 @@ function App() {
       const res = await fetch("/api/gas?" + new URLSearchParams({action:"addlogin", name:name}));
       const data = await res.json();
       if (data && data.firstLoginBonus) {
-        alert("🎉 ようこそ！初回ログインボーナスとして500ptを獲得しました！");
+        alert("🎉 ようこそ！初回ログインボーナスとして500ptを獲得しました！\n\n※ポイント履歴に反映されない場合は、ページの再読み込みをお試しください。");
         autoFetch();
+        fetchPointHistory(name); // ポイント履歴パネルは、ログイン直後に一度だけ取得済みのため、ここで取り直す
       }
     } catch(e) {}
   }
