@@ -3882,6 +3882,11 @@ function App() {
   const [showPurchasedScores, setShowPurchasedScores] = useState(false);
   const [purchasedScoresData, setPurchasedScoresData] = useState(null);
   const [purchasedScoresView, setPurchasedScoresView] = useState("summary"); // summary / bysong / bymember
+  const [showUnlinkedBookings, setShowUnlinkedBookings] = useState(false);
+  const [unlinkedBookings, setUnlinkedBookings] = useState(null);
+  const [unlinkedBookingSelect, setUnlinkedBookingSelect] = useState({}); // rowIndex -> 選択中の名前
+  const [unlinkedBookingBusy, setUnlinkedBookingBusy] = useState({});
+  const [unlinkedBookingMsg, setUnlinkedBookingMsg] = useState({});
   const [purchasedScoresExpanded, setPurchasedScoresExpanded] = useState(null);
   async function fetchAllWorkouts(){
     try {
@@ -3897,6 +3902,29 @@ function App() {
       if (res && res.rows) setPurchasedScoresData(res.rows.filter(function(r){return !excludeNames.includes(r.name);}));
       else setPurchasedScoresData([]);
     } catch(e){ setPurchasedScoresData([]); }
+  }
+  async function fetchUnlinkedBookings(){
+    try {
+      const res = await gasWrite({action:"getunlinkedbookings"});
+      if (res && res.rows) setUnlinkedBookings(res.rows);
+      else setUnlinkedBookings([]);
+    } catch(e){ setUnlinkedBookings([]); }
+  }
+  async function linkUnlinkedBooking(rowIndex){
+    const chosenName = unlinkedBookingSelect[rowIndex];
+    if (!chosenName) { setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ メンバーを選んでください"})); return; }
+    if (unlinkedBookingBusy[rowIndex]) return; // 二重送信を防ぐ
+    setUnlinkedBookingBusy(prev=>({...prev,[rowIndex]:true}));
+    try {
+      const res = await gasWrite({action:"linkunlinkedbooking", rowIndex:String(rowIndex), memberName:chosenName});
+      if (res && res.success) {
+        setUnlinkedBookings(prev => prev.filter(b => b.rowIndex !== rowIndex));
+        autoFetch();
+      } else {
+        setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ "+((res&&res.error)||"紐付けに失敗しました")}));
+      }
+    } catch(e){ setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ 通信に失敗しました"})); }
+    setUnlinkedBookingBusy(prev=>({...prev,[rowIndex]:false}));
   }
   const [showAdminPastScheds, setShowAdminPastScheds] = useState(false);
   const [playerMode, setPlayerMode] = useState("single");
@@ -8327,6 +8355,53 @@ function App() {
             </div>
           );
         })()}
+        {/* Google予約 未紐付け一覧（DANiLOのみ） */}
+        {!isInstructor && (
+          <button onClick={()=>{setShowUnlinkedBookings(!showUnlinkedBookings); if(!showUnlinkedBookings && unlinkedBookings===null) fetchUnlinkedBookings();}}
+            style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+            ⚠️ 未紐付け予約（要確認） {showUnlinkedBookings?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showUnlinkedBookings && (
+          <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+            <p style={{fontSize:11,color:C.label,marginBottom:10,lineHeight:1.6}}>
+              Googleカレンダー予約に登録されてる名前が、ポータルのメンバー名と一致しなかったものの一覧です。該当するメンバーを選んで登録すると、スケジュールに反映されます。
+            </p>
+            {!unlinkedBookings ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>
+            ) : unlinkedBookings.length===0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>未紐付けの予約はありません</p>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {unlinkedBookings.map(function(b){
+                  return (
+                    <div key={b.rowIndex} style={{padding:"10px 12px",background:"rgba(160,64,48,0.06)",border:"1px solid rgba(160,64,48,0.2)",borderRadius:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:4}}>
+                        <span style={{fontSize:13,fontWeight:700,color:C.choco}}>{b.calendarName}</span>
+                        <span style={{fontSize:10,color:C.label}}>{b.date} {b.time}</span>
+                      </div>
+                      <p style={{fontSize:10,color:C.label,marginBottom:8}}>{b.type}{b.title?"／"+b.title:""}</p>
+                      {unlinkedBookingMsg[b.rowIndex] && <p style={{fontSize:10,color:"#a04030",marginBottom:6}}>{unlinkedBookingMsg[b.rowIndex]}</p>}
+                      <div style={{display:"flex",gap:6}}>
+                        <select value={unlinkedBookingSelect[b.rowIndex]||""} onChange={e=>setUnlinkedBookingSelect(prev=>({...prev,[b.rowIndex]:e.target.value}))}
+                          style={{flex:1,fontSize:11,padding:"6px 8px",borderRadius:6,border:"1px solid "+C.border,background:"#fff"}}>
+                          <option value="">メンバーを選択</option>
+                          {members.filter(m=>m.name).sort((a,c)=>a.name.localeCompare(c.name,"ja")).map(m=>(
+                            <option key={m.name} value={m.name}>{m.name}</option>
+                          ))}
+                        </select>
+                        <button disabled={!!unlinkedBookingBusy[b.rowIndex]} onClick={()=>linkUnlinkedBooking(b.rowIndex)}
+                          style={{padding:"6px 14px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:11,fontWeight:600,cursor:unlinkedBookingBusy[b.rowIndex]?"default":"pointer",opacity:unlinkedBookingBusy[b.rowIndex]?0.5:1,whiteSpace:"nowrap"}}>
+                          {unlinkedBookingBusy[b.rowIndex]?"処理中...":"登録"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         {/* ログイン履歴（DANiLOのみ） */}
         {!isInstructor && (
           <button onClick={()=>{setShowLogins(!showLogins); if(!showLogins) fetchLogins();}}
