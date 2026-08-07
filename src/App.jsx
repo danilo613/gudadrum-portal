@@ -4333,6 +4333,7 @@ function App() {
   const [rtmMinutes, setRtmMinutes] = useState(0); // 0=未選択, 5/10/15
   const [rtmActive, setRtmActive] = useState(false);
   const [rtmType, setRtmType] = useState(null); // "training" or "muscle"
+  const [rtmInternalizeLevel, setRtmInternalizeLevel] = useState("beginner"); // beginner / intermediate / advanced
   const [characterGrowth, setCharacterGrowth] = useState(null);
   const [characterModalOpen, setCharacterModalOpen] = useState(false);
   const [characterMessage, setCharacterMessage] = useState("");
@@ -4356,8 +4357,9 @@ function App() {
   React.useEffect(()=>{rtmActiveRef.current=rtmActive;},[rtmActive]);
 
   // internalizeモード用：5分区切りごとに10〜15回、無音にする小節の開始タイムスタンプ（秒）を生成
-  // 小節同士が連続で無音にならないよう、最低でも小節2つ分の間隔を空ける
-  function generateSilentBarSchedule_(totalSec, barDurationSec) {
+  // 小節同士が連続で無音にならないよう、最低でも小節2つ分（＋無音自体の長さ）の間隔を空ける
+  // level: "beginner"=必ず1小節無音／"intermediate"=1小節と2小節が半々／"advanced"=必ず2小節無音
+  function generateSilentBarSchedule_(totalSec, barDurationSec, level) {
     const timestamps = [];
     const segCount = Math.ceil(totalSec / 300);
     for (let seg = 0; seg < segCount; seg++) {
@@ -4366,15 +4368,22 @@ function App() {
       const segLen = segEnd - segStart;
       if (segLen <= 0) continue;
       const count = 10 + Math.floor(Math.random() * 6); // 10〜15
-      const minGap = Math.max(barDurationSec * 2, segLen / (count * 2 || 1));
+      // 2小節分の無音もあり得るため、間隔は少し広めに確保する
+      const minGap = Math.max(barDurationSec * 3, segLen / (count * 2 || 1));
       const candidates = [];
       let attempts = 0;
       while (candidates.length < count && attempts < count * 40) {
         attempts++;
         const t = segStart + Math.random() * segLen;
-        if (candidates.every(c => Math.abs(c - t) >= minGap)) candidates.push(t);
+        if (candidates.every(c => Math.abs(c.time - t) >= minGap)) {
+          let bars;
+          if (level === "advanced") bars = 2;
+          else if (level === "intermediate") bars = Math.random() < 0.5 ? 1 : 2;
+          else bars = 1; // beginner
+          candidates.push({ time: t, bars: bars });
+        }
       }
-      candidates.sort((a,b)=>a-b);
+      candidates.sort((a,b)=>a.time-b.time);
       timestamps.push(...candidates);
     }
     return timestamps;
@@ -4410,10 +4419,11 @@ function App() {
     // internalizeモード：無音小節のスケジュールを事前生成（テンポは固定なので小節の長さも一定）
     rtmSilentIdxRef.current = 0;
     rtmBarSilentRef.current = false;
+    rtmSilentBarsRemainingRef.current = 0;
     if (rtmType === "internalize") {
       const beatsPerBar = metroTimeSigRef.current === "3/4" ? 3 : 4;
       const barDurationSec = (60 / startBpm) * beatsPerBar;
-      rtmSilentScheduleRef.current = generateSilentBarSchedule_(minutes*60, barDurationSec);
+      rtmSilentScheduleRef.current = generateSilentBarSchedule_(minutes*60, barDurationSec, rtmInternalizeLevel);
     } else {
       rtmSilentScheduleRef.current = [];
     }
@@ -4593,6 +4603,7 @@ function App() {
   // RTM用情報
   const rtmInfoRef = React.useRef(null); // {startTime, totalSec, startBpm, bpmIncrease}
   const rtmSilentScheduleRef = React.useRef([]); // internalizeモード：無音にするタイムスタンプ一覧（秒）
+  const rtmSilentBarsRemainingRef = React.useRef(0); // internalizeモード：現在の無音が、あと何小節続くか
   const rtmSilentIdxRef = React.useRef(0);
   const rtmBarSilentRef = React.useRef(false); // 現在の小節が無音対象かどうか
 
@@ -4767,14 +4778,23 @@ function App() {
       // 小節頭でinternalizeモードの無音判定を更新
       if (isBarHead) {
         if (rtmInfoRef.current && rtmInfoRef.current.type === "internalize") {
-          const elapsedSec = (Date.now() - rtmInfoRef.current.startTime) / 1000;
-          const schedule = rtmSilentScheduleRef.current;
-          let silent = false;
-          while (rtmSilentIdxRef.current < schedule.length && elapsedSec >= schedule[rtmSilentIdxRef.current]) {
-            silent = true;
-            rtmSilentIdxRef.current++;
+          if (rtmSilentBarsRemainingRef.current > 0) {
+            // 直前の無音イベントが2小節指定だった場合、続きの小節も無音のまま
+            rtmSilentBarsRemainingRef.current--;
+            rtmBarSilentRef.current = true;
+          } else {
+            const elapsedSec = (Date.now() - rtmInfoRef.current.startTime) / 1000;
+            const schedule = rtmSilentScheduleRef.current;
+            let silent = false;
+            let extraBars = 0;
+            while (rtmSilentIdxRef.current < schedule.length && elapsedSec >= schedule[rtmSilentIdxRef.current].time) {
+              silent = true;
+              extraBars = schedule[rtmSilentIdxRef.current].bars - 1; // 今回の小節分を1つ消費した残り
+              rtmSilentIdxRef.current++;
+            }
+            rtmBarSilentRef.current = silent;
+            rtmSilentBarsRemainingRef.current = extraBars;
           }
-          rtmBarSilentRef.current = silent;
         } else {
           rtmBarSilentRef.current = false;
         }
@@ -6691,7 +6711,20 @@ function App() {
                   {/* リズム内在トレーニングモード（不規則な無音小節あり／幹サブスク限定） */}
                   <div style={{marginBottom:16}}>
                     <div style={{fontSize:11,color:"rgba(150,220,180,0.85)",letterSpacing:2,fontWeight:500,marginBottom:6}}>🧘 リズム内在トレーニングモード</div>
-                    <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>不規則に1小節無音になる。テンポを体の中で保つ練習。5分=5P / 10分=10P / 15分=15P</div>
+                    <div style={{display:"flex",gap:6,marginBottom:8}}>
+                      {[["beginner","初級"],["intermediate","中級"],["advanced","上級"]].map(([key,label])=>(
+                        <button key={key} onClick={()=>setRtmInternalizeLevel(key)}
+                          style={{flex:1,padding:"6px 0",borderRadius:6,border:rtmInternalizeLevel===key?"1px solid rgba(150,220,180,0.6)":"1px solid rgba(150,220,180,0.15)",background:rtmInternalizeLevel===key?"linear-gradient(180deg, rgba(40,80,60,0.6), rgba(20,50,35,0.6))":"rgba(150,220,180,0.05)",color:rtmInternalizeLevel===key?"#c8e8d4":"rgba(200,232,212,0.5)",fontSize:11,fontWeight:rtmInternalizeLevel===key?600:400,cursor:"pointer",letterSpacing:1}}>
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{fontSize:10,color:"rgba(150,220,180,0.5)",marginBottom:8,letterSpacing:0.5,lineHeight:1.6}}>
+                      {rtmInternalizeLevel==="beginner" && "不規則に1小節無音になる。テンポを体の中で保つ練習。"}
+                      {rtmInternalizeLevel==="intermediate" && "不規則に1小節、または2小節（半々の確率）無音になる。より長く、テンポを見失わない練習。"}
+                      {rtmInternalizeLevel==="advanced" && "不規則に2小節、連続で無音になる。長い空白でもテンポを保ち続ける、上級者向けの練習。"}
+                      <br/>5分=5P / 10分=10P / 15分=15P
+                    </div>
                     <div style={{display:"flex",flexDirection:"column",gap:6}}>
                       {[[5,5],[10,10],[15,15]].map(([min,pt])=>{
                         const isKanSubscriber = (currentMember.subscType === "幹ノーマル" || currentMember.subscType === "幹スペシャル" || currentMember.subscType === "幹 ノーマル" || currentMember.subscType === "幹 スペシャル" || currentMember.subscType === "講師") || isInstructor || isFromAdmin;
@@ -6747,7 +6780,7 @@ function App() {
                 <div>
                   {rtmType === "internalize" && (
                     <div style={{textAlign:"center",marginBottom:10,fontSize:11,color:"rgba(200,232,212,0.8)",letterSpacing:1,lineHeight:1.6}}>
-                      🧘 リズム内在トレーニング中——不規則に1小節無音になります。<br/>心の中でテンポを保ったまま演奏し続けてください。
+                      🧘 リズム内在トレーニング中（{rtmInternalizeLevel==="beginner"?"初級":rtmInternalizeLevel==="intermediate"?"中級":"上級"}）——不規則に{rtmInternalizeLevel==="beginner"?"1小節":rtmInternalizeLevel==="intermediate"?"1〜2小節":"2小節"}無音になります。<br/>心の中でテンポを保ったまま演奏し続けてください。
                     </div>
                   )}
                   {/* カウントダウン（大きく中央） */}
