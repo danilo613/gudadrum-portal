@@ -3927,6 +3927,19 @@ function App() {
     } catch(e){ setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ 通信に失敗しました"})); }
     setUnlinkedBookingBusy(prev=>({...prev,[rowIndex]:false}));
   }
+  async function ignoreUnlinkedBooking(rowIndex){
+    if (unlinkedBookingBusy[rowIndex]) return; // 二重送信を防ぐ
+    setUnlinkedBookingBusy(prev=>({...prev,[rowIndex]:true}));
+    try {
+      const res = await gasWrite({action:"ignoreunlinkedbooking", rowIndex:String(rowIndex)});
+      if (res && res.success) {
+        setUnlinkedBookings(prev => prev.filter(b => b.rowIndex !== rowIndex));
+      } else {
+        setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ "+((res&&res.error)||"無視に失敗しました")}));
+      }
+    } catch(e){ setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ 通信に失敗しました"})); }
+    setUnlinkedBookingBusy(prev=>({...prev,[rowIndex]:false}));
+  }
   const [showAdminPastScheds, setShowAdminPastScheds] = useState(false);
   const [playerMode, setPlayerMode] = useState("single");
   const [iridescenceScale, setIridescenceScale] = useState("arcane");
@@ -8394,6 +8407,10 @@ function App() {
                         <button disabled={!!unlinkedBookingBusy[b.rowIndex]} onClick={()=>linkUnlinkedBooking(b.rowIndex)}
                           style={{padding:"6px 14px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:11,fontWeight:600,cursor:unlinkedBookingBusy[b.rowIndex]?"default":"pointer",opacity:unlinkedBookingBusy[b.rowIndex]?0.5:1,whiteSpace:"nowrap"}}>
                           {unlinkedBookingBusy[b.rowIndex]?"処理中...":"登録"}
+                        </button>
+                        <button disabled={!!unlinkedBookingBusy[b.rowIndex]} onClick={()=>{if(confirm("この予約を無視しますか？（スケジュールには反映されません）")) ignoreUnlinkedBooking(b.rowIndex);}}
+                          style={{padding:"6px 12px",borderRadius:6,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:11,cursor:unlinkedBookingBusy[b.rowIndex]?"default":"pointer",opacity:unlinkedBookingBusy[b.rowIndex]?0.5:1,whiteSpace:"nowrap"}}>
+                          無視
                         </button>
                       </div>
                     </div>
