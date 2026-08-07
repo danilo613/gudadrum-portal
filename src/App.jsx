@@ -6788,11 +6788,19 @@ function App() {
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>今月の練習時間</div>
-                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.monthMinutes)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span></div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>
+                    {(workoutStats&&workoutStats.monthMinutes)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span>
+                    <span style={{fontSize:11,color:"rgba(150,220,180,0.4)",marginLeft:6,marginRight:6}}>/</span>
+                    <span style={{fontSize:15}}>{(((workoutStats&&workoutStats.monthMinutes)||0)/60).toFixed(1)}</span><span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>時間</span>
+                  </div>
                 </div>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>累計練習時間</div>
-                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>{(workoutStats&&workoutStats.totalMinutes)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span></div>
+                  <div style={{fontSize:22,color:"#a0e8c0",fontFamily:"monospace",fontWeight:300}}>
+                    {(workoutStats&&workoutStats.totalMinutes)||0}<span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>分</span>
+                    <span style={{fontSize:11,color:"rgba(150,220,180,0.4)",marginLeft:6,marginRight:6}}>/</span>
+                    <span style={{fontSize:15}}>{(((workoutStats&&workoutStats.totalMinutes)||0)/60).toFixed(1)}</span><span style={{fontSize:11,color:"rgba(150,220,180,0.5)",marginLeft:4}}>時間</span>
+                  </div>
                 </div>
                 <div style={{padding:"10px 12px",background:"rgba(10,20,15,0.6)",border:"1px solid rgba(150,220,180,0.1)",borderRadius:8}}>
                   <div style={{fontSize:9,color:"rgba(150,220,180,0.5)",letterSpacing:1,marginBottom:4}}>連続日数</div>
