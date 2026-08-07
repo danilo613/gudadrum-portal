@@ -3920,6 +3920,7 @@ function App() {
       if (res && res.success) {
         setUnlinkedBookings(prev => prev.filter(b => b.rowIndex !== rowIndex));
         autoFetch();
+        fetchSchedules(); // 全メンバースケジュール・マイスケジュール、両方ここから読んでるので、これで自動反映される
       } else {
         setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ "+((res&&res.error)||"紐付けに失敗しました")}));
       }
