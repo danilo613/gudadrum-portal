@@ -3959,29 +3959,39 @@ function App() {
     const rowsHtml = song.sections.map(function(s,i){
       const cat = sectionCategoryOf(s.label);
       const rowBg = i%2===0 ? "#fff" : "#f7f5f2";
-      return '<tr style="background:'+rowBg+'"><td style="padding:10px 14px;color:#999;font-size:13px">'+(i+1)+'</td>'
-        +'<td style="padding:10px 14px"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+cat.color+';margin-right:8px"></span>'+s.label+'</td>'
-        +'<td style="padding:10px 14px;text-align:right;font-weight:700;font-size:16px">'+(s.bars||"-")+'</td></tr>';
+      return '<div style="display:flex;align-items:center;padding:9px 14px;background:'+rowBg+'">'
+        +'<span style="width:30px;font-size:12px;color:#999">'+(i+1)+'</span>'
+        +'<span style="flex:1;font-size:13px;color:#333;display:flex;align-items:center"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+cat.color+';margin-right:8px;flex-shrink:0"></span>'+s.label+'</span>'
+        +'<span style="font-size:15px;font-weight:700;color:#333">'+(s.bars||"-")+'</span>'
+        +'</div>';
     }).join("");
     const totalBars = song.sections.reduce(function(sum,s){ return sum + (s.bars||0); }, 0);
     const usedCats = {};
     song.sections.forEach(function(s){ const c=sectionCategoryOf(s.label); usedCats[c.name]=c.color; });
     const legendHtml = Object.keys(usedCats).map(function(name){
-      return '<span style="display:inline-flex;align-items:center;margin-right:16px;font-size:11px;color:#888"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+usedCats[name]+';margin-right:5px"></span>'+name+'</span>';
+      return '<span style="display:inline-flex;align-items:center;margin-right:16px;font-size:10px;color:#888"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+usedCats[name]+';margin-right:5px"></span>'+name+'</span>';
     }).join("");
     const win = window.open("","_blank");
     win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+song.title+'</title>'
-      +'<style>@page{size:A4;margin:18mm}body{font-family:sans-serif;margin:0;background:#faf8f4}table{width:100%;border-collapse:collapse}</style></head><body>'
+      +'<style>'
+        +'@page{size:A4;margin:18mm}'
+        +'body{font-family:"Hiragino Sans","Noto Sans JP","Yu Gothic",-apple-system,sans-serif;margin:0;background:#faf8f4;color:#333}'
+      +'</style></head><body>'
       +'<div style="font-size:26px;font-weight:700;color:#222;margin-bottom:4px">'+song.title+'</div>'
       +'<div style="font-size:12px;color:#999;margin-bottom:20px">楽曲構成表　／　'+song.scale+'　／　BPM '+(song.bpm||"-")+'</div>'
-      +'<div style="border-radius:10px;overflow:hidden;border:1px solid #e8e4dc">'
-        +'<table>'
-          +'<thead><tr style="background:#eae6dc"><th style="text-align:left;padding:10px 14px;font-size:12px;color:#888;width:36px">#</th><th style="text-align:left;padding:10px 14px;font-size:12px;color:#888">セクション</th><th style="text-align:right;padding:10px 14px;font-size:12px;color:#888">小節数</th></tr></thead>'
-          +'<tbody>'+rowsHtml+'</tbody>'
-          +'<tfoot><tr style="background:#eae6dc;border-top:2px solid #ccc"><td colspan="2" style="padding:12px 14px;font-weight:700">合計</td><td style="padding:12px 14px;text-align:right;font-weight:700;font-size:18px">'+totalBars+'小節</td></tr></tfoot>'
-        +'</table>'
+      +'<div style="border-radius:12px;overflow:hidden;border:1px solid #e8e4dc">'
+        +'<div style="display:flex;background:#eae6dc;padding:9px 14px">'
+          +'<span style="width:30px;font-size:11px;color:#888">#</span>'
+          +'<span style="flex:1;font-size:11px;color:#888">セクション</span>'
+          +'<span style="font-size:11px;color:#888">小節数</span>'
+        +'</div>'
+        +rowsHtml
+        +'<div style="display:flex;padding:11px 14px;background:#eae6dc;border-top:2px solid #ccc">'
+          +'<span style="flex:1;font-size:12px;font-weight:700;color:#333">合計</span>'
+          +'<span style="font-size:16px;font-weight:700;color:#333">'+totalBars+'小節</span>'
+        +'</div>'
       +'</div>'
-      +'<div style="margin-top:16px">'+legendHtml+'</div>'
+      +'<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:0">'+legendHtml+'</div>'
       +'<div style="margin-top:24px;font-size:8px;color:#bbb;text-align:center">© 2026 by オフィススターシーヅ・「GUDAdrum」はオフィススターシーヅ・の登録商標です（登録第6018643号）</div>'
       +'</body></html>');
     win.document.close();
@@ -8038,10 +8048,13 @@ function App() {
                         <p style={{fontSize:20,fontWeight:700,color:"#222"}}>{selectedSong.title}</p>
                         <p style={{fontSize:11,color:"#999",marginTop:2}}>楽曲構成表　／　{selectedSong.scale}　／　BPM {selectedSong.bpm||"-"}</p>
                       </div>
-                      <button onClick={()=>printSongComposition(selectedSong)}
-                        style={{padding:"6px 14px",borderRadius:6,border:"1px solid #00B8D9",background:"#fff",color:"#00A0C0",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
-                        🖨️ 印刷
-                      </button>
+                      <div style={{textAlign:"right"}}>
+                        <button onClick={()=>printSongComposition(selectedSong)}
+                          style={{padding:"6px 14px",borderRadius:6,border:"1px solid #00B8D9",background:"#fff",color:"#00A0C0",fontSize:11,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
+                          🖨️ 印刷 / PDF保存
+                        </button>
+                        <p style={{fontSize:8,color:C.label,marginTop:3}}>※印刷ダイアログの「送信先」で<br/>「PDFに保存」を選ぶとPDF化できます</p>
+                      </div>
                     </div>
                     {selectedSong.sections.length===0 ? (
                       <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>セクションが登録されていません</p>
