@@ -3824,9 +3824,12 @@ function App() {
   const [newSectionScoreId, setNewSectionScoreId] = useState("");
   const [newSectionLabel, setNewSectionLabel] = useState("");
   const [newSectionSubdiv, setNewSectionSubdiv] = useState("triplet");
+  const [newSectionBars, setNewSectionBars] = useState("8");
   const [sectionAddMsg, setSectionAddMsg] = useState("");
   const [editingSectionKey, setEditingSectionKey] = useState(null);
   const [editingSectionLabel, setEditingSectionLabel] = useState("");
+  const [editingSectionBars, setEditingSectionBars] = useState("");
+  const [editingSectionBarsLoading, setEditingSectionBarsLoading] = useState(false);
   const [sectionEditMsg, setSectionEditMsg] = useState("");
   const [confirmDeleteSongId, setConfirmDeleteSongId] = useState(null);
   const [songDeleteMsg, setSongDeleteMsg] = useState("");
@@ -5407,6 +5410,10 @@ function App() {
     try {
       const res = await gasWrite({ action: "addsectiondefinition", scoreId: newSectionScoreId, label: newSectionLabel.trim(), subdivision: newSectionSubdiv });
       if (res && res.success) {
+        // 小節数の初期値も、この時点で書き込んでおく（譜面編集を初めて開いた時、この数字からスタートする）
+        if (res.key) {
+          try { await gasWrite({ action: "savescore", score_id: newSectionScoreId, section: res.key, hand: "meta", color: "bars", pattern: String(newSectionBars||"8") }); } catch(e) {}
+        }
         setSectionAddMsg("✅ 「" + newSectionLabel.trim() + "」を追加しました");
         setNewSectionLabel("");
         await fetchSongMaster();
@@ -5417,11 +5424,30 @@ function App() {
     setTimeout(function(){setSectionAddMsg("");}, 4000);
   }
 
+  async function startEditingSection(scoreId, key, label) {
+    setEditingSectionKey(key);
+    setEditingSectionLabel(label);
+    setEditingSectionBars("");
+    setEditingSectionBarsLoading(true);
+    try {
+      const res = await gasRead({ action:"getscores", score_id:scoreId });
+      let bars = "8";
+      (res && res.rows || []).forEach(function(r){
+        if (r.section === key && r.hand === "meta" && r.color === "bars") bars = r.pattern;
+      });
+      setEditingSectionBars(bars);
+    } catch(e) { setEditingSectionBars("8"); }
+    setEditingSectionBarsLoading(false);
+  }
   async function submitSectionLabelEdit(scoreId, key) {
     if (!editingSectionLabel.trim()) { setSectionEditMsg("❌ ラベルを入力してください"); return; }
     try {
-      const res = await gasWrite({ action: "updatesectionlabel", scoreId: scoreId, key: key, label: editingSectionLabel.trim() });
-      if (res && res.success) {
+      const calls = [gasWrite({ action: "updatesectionlabel", scoreId: scoreId, key: key, label: editingSectionLabel.trim() })];
+      if (editingSectionBars) {
+        calls.push(gasWrite({ action: "savescore", score_id: scoreId, section: key, hand: "meta", color: "bars", pattern: String(editingSectionBars) }));
+      }
+      const results = await Promise.all(calls);
+      if (results[0] && results[0].success) {
         setSectionEditMsg("✅ 更新しました");
         setEditingSectionKey(null);
         await fetchSongMaster();
@@ -7916,6 +7942,9 @@ function App() {
               <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>セクション名</label>
               <input value={newSectionLabel} onChange={e=>setNewSectionLabel(e.target.value)} placeholder="例：イントロ"
                 style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10,boxSizing:"border-box"}}/>
+              <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>小節数（初期値・後から譜面編集画面で変更できます）</label>
+              <input type="number" min="1" value={newSectionBars} onChange={e=>setNewSectionBars(e.target.value)}
+                style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10,boxSizing:"border-box"}}/>
               <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>拍種別</label>
               <select value={newSectionSubdiv} onChange={e=>setNewSectionSubdiv(e.target.value)}
                 style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,marginBottom:10}}>
@@ -7979,18 +8008,24 @@ function App() {
                         return (
                           <div key={sec.key} style={{display:"flex",alignItems:"center",gap:6,padding:"3px 0"}}>
                             {isEditing ? (
-                              <>
-                                <input value={editingSectionLabel} onChange={e=>setEditingSectionLabel(e.target.value)}
-                                  style={{flex:1,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 8px",fontSize:11,color:C.choco}}/>
-                                <button onClick={()=>submitSectionLabelEdit(s.scoreId, sec.key)}
-                                  style={{padding:"4px 10px",borderRadius:6,border:"none",background:"#3a7a8a",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer"}}>保存</button>
-                                <button onClick={()=>setEditingSectionKey(null)}
-                                  style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:10,cursor:"pointer"}}>取消</button>
-                              </>
+                              <div style={{flex:1,display:"flex",flexDirection:"column",gap:4}}>
+                                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                                  <input value={editingSectionLabel} onChange={e=>setEditingSectionLabel(e.target.value)}
+                                    style={{flex:1,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 8px",fontSize:11,color:C.choco}}/>
+                                  <input type="number" min="1" value={editingSectionBars} onChange={e=>setEditingSectionBars(e.target.value)}
+                                    placeholder={editingSectionBarsLoading?"...":"小節数"}
+                                    style={{width:70,background:"#fff",border:"1px solid "+C.border,borderRadius:6,padding:"4px 8px",fontSize:11,color:C.choco}}/>
+                                  <button onClick={()=>submitSectionLabelEdit(s.scoreId, sec.key)}
+                                    style={{padding:"4px 10px",borderRadius:6,border:"none",background:"#3a7a8a",color:"#fff",fontSize:10,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>保存</button>
+                                  <button onClick={()=>setEditingSectionKey(null)}
+                                    style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:10,cursor:"pointer",whiteSpace:"nowrap"}}>取消</button>
+                                </div>
+                                <p style={{fontSize:9,color:"#a04030",lineHeight:1.5}}>⚠️ 小節数を今より減らすと、はみ出た小節の音符データが見えなくなります（データ自体は残ります）。ご注意ください。</p>
+                              </div>
                             ) : (
                               <>
                                 <span style={{flex:1,fontSize:11,color:C.choco}}>・{sec.label}</span>
-                                <button onClick={()=>{setEditingSectionKey(sec.key);setEditingSectionLabel(sec.label);}}
+                                <button onClick={()=>startEditingSection(s.scoreId, sec.key, sec.label)}
                                   style={{padding:"2px 8px",borderRadius:6,border:"1px solid rgba(58,122,138,0.3)",background:"#fff",color:"#3a7a8a",fontSize:9,cursor:"pointer"}}>✏️編集</button>
                               </>
                             )}
