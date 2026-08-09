@@ -3961,7 +3961,7 @@ function App() {
       const rowBg = i%2===0 ? "#fff" : "#f7f5f2";
       return '<div style="display:flex;align-items:center;padding:9px 14px;background:'+rowBg+'">'
         +'<span style="width:30px;font-size:12px;color:#999">'+(i+1)+'</span>'
-        +'<span style="flex:1;font-size:13px;color:#333;display:flex;align-items:center"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+cat.color+';margin-right:8px;flex-shrink:0"></span>'+s.label+'</span>'
+        +'<span style="width:140px;flex-shrink:0;font-size:13px;color:#333;display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+cat.color+';margin-right:8px;flex-shrink:0"></span>'+s.label+'</span>'
         +'<span style="font-size:15px;font-weight:700;color:#333">'+(s.bars||"-")+'</span>'
         +'</div>';
     }).join("");
@@ -3982,7 +3982,7 @@ function App() {
       +'<div style="border-radius:12px;overflow:hidden;border:1px solid #e8e4dc">'
         +'<div style="display:flex;background:#eae6dc;padding:9px 14px">'
           +'<span style="width:30px;font-size:11px;color:#888">#</span>'
-          +'<span style="flex:1;font-size:11px;color:#888">セクション</span>'
+          +'<span style="width:140px;flex-shrink:0;font-size:11px;color:#888">セクション</span>'
           +'<span style="font-size:11px;color:#888">小節数</span>'
         +'</div>'
         +rowsHtml
@@ -8063,7 +8063,7 @@ function App() {
                       <div style={{borderRadius:10,overflow:"hidden",border:"1px solid #e8e4dc"}}>
                         <div style={{display:"flex",background:"#eae6dc",padding:"9px 14px"}}>
                           <span style={{width:30,fontSize:11,color:"#888"}}>#</span>
-                          <span style={{flex:1,fontSize:11,color:"#888"}}>セクション</span>
+                          <span style={{width:140,flexShrink:0,fontSize:11,color:"#888"}}>セクション</span>
                           <span style={{fontSize:11,color:"#888"}}>小節数</span>
                         </div>
                         {selectedSong.sections.map(function(s,i){
@@ -8071,7 +8071,7 @@ function App() {
                           return (
                             <div key={i} style={{display:"flex",alignItems:"center",padding:"9px 14px",background:i%2===0?"#fff":"#f7f5f2"}}>
                               <span style={{width:30,fontSize:12,color:"#999"}}>{i+1}</span>
-                              <span style={{flex:1,fontSize:13,color:"#333",display:"flex",alignItems:"center"}}>
+                              <span style={{width:140,flexShrink:0,fontSize:13,color:"#333",display:"flex",alignItems:"center",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
                                 <span style={{width:8,height:8,borderRadius:"50%",background:cat.color,marginRight:8,flexShrink:0}}/>
                                 {s.label}
                               </span>
