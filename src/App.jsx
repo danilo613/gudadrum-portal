@@ -10592,8 +10592,9 @@ function App() {
                           var list = groups[assignee];
                           var cApplied = list.filter(function(o){return o.status==="申し込み済み";}).length;
                           var cJoin = list.filter(function(o){return o.status==="参加";}).length;
-                          var cPending = list.filter(function(o){return o.status!=="申し込み済み"&&o.status!=="参加"&&o.status!=="不参加";}).length;
+                          var cPending = list.filter(function(o){return o.contacted&&o.status!=="申し込み済み"&&o.status!=="参加"&&o.status!=="不参加";}).length;
                           var cNo = list.filter(function(o){return o.status==="不参加";}).length;
+                          var cNotContacted = list.filter(function(o){return !o.contacted&&o.status!=="申し込み済み"&&o.status!=="参加"&&o.status!=="不参加";}).length;
                           return (
                             <div key={assignee} style={{minWidth:180,flexShrink:0}}>
                               <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:2,padding:"4px 8px",background:"rgba(138,74,106,0.1)",borderRadius:6,textAlign:"center"}}>
@@ -10604,6 +10605,7 @@ function App() {
                                 <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(42,122,58,0.15)",color:"#2a7a3a",fontWeight:600}}>参加{cJoin}</span>
                                 <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(138,74,106,0.1)",color:"#8a6a7a",fontWeight:600}}>未定{cPending}</span>
                                 <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(160,64,48,0.12)",color:"#a04030",fontWeight:600}}>不参加{cNo}</span>
+                                <span style={{padding:"1px 6px",borderRadius:4,background:"rgba(138,74,106,0.06)",color:"#a89aa0",fontWeight:600}}>声掛け未{cNotContacted}</span>
                               </div>
                               <div style={{display:"flex",flexDirection:"column",gap:6}}>
                                 {groups[assignee].map(function(o){
