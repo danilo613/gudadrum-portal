@@ -3806,6 +3806,9 @@ function App() {
   const [insightCopied, setInsightCopied] = useState(false);
   const [songMasterList, setSongMasterList] = useState(null);
   const [showSongMasterCard, setShowSongMasterCard] = useState(false);
+  const [showSongCompositionTable, setShowSongCompositionTable] = useState(false);
+  const [songCompositionData, setSongCompositionData] = useState(null);
+  const [songCompositionLoading, setSongCompositionLoading] = useState(false);
   const [groupOpenScore, setGroupOpenScore] = useState(false);
   const [groupOpenHpt, setGroupOpenHpt] = useState(false);
   const [groupOpenSubs, setGroupOpenSubs] = useState(false);
@@ -3907,6 +3910,66 @@ function App() {
       if (res && res.workouts) setWorkoutHistory(res.workouts);
       else setWorkoutHistory([]);
     } catch(e){ setWorkoutHistory([]); }
+  }
+  function scaleLabelOf(scoreId){
+    if (CUSTOM_SONGS[scoreId]) {
+      const s = CUSTOM_SONGS[scoreId].scale;
+      return s==="arcane"?"響ノ音":s==="enigma"?"秘ノ音":s==="equinox"?"光ノ音":s==="african"?"和ノ音":"風ノ音";
+    }
+    if (scoreId==="iridescence") return "秘ノ音";
+    if (scoreId==="aoi") return "響ノ音";
+    if (scoreId==="nostalgic"||scoreId==="holychild") return "光ノ音";
+    return "風ノ音";
+  }
+  async function fetchSongCompositionTable(){
+    setSongCompositionLoading(true);
+    try {
+      const scoreIds = Object.keys(SCORE_ID_TO_NAME);
+      const results = await Promise.all(scoreIds.map(async function(scoreId){
+        const sections = SCORE_SECTIONS[scoreId] || [];
+        let barsBySection = {};
+        try {
+          const res = await gasRead({ action:"getscores", score_id:scoreId });
+          (res && res.rows || []).forEach(function(r){
+            if (r.hand === "meta" && r.color === "bars") barsBySection[r.section] = parseInt(r.pattern) || null;
+          });
+        } catch(e) {}
+        return {
+          scoreId: scoreId,
+          title: SCORE_ID_TO_NAME[scoreId],
+          scale: scaleLabelOf(scoreId),
+          bpm: SCORE_DEFAULT_BPM[scoreId] || null,
+          sections: sections.map(function(s){ return { key:s[0], label:s[1], bars: barsBySection[s[0]] || null }; }),
+        };
+      }));
+      setSongCompositionData(results);
+    } catch(e) { setSongCompositionData([]); }
+    setSongCompositionLoading(false);
+  }
+  function printSongComposition(song){
+    const rowsHtml = song.sections.map(function(s){
+      return '<tr><td style="padding:8px 12px;border-bottom:1px solid #e0e0e0">'+s.label+'</td><td style="padding:8px 12px;border-bottom:1px solid #e0e0e0;text-align:right">'+(s.bars?s.bars+'小節':'-')+'</td></tr>';
+    }).join("");
+    const totalBars = song.sections.reduce(function(sum,s){ return sum + (s.bars||0); }, 0);
+    const win = window.open("","_blank");
+    win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+song.title+'</title>'
+      +'<style>@page{size:A4;margin:20mm}body{font-family:sans-serif;margin:0}</style></head><body>'
+      +'<div style="font-size:24px;font-weight:700;color:#1a3a2a;margin-bottom:4px">'+song.title+'</div>'
+      +'<div style="font-size:12px;color:#888;margin-bottom:20px">Composed by DANiLO</div>'
+      +'<div style="display:flex;gap:24px;margin-bottom:24px;padding:14px 18px;background:#f7f5f2;border-radius:10px">'
+        +'<div><div style="font-size:10px;color:#999">音階</div><div style="font-size:16px;font-weight:700;color:#333">'+song.scale+'</div></div>'
+        +'<div><div style="font-size:10px;color:#999">BPM</div><div style="font-size:16px;font-weight:700;color:#333">'+(song.bpm||"-")+'</div></div>'
+        +'<div><div style="font-size:10px;color:#999">総小節数</div><div style="font-size:16px;font-weight:700;color:#333">'+totalBars+'小節</div></div>'
+        +'<div><div style="font-size:10px;color:#999">セクション数</div><div style="font-size:16px;font-weight:700;color:#333">'+song.sections.length+'</div></div>'
+      +'</div>'
+      +'<table style="width:100%;border-collapse:collapse">'
+        +'<thead><tr><th style="text-align:left;padding:8px 12px;border-bottom:2px solid #333;font-size:12px;color:#666">セクション</th><th style="text-align:right;padding:8px 12px;border-bottom:2px solid #333;font-size:12px;color:#666">小節数</th></tr></thead>'
+        +'<tbody>'+rowsHtml+'</tbody>'
+      +'</table>'
+      +'<div style="margin-top:20px;font-size:8px;color:#bbb;text-align:center">© 2026 by オフィススターシーヅ・「GUDAdrum」はオフィススターシーヅ・の登録商標です（登録第6018643号）</div>'
+      +'</body></html>');
+    win.document.close();
+    setTimeout(function(){win.print();},300);
   }
   async function fetchAllPurchasedScores(){
     try {
@@ -7912,6 +7975,51 @@ function App() {
                   );
                 })}
                 </>)}
+              </div>
+            )}
+          </div>
+        )}
+        {/* 楽曲構成一覧（DANiLOのみ） */}
+        {!isInstructor && (
+          <button onClick={()=>{setShowSongCompositionTable(!showSongCompositionTable); if(!showSongCompositionTable && songCompositionData===null) fetchSongCompositionTable();}}
+            style={adminCardStyle(ADMIN_GROUP_COLORS.score)}>
+            📋 楽曲構成一覧 {showSongCompositionTable?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showSongCompositionTable && (
+          <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+            {songCompositionLoading ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…（曲数が多いと少し時間がかかります）</p>
+            ) : !songCompositionData || songCompositionData.length===0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>登録曲がありません</p>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {songCompositionData.map(function(song){
+                  const totalBars = song.sections.reduce(function(sum,s){return sum+(s.bars||0);},0);
+                  return (
+                    <div key={song.scoreId} style={{padding:"10px 12px",background:"#00B8D90D",border:"1px solid rgba(0,184,217,0.2)",borderRadius:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
+                        <div>
+                          <p style={{fontSize:13,fontWeight:700,color:C.choco}}>{song.title}</p>
+                          <p style={{fontSize:10,color:C.label,marginTop:2}}>{song.scale}／BPM {song.bpm||"-"}／全{totalBars}小節／{song.sections.length}セクション</p>
+                        </div>
+                        <button onClick={()=>printSongComposition(song)}
+                          style={{padding:"5px 12px",borderRadius:6,border:"1px solid #00B8D9",background:"#fff",color:"#00A0C0",fontSize:10,fontWeight:600,cursor:"pointer",whiteSpace:"nowrap"}}>
+                          🖨️ 印刷
+                        </button>
+                      </div>
+                      <div style={{display:"flex",flexWrap:"wrap",gap:4}}>
+                        {song.sections.map(function(s,i){
+                          return (
+                            <span key={i} style={{fontSize:10,padding:"3px 8px",borderRadius:12,background:"rgba(0,184,217,0.1)",color:"#008aa8"}}>
+                              {s.label}（{s.bars?s.bars+"小節":"-"}）
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
