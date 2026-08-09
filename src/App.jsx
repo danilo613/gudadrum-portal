@@ -3752,6 +3752,9 @@ function App() {
   const [workshopData, setWorkshopData] = useState([]);
   const [workshopHeaders, setWorkshopHeaders] = useState([]);
   const [showWorkshop, setShowWorkshop] = useState(false);
+  const [showFeedbackList, setShowFeedbackList] = useState(false);
+  const [feedbackListData, setFeedbackListData] = useState(null);
+  const [feedbackStatusBusy, setFeedbackStatusBusy] = useState({});
   const [workshopLoaded, setWorkshopLoaded] = useState(false);
   const [loginData, setLoginData] = useState(()=>cachedInit("loginData", []));
   const [workshopFilter, setWorkshopFilter] = useState("all");
@@ -3837,6 +3840,8 @@ function App() {
   const [editingSongTitle, setEditingSongTitle] = useState("");
   const [songTitleEditMsg, setSongTitleEditMsg] = useState("");
   const [showRegisteredSongs, setShowRegisteredSongs] = useState(false);
+  const [sectionBarsCache, setSectionBarsCache] = useState({}); // "scoreId_sectionKey" -> 小節数
+  const [sectionBarsFetched, setSectionBarsFetched] = useState(false);
   const [showExpiredPoints, setShowExpiredPoints] = useState(false);
   const [expiredPointCandidates, setExpiredPointCandidates] = useState(null);
   const [expiredPointMsg, setExpiredPointMsg] = useState("");
@@ -5415,6 +5420,7 @@ function App() {
         // 小節数の初期値も、この時点で書き込んでおく（譜面編集を初めて開いた時、この数字からスタートする）
         if (res.key) {
           try { await gasWrite({ action: "savescore", score_id: newSectionScoreId, section: res.key, hand: "meta", color: "bars", pattern: String(newSectionBars||"8") }); } catch(e) {}
+          setSectionBarsCache(prev => ({...prev, [newSectionScoreId+"_"+res.key]: newSectionBars||"8"}));
         }
         setSectionAddMsg("✅ 「" + newSectionLabel.trim() + "」を追加しました");
         setNewSectionLabel("");
@@ -5426,6 +5432,25 @@ function App() {
     setTimeout(function(){setSectionAddMsg("");}, 4000);
   }
 
+  async function fetchAllSectionBars() {
+    if (!songMasterList || songMasterList.length === 0) return;
+    try {
+      const results = await Promise.all(songMasterList.map(async function(s){
+        try {
+          const res = await gasRead({ action:"getscores", score_id:s.scoreId });
+          const bars = {};
+          (res && res.rows || []).forEach(function(r){
+            if (r.hand === "meta" && r.color === "bars") bars[s.scoreId+"_"+r.section] = r.pattern;
+          });
+          return bars;
+        } catch(e) { return {}; }
+      }));
+      const merged = {};
+      results.forEach(function(b){ Object.assign(merged, b); });
+      setSectionBarsCache(prev => ({...prev, ...merged}));
+      setSectionBarsFetched(true);
+    } catch(e) {}
+  }
   async function startEditingSection(scoreId, key, label) {
     setEditingSectionKey(key);
     setEditingSectionLabel(label);
@@ -5452,6 +5477,9 @@ function App() {
       if (results[0] && results[0].success) {
         setSectionEditMsg("✅ 更新しました");
         setEditingSectionKey(null);
+        if (editingSectionBars) {
+          setSectionBarsCache(prev => ({...prev, [scoreId+"_"+key]: editingSectionBars}));
+        }
         await fetchSongMaster();
       } else {
         setSectionEditMsg("❌ 更新に失敗しました");
@@ -5922,6 +5950,30 @@ function App() {
       const data = await res.json();
       if (data.rows) { setWorkshopData(data.rows); setWorkshopHeaders(data.headers||[]); setWorkshopLoaded(true); }
     } catch(e) {}
+  }
+  async function fetchFeedbackList() {
+    try {
+      const res = await gasWrite({ action: "getfeedbacklist" });
+      if (res && res.rows) setFeedbackListData(res.rows);
+      else setFeedbackListData([]);
+    } catch(e) { setFeedbackListData([]); }
+  }
+  async function toggleFeedbackStatus(rowIndex, field, currentValue) {
+    const busyKey = rowIndex+"_"+field;
+    if (feedbackStatusBusy[busyKey]) return;
+    setFeedbackStatusBusy(prev => ({...prev, [busyKey]:true}));
+    const newValue = !currentValue;
+    setFeedbackListData(prev => prev.map(function(r){ return r.rowIndex===rowIndex ? {...r, [field]:newValue} : r; })); // 先に画面へ反映
+    try {
+      const res = await gasWrite({ action:"updatefeedbackstatus", rowIndex:String(rowIndex), field:field, value:String(newValue) });
+      if (!res || !res.success) {
+        // 失敗した場合は元に戻す
+        setFeedbackListData(prev => prev.map(function(r){ return r.rowIndex===rowIndex ? {...r, [field]:currentValue} : r; }));
+      }
+    } catch(e) {
+      setFeedbackListData(prev => prev.map(function(r){ return r.rowIndex===rowIndex ? {...r, [field]:currentValue} : r; }));
+    }
+    setFeedbackStatusBusy(prev => ({...prev, [busyKey]:false}));
   }
 
   async function fetchSurvey() {
@@ -7979,7 +8031,7 @@ function App() {
 
             {songMasterList && songMasterList.length > 0 && (
               <div style={{borderTop:"1px solid "+C.border,paddingTop:12}}>
-                <button onClick={()=>setShowRegisteredSongs(!showRegisteredSongs)}
+                <button onClick={()=>{setShowRegisteredSongs(!showRegisteredSongs); if(!showRegisteredSongs) fetchAllSectionBars();}}
                   style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:0,background:"transparent",border:"none",cursor:"pointer",marginBottom:8}}>
                   <span style={{fontSize:11,fontWeight:700,color:"#222"}}>登録済みの新曲（{songMasterList.length}件）</span>
                   <span style={{fontSize:11,color:"#222"}}>{showRegisteredSongs?"▲":"▼"}</span>
@@ -8043,7 +8095,12 @@ function App() {
                               </div>
                             ) : (
                               <>
-                                <span style={{flex:1,fontSize:11,color:C.choco}}>・{sec.label}</span>
+                                <span style={{flex:1,fontSize:11,color:C.choco}}>
+                                  ・{sec.label}
+                                  <span style={{fontSize:10,color:"#3a7a8a",marginLeft:6}}>
+                                    {sectionBarsCache[s.scoreId+"_"+sec.key]!==undefined ? sectionBarsCache[s.scoreId+"_"+sec.key]+"小節" : "…"}
+                                  </span>
+                                </span>
                                 <button onClick={()=>startEditingSection(s.scoreId, sec.key, sec.label)}
                                   style={{padding:"2px 8px",borderRadius:6,border:"1px solid rgba(58,122,138,0.3)",background:"#fff",color:"#3a7a8a",fontSize:9,cursor:"pointer"}}>✏️編集</button>
                               </>
@@ -9339,6 +9396,43 @@ function App() {
         </>)}
         {renderAdminGroupHeader("📈","データー収集","各種データの収集・分析を行う",ADMIN_GROUP_COLORS.collect,groupOpenCollect,()=>setGroupOpenCollect(!groupOpenCollect))}
         {groupOpenCollect && (<>
+        <button onClick={()=>{setShowFeedbackList(!showFeedbackList); if(!showFeedbackList && feedbackListData===null) fetchFeedbackList();}}
+          style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
+          📝 フィードバック一覧 {showFeedbackList?"▲":"▼"}
+        </button>
+        {showFeedbackList && (
+          <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
+            {!feedbackListData ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>
+            ) : feedbackListData.length===0 ? (
+              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>フィードバックはありません</p>
+            ) : (
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {feedbackListData.map(function(f){
+                  return (
+                    <div key={f.rowIndex} style={{padding:"10px 12px",background:f.handled?"rgba(42,122,58,0.06)":"rgba(138,74,106,0.04)",border:"1px solid "+(f.handled?"rgba(42,122,58,0.2)":"rgba(138,74,106,0.15)"),borderRadius:8}}>
+                      <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:4}}>
+                        <span style={{fontSize:12,fontWeight:700,color:C.choco}}>{f.name}</span>
+                        <span style={{fontSize:10,color:C.label}}>{f.date}</span>
+                      </div>
+                      <p style={{fontSize:12,color:C.choco,lineHeight:1.6,marginBottom:8,whiteSpace:"pre-wrap"}}>{f.message}</p>
+                      <div style={{display:"flex",gap:14}}>
+                        <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:C.label,cursor:"pointer"}}>
+                          <input type="checkbox" checked={f.checked} onChange={()=>toggleFeedbackStatus(f.rowIndex,"checked",f.checked)}/>
+                          確認済み
+                        </label>
+                        <label style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:C.label,cursor:"pointer"}}>
+                          <input type="checkbox" checked={f.handled} onChange={()=>toggleFeedbackStatus(f.rowIndex,"handled",f.handled)}/>
+                          対応済み
+                        </label>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
         <button onClick={()=>{setShowWorkshop(!showWorkshop); if(!workshopLoaded) fetchWorkshop();}}
           style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
           🧪 練習会データ {showWorkshop?"▲":"▼"}
