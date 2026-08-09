@@ -307,6 +307,19 @@ const SCORE_SOUND_URLS = {
     lime:"/sounds/lime.mp3",
     attack:"/sounds/attack.mp3",
   },
+  african: {
+    // 和ノ音（african）：音源データは追って追加予定。ファイル名の対応関係だけ先に用意しておく。
+    yellow:"/sounds/african_yellow.mp3",
+    red:"/sounds/african_red.mp3",
+    purple:"/sounds/african_purple.mp3",
+    green:"/sounds/african_green.mp3",
+    brown:"/sounds/african_brown.mp3",
+    cyan:"/sounds/african_cyan.mp3",
+    orange:"/sounds/african_orange.mp3",
+    pink:"/sounds/african_pink.mp3",
+    lime:"/sounds/african_lime.mp3",
+    attack:"/sounds/african_attack.mp3",
+  },
   enigma: {
     yellow:"/sounds/enigma_yellow.mp3",
     red:"/sounds/enigma_red.mp3",
@@ -6413,12 +6426,12 @@ function App() {
 
   const topbar = (title, actions) => (
     <div style={{background:"rgba(255,255,255,0.85)",borderBottom:"1px solid rgba(0,0,0,0.06)",position:"sticky",top:0,zIndex:10,backdropFilter:"blur(12px)",WebkitBackdropFilter:"blur(12px)"}}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 16px"}}>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:16}}>🌿</span>
-          <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.choco,fontFamily:"'Noto Serif JP',serif"}}>{title}</span>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"10px 16px",gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0,flexShrink:1}}>
+          <span style={{fontSize:16,flexShrink:0}}>🌿</span>
+          <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.choco,fontFamily:"'Noto Serif JP',serif",whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{title}</span>
         </div>
-        <div style={{display:"flex",gap:8,flexShrink:0}}>{actions}</div>
+        <div style={{display:"flex",gap:8,flexShrink:0,overflowX:"auto",WebkitOverflowScrolling:"touch"}}>{actions}</div>
       </div>
       {title==="GUDADRUM ORCHESTRA"&&(
         <div style={{fontSize:10,color:"#5a8a5a",padding:"0 16px 8px",lineHeight:1.4}}>
@@ -7778,6 +7791,7 @@ function App() {
               <option value="arcane">響ノ音（arcane）</option>
               <option value="enigma">秘ノ音（enigma）</option>
               <option value="equinox">光ノ音（equinox）</option>
+              <option value="african">和ノ音（african）</option>
             </select>
             <label style={{fontSize:10,color:"#222",display:"block",marginBottom:4,fontWeight:600}}>原曲BPM（任意）</label>
             <input type="number" value={newSongBpm} onChange={e=>setNewSongBpm(e.target.value)} placeholder="例：100"
