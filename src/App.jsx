@@ -3843,6 +3843,7 @@ function App() {
   const [expiredPointBusy, setExpiredPointBusy] = useState({});
   const [confirmExpireRow, setConfirmExpireRow] = useState(null);
   const [bgmInfo, setBgmInfo] = useState({title:"月灯りの森", artist:"灯音to.o.n"});
+  const [inorionParticipantCount, setInorionParticipantCount] = useState(null);
   const [showBgmEdit, setShowBgmEdit] = useState(false);
   const [bgmEditTitle, setBgmEditTitle] = useState("");
   const [bgmEditArtist, setBgmEditArtist] = useState("");
@@ -5223,6 +5224,7 @@ function App() {
     setTimeout(()=>{ fetchInorion(); }, 450);
     setTimeout(()=>{ fetchSongMaster(); }, 600);
     setTimeout(()=>{ fetchBgmInfo(); }, 900); // 表示上そこまで急がないので、最初のバッチより少し遅らせる
+    setTimeout(()=>{ fetchInorionParticipantCount(); }, 1000);
     const timer = setInterval(() => {
       autoFetch();
       setTimeout(()=>{ fetchSchedules(); }, 150);
@@ -5462,6 +5464,12 @@ function App() {
     try {
       const res = await gasWrite({ action: "getbgminfo" });
       if (res && (res.title || res.artist)) setBgmInfo({title: res.title||"", artist: res.artist||""});
+    } catch(e) {}
+  }
+  async function fetchInorionParticipantCount() {
+    try {
+      const res = await gasWrite({ action: "getinorionparticipantcount" });
+      if (res && typeof res.count === "number") setInorionParticipantCount(res.count);
     } catch(e) {}
   }
 
@@ -7510,6 +7518,17 @@ function App() {
                 ?<p style={{fontSize:13,fontWeight:700,color:"#c87aaa",marginTop:8}}>🎉 本日開催！</p>
                 :<p style={{fontSize:13,color:"#8a6a7a",marginTop:8}}>終了しました</p>;
             })()}
+            {inorionParticipantCount!==null && (
+              <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid rgba(138,74,106,0.15)"}}>
+                <p style={{fontSize:11,color:"#8a4a6a",marginBottom:4}}>
+                  現在のお申し込み　<span style={{fontSize:16,fontWeight:700,color:"#6a2a4a"}}>{inorionParticipantCount}</span> / 150人
+                </p>
+                <div style={{width:"100%",height:8,borderRadius:6,background:"rgba(138,74,106,0.12)",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:Math.min(100,Math.round(inorionParticipantCount/150*100))+"%",background:"linear-gradient(90deg, #d896b8, #8a4a6a)",borderRadius:6}}/>
+                </div>
+                <p style={{fontSize:10,color:"#8a6a7a",marginTop:4}}>達成率 {Math.min(100,Math.round(inorionParticipantCount/150*100))}%</p>
+              </div>
+            )}
           </div>
 
           {/* 前日当日リハ予定 */}
@@ -10380,6 +10399,17 @@ function App() {
                 ? <p style={{fontSize:13,fontWeight:700,color:"#c87aaa",marginTop:8}}>🎉 本日開催！</p>
                 : <p style={{fontSize:13,color:"#8a6a7a",marginTop:8}}>終了しました</p>;
             })()}
+            {inorionParticipantCount!==null && (
+              <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid rgba(138,74,106,0.15)"}}>
+                <p style={{fontSize:11,color:"#8a4a6a",marginBottom:4}}>
+                  現在のお申し込み　<span style={{fontSize:16,fontWeight:700,color:"#6a2a4a"}}>{inorionParticipantCount}</span> / 150人
+                </p>
+                <div style={{width:"100%",height:8,borderRadius:6,background:"rgba(138,74,106,0.12)",overflow:"hidden"}}>
+                  <div style={{height:"100%",width:Math.min(100,Math.round(inorionParticipantCount/150*100))+"%",background:"linear-gradient(90deg, #d896b8, #8a4a6a)",borderRadius:6}}/>
+                </div>
+                <p style={{fontSize:10,color:"#8a6a7a",marginTop:4}}>達成率 {Math.min(100,Math.round(inorionParticipantCount/150*100))}%</p>
+              </div>
+            )}
           </div>
 
           {/* 参加者管理・声掛けリスト（DANiLO＋講師陣） */}
