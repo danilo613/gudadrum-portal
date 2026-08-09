@@ -3958,7 +3958,7 @@ function App() {
   function printSongComposition(song){
     const rowsHtml = song.sections.map(function(s,i){
       const cat = sectionCategoryOf(s.label);
-      const rowBg = i%2===0 ? "#fff" : "#f7f5f2";
+      const rowBg = i%2===0 ? "#fff" : "#ece6d8";
       return '<div style="display:flex;align-items:center;padding:9px 14px;background:'+rowBg+'">'
         +'<span style="width:30px;font-size:12px;color:#999">'+(i+1)+'</span>'
         +'<span style="width:140px;flex-shrink:0;font-size:13px;color:#333;display:flex;align-items:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+cat.color+';margin-right:8px;flex-shrink:0"></span>'+s.label+'</span>'
