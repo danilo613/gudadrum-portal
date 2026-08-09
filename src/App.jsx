@@ -7526,7 +7526,7 @@ function App() {
                 <div style={{width:"100%",height:8,borderRadius:6,background:"rgba(138,74,106,0.12)",overflow:"hidden"}}>
                   <div style={{height:"100%",width:Math.min(100,Math.round(inorionParticipantCount/150*100))+"%",background:"linear-gradient(90deg, #d896b8, #8a4a6a)",borderRadius:6}}/>
                 </div>
-                <p style={{fontSize:10,color:"#8a6a7a",marginTop:4}}>達成率 {Math.min(100,Math.round(inorionParticipantCount/150*100))}%</p>
+                <p style={{fontSize:13,fontWeight:700,color:"#8a6a7a",marginTop:4}}>達成率 {Math.min(100,Math.round(inorionParticipantCount/150*100))}%</p>
               </div>
             )}
           </div>
@@ -10407,7 +10407,7 @@ function App() {
                 <div style={{width:"100%",height:8,borderRadius:6,background:"rgba(138,74,106,0.12)",overflow:"hidden"}}>
                   <div style={{height:"100%",width:Math.min(100,Math.round(inorionParticipantCount/150*100))+"%",background:"linear-gradient(90deg, #d896b8, #8a4a6a)",borderRadius:6}}/>
                 </div>
-                <p style={{fontSize:10,color:"#8a6a7a",marginTop:4}}>達成率 {Math.min(100,Math.round(inorionParticipantCount/150*100))}%</p>
+                <p style={{fontSize:13,fontWeight:700,color:"#8a6a7a",marginTop:4}}>達成率 {Math.min(100,Math.round(inorionParticipantCount/150*100))}%</p>
               </div>
             )}
           </div>
