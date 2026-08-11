@@ -3783,12 +3783,6 @@ function App() {
   const [surveyModal, setSurveyModal] = useState(null);
   const [isFromAdmin, setIsFromAdmin] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
-  const [trialPatterns, setTrialPatterns] = useState(null);
-  const [trialMemoText, setTrialMemoText] = useState("");
-  const [trialBpm, setTrialBpm] = useState(100);
-  const [trialMetroOn, setTrialMetroOn] = useState(false);
-  const [trialMetroMode, setTrialMetroMode] = useState("normal");
-  const [trialHeadBell, setTrialHeadBell] = useState(true);
   const [bgmPlayed, setBgmPlayed] = useState(false);
   const bgmRef = React.useRef(null);
   const pointHistoryFetchGen = React.useRef(0); // 古い応答が、後から来た正しい応答を上書きしないようにするためのガード
@@ -7426,24 +7420,6 @@ function App() {
         {loginErr && <p style={{fontSize:13,color:"#a04030",textAlign:"center",marginTop:12}}>{loginErr}</p>}
         {fetchMsg && <p style={{fontSize:12,color:"#a04030",textAlign:"center",marginTop:8,lineHeight:1.6}}>{fetchMsg}</p>}
       </div>
-      <button onClick={async ()=>{
-          setPage("trial");
-          window.scrollTo(0,0);
-          try {
-            const res = await gasRead({ action:"getscores", score_id:"iridescence" });
-            const patterns = {};
-            (res && res.rows || []).forEach(function(r){
-              if(!patterns[r.section]) patterns[r.section] = { left:{}, right:{}, meta:{} };
-              if(!patterns[r.section][r.hand]) patterns[r.section][r.hand] = {};
-              if(r.hand === "meta") patterns[r.section].meta[r.color] = r.pattern;
-              else patterns[r.section][r.hand][r.color] = JSON.parse(r.pattern||"[]");
-            });
-            setTrialPatterns(patterns);
-          } catch(e) {}
-        }}
-        style={{marginTop:16,width:"100%",maxWidth:380,padding:14,borderRadius:12,border:"1px dashed rgba(112,130,56,0.5)",background:"rgba(255,255,255,0.5)",color:C.moss,fontSize:13,fontWeight:700,cursor:"pointer",letterSpacing:"0.06em"}}>
-        🎼 ゲスト体験はこちら（会員登録なしでお試し）
-      </button>
       {showSettings && <SettingsModal/>}
     </div>
   );
@@ -7559,219 +7535,6 @@ function App() {
   );
 
   // ゲストページ（壱祈音専用）
-  if (page === "trial") {
-    const demoName = "ゲストさん";
-    return (
-      <div style={{minHeight:"100vh",background:"#f4f1ea",fontFamily:"'Noto Sans JP',sans-serif",paddingBottom:70}}>
-        <div style={{background:"linear-gradient(135deg,#ffd27a,#f5a623)",color:"#5a3a00",padding:"12px 16px",fontSize:12,lineHeight:1.6,textAlign:"center",fontWeight:700,position:"sticky",top:0,zIndex:50,boxShadow:"0 2px 8px rgba(0,0,0,0.1)"}}>
-          ✨ これは体験版です。実際のメンバー専用サイトの一部を再現しています。<br/>表示されているデータはすべてサンプルです。
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:8,padding:"14px 16px",background:"rgba(255,255,255,0.85)",borderBottom:"1px solid rgba(0,0,0,0.06)"}}>
-          <span style={{fontSize:16}}>🌿</span>
-          <span style={{fontSize:13,fontWeight:700,letterSpacing:"0.1em",color:C.choco}}>GUDADRUM ORCHESTRA（体験版）</span>
-          <button onClick={()=>{setPage("login");setTrialPatterns(null);}}
-            style={{marginLeft:"auto",padding:"6px 14px",borderRadius:20,border:"1px solid "+C.border,background:"#fff",color:C.label,fontSize:11,cursor:"pointer"}}>
-            ← 戻る
-          </button>
-        </div>
-
-        <div style={{maxWidth:480,margin:"0 auto",padding:16}}>
-
-          {/* ヒーローカード */}
-          <div style={{background:"linear-gradient(135deg,#fff,#f7f2e8)",borderRadius:18,padding:20,textAlign:"center",border:"1px solid rgba(112,130,56,0.2)",marginBottom:14}}>
-            <p style={{fontSize:15,fontWeight:700,color:C.choco,marginBottom:4}}>はじめまして、{demoName}🌱</p>
-            <span style={{display:"inline-block",marginTop:6,background:"rgba(112,130,56,0.12)",color:C.moss,fontSize:11,fontWeight:600,padding:"3px 12px",borderRadius:12}}>蕾</span>
-            <div style={{marginTop:14,padding:14,background:"rgba(112,130,56,0.06)",borderRadius:12}}>
-              <div style={{fontSize:10,color:"#8a7a5a",marginBottom:2}}>保有ポイント</div>
-              <div style={{fontSize:26,fontWeight:700,color:C.moss}}>1,250 <span style={{fontSize:13,fontWeight:400}}>pt</span></div>
-            </div>
-          </div>
-
-          {/* ポイント履歴 */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>📋 ポイント履歴</p>
-            {[["初回ログインボーナス","+500pt",true],["リズムトレーニング参加","+50pt",true],["サブスク特典","+80pt",true],["ポイント期限切れ（半年未使用分）","-30pt",false]].map(function(row,i){
-              return <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i<3?"1px solid rgba(0,0,0,0.05)":"none",fontSize:12}}>
-                <span>{row[0]}</span><span style={{fontWeight:700,color:row[2]?"#2a7a3a":"#a04030"}}>{row[1]}</span>
-              </div>;
-            })}
-          </div>
-
-          {/* 譜面プレイヤー（本物） */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>🎼 譜面プレイヤー</p>
-            {!trialPatterns ? (
-              <p style={{fontSize:12,color:C.label,textAlign:"center",padding:20}}>読込中…</p>
-            ) : (
-              <ScorePlayer
-                scoreId="iridescence" sectionKey="amelo" sectionLabel="Aメロ"
-                patternData={trialPatterns["amelo"]||{left:{},right:{},meta:{}}}
-                canEdit={false} onSave={()=>{}}
-                startTime="" onStartTimeChange={()=>{}}
-                scale="enigma" subdivProp="16th" scoreLoading={false}
-                onSectionEnd={()=>{}} onQueueStart={()=>{}} isQueuePlaying={false}
-                sharedBpm={trialBpm} onBpmChange={setTrialBpm}
-                sharedMetroOn={trialMetroOn} sharedMetroMode={trialMetroMode} onMetroChange={(on,mode)=>{setTrialMetroOn(on);setTrialMetroMode(mode);}}
-                onPrintAll={()=>{}} onPrintThis={()=>{}} onLoopComplete={()=>{}}
-                autoPlay={false} instrument2={null} patternData2={null}
-                sharedHeadBell={trialHeadBell} floatPosInit={null} onFloatPosChange={()=>{}} swapLR={false}
-              />
-            )}
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              🎼 ご購入いただいたグーダドラムに対応する譜面プレイヤーが、ここに表示されます。体験版では「iridescence／Aメロ」のみ、実際の操作感をお試しいただけます。<br/>
-              グーダドラム／譜面プレイヤーのご購入はこちら → <a href="https://www.gudadrumjapan.com/product-page/player" style={{color:C.moss}}>gudadrumjapan.com</a>
-            </div>
-          </div>
-
-          {/* メトロノーム */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>⏱ メトロノーム</p>
-            <div style={{textAlign:"center",padding:14,background:"rgba(112,130,56,0.05)",borderRadius:10,marginBottom:8}}>
-              <div style={{fontSize:28,fontWeight:300,color:C.choco}}>♩={trialBpm}</div>
-            </div>
-            {["🧘 リズム内在トレーニングモード","💪 リズム筋トレモード"].map(function(name,i){
-              return <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",background:"rgba(0,0,0,0.03)",borderRadius:10,marginBottom:8,filter:"grayscale(0.3)"}}>
-                <span style={{fontSize:12,color:"#8a7a6a"}}>{name}</span><span style={{fontSize:14}}>🔒</span>
-              </div>;
-            })}
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,lineHeight:1.6}}>
-              ⏱ 基本のメトロノームは自由にお試しいただけます。トレーニングモードは、会員登録で解放されます
-            </div>
-          </div>
-
-          {/* 演奏診断 */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>🎯 演奏診断</p>
-            <div style={{textAlign:"center",padding:16,background:"rgba(112,130,56,0.05)",borderRadius:10}}>
-              <div style={{fontSize:11,color:"#8a7a5a",marginBottom:4}}>テンポ精度</div>
-              <div style={{fontSize:32,fontWeight:700,color:C.moss}}>92%</div>
-            </div>
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              🎯 実際の演奏データをもとに、テンポのズレを可視化する機能です（表示はサンプルです）
-            </div>
-          </div>
-
-          {/* マイメモ */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>📝 マイメモ</p>
-            <textarea value={trialMemoText} onChange={e=>setTrialMemoText(e.target.value)} placeholder="演奏の気づきなどを、自由に書き込んでみてください"
-              style={{width:"100%",height:70,border:"1px solid rgba(112,130,56,0.2)",borderRadius:8,padding:8,fontSize:12,fontFamily:"inherit",resize:"none",boxSizing:"border-box"}}/>
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              📝 自由にメモを書き込めます。演奏の気づきなどを残す機能です（この体験版では保存されません）
-            </div>
-          </div>
-
-          {/* マイスケジュール */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>📅 マイスケジュール</p>
-            {[["個人レッスン","8月20日（木）"],["練習会","8月27日（木）"]].map(function(row,i){
-              return <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i===0?"1px solid rgba(0,0,0,0.05)":"none",fontSize:12}}>
-                <span>{row[0]}</span><span style={{color:"#9a8a6a",fontSize:10}}>{row[1]}</span>
-              </div>;
-            })}
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              📅 実際には、ご自身の予約状況がここに反映されます（表示はサンプルです）
-            </div>
-          </div>
-
-          {/* 各種申込 */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>💳 各種申込・サブスク・レッスン・購入</p>
-            {[["幹サブスク　お申し込み","¥3,000〜"],["個人レッスン　お申し込み","要予約"],["GUDAdrum　ご購入","gudadrumjapan.com"]].map(function(row,i){
-              return <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i<2?"1px solid rgba(0,0,0,0.05)":"none",fontSize:12}}>
-                <span>{row[0]}</span><span style={{color:"#9a8a6a",fontSize:10}}>{row[1]}</span>
-              </div>;
-            })}
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              💳 こちらは実際にお申し込みいただけます
-            </div>
-          </div>
-
-          {/* 全体スケジュール */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>📆 全体スケジュール</p>
-            {[["全体練習","8月23日（日）"],["壱祈音〜Inorion〜 前夜祭","10月16日（金）"]].map(function(row,i){
-              return <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i===0?"1px solid rgba(0,0,0,0.05)":"none",fontSize:12}}>
-                <span>{row[0]}</span><span style={{color:"#9a8a6a",fontSize:10}}>{row[1]}</span>
-              </div>;
-            })}
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              📆 オーケストラ全体の予定です
-            </div>
-          </div>
-
-          {/* オーケストラ成長度数 */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>🌱 オーケストラ成長度数</p>
-            <div style={{textAlign:"center",padding:14,background:"rgba(112,130,56,0.05)",borderRadius:10}}>
-              <div style={{fontSize:13,fontWeight:700,color:C.choco}}>LEV2「響きの兆し」</div>
-              <div style={{fontSize:10,color:"#8a7a5a",marginTop:4}}>メンバー数 44 / 108人</div>
-            </div>
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              🌱 オーケストラ全体の成長を可視化しています（表示はサンプルです）
-            </div>
-          </div>
-
-          {/* マイデータ */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>📊 マイデータ</p>
-            {[["今月の練習時間","127分 / 2.1時間"],["累計練習時間","18時間"]].map(function(row,i){
-              return <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"8px 0",borderBottom:i===0?"1px solid rgba(0,0,0,0.05)":"none",fontSize:12}}>
-                <span>{row[0]}</span><span style={{color:"#9a8a6a",fontSize:10}}>{row[1]}</span>
-              </div>;
-            })}
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              📊 ご自身の練習の積み重ねが、ここに記録されていきます（表示はサンプルです）
-            </div>
-          </div>
-
-          {/* 全国マップ */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>🗺️ 全国マップ</p>
-            <div style={{height:150,borderRadius:12,background:"linear-gradient(135deg,#e8f0e0,#d8e8d0)",position:"relative",overflow:"hidden"}}>
-              {[["東京都・佐藤さん",30,40],["大阪府・鈴木さん",80,120],["福岡県・田中さん",110,60],["北海道・山本さん",50,200]].map(function(p,i){
-                return <span key={i} style={{position:"absolute",top:p[1],left:p[2],fontSize:10,background:"#fff",padding:"2px 6px",borderRadius:10,boxShadow:"0 1px 4px rgba(0,0,0,0.15)",color:C.choco,fontWeight:600}}>{p[0]}</span>;
-              })}
-            </div>
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,marginTop:10,lineHeight:1.6}}>
-              🗺️ 実際には、全国のメンバーがこのように登録されています（表示は仮のデータです）
-            </div>
-          </div>
-
-          {/* メインカリキュラム */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>🔒 メインカリキュラム</p>
-            {["第1章：基礎リズムの作り方","第2章：手の使い方","第3章：アンサンブルの組み方"].map(function(name,i){
-              return <div key={i} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 14px",background:"rgba(0,0,0,0.03)",borderRadius:10,marginBottom:8,filter:"grayscale(0.3)"}}>
-                <span style={{fontSize:12,color:"#8a7a6a"}}>{name}</span><span style={{fontSize:14}}>🔒</span>
-              </div>;
-            })}
-            <div style={{fontSize:10.5,color:"#9a7a4a",background:"rgba(245,166,35,0.1)",borderLeft:"3px solid #f5a623",padding:"8px 10px",borderRadius:6,lineHeight:1.6}}>
-              🔒 メンバー登録をすると解放されます
-            </div>
-          </div>
-
-          {/* よくある質問 */}
-          <div style={{background:"rgba(255,255,255,0.85)",border:"1px solid rgba(112,130,56,0.15)",borderRadius:14,padding:16,marginBottom:14}}>
-            <p style={{fontSize:13,fontWeight:700,color:C.choco,marginBottom:10}}>❓ よくある質問</p>
-            {["グーダドラムとは何ですか？","初心者でも参加できますか？","楽器の購入方法を教えてください"].map(function(q,i){
-              return <div key={i} style={{padding:"8px 0",borderBottom:i<2?"1px solid rgba(0,0,0,0.05)":"none",fontSize:12}}>{q}</div>;
-            })}
-          </div>
-
-        </div>
-
-        <div style={{position:"fixed",bottom:0,left:0,right:0,background:"rgba(255,255,255,0.95)",borderTop:"1px solid rgba(0,0,0,0.08)",padding:"12px 16px",textAlign:"center",backdropFilter:"blur(8px)"}}>
-          <a href="https://www.gudadrumjapan.com" target="_blank" rel="noreferrer"
-            style={{display:"inline-block",background:"linear-gradient(135deg,#7a9a4a,#5a7a2a)",color:"#fff",fontSize:13,fontWeight:700,padding:"10px 28px",borderRadius:24,textDecoration:"none"}}>
-            気になったら、こちらから 🌿
-          </a>
-          <div style={{fontSize:10,color:"#9a8a6a",marginTop:6}}>GUDAdrum Orchestra への参加案内・お問い合わせ</div>
-        </div>
-      </div>
-    );
-  }
-
   if (page === "guest") {
     const C2 = C;
     return (
@@ -10792,6 +10555,33 @@ function App() {
                     <div style={{marginBottom:8,padding:"8px 10px",background:"rgba(138,74,106,0.08)",borderRadius:8}}>
                       <p style={{fontSize:11,color:"#8a4a6a"}}>合計申込人数：{inorionParticipants.reduce(function(s,p){return s+p.count;},0)}名</p>
                       <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a"}}>合計金額：{inorionParticipants.reduce(function(s,p){return s+inorionParticipantAmount(p);},0).toLocaleString()}円</p>
+                    </div>
+                    <div style={{marginBottom:10,padding:"8px 10px",background:"rgba(138,74,106,0.04)",border:"1px solid rgba(138,74,106,0.12)",borderRadius:8}}>
+                      <p style={{fontSize:10,fontWeight:700,color:"#8a4a6a",marginBottom:6}}>種別ごとの内訳</p>
+                      {(function(){
+                        var byType = {};
+                        inorionParticipants.forEach(function(p){
+                          var key = p.ticketType || "未設定";
+                          if (!byType[key]) byType[key] = { count:0, amount:0, names:[] };
+                          byType[key].count += p.count;
+                          byType[key].amount += inorionParticipantAmount(p);
+                          byType[key].names.push(p.name + (p.count>1?"×"+p.count:""));
+                        });
+                        var types = Object.keys(byType);
+                        if (types.length === 0) return <p style={{fontSize:10,color:"#8a6a7a"}}>データなし</p>;
+                        return types.map(function(t){
+                          var info = byType[t];
+                          return (
+                            <div key={t} style={{marginBottom:6,paddingBottom:6,borderBottom:"1px solid rgba(138,74,106,0.1)"}}>
+                              <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline"}}>
+                                <span style={{fontSize:11,fontWeight:600,color:"#6a2a4a"}}>{t}（{info.count}名）</span>
+                                <span style={{fontSize:11,color:"#8a4a6a"}}>{info.amount.toLocaleString()}円</span>
+                              </div>
+                              <p style={{fontSize:9,color:"#a08a95",marginTop:2,lineHeight:1.5}}>{info.names.join("、")}</p>
+                            </div>
+                          );
+                        });
+                      })()}
                     </div>
                     <div style={{display:"flex",flexDirection:"column",gap:8}}>
                       {inorionParticipants.map(function(p){
