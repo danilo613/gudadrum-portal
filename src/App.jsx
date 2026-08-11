@@ -11253,7 +11253,7 @@ function App() {
                             {(function(){
                               var seenInRank = {}; // rank -> これまでに出てきた同率内の人数
                               return monthlyStreaks.streaks.map(function(r, idx){
-                                var rank = r.rank;
+                                var rank = r.rank || (idx+1);
                                 seenInRank[rank] = (seenInRank[rank]||0) + 1;
                                 var subIdx = seenInRank[rank];
                                 var tieCountForRank = monthlyStreaks.streaks.filter(function(x){return x.rank===rank;}).length;
