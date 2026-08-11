@@ -565,13 +565,14 @@ function adminCardStyle(groupColor) {
     textAlign:"left"
   };
 }
-const INORION_TICKET_TYPES = ["スペシャル席","一般席","遠目席","ライブ配信","招待席","スポンサー"];
+const INORION_TICKET_TYPES = ["スペシャル席","一般席","遠目席","ライブ配信","招待席","招待（オーケストラメンバー招待枠）","スポンサー"];
 const INORION_TICKET_PRICES = {
   "スペシャル席": 11000,
   "一般席": 4500,
   "遠目席": 3800,
   "ライブ配信": 3300,
   "招待席": 0,
+  "招待（オーケストラメンバー招待枠）": 4000,
 };
 function inorionParticipantAmount(p) {
   if (p.ticketType === "スポンサー") return p.supportAmount || 0;
