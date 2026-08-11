@@ -8715,6 +8715,12 @@ function App() {
               return {date:"", author:"", text:trimmed};
             }).filter(Boolean);
           };
+          var parseCommentDate = function(s){
+            // "yyyy/M/d" 形式（ゼロ埋めなし）を、正しく日付として比較できるようにパースする
+            if (!s) return new Date(0);
+            var parts = s.split("/");
+            return new Date(parseInt(parts[0]), (parseInt(parts[1])||1)-1, parseInt(parts[2])||1);
+          };
           var entries = memberSchedules
             .filter(function(s){
               if (!s["コメント"]) return false;
@@ -8723,21 +8729,33 @@ function App() {
             })
             .map(function(s){
               var comments = parseComments(s["コメント"]);
-              return { name:s["名前"], rawDate:s["日付"], type:s["種別"]||"", comments:comments };
+              var lastDate = comments.length ? parseCommentDate(comments[comments.length-1].date) : new Date(s["日付"]);
+              return { name:s["名前"], rawDate:s["日付"], type:s["種別"]||"", comments:comments, lastDate:lastDate };
             })
-            .sort(function(a,b){
-              var aLast = a.comments.length ? a.comments[a.comments.length-1].date : "";
-              var bLast = b.comments.length ? b.comments[b.comments.length-1].date : "";
-              return bLast.localeCompare(aLast);
-            });
+            .sort(function(a,b){ return b.lastDate - a.lastDate; });
+
+          // 月ごと（フィードバックの最新日付が属する月）にグループ化
+          var groups = {}; // "2026年8月" -> [entries]
+          var groupOrder = [];
+          entries.forEach(function(entry){
+            var gkey = entry.lastDate.getFullYear()+"年"+(entry.lastDate.getMonth()+1)+"月";
+            if (!groups[gkey]) { groups[gkey] = []; groupOrder.push(gkey); }
+            groups[gkey].push(entry);
+          });
+
           return (
             <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
               <p style={{fontSize:10,color:C.label,marginBottom:10,lineHeight:1.6}}>2026年8月以降の、各メンバーのレッスン等へのフィードバックです。返信すると、メンバーのマイスケジュールにもそのまま反映されます。</p>
               {entries.length===0 ? (
                 <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>フィードバックはまだありません</p>
               ) : (
-                <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                  {entries.map(function(entry,i){
+                <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  {groupOrder.map(function(gkey){
+                    return (
+                      <div key={gkey}>
+                        <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:8,paddingBottom:4,borderBottom:"2px solid rgba(138,74,106,0.2)"}}>{gkey}</p>
+                        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                          {groups[gkey].map(function(entry,i){
                     var key = entry.name+"_"+entry.rawDate+"_"+entry.type+"_"+i;
                     var d = new Date(entry.rawDate);
                     var dateLabel = (d.getMonth()+1)+"月"+d.getDate()+"日";
@@ -8753,7 +8771,7 @@ function App() {
                               <div key={j} style={{fontSize:11,color:C.choco,background:"rgba(255,255,255,0.6)",borderRadius:6,padding:"5px 8px"}}>
                                 <span style={{fontWeight:700,color:"#6a2a4a"}}>{c.author}</span>
                                 <span style={{color:C.label,fontSize:9,marginLeft:6}}>{c.date}</span>
-                                <p style={{marginTop:2,lineHeight:1.5}}>{c.text}</p>
+                                <p style={{marginTop:2,lineHeight:1.5,whiteSpace:"pre-wrap"}}>{c.text}</p>
                               </div>
                             );
                           })}
@@ -8767,6 +8785,10 @@ function App() {
                             style={{padding:"6px 14px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:11,fontWeight:600,cursor:lessonFbBusy[key]?"default":"pointer",opacity:lessonFbBusy[key]?0.5:1,whiteSpace:"nowrap"}}>
                             {lessonFbBusy[key]?"送信中...":"返信"}
                           </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                         </div>
                       </div>
                     );
