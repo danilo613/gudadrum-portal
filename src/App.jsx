@@ -11272,9 +11272,6 @@ function App() {
                               });
                             })()}
                           </div>
-                          <p style={{fontSize:8,color:"#9a6a4a",marginTop:6,lineHeight:1.5,position:"relative"}}>
-                            ※同じ連続日数の場合は同順位とし、その中では今月の練習時間が長い方を上に表示しています
-                          </p>
                         </div>
                       )}
                       {generalNotices.map(function(n,i){
