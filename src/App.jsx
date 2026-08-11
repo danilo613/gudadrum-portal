@@ -11250,21 +11250,31 @@ function App() {
                             <span style={{fontSize:11,fontWeight:700,color:"#7a3a20",letterSpacing:0.5}}>{monthlyStreaks.yearMonth}　連続練習日数 ランキング</span>
                           </div>
                           <div style={{display:"flex",flexDirection:"column",gap:4,position:"relative"}}>
-                            {monthlyStreaks.streaks.map(function(r, idx){
-                              var rank = idx+1;
-                              var rankIcon = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"　";
-                              var rankColor = rank===1?"#b8860b":rank===2?"#808080":rank===3?"#cd7f32":"#7a3a20";
-                              var rankBg = rank===1?"linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05))":rank===2?"linear-gradient(90deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05))":"linear-gradient(90deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05))";
-                              return (
-                                <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 8px",background:rankBg,borderRadius:6,border:"1px solid rgba(212,112,58,0.2)"}}>
-                                  <span style={{fontSize:15,minWidth:20,textAlign:"center"}}>{rankIcon}</span>
-                                  <span style={{fontSize:10,color:rankColor,fontWeight:700,minWidth:16}}>{rank}位</span>
-                                  <span style={{fontSize:12,color:"#4a2818",flex:1,fontWeight:700}}>{r.name}</span>
-                                  <span style={{fontSize:11,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.streak}<span style={{fontSize:8,marginLeft:2,opacity:0.7}}>日連続</span></span>
-                                </div>
-                              );
-                            })}
+                            {(function(){
+                              var seenInRank = {}; // rank -> これまでに出てきた同率内の人数
+                              return monthlyStreaks.streaks.map(function(r, idx){
+                                var rank = r.rank;
+                                seenInRank[rank] = (seenInRank[rank]||0) + 1;
+                                var subIdx = seenInRank[rank];
+                                var tieCountForRank = monthlyStreaks.streaks.filter(function(x){return x.rank===rank;}).length;
+                                var rankLabel = tieCountForRank > 1 ? (rank+"位-"+subIdx) : (rank+"位");
+                                var rankIcon = rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"　";
+                                var rankColor = rank===1?"#b8860b":rank===2?"#808080":rank===3?"#cd7f32":"#7a3a20";
+                                var rankBg = rank===1?"linear-gradient(90deg, rgba(255,215,0,0.25), rgba(255,215,0,0.05))":rank===2?"linear-gradient(90deg, rgba(192,192,192,0.2), rgba(192,192,192,0.05))":"linear-gradient(90deg, rgba(205,127,50,0.2), rgba(205,127,50,0.05))";
+                                return (
+                                  <div key={idx} style={{display:"flex",alignItems:"center",gap:8,padding:"4px 8px",background:rankBg,borderRadius:6,border:"1px solid rgba(212,112,58,0.2)"}}>
+                                    <span style={{fontSize:15,minWidth:20,textAlign:"center"}}>{rankIcon}</span>
+                                    <span style={{fontSize:10,color:rankColor,fontWeight:700,minWidth:34}}>{rankLabel}</span>
+                                    <span style={{fontSize:12,color:"#4a2818",flex:1,fontWeight:700}}>{r.name}</span>
+                                    <span style={{fontSize:11,color:rankColor,fontFamily:"monospace",fontWeight:600}}>{r.streak}<span style={{fontSize:8,marginLeft:2,opacity:0.7}}>日連続</span></span>
+                                  </div>
+                                );
+                              });
+                            })()}
                           </div>
+                          <p style={{fontSize:8,color:"#9a6a4a",marginTop:6,lineHeight:1.5,position:"relative"}}>
+                            ※同じ連続日数の場合は同順位とし、その中では今月の練習時間が長い方を上に表示しています
+                          </p>
                         </div>
                       )}
                       {generalNotices.map(function(n,i){
