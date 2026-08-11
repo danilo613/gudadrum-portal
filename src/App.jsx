@@ -3910,6 +3910,10 @@ function App() {
   const [purchasedScoresData, setPurchasedScoresData] = useState(null);
   const [purchasedScoresView, setPurchasedScoresView] = useState("summary"); // summary / bysong / bymember
   const [showUnlinkedBookings, setShowUnlinkedBookings] = useState(false);
+  const [showLessonFeedback, setShowLessonFeedback] = useState(false);
+  const [lessonFbReplyText, setLessonFbReplyText] = useState({});
+  const [lessonFbBusy, setLessonFbBusy] = useState({});
+  const [lessonFbMsg, setLessonFbMsg] = useState({});
   const [unlinkedBookings, setUnlinkedBookings] = useState(null);
   const [unlinkedBookingSelect, setUnlinkedBookingSelect] = useState({}); // rowIndex -> 選択中の名前
   const [unlinkedBookingBusy, setUnlinkedBookingBusy] = useState({});
@@ -4051,6 +4055,27 @@ function App() {
       }
     } catch(e){ setUnlinkedBookingMsg(prev=>({...prev,[rowIndex]:"❌ 通信に失敗しました"})); }
     setUnlinkedBookingBusy(prev=>({...prev,[rowIndex]:false}));
+  }
+  async function replyLessonFeedback(memberName, rawDate, type, key){
+    const value = (lessonFbReplyText[key]||"").trim();
+    if (!value) { setLessonFbMsg(prev=>({...prev,[key]:"❌ 返信内容を入力してください"})); return; }
+    if (lessonFbBusy[key]) return; // 二重送信を防ぐ
+    setLessonFbBusy(prev=>({...prev,[key]:true}));
+    try {
+      const today = new Date();
+      const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
+      const commentText = dateStr+" DANiLO: "+value;
+      const res = await gasWrite({action:"addschedulecomment", name:memberName, date:rawDate, type:type, comment:commentText, isMemberFeedback:"false"});
+      if (res && !res.error) {
+        setLessonFbMsg(prev=>({...prev,[key]:"✅ 返信しました"}));
+        setLessonFbReplyText(prev=>({...prev,[key]:""}));
+        await fetchSchedules(); // マイスケジュール側にもそのまま反映される
+      } else {
+        setLessonFbMsg(prev=>({...prev,[key]:"❌ "+((res&&res.error)||"送信に失敗しました")}));
+      }
+    } catch(e) { setLessonFbMsg(prev=>({...prev,[key]:"❌ 通信に失敗しました"})); }
+    setLessonFbBusy(prev=>({...prev,[key]:false}));
+    setTimeout(function(){setLessonFbMsg(prev=>({...prev,[key]:""}));}, 4000);
   }
   const [showAdminPastScheds, setShowAdminPastScheds] = useState(false);
   const [playerMode, setPlayerMode] = useState("single");
@@ -8670,6 +8695,87 @@ function App() {
         </>)}
         {renderAdminGroupHeader("📊","メンバー状況・記録","メンバーの活動状況・記録を確認",ADMIN_GROUP_COLORS.member,groupOpenMember,()=>setGroupOpenMember(!groupOpenMember))}
         {groupOpenMember && (<>
+
+        {/* レッスンのフィードバック（DANiLOのみ表示） */}
+        {!isInstructor && (
+          <button onClick={()=>{setShowLessonFeedback(!showLessonFeedback); if(!showLessonFeedback && memberSchedules.length===0) fetchSchedules();}}
+            style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+            💬 レッスンのフィードバック {showLessonFeedback?"▲":"▼"}
+          </button>
+        )}
+        {!isInstructor && showLessonFeedback && (function(){
+          var FB_START = new Date("2026-08-01");
+          var parseComments = function(raw){
+            if (!raw) return [];
+            return raw.split(/\s*;\s*/).map(function(line){
+              var trimmed = line.trim();
+              if (!trimmed) return null;
+              var match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+              if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
+              return {date:"", author:"", text:trimmed};
+            }).filter(Boolean);
+          };
+          var entries = memberSchedules
+            .filter(function(s){
+              if (!s["コメント"]) return false;
+              var d = new Date(s["日付"]);
+              return !isNaN(d.getTime()) && d >= FB_START;
+            })
+            .map(function(s){
+              var comments = parseComments(s["コメント"]);
+              return { name:s["名前"], rawDate:s["日付"], type:s["種別"]||"", comments:comments };
+            })
+            .sort(function(a,b){
+              var aLast = a.comments.length ? a.comments[a.comments.length-1].date : "";
+              var bLast = b.comments.length ? b.comments[b.comments.length-1].date : "";
+              return bLast.localeCompare(aLast);
+            });
+          return (
+            <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+              <p style={{fontSize:10,color:C.label,marginBottom:10,lineHeight:1.6}}>2026年8月以降の、各メンバーのレッスン等へのフィードバックです。返信すると、メンバーのマイスケジュールにもそのまま反映されます。</p>
+              {entries.length===0 ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>フィードバックはまだありません</p>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {entries.map(function(entry,i){
+                    var key = entry.name+"_"+entry.rawDate+"_"+entry.type+"_"+i;
+                    var d = new Date(entry.rawDate);
+                    var dateLabel = (d.getMonth()+1)+"月"+d.getDate()+"日";
+                    return (
+                      <div key={key} style={{padding:"10px 12px",background:"rgba(138,74,106,0.05)",border:"1px solid rgba(138,74,106,0.15)",borderRadius:8}}>
+                        <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+                          <span style={{fontSize:12,fontWeight:700,color:C.choco}}>{entry.name}</span>
+                          <span style={{fontSize:10,color:C.label}}>{dateLabel}{entry.type?"／"+entry.type:""}</span>
+                        </div>
+                        <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:8}}>
+                          {entry.comments.map(function(c,j){
+                            return (
+                              <div key={j} style={{fontSize:11,color:C.choco,background:"rgba(255,255,255,0.6)",borderRadius:6,padding:"5px 8px"}}>
+                                <span style={{fontWeight:700,color:"#6a2a4a"}}>{c.author}</span>
+                                <span style={{color:C.label,fontSize:9,marginLeft:6}}>{c.date}</span>
+                                <p style={{marginTop:2,lineHeight:1.5}}>{c.text}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        {lessonFbMsg[key] && <p style={{fontSize:10,color:lessonFbMsg[key].indexOf("✅")===0?"#2a7a3a":"#a04030",marginBottom:6}}>{lessonFbMsg[key]}</p>}
+                        <div style={{display:"flex",gap:6}}>
+                          <input value={lessonFbReplyText[key]||""} onChange={e=>setLessonFbReplyText(prev=>({...prev,[key]:e.target.value}))}
+                            placeholder="返信を入力"
+                            style={{flex:1,fontSize:11,padding:"6px 8px",borderRadius:6,border:"1px solid "+C.border}}/>
+                          <button disabled={!!lessonFbBusy[key]} onClick={()=>replyLessonFeedback(entry.name, entry.rawDate, entry.type, key)}
+                            style={{padding:"6px 14px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:11,fontWeight:600,cursor:lessonFbBusy[key]?"default":"pointer",opacity:lessonFbBusy[key]?0.5:1,whiteSpace:"nowrap"}}>
+                            {lessonFbBusy[key]?"送信中...":"返信"}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* 全メンバースケジュール（DANiLOのみ表示） */}
         {!isInstructor && (
