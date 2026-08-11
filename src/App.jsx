@@ -9525,11 +9525,13 @@ function App() {
         </>)}
         {renderAdminGroupHeader("📈","データー収集","各種データの収集・分析を行う",ADMIN_GROUP_COLORS.collect,groupOpenCollect,()=>setGroupOpenCollect(!groupOpenCollect))}
         {groupOpenCollect && (<>
+        {!isInstructor && (
         <button onClick={()=>{setShowFeedbackList(!showFeedbackList); if(!showFeedbackList && feedbackListData===null) fetchFeedbackList();}}
           style={adminCardStyle(ADMIN_GROUP_COLORS.collect)}>
           📝 フィードバック一覧 {showFeedbackList?"▲":"▼"}
         </button>
-        {showFeedbackList && (
+        )}
+        {!isInstructor && showFeedbackList && (
           <div style={{gridColumn:"1 / -1",marginBottom:16,background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px"}}>
             {!feedbackListData ? (
               <p style={{fontSize:12,color:C.label,textAlign:"center",padding:8}}>読込中…</p>
