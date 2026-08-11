@@ -8848,6 +8848,16 @@ function App() {
           return (
             <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
               <p style={{fontSize:10,color:C.label,marginBottom:10,lineHeight:1.6}}>2026年8月以降の、ご自身が登録された予定へのフィードバックです。返信すると、メンバーのマイスケジュールにもそのまま反映されます。</p>
+              {!instructorName && (
+                <div style={{marginBottom:12}}>
+                  <label style={{fontSize:11,color:C.olive,display:"block",marginBottom:6,fontWeight:600}}>講師名</label>
+                  <select value={instructorName} onChange={e=>setInstructorName(e.target.value)}
+                    style={{width:"100%",background:"#fff",border:"1px solid "+C.border,borderRadius:10,padding:"9px 12px",fontSize:13,color:C.choco,cursor:"pointer"}}>
+                    <option value="">-- 選択してください --</option>
+                    {INSTRUCTORS.map(n=><option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+              )}
               {!instructorName ? (
                 <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>講師名を選択してください</p>
               ) : entries.length===0 ? (
