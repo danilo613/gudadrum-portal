@@ -4064,7 +4064,7 @@ function App() {
     try {
       const today = new Date();
       const dateStr = today.getFullYear()+"/"+(today.getMonth()+1)+"/"+today.getDate();
-      const commentText = dateStr+" DANiLO: "+value;
+      const commentText = dateStr+" "+(isInstructor?(instructorName||"講師"):"DANiLO")+": "+value;
       const res = await gasWrite({action:"addschedulecomment", name:memberName, date:rawDate, type:type, comment:commentText, isMemberFeedback:"false"});
       if (res && !res.error) {
         setLessonFbMsg(prev=>({...prev,[key]:"✅ 返信しました"}));
@@ -8789,6 +8789,110 @@ function App() {
                       </div>
                     );
                   })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* レッスンのフィードバック（講師のみ表示・自分が登録した予定のみ） */}
+        {isInstructor && (
+          <button onClick={()=>{setShowLessonFeedback(!showLessonFeedback); if(!showLessonFeedback && memberSchedules.length===0) fetchSchedules();}}
+            style={adminCardStyle(ADMIN_GROUP_COLORS.member)}>
+            💬 レッスンのフィードバック {showLessonFeedback?"▲":"▼"}
+          </button>
+        )}
+        {isInstructor && showLessonFeedback && (function(){
+          var FB_START = new Date("2026-08-01");
+          var parseComments = function(raw){
+            if (!raw) return [];
+            return raw.split(/\s*;\s*/).map(function(line){
+              var trimmed = line.trim();
+              if (!trimmed) return null;
+              var match = trimmed.match(/^(\d{4}\/\d+\/\d+)\s+([^:]+):\s*([\s\S]+)$/);
+              if (match) return {date:match[1], author:match[2].trim(), text:match[3].trim()};
+              return {date:"", author:"", text:trimmed};
+            }).filter(Boolean);
+          };
+          var parseCommentDate = function(s){
+            if (!s) return new Date(0);
+            var parts = s.split("/");
+            return new Date(parseInt(parts[0]), (parseInt(parts[1])||1)-1, parseInt(parts[2])||1);
+          };
+          var entries = memberSchedules
+            .filter(function(s){
+              if (!s["コメント"]) return false;
+              if (s["記録者"] !== instructorName) return false; // 自分が登録した予定のみ
+              var d = new Date(s["日付"]);
+              return !isNaN(d.getTime()) && d >= FB_START;
+            })
+            .map(function(s){
+              var comments = parseComments(s["コメント"]);
+              var lastDate = comments.length ? parseCommentDate(comments[comments.length-1].date) : new Date(s["日付"]);
+              return { name:s["名前"], rawDate:s["日付"], type:s["種別"]||"", comments:comments, lastDate:lastDate };
+            })
+            .sort(function(a,b){ return b.lastDate - a.lastDate; });
+
+          var groups = {};
+          var groupOrder = [];
+          entries.forEach(function(entry){
+            var gkey = entry.lastDate.getFullYear()+"年"+(entry.lastDate.getMonth()+1)+"月";
+            if (!groups[gkey]) { groups[gkey] = []; groupOrder.push(gkey); }
+            groups[gkey].push(entry);
+          });
+
+          return (
+            <div style={{gridColumn:"1 / -1",background:"rgba(255,255,255,0.8)",border:"1px solid "+C.border,borderRadius:12,padding:"12px 14px",marginBottom:8}}>
+              <p style={{fontSize:10,color:C.label,marginBottom:10,lineHeight:1.6}}>2026年8月以降の、ご自身が登録された予定へのフィードバックです。返信すると、メンバーのマイスケジュールにもそのまま反映されます。</p>
+              {!instructorName ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>講師名を選択してください</p>
+              ) : entries.length===0 ? (
+                <p style={{fontSize:12,color:C.label,textAlign:"center",padding:12}}>フィードバックはまだありません</p>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:14}}>
+                  {groupOrder.map(function(gkey){
+                    return (
+                      <div key={gkey}>
+                        <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a",marginBottom:8,paddingBottom:4,borderBottom:"2px solid rgba(138,74,106,0.2)"}}>{gkey}</p>
+                        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                          {groups[gkey].map(function(entry,i){
+                            var key = entry.name+"_"+entry.rawDate+"_"+entry.type+"_"+i;
+                            var d = new Date(entry.rawDate);
+                            var dateLabel = (d.getMonth()+1)+"月"+d.getDate()+"日";
+                            return (
+                              <div key={key} style={{padding:"10px 12px",background:"rgba(138,74,106,0.05)",border:"1px solid rgba(138,74,106,0.15)",borderRadius:8}}>
+                                <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:6}}>
+                                  <span style={{fontSize:12,fontWeight:700,color:C.choco}}>{entry.name}</span>
+                                  <span style={{fontSize:10,color:C.label}}>{dateLabel}{entry.type?"／"+entry.type:""}</span>
+                                </div>
+                                <div style={{display:"flex",flexDirection:"column",gap:4,marginBottom:8}}>
+                                  {entry.comments.map(function(c,j){
+                                    return (
+                                      <div key={j} style={{fontSize:11,color:C.choco,background:"rgba(255,255,255,0.6)",borderRadius:6,padding:"5px 8px"}}>
+                                        <span style={{fontWeight:700,color:"#6a2a4a"}}>{c.author}</span>
+                                        <span style={{color:C.label,fontSize:9,marginLeft:6}}>{c.date}</span>
+                                        <p style={{marginTop:2,lineHeight:1.5,whiteSpace:"pre-wrap"}}>{c.text}</p>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                {lessonFbMsg[key] && <p style={{fontSize:10,color:lessonFbMsg[key].indexOf("✅")===0?"#2a7a3a":"#a04030",marginBottom:6}}>{lessonFbMsg[key]}</p>}
+                                <div style={{display:"flex",gap:6}}>
+                                  <input value={lessonFbReplyText[key]||""} onChange={e=>setLessonFbReplyText(prev=>({...prev,[key]:e.target.value}))}
+                                    placeholder="返信を入力"
+                                    style={{flex:1,fontSize:11,padding:"6px 8px",borderRadius:6,border:"1px solid "+C.border}}/>
+                                  <button disabled={!!lessonFbBusy[key]} onClick={()=>replyLessonFeedback(entry.name, entry.rawDate, entry.type, key)}
+                                    style={{padding:"6px 14px",borderRadius:6,border:"none",background:"#708238",color:"#fff",fontSize:11,fontWeight:600,cursor:lessonFbBusy[key]?"default":"pointer",opacity:lessonFbBusy[key]?0.5:1,whiteSpace:"nowrap"}}>
+                                    {lessonFbBusy[key]?"送信中...":"返信"}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     );
