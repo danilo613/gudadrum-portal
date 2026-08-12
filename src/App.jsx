@@ -6354,9 +6354,33 @@ function App() {
     setTimeout(function(){win.print();},300);
   }
 
+  const SCORE_CACHE_TTL = 10 * 60 * 1000; // 10分。この間は再読み込みしてもGASへ聞きに行かない
+  function readScoreCache_(scoreId) {
+    try {
+      const raw = localStorage.getItem("scoreCache_" + scoreId);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || (Date.now() - parsed.savedAt) > SCORE_CACHE_TTL) return null;
+      return parsed.patterns;
+    } catch(e) { return null; }
+  }
+  function writeScoreCache_(scoreId, patterns) {
+    try { localStorage.setItem("scoreCache_" + scoreId, JSON.stringify({ savedAt: Date.now(), patterns: patterns })); } catch(e) {}
+  }
+  function clearScoreCache_(scoreId) {
+    try { localStorage.removeItem("scoreCache_" + scoreId); } catch(e) {}
+  }
   async function loadScorePatterns(scoreId) {
-    // 既にキャッシュがあればスキップ
+    // 既にキャッシュがあればスキップ（同じセッション内）
     if(scorePatterns[scoreId] && Object.keys(scorePatterns[scoreId]).length > 0) return;
+
+    // ページを再読み込みしても消えない、ブラウザ側の一時保存（10分間）も確認する
+    const cached = readScoreCache_(scoreId);
+    if (cached) {
+      setScorePatterns(function(prev){ return Object.assign({}, prev, {[scoreId]: cached}); });
+      return;
+    }
+
     setScoreLoading(true);
     setScoreLoadError(null);
     try {
@@ -6376,6 +6400,7 @@ function App() {
       setScorePatterns(function(prev){
         return Object.assign({}, prev, {[scoreId]: patterns});
       });
+      writeScoreCache_(scoreId, patterns);
     } catch(e) {
       console.warn("loadScorePatterns error:", e);
       setScoreLoadError(scoreId); // 画面側で「読み込みに失敗しました。再読み込み」を出せるようにする
@@ -6454,6 +6479,7 @@ function App() {
     }
     if(meta){updated.meta.bars=meta.bars;updated.meta.repeat=meta.repeat;updated.meta.startTime=meta.startTime;updated.meta.noteType=meta.noteType;updated.meta.subdiv=meta.noteType;updated.meta.barLengths=meta.barLengths||null;}
     setScorePatterns(function(prev){var n=Object.assign({},prev);n[scoreId]=Object.assign({},prev[scoreId]);n[scoreId][section]=updated;return n;});
+    clearScoreCache_(scoreId); // 編集したので、ブラウザ側の一時保存は消して、次回は必ず最新を取りにいく
   }
 
   async function gasWrite(params, _retryCount) {
