@@ -8124,6 +8124,22 @@ function App() {
                 if(headBell!==undefined) setSharedHeadBell(headBell);
               }}
             />
+            {/* 五線譜表示（試作機能・管理者確認用） */}
+            <div style={{marginTop:10}}>
+              <button onClick={()=>setShowStaffNotation(!showStaffNotation)}
+                style={{width:"100%",padding:"8px 0",borderRadius:10,border:"1px dashed rgba(112,130,56,0.5)",background:"rgba(255,255,255,0.5)",color:C.moss,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                🎼 五線譜で見る（試作） {showStaffNotation?"▲":"▼"}
+              </button>
+              {showStaffNotation && (
+                <div style={{marginTop:8}}>
+                  <StaffNotationView
+                    patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
+                    scale={(scoreEditId==="iridescence")?iridescenceScale:(scoreEditId==="kigaru")?kigaruScale:(scoreEditId==="nostalgic"||scoreEditId==="holychild")?"equinox":(scoreEditId==="aoi")?"arcane":(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":"default"}
+                    spb={(function(){var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});return (sec&&sec[2]==="triplet")?12:16;})()}
+                  />
+                </div>
+              )}
+            </div>
           </div>
         )}
 
