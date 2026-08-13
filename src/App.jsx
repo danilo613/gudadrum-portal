@@ -3488,25 +3488,34 @@ function StaffNotationView({ patternData, scale, spb }) {
       return notes;
     }
 
-    const barsPerRow = 2, staveWidth = 340;
+    const barsPerRow = 2, staveWidth = 340, headerWidth = 70;
     const rows = Math.ceil(nb / barsPerRow);
     const renderer = new VF.Renderer(containerRef.current, VF.Renderer.Backends.SVG);
-    renderer.resize(Math.min(barsPerRow, nb) * staveWidth + 40, rows * 170 + 20);
+    renderer.resize(headerWidth + Math.min(barsPerRow, nb) * staveWidth + 40, rows * 170 + 20);
     const context = renderer.getContext();
+
+    for (let row = 0; row < rows; row++) {
+      // 各行の頭に、音部記号＋拍子記号、専用のスペースを用意する（どの行も同じ幅で統一）
+      const headerStave = new VF.Stave(20, 20 + row * 170, headerWidth);
+      headerStave.setBegBarType(VF.Barline.type.NONE);
+      headerStave.setEndBarType(VF.Barline.type.NONE);
+      headerStave.addClef("treble");
+      headerStave.addTimeSignature("4/4");
+      headerStave.setContext(context).draw();
+    }
 
     for (let bi = 0; bi < nb; bi++) {
       const row = Math.floor(bi / barsPerRow), col = bi % barsPerRow;
-      const x = 20 + col * staveWidth, y = 20 + row * 170;
+      const x = 20 + headerWidth + col * staveWidth;
+      const y = 20 + row * 170;
       const stave = new VF.Stave(x, y, staveWidth);
-      if (col === 0) stave.addClef("treble");
-      if (bi === 0) stave.addTimeSignature("4/4");
       stave.setContext(context).draw();
       const notes = barToNotes(bi);
       const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
       const voice = new VF.Voice({num_beats:4, beat_value:4});
       voice.setStrict(false);
       voice.addTickables(notes);
-      new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-50);
+      new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-40);
       voice.draw(context, stave);
       beams.forEach(function(b){ b.setContext(context).draw(); });
     }
