@@ -3443,7 +3443,7 @@ function decomposeDuration_(steps) {
 }
 
 // 1セクション分を、指定したDOMコンテナに五線譜として描画する（本体・全曲印刷、両方から使う共通処理）
-function renderStaffSection_(container, patternData, scale, spb) {
+function renderStaffSection_(container, patternData, scale, spb, colorMode) {
   if (!container || !patternData || !window.Vex) return;
   container.innerHTML = "";
   const VF = window.Vex.Flow;
@@ -3476,7 +3476,9 @@ function renderStaffSection_(container, patternData, scale, spb) {
   function makeNote(stepHits, duration) {
     if (!stepHits) return new VF.StaveNote({keys:["b/4"], duration: duration+"r"});
     const n = new VF.StaveNote({keys: stepHits.map(function(h){return h.key;}), duration: duration});
-    stepHits.forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
+    if (colorMode) {
+      stepHits.forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
+    }
     return n;
   }
 
@@ -3569,37 +3571,70 @@ function renderStaffSection_(container, patternData, scale, spb) {
 
 function StaffNotationView({ patternData, scale, spb }) {
   const containerRef = React.useRef(null);
+  const [colorMode, setColorMode] = React.useState(true);
   React.useEffect(function(){
-    renderStaffSection_(containerRef.current, patternData, scale, spb);
-  }, [patternData, scale, spb]);
+    renderStaffSection_(containerRef.current, patternData, scale, spb, colorMode);
+  }, [patternData, scale, spb, colorMode]);
 
   return (
     <div style={{background:"#fff",borderRadius:12,padding:"12px",overflowX:"auto",border:"1px solid rgba(0,0,0,0.08)"}}>
       <p style={{fontSize:10,color:"#a87a20",background:"#fff8e8",borderLeft:"3px solid #d4a040",padding:"6px 10px",borderRadius:4,marginBottom:10,lineHeight:1.5}}>
         🎼 試作機能です。左手・右手の区別はまだありません。
       </p>
+      <div style={{display:"flex",gap:6,marginBottom:10}}>
+        <button onClick={()=>setColorMode(true)}
+          style={{flex:1,padding:"6px 0",borderRadius:8,border:colorMode?"2px solid #8a4a6a":"1px solid rgba(0,0,0,0.15)",background:colorMode?"rgba(138,74,106,0.1)":"#fff",color:colorMode?"#8a4a6a":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+          🎨 カラー
+        </button>
+        <button onClick={()=>setColorMode(false)}
+          style={{flex:1,padding:"6px 0",borderRadius:8,border:!colorMode?"2px solid #333":"1px solid rgba(0,0,0,0.15)",background:!colorMode?"rgba(0,0,0,0.05)":"#fff",color:!colorMode?"#333":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+          ⚫ 黒
+        </button>
+      </div>
       <div ref={containerRef}/>
     </div>
   );
 }
 
 // 曲全体（全セクション）を、1つの画面に五線譜としてまとめて表示する（印刷・PDF保存用）
+// 曲全体表示・専用の、トグルUIを持たない軽量な1セクション描画（印刷時に余計なボタンが写り込まないように）
+function StaffSectionPlain_({ patternData, scale, spb, colorMode }) {
+  const containerRef = React.useRef(null);
+  React.useEffect(function(){
+    renderStaffSection_(containerRef.current, patternData, scale, spb, colorMode);
+  }, [patternData, scale, spb, colorMode]);
+  return <div ref={containerRef}/>;
+}
+
 function FullScoreStaffView({ songTitle, scale, sections, allPatterns }) {
+  const [colorMode, setColorMode] = React.useState(true);
   return (
-    <div style={{background:"#fff",padding:20}}>
-      <div style={{fontSize:20,fontWeight:700,color:"#1a3a2a",marginBottom:4}}>{songTitle}</div>
-      <div style={{fontSize:11,color:"#888",marginBottom:16}}>Composed by DANiLO</div>
-      {sections.map(function(sec){
-        var sectionKey = sec[0], sectionLabel = sec[1], sectionSpb = (sec[2]==="triplet") ? 12 : 16;
-        var pd = (allPatterns||{})[sectionKey];
-        if (!pd) return null;
-        return (
-          <div key={sectionKey} style={{marginBottom:24}}>
-            <div style={{fontSize:14,fontWeight:700,color:"#333",marginBottom:8}}>{sectionLabel}</div>
-            <StaffNotationView patternData={pd} scale={scale} spb={sectionSpb}/>
-          </div>
-        );
-      })}
+    <div>
+      <div className="staff-toggle-noprint" style={{display:"flex",gap:6,marginBottom:12}}>
+        <button onClick={()=>setColorMode(true)}
+          style={{flex:1,padding:"6px 0",borderRadius:8,border:colorMode?"2px solid #8a4a6a":"1px solid rgba(0,0,0,0.15)",background:colorMode?"rgba(138,74,106,0.1)":"#fff",color:colorMode?"#8a4a6a":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+          🎨 カラー
+        </button>
+        <button onClick={()=>setColorMode(false)}
+          style={{flex:1,padding:"6px 0",borderRadius:8,border:!colorMode?"2px solid #333":"1px solid rgba(0,0,0,0.15)",background:!colorMode?"rgba(0,0,0,0.05)":"#fff",color:!colorMode?"#333":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+          ⚫ 黒
+        </button>
+      </div>
+      <div style={{background:"#fff",padding:20}}>
+        <div style={{fontSize:20,fontWeight:700,color:"#1a3a2a",marginBottom:4}}>{songTitle}</div>
+        <div style={{fontSize:11,color:"#888",marginBottom:16}}>Composed by DANiLO</div>
+        {sections.map(function(sec){
+          var sectionKey = sec[0], sectionLabel = sec[1], sectionSpb = (sec[2]==="triplet") ? 12 : 16;
+          var pd = (allPatterns||{})[sectionKey];
+          if (!pd) return null;
+          return (
+            <div key={sectionKey} style={{marginBottom:24}}>
+              <div style={{fontSize:14,fontWeight:700,color:"#333",marginBottom:8}}>{sectionLabel}</div>
+              <StaffSectionPlain_ patternData={pd} scale={scale} spb={sectionSpb} colorMode={colorMode}/>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -8239,7 +8274,7 @@ function App() {
                       if(!el) return;
                       var win = window.open("","_blank");
                       win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+SCORE_ID_TO_NAME[scoreEditId]+'</title>'
-                        +'<style>@page{size:A4;margin:12mm}body{font-family:sans-serif;margin:0}</style></head><body>'
+                        +'<style>@page{size:A4;margin:12mm}body{font-family:sans-serif;margin:0}.staff-toggle-noprint{display:none !important}</style></head><body>'
                         +el.innerHTML+'</body></html>');
                       win.document.close();
                       setTimeout(function(){win.print();},400);
