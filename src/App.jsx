@@ -3488,15 +3488,15 @@ function StaffNotationView({ patternData, scale, spb }) {
       return notes;
     }
 
-    const barsPerRow = 4, staveWidth = 180;
+    const barsPerRow = 2, staveWidth = 340;
     const rows = Math.ceil(nb / barsPerRow);
     const renderer = new VF.Renderer(containerRef.current, VF.Renderer.Backends.SVG);
-    renderer.resize(Math.min(barsPerRow, nb) * staveWidth + 40, rows * 130 + 20);
+    renderer.resize(Math.min(barsPerRow, nb) * staveWidth + 40, rows * 170 + 20);
     const context = renderer.getContext();
 
     for (let bi = 0; bi < nb; bi++) {
       const row = Math.floor(bi / barsPerRow), col = bi % barsPerRow;
-      const x = 20 + col * staveWidth, y = 20 + row * 130;
+      const x = 20 + col * staveWidth, y = 20 + row * 170;
       const stave = new VF.Stave(x, y, staveWidth);
       if (col === 0) stave.addClef("treble");
       if (bi === 0) stave.addTimeSignature("4/4");
@@ -3506,7 +3506,7 @@ function StaffNotationView({ patternData, scale, spb }) {
       const voice = new VF.Voice({num_beats:4, beat_value:4});
       voice.setStrict(false);
       voice.addTickables(notes);
-      new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-30);
+      new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-50);
       voice.draw(context, stave);
       beams.forEach(function(b){ b.setContext(context).draw(); });
     }
