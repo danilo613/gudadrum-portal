@@ -3459,7 +3459,8 @@ function StaffNotationView({ patternData, scale, spb }) {
       Object.keys(pitchMap).forEach(function(color){
         [left, right].forEach(function(hand){
           if (hand[color]) {
-            (hand[color] || []).forEach(function(globalStep){
+            hand[color].forEach(function(val, globalStep){
+              if (!val) return; // その場所に音が無い（false/undefined/0）
               const localStep = globalStep - barIndex * stepsPerBar;
               if (localStep >= 0 && localStep < stepsPerBar) {
                 if (!hits[localStep]) hits[localStep] = [];
