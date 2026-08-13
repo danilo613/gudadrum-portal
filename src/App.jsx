@@ -3442,130 +3442,135 @@ function decomposeDuration_(steps) {
   return result;
 }
 
+// 1セクション分を、指定したDOMコンテナに五線譜として描画する（本体・全曲印刷、両方から使う共通処理）
+function renderStaffSection_(container, patternData, scale, spb) {
+  if (!container || !patternData || !window.Vex) return;
+  container.innerHTML = "";
+  const VF = window.Vex.Flow;
+  const pitchMap = SCALE_PITCH_MAPS[scale] || SCALE_PITCH_MAPS.default;
+  const left = patternData.left || {};
+  const right = patternData.right || {};
+  const nb = (patternData.meta && parseInt(patternData.meta.bars)) || 8;
+  const stepsPerBar = spb || 16;
+  const isTriplet = stepsPerBar === 12;
+
+  function collectHits(barIndex) {
+    const hits = {};
+    Object.keys(pitchMap).forEach(function(color){
+      [left, right].forEach(function(hand){
+        if (hand[color]) {
+          hand[color].forEach(function(val, globalStep){
+            if (!val) return;
+            const localStep = globalStep - barIndex * stepsPerBar;
+            if (localStep >= 0 && localStep < stepsPerBar) {
+              if (!hits[localStep]) hits[localStep] = [];
+              if (hits[localStep].indexOf(pitchMap[color]) < 0) hits[localStep].push({key:pitchMap[color], color:color});
+            }
+          });
+        }
+      });
+    });
+    return hits;
+  }
+
+  function makeNote(stepHits, duration) {
+    if (!stepHits) return new VF.StaveNote({keys:["b/4"], duration: duration+"r"});
+    const n = new VF.StaveNote({keys: stepHits.map(function(h){return h.key;}), duration: duration});
+    stepHits.forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
+    return n;
+  }
+
+  // 三連符系（1小節=12ステップ＝4拍×3連符）：拍ごとに3つの8分音符としてグループ化し、連符（3）の括弧を付ける
+  function barToNotesTriplet(barIndex) {
+    const hits = collectHits(barIndex);
+    const notes = [];
+    const tupletGroups = [];
+    for (let beat = 0; beat < 4; beat++) {
+      const groupNotes = [];
+      for (let sub = 0; sub < 3; sub++) {
+        const step = beat * 3 + sub;
+        groupNotes.push(makeNote(hits[step], "8"));
+      }
+      notes.push.apply(notes, groupNotes);
+      tupletGroups.push(groupNotes);
+    }
+    return { notes: notes, tupletGroups: tupletGroups };
+  }
+
+  // 16分音符系（1小節=16ステップ）：次の音までの間隔をもとに、標準的な音符の長さへ変換する
+  function barToNotesStraight(barIndex) {
+    const hits = collectHits(barIndex);
+    const onsetSteps = Object.keys(hits).map(Number).sort(function(a,b){return a-b;});
+    const notes = [];
+    if (onsetSteps.length === 0 || onsetSteps[0] > 0) {
+      const gap = (onsetSteps.length === 0 ? stepsPerBar : onsetSteps[0]);
+      decomposeDuration_(gap).forEach(function(dur){ notes.push(makeNote(null, dur)); });
+    }
+    onsetSteps.forEach(function(step, i){
+      const nextStep = (i+1 < onsetSteps.length) ? onsetSteps[i+1] : stepsPerBar;
+      const gap = nextStep - step;
+      const durations = decomposeDuration_(gap);
+      notes.push(makeNote(hits[step], durations[0]));
+      durations.slice(1).forEach(function(dur){ notes.push(makeNote(null, dur)); });
+    });
+    return { notes: notes, tupletGroups: null };
+  }
+
+  function barToNotes(barIndex) {
+    return isTriplet ? barToNotesTriplet(barIndex) : barToNotesStraight(barIndex);
+  }
+
+  const barsPerRow = 2, staveWidth = 340, headerWidth = 70;
+  const rows = Math.ceil(nb / barsPerRow);
+  const renderer = new VF.Renderer(container, VF.Renderer.Backends.SVG);
+  renderer.resize(headerWidth + Math.min(barsPerRow, nb) * staveWidth + 40, rows * 170 + 20);
+  const context = renderer.getContext();
+
+  for (let row = 0; row < rows; row++) {
+    // 各行の頭に、音部記号＋拍子記号、専用のスペースを用意する（どの行も同じ幅で統一）
+    const headerStave = new VF.Stave(20, 20 + row * 170, headerWidth);
+    headerStave.setBegBarType(VF.Barline.type.NONE);
+    headerStave.setEndBarType(VF.Barline.type.NONE);
+    headerStave.addClef("treble");
+    headerStave.addTimeSignature("4/4");
+    headerStave.setContext(context).draw();
+  }
+
+  for (let bi = 0; bi < nb; bi++) {
+    const row = Math.floor(bi / barsPerRow), col = bi % barsPerRow;
+    const x = 20 + headerWidth + col * staveWidth;
+    const y = 20 + row * 170;
+    const stave = new VF.Stave(x, y, staveWidth);
+    stave.setContext(context).draw();
+    const result = barToNotes(bi);
+    const notes = result.notes;
+    var tuplets = [];
+    if (result.tupletGroups) {
+      // 連符オブジェクトは、Voiceに音符を渡す前に作る必要がある（ここで内部的な長さの調整が行われる）
+      tuplets = result.tupletGroups.map(function(group){ return new VF.Tuplet(group); });
+    }
+    const voice = new VF.Voice({num_beats:4, beat_value:4});
+    voice.setStrict(false);
+    voice.addTickables(notes);
+    new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-40);
+    voice.draw(context, stave);
+    if (result.tupletGroups) {
+      result.tupletGroups.forEach(function(group){
+        var beamableNotes = group.filter(function(n){ return !n.isRest(); });
+        if (beamableNotes.length > 1) new VF.Beam(beamableNotes).setContext(context).draw();
+      });
+      tuplets.forEach(function(t){ t.setContext(context).draw(); });
+    } else {
+      const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
+      beams.forEach(function(b){ b.setContext(context).draw(); });
+    }
+  }
+}
+
 function StaffNotationView({ patternData, scale, spb }) {
   const containerRef = React.useRef(null);
   React.useEffect(function(){
-    if (!containerRef.current || !patternData || !window.Vex) return;
-    containerRef.current.innerHTML = "";
-    const VF = window.Vex.Flow;
-    const pitchMap = SCALE_PITCH_MAPS[scale] || SCALE_PITCH_MAPS.default;
-    const left = patternData.left || {};
-    const right = patternData.right || {};
-    const nb = (patternData.meta && parseInt(patternData.meta.bars)) || 8;
-    const stepsPerBar = spb || 16;
-    const isTriplet = stepsPerBar === 12;
-
-    function collectHits(barIndex) {
-      const hits = {};
-      Object.keys(pitchMap).forEach(function(color){
-        [left, right].forEach(function(hand){
-          if (hand[color]) {
-            hand[color].forEach(function(val, globalStep){
-              if (!val) return;
-              const localStep = globalStep - barIndex * stepsPerBar;
-              if (localStep >= 0 && localStep < stepsPerBar) {
-                if (!hits[localStep]) hits[localStep] = [];
-                if (hits[localStep].indexOf(pitchMap[color]) < 0) hits[localStep].push({key:pitchMap[color], color:color});
-              }
-            });
-          }
-        });
-      });
-      return hits;
-    }
-
-    function makeNote(stepHits, duration) {
-      if (!stepHits) return new VF.StaveNote({keys:["b/4"], duration: duration+"r"});
-      const n = new VF.StaveNote({keys: stepHits.map(function(h){return h.key;}), duration: duration});
-      stepHits.forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
-      return n;
-    }
-
-    // 三連符系（1小節=12ステップ＝4拍×3連符）：拍ごとに3つの8分音符としてグループ化し、連符（3）の括弧を付ける
-    function barToNotesTriplet(barIndex) {
-      const hits = collectHits(barIndex);
-      const notes = [];
-      const tupletGroups = [];
-      for (let beat = 0; beat < 4; beat++) {
-        const groupNotes = [];
-        for (let sub = 0; sub < 3; sub++) {
-          const step = beat * 3 + sub;
-          groupNotes.push(makeNote(hits[step], "8"));
-        }
-        notes.push.apply(notes, groupNotes);
-        tupletGroups.push(groupNotes);
-      }
-      return { notes: notes, tupletGroups: tupletGroups };
-    }
-
-    // 16分音符系（1小節=16ステップ）：次の音までの間隔をもとに、標準的な音符の長さへ変換する
-    function barToNotesStraight(barIndex) {
-      const hits = collectHits(barIndex);
-      const onsetSteps = Object.keys(hits).map(Number).sort(function(a,b){return a-b;});
-      const notes = [];
-      if (onsetSteps.length === 0 || onsetSteps[0] > 0) {
-        const gap = (onsetSteps.length === 0 ? stepsPerBar : onsetSteps[0]);
-        decomposeDuration_(gap).forEach(function(dur){ notes.push(makeNote(null, dur)); });
-      }
-      onsetSteps.forEach(function(step, i){
-        const nextStep = (i+1 < onsetSteps.length) ? onsetSteps[i+1] : stepsPerBar;
-        const gap = nextStep - step;
-        const durations = decomposeDuration_(gap);
-        notes.push(makeNote(hits[step], durations[0]));
-        durations.slice(1).forEach(function(dur){ notes.push(makeNote(null, dur)); });
-      });
-      return { notes: notes, tupletGroups: null };
-    }
-
-    function barToNotes(barIndex) {
-      return isTriplet ? barToNotesTriplet(barIndex) : barToNotesStraight(barIndex);
-    }
-
-    const barsPerRow = 2, staveWidth = 340, headerWidth = 70;
-    const rows = Math.ceil(nb / barsPerRow);
-    const renderer = new VF.Renderer(containerRef.current, VF.Renderer.Backends.SVG);
-    renderer.resize(headerWidth + Math.min(barsPerRow, nb) * staveWidth + 40, rows * 170 + 20);
-    const context = renderer.getContext();
-
-    for (let row = 0; row < rows; row++) {
-      // 各行の頭に、音部記号＋拍子記号、専用のスペースを用意する（どの行も同じ幅で統一）
-      const headerStave = new VF.Stave(20, 20 + row * 170, headerWidth);
-      headerStave.setBegBarType(VF.Barline.type.NONE);
-      headerStave.setEndBarType(VF.Barline.type.NONE);
-      headerStave.addClef("treble");
-      headerStave.addTimeSignature("4/4");
-      headerStave.setContext(context).draw();
-    }
-
-    for (let bi = 0; bi < nb; bi++) {
-      const row = Math.floor(bi / barsPerRow), col = bi % barsPerRow;
-      const x = 20 + headerWidth + col * staveWidth;
-      const y = 20 + row * 170;
-      const stave = new VF.Stave(x, y, staveWidth);
-      stave.setContext(context).draw();
-      const result = barToNotes(bi);
-      const notes = result.notes;
-      var tuplets = [];
-      if (result.tupletGroups) {
-        // 連符オブジェクトは、Voiceに音符を渡す前に作る必要がある（ここで内部的な長さの調整が行われる）
-        tuplets = result.tupletGroups.map(function(group){ return new VF.Tuplet(group); });
-      }
-      const voice = new VF.Voice({num_beats:4, beat_value:4});
-      voice.setStrict(false);
-      voice.addTickables(notes);
-      new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-40);
-      voice.draw(context, stave);
-      if (result.tupletGroups) {
-        result.tupletGroups.forEach(function(group){
-          var beamableNotes = group.filter(function(n){ return !n.isRest(); });
-          if (beamableNotes.length > 1) new VF.Beam(beamableNotes).setContext(context).draw();
-        });
-        tuplets.forEach(function(t){ t.setContext(context).draw(); });
-      } else {
-        const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
-        beams.forEach(function(b){ b.setContext(context).draw(); });
-      }
-    }
+    renderStaffSection_(containerRef.current, patternData, scale, spb);
   }, [patternData, scale, spb]);
 
   return (
@@ -3577,6 +3582,29 @@ function StaffNotationView({ patternData, scale, spb }) {
     </div>
   );
 }
+
+// 曲全体（全セクション）を、1つの画面に五線譜としてまとめて表示する（印刷・PDF保存用）
+function FullScoreStaffView({ songTitle, scale, sections, allPatterns }) {
+  return (
+    <div style={{background:"#fff",padding:20}}>
+      <div style={{fontSize:20,fontWeight:700,color:"#1a3a2a",marginBottom:4}}>{songTitle}</div>
+      <div style={{fontSize:11,color:"#888",marginBottom:16}}>Composed by DANiLO</div>
+      {sections.map(function(sec){
+        var sectionKey = sec[0], sectionLabel = sec[1], sectionSpb = (sec[2]==="triplet") ? 12 : 16;
+        var pd = (allPatterns||{})[sectionKey];
+        if (!pd) return null;
+        return (
+          <div key={sectionKey} style={{marginBottom:24}}>
+            <div style={{fontSize:14,fontWeight:700,color:"#333",marginBottom:8}}>{sectionLabel}</div>
+            <StaffNotationView patternData={pd} scale={scale} spb={sectionSpb}/>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+
 
 function SetlistView({ inorionData, onClose, C }) {
   var [rows, setRows] = React.useState([]);
@@ -3942,6 +3970,7 @@ function App() {
   const [isFromAdmin, setIsFromAdmin] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [showStaffNotation, setShowStaffNotation] = useState(false);
+  const [showFullScoreStaff, setShowFullScoreStaff] = useState(false);
   const [bgmPlayed, setBgmPlayed] = useState(false);
   const bgmRef = React.useRef(null);
   const pointHistoryFetchGen = React.useRef(0); // 古い応答が、後から来た正しい応答を上書きしないようにするためのガード
@@ -8196,6 +8225,37 @@ function App() {
                     scale={(scoreEditId==="iridescence")?iridescenceScale:(scoreEditId==="kigaru")?kigaruScale:(scoreEditId==="nostalgic"||scoreEditId==="holychild")?"equinox":(scoreEditId==="aoi")?"arcane":(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":"default"}
                     spb={(function(){var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});return (sec&&sec[2]==="triplet")?12:16;})()}
                   />
+                </div>
+              )}
+              <button onClick={()=>setShowFullScoreStaff(!showFullScoreStaff)}
+                style={{width:"100%",marginTop:6,padding:"8px 0",borderRadius:10,border:"1px dashed rgba(112,130,56,0.5)",background:"rgba(255,255,255,0.5)",color:C.moss,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+                🎼 曲全体を五線譜で見る（印刷／PDF保存・試作） {showFullScoreStaff?"▲":"▼"}
+              </button>
+              {showFullScoreStaff && (
+                <div style={{marginTop:8}}>
+                  <div style={{textAlign:"right",marginBottom:8}}>
+                    <button onClick={()=>{
+                      var el = document.getElementById("full-score-staff-print-area");
+                      if(!el) return;
+                      var win = window.open("","_blank");
+                      win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+SCORE_ID_TO_NAME[scoreEditId]+'</title>'
+                        +'<style>@page{size:A4;margin:12mm}body{font-family:sans-serif;margin:0}</style></head><body>'
+                        +el.innerHTML+'</body></html>');
+                      win.document.close();
+                      setTimeout(function(){win.print();},400);
+                    }}
+                      style={{padding:"6px 14px",borderRadius:6,border:"1px solid "+C.moss,background:"#fff",color:C.moss,fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                      🖨️ 印刷 / PDF保存
+                    </button>
+                  </div>
+                  <div id="full-score-staff-print-area">
+                    <FullScoreStaffView
+                      songTitle={SCORE_ID_TO_NAME[scoreEditId]}
+                      scale={(scoreEditId==="iridescence")?iridescenceScale:(scoreEditId==="kigaru")?kigaruScale:(scoreEditId==="nostalgic"||scoreEditId==="holychild")?"equinox":(scoreEditId==="aoi")?"arcane":(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":"default"}
+                      sections={SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily}
+                      allPatterns={scorePatterns[scoreEditId]||{}}
+                    />
+                  </div>
                 </div>
               )}
             </div>
