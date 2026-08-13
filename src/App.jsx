@@ -11443,7 +11443,9 @@ function App() {
           }).sort(function(a,b){return new Date(a["日付"])-new Date(b["日付"]);});
           var hasRanking = monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0;
           var hasStreaks = monthlyStreaks && monthlyStreaks.streaks && monthlyStreaks.streaks.length > 0;
-          if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0 && !hasRanking && !hasStreaks) return null;
+          var rankingLoading = monthlyRanking === null; // まだ一度も取得できていない（読み込み中）
+          var streaksLoading = monthlyStreaks === null;
+          if(specialNotices.length===0 && generalNotices.length===0 && monthScheds.length===0 && !hasRanking && !hasStreaks && !rankingLoading && !streaksLoading) return null;
           return (
             <div style={{display:"flex",flexDirection:"column",gap:8}}>
               {/* スペシャルお知らせ */}
@@ -11456,7 +11458,7 @@ function App() {
                 </div>
               )}
               {/* 通常お知らせ（開閉式） */}
-              {(generalNotices.length>0||monthScheds.length>0||hasRanking||hasStreaks)&&(
+              {(generalNotices.length>0||monthScheds.length>0||hasRanking||hasStreaks||rankingLoading||streaksLoading)&&(
                 <div style={{background:"rgba(255,255,255,0.92)",border:"1px solid "+C.border,borderRadius:14,overflow:"hidden"}}>
                   <button onClick={()=>setNoticeOpen(!noticeOpen)}
                     style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
@@ -11469,6 +11471,11 @@ function App() {
                         style={{position:"absolute",bottom:-8,right:-8,width:96,height:96,objectFit:"contain",objectPosition:"bottom right",pointerEvents:"none",zIndex:5}}
                         onError={function(e){e.target.style.display="none";}}/>
                       {/* 先月のリズム筋トレランキング */}
+                      {rankingLoading && (
+                        <div style={{background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 50%, #ffe8b4 100%)",border:"1.5px solid #d4a040",borderRadius:12,padding:"12px 14px",marginBottom:10,textAlign:"center"}}>
+                          <span style={{fontSize:11,color:"#8a6a20"}}>🏆 リズム筋トレ ランキング　読み込み中…</span>
+                        </div>
+                      )}
                       {monthlyRanking && monthlyRanking.ranking && monthlyRanking.ranking.length > 0 && (
                         <div style={{background:"linear-gradient(135deg, #fff8e8 0%, #ffefc8 50%, #ffe8b4 100%)",border:"1.5px solid #d4a040",borderRadius:12,padding:"12px 14px",position:"relative",overflow:"hidden",marginBottom:10,boxShadow:"0 2px 8px rgba(212,160,64,0.15)"}}>
                           <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#d4a040,#f4c060,#d4a040)"}}/>
@@ -11511,6 +11518,11 @@ function App() {
                         </div>
                       )}
                       {/* 今月の連続練習日数TOP3 */}
+                      {streaksLoading && (
+                        <div style={{background:"linear-gradient(135deg, #fff0e8 0%, #ffe0d0 50%, #ffd4b8 100%)",border:"1.5px solid #d4703a",borderRadius:12,padding:"12px 14px",marginBottom:10,textAlign:"center"}}>
+                          <span style={{fontSize:11,color:"#a04a20"}}>🔥 連続練習日数 ランキング　読み込み中…</span>
+                        </div>
+                      )}
                       {hasStreaks && (
                         <div style={{background:"linear-gradient(135deg, #fff0e8 0%, #ffe0d0 50%, #ffd4b8 100%)",border:"1.5px solid #d4703a",borderRadius:12,padding:"12px 14px",position:"relative",overflow:"hidden",marginBottom:10,boxShadow:"0 2px 8px rgba(212,112,58,0.15)"}}>
                           <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,#d4703a,#f4903a,#d4703a)"}}/>
