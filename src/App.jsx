@@ -7821,6 +7821,37 @@ function App() {
               />
             </div>
           )}
+          <button onClick={()=>setShowFullScoreStaff(!showFullScoreStaff)}
+            style={{width:"100%",marginTop:6,padding:"8px 0",borderRadius:10,border:"1px dashed rgba(112,130,56,0.5)",background:"rgba(255,255,255,0.5)",color:C.moss,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+            🎼 曲全体を五線譜で見る（印刷／PDF保存・試作） {showFullScoreStaff?"▲":"▼"}
+          </button>
+          {showFullScoreStaff && (
+            <div style={{marginTop:8}}>
+              <div style={{textAlign:"right",marginBottom:8}}>
+                <button onClick={()=>{
+                  var el = document.getElementById("full-score-staff-print-area");
+                  if(!el) return;
+                  var win = window.open("","_blank");
+                  win.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+SCORE_ID_TO_NAME[scoreEditId]+'</title>'
+                    +'<style>@page{size:A4;margin:12mm}body{font-family:sans-serif;margin:0}.staff-toggle-noprint{display:none !important}</style></head><body>'
+                    +el.innerHTML+'</body></html>');
+                  win.document.close();
+                  setTimeout(function(){win.print();},400);
+                }}
+                  style={{padding:"6px 14px",borderRadius:6,border:"1px solid "+C.moss,background:"#fff",color:C.moss,fontSize:11,fontWeight:600,cursor:"pointer"}}>
+                  🖨️ 印刷 / PDF保存
+                </button>
+              </div>
+              <div id="full-score-staff-print-area">
+                <FullScoreStaffView
+                  songTitle={SCORE_ID_TO_NAME[scoreEditId]}
+                  scale={(scoreEditId==="iridescence")?iridescenceScale:(scoreEditId==="kigaru")?kigaruScale:(scoreEditId==="nostalgic"||scoreEditId==="holychild")?"equinox":(scoreEditId==="aoi")?"arcane":(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":"default"}
+                  sections={SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily}
+                  allPatterns={scorePatterns[scoreEditId]||{}}
+                />
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
