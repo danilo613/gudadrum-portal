@@ -3453,14 +3453,15 @@ function StaffNotationView({ patternData, scale, spb }) {
     const right = patternData.right || {};
     const nb = (patternData.meta && parseInt(patternData.meta.bars)) || 8;
     const stepsPerBar = spb || 16;
+    const isTriplet = stepsPerBar === 12;
 
-    function barToNotes(barIndex) {
+    function collectHits(barIndex) {
       const hits = {};
       Object.keys(pitchMap).forEach(function(color){
         [left, right].forEach(function(hand){
           if (hand[color]) {
             hand[color].forEach(function(val, globalStep){
-              if (!val) return; // その場所に音が無い（false/undefined/0）
+              if (!val) return;
               const localStep = globalStep - barIndex * stepsPerBar;
               if (localStep >= 0 && localStep < stepsPerBar) {
                 if (!hits[localStep]) hits[localStep] = [];
@@ -3470,22 +3471,54 @@ function StaffNotationView({ patternData, scale, spb }) {
           }
         });
       });
+      return hits;
+    }
+
+    function makeNote(stepHits, duration) {
+      if (!stepHits) return new VF.StaveNote({keys:["b/4"], duration: duration+"r"});
+      const n = new VF.StaveNote({keys: stepHits.map(function(h){return h.key;}), duration: duration});
+      stepHits.forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
+      return n;
+    }
+
+    // 三連符系（1小節=12ステップ＝4拍×3連符）：拍ごとに3つの8分音符としてグループ化し、連符（3）の括弧を付ける
+    function barToNotesTriplet(barIndex) {
+      const hits = collectHits(barIndex);
+      const notes = [];
+      const tupletGroups = [];
+      for (let beat = 0; beat < 4; beat++) {
+        const groupNotes = [];
+        for (let sub = 0; sub < 3; sub++) {
+          const step = beat * 3 + sub;
+          groupNotes.push(makeNote(hits[step], "8"));
+        }
+        notes.push.apply(notes, groupNotes);
+        tupletGroups.push(groupNotes);
+      }
+      return { notes: notes, tupletGroups: tupletGroups };
+    }
+
+    // 16分音符系（1小節=16ステップ）：次の音までの間隔をもとに、標準的な音符の長さへ変換する
+    function barToNotesStraight(barIndex) {
+      const hits = collectHits(barIndex);
       const onsetSteps = Object.keys(hits).map(Number).sort(function(a,b){return a-b;});
       const notes = [];
       if (onsetSteps.length === 0 || onsetSteps[0] > 0) {
         const gap = (onsetSteps.length === 0 ? stepsPerBar : onsetSteps[0]);
-        decomposeDuration_(gap).forEach(function(dur){ notes.push(new VF.StaveNote({keys:["b/4"], duration:dur+"r"})); });
+        decomposeDuration_(gap).forEach(function(dur){ notes.push(makeNote(null, dur)); });
       }
       onsetSteps.forEach(function(step, i){
         const nextStep = (i+1 < onsetSteps.length) ? onsetSteps[i+1] : stepsPerBar;
         const gap = nextStep - step;
         const durations = decomposeDuration_(gap);
-        const n = new VF.StaveNote({keys: hits[step].map(function(h){return h.key;}), duration: durations[0]});
-        hits[step].forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
-        notes.push(n);
-        durations.slice(1).forEach(function(dur){ notes.push(new VF.StaveNote({keys:["b/4"], duration:dur+"r"})); });
+        notes.push(makeNote(hits[step], durations[0]));
+        durations.slice(1).forEach(function(dur){ notes.push(makeNote(null, dur)); });
       });
-      return notes;
+      return { notes: notes, tupletGroups: null };
+    }
+
+    function barToNotes(barIndex) {
+      return isTriplet ? barToNotesTriplet(barIndex) : barToNotesStraight(barIndex);
     }
 
     const barsPerRow = 2, staveWidth = 340, headerWidth = 70;
@@ -3510,14 +3543,25 @@ function StaffNotationView({ patternData, scale, spb }) {
       const y = 20 + row * 170;
       const stave = new VF.Stave(x, y, staveWidth);
       stave.setContext(context).draw();
-      const notes = barToNotes(bi);
-      const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
+      const result = barToNotes(bi);
+      const notes = result.notes;
+      var tuplets = [];
+      if (result.tupletGroups) {
+        // 連符オブジェクトは、Voiceに音符を渡す前に作る必要がある（ここで内部的な長さの調整が行われる）
+        tuplets = result.tupletGroups.map(function(group){ return new VF.Tuplet(group); });
+      }
       const voice = new VF.Voice({num_beats:4, beat_value:4});
       voice.setStrict(false);
       voice.addTickables(notes);
       new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-40);
       voice.draw(context, stave);
-      beams.forEach(function(b){ b.setContext(context).draw(); });
+      if (result.tupletGroups) {
+        result.tupletGroups.forEach(function(group){ new VF.Beam(group).setContext(context).draw(); });
+        tuplets.forEach(function(t){ t.setContext(context).draw(); });
+      } else {
+        const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
+        beams.forEach(function(b){ b.setContext(context).draw(); });
+      }
     }
   }, [patternData, scale, spb]);
 
