@@ -3555,16 +3555,23 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode) {
     voice.setStrict(false);
     voice.addTickables(notes);
     new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-40);
-    voice.draw(context, stave);
+    // Beamは voice.draw() より前に作る（Beamのコンストラクタがnote側に自分を紐づけて
+    // 初めて、そのノートの個別の符尾＝flagが抑制される仕組みのため。以前はvoice.draw()の
+    // 後でBeamを作っていたので、flagが先に描画され、その上にbeamが重なって二重に
+    // 表示されてしまっていた）
+    var beams = [];
     if (result.tupletGroups) {
       result.tupletGroups.forEach(function(group){
         var beamableNotes = group.filter(function(n){ return !n.isRest(); });
-        if (beamableNotes.length > 1) new VF.Beam(beamableNotes).setContext(context).draw();
+        if (beamableNotes.length > 1) beams.push(new VF.Beam(beamableNotes));
       });
-      tuplets.forEach(function(t){ t.setContext(context).draw(); });
     } else {
-      const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
-      beams.forEach(function(b){ b.setContext(context).draw(); });
+      beams = VF.Beam.generateBeams(notes, {beam_rests:false});
+    }
+    voice.draw(context, stave);
+    beams.forEach(function(b){ b.setContext(context).draw(); });
+    if (result.tupletGroups) {
+      tuplets.forEach(function(t){ t.setContext(context).draw(); });
     }
   }
 }
