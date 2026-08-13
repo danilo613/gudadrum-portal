@@ -3556,7 +3556,10 @@ function StaffNotationView({ patternData, scale, spb }) {
       new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-40);
       voice.draw(context, stave);
       if (result.tupletGroups) {
-        result.tupletGroups.forEach(function(group){ new VF.Beam(group).setContext(context).draw(); });
+        result.tupletGroups.forEach(function(group){
+          var beamableNotes = group.filter(function(n){ return !n.isRest(); });
+          if (beamableNotes.length > 1) new VF.Beam(beamableNotes).setContext(context).draw();
+        });
         tuplets.forEach(function(t){ t.setContext(context).draw(); });
       } else {
         const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
@@ -4034,6 +4037,8 @@ function App() {
   const [inorionPage, setInorionPage] = useState(false);
   const [inorionMyOpen, setInorionMyOpen] = useState(false);
   const [inorionListOpen, setInorionListOpen] = useState(false);
+  const [songStructureOpen, setSongStructureOpen] = useState({});
+  const [costumeOpen, setCostumeOpen] = useState(false);
   const [inorionSchedOpen, setInorionSchedOpen] = useState(false);
   const [inorionGuestOpen, setInorionGuestOpen] = useState(false);
   const [inorionRehaOpen, setInorionRehaOpen] = useState(false);
@@ -10913,6 +10918,45 @@ function App() {
       "春ノ舞": "94 BPM",
       "秋霖〜shuhrin〜": "112 BPM",
     };
+    const SONG_STRUCTURE = {
+      "water lily〜水面〜": [
+        "イントロ （DANiLOのみ）",
+        "Aメロ（始まる前に4カウントが入る）",
+        "Bメロ",
+        "間",
+        "イントロ'（DANiLO＆講師のみ）（始まる前に4カウントが入る）",
+        "Aメロ",
+        "イントロ'（DANiLOのみ）",
+        "Aメロ",
+        "Bメロ（DANiLOのみ）",
+      ],
+      "iridescence": [
+        "イントロ（DANiLOのみ）",
+        "Aメロ",
+        "Bメロ",
+        "Aメロ",
+        "Bメロ",
+        "イントロ'（DANiLOのみ）",
+        "サビ",
+        "サビ'",
+        "間合い",
+        "イントロ（DANiLOのみ）",
+        "Aメロ",
+        "Bメロ",
+        "アウトロ",
+      ],
+      "蒼〜aoi〜": [
+        "イントロ（DANiLOのみ）",
+        "Aメロ（前半8小節：DANiLOのみ）",
+        "Bメロ",
+        "〜〜〜",
+        "割愛",
+        "〜〜〜",
+        "サビ'",
+        "間奏①（メンバーは後半後半9小節目からフェードアウト）",
+        "締め（DANiLOのみ）",
+      ],
+    };
     const myEntries = inorionData.filter(r=>r.name===m.name);
     const INORION_SCHED_TYPES = ["幹向け〜zoom交流＆相談会〜（サブスクメンバー向け）","全体練習会（10月17日演奏会出演者向け）","対面 練習会（自由参加）"];
     const today2 = new Date(); today2.setHours(0,0,0,0);
@@ -11399,6 +11443,25 @@ function App() {
             )}
           </div>
 
+          {/* 衣装に関して */}
+          <div style={boxStyle}>
+            {headerBtn("👗 衣装に関して", costumeOpen, ()=>setCostumeOpen(!costumeOpen))}
+            {costumeOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"14px 16px"}}>
+                <p style={{fontSize:12,color:"#6a2a4a",lineHeight:2}}>
+                  壱祈音〜Inorion〜の衣装は<br/>
+                  前半：黒系統<br/>
+                  後半：白系統<br/>
+                  共通して、赤ポイント（アクセサリー、ピアス、ストール、付け毛など）を身につけてください。
+                </p>
+                <p style={{fontSize:11,color:"#8a4a6a",lineHeight:1.9,marginTop:10,paddingTop:10,borderTop:"1px dashed rgba(138,74,106,0.2)"}}>
+                  ※前半とは、1曲目「律」〜9曲目「Heartbeat of L**E」まで<br/>
+                  　後半とは10曲目「dreamy EYES」〜アンコール「蒼〜aoi〜」まで
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* 練習会日程調整 */}
           <div style={boxStyle}>
               {headerBtn("📅 参加確認", practiceOpen, ()=>{setPracticeOpen(!practiceOpen);if(!practiceLoaded)fetchPractice();})}
@@ -11510,6 +11573,23 @@ function App() {
                   return (
                     <div key={song} style={{marginBottom:14,background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",border:"1px solid rgba(138,74,106,0.12)"}}>
                       <p style={{fontSize:14,fontWeight:700,color:"#6a2a4a",marginBottom:8}}>🎵 {song}{SONG_BPM[song] ? <span style={{fontSize:11,fontWeight:400,color:"#8a6a7a",marginLeft:6}}>{SONG_BPM[song]}</span> : ""}</p>
+                      {SONG_STRUCTURE[song] && (
+                        <div style={{marginBottom:8}}>
+                          <button onClick={()=>setSongStructureOpen(prev=>({...prev,[song]:!prev[song]}))}
+                            style={{width:"100%",padding:"7px 10px",borderRadius:8,border:"1px solid rgba(138,74,106,0.25)",background:"rgba(255,255,255,0.6)",color:"#6a2a4a",fontSize:11,fontWeight:600,cursor:"pointer",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                            <span>📋 本番の構成</span>
+                            <span>{songStructureOpen[song]?"▲":"▼"}</span>
+                          </button>
+                          {songStructureOpen[song] && (
+                            <div style={{marginTop:6,padding:"10px 12px",background:"rgba(255,255,255,0.7)",borderRadius:8,border:"1px solid rgba(138,74,106,0.15)"}}>
+                              <p style={{fontSize:10,fontWeight:700,color:"#8a4a6a",marginBottom:6}}>【構成】</p>
+                              {SONG_STRUCTURE[song].map(function(line,li){
+                                return <p key={li} style={{fontSize:11,color:"#6a2a4a",lineHeight:1.8}}>{line}</p>;
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
                       {entries.map((r,i)=>{
                         const scaleMatch = r.song.match(/（(.+?)）/);
                         const scale = scaleMatch ? scaleMatch[1] : r.song === "iridescence 上物" ? "上物" : "";
