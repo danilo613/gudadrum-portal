@@ -3421,6 +3421,106 @@ function renderSideGrid2(barIdx, side){
 }
 
 
+// ===== 五線譜表示（試作） =====
+// 各音階の、色→実際の音の高さ（低い順：ピンク・オレンジ・黄緑・緑・赤・紫・茶色・黄色・水色）
+const SCALE_PITCH_MAPS = {
+  arcane:  { pink:"f/3", orange:"a/3", lime:"c/4", green:"d/4", red:"e/4", purple:"f/4", brown:"g/4", yellow:"a/4", cyan:"c/5" },
+  enigma:  { pink:"eb/3", orange:"g/3", lime:"bb/3", green:"c/4", red:"d/4", purple:"eb/4", brown:"f/4", yellow:"g/4", cyan:"bb/4" },
+  equinox: { pink:"f#/3", orange:"a/3", lime:"c#/4", green:"d/4", red:"e/4", purple:"f#/4", brown:"g#/4", yellow:"a/4", cyan:"c#/5" },
+  default: { pink:"g/3", orange:"c/4", lime:"d/4", green:"e/4", red:"g/4", purple:"a/4", brown:"b/4", yellow:"c/5", cyan:"d/5" },
+};
+const STAFF_COLOR_HEX = { pink:"#e88ab0", orange:"#e8842a", lime:"#8ac93a", green:"#4a9a68", red:"#e05a4a", purple:"#8888cc", brown:"#a06a3a", yellow:"#e8c95a", cyan:"#4ac9c9" };
+
+// 16分音符いくつ分か（1〜16）を、標準的な音符の長さに分解する
+function decomposeDuration_(steps) {
+  const table = [[16,"1"],[12,"2d"],[8,"2"],[6,"4d"],[4,"4"],[3,"8d"],[2,"8"],[1,"16"]];
+  const result = []; let remain = steps;
+  while (remain > 0) {
+    const found = table.find(function(t){return t[0] <= remain;});
+    result.push(found[1]); remain -= found[0];
+  }
+  return result;
+}
+
+function StaffNotationView({ patternData, scale, spb }) {
+  const containerRef = React.useRef(null);
+  React.useEffect(function(){
+    if (!containerRef.current || !patternData || !window.Vex) return;
+    containerRef.current.innerHTML = "";
+    const VF = window.Vex.Flow;
+    const pitchMap = SCALE_PITCH_MAPS[scale] || SCALE_PITCH_MAPS.default;
+    const left = patternData.left || {};
+    const right = patternData.right || {};
+    const nb = (patternData.meta && parseInt(patternData.meta.bars)) || 8;
+    const stepsPerBar = spb || 16;
+
+    function barToNotes(barIndex) {
+      const hits = {};
+      Object.keys(pitchMap).forEach(function(color){
+        [left, right].forEach(function(hand){
+          if (hand[color]) {
+            (hand[color] || []).forEach(function(globalStep){
+              const localStep = globalStep - barIndex * stepsPerBar;
+              if (localStep >= 0 && localStep < stepsPerBar) {
+                if (!hits[localStep]) hits[localStep] = [];
+                if (hits[localStep].indexOf(pitchMap[color]) < 0) hits[localStep].push({key:pitchMap[color], color:color});
+              }
+            });
+          }
+        });
+      });
+      const onsetSteps = Object.keys(hits).map(Number).sort(function(a,b){return a-b;});
+      const notes = [];
+      if (onsetSteps.length === 0 || onsetSteps[0] > 0) {
+        const gap = (onsetSteps.length === 0 ? stepsPerBar : onsetSteps[0]);
+        decomposeDuration_(gap).forEach(function(dur){ notes.push(new VF.StaveNote({keys:["b/4"], duration:dur+"r"})); });
+      }
+      onsetSteps.forEach(function(step, i){
+        const nextStep = (i+1 < onsetSteps.length) ? onsetSteps[i+1] : stepsPerBar;
+        const gap = nextStep - step;
+        const durations = decomposeDuration_(gap);
+        const n = new VF.StaveNote({keys: hits[step].map(function(h){return h.key;}), duration: durations[0]});
+        hits[step].forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
+        notes.push(n);
+        durations.slice(1).forEach(function(dur){ notes.push(new VF.StaveNote({keys:["b/4"], duration:dur+"r"})); });
+      });
+      return notes;
+    }
+
+    const barsPerRow = 4, staveWidth = 180;
+    const rows = Math.ceil(nb / barsPerRow);
+    const renderer = new VF.Renderer(containerRef.current, VF.Renderer.Backends.SVG);
+    renderer.resize(Math.min(barsPerRow, nb) * staveWidth + 40, rows * 130 + 20);
+    const context = renderer.getContext();
+
+    for (let bi = 0; bi < nb; bi++) {
+      const row = Math.floor(bi / barsPerRow), col = bi % barsPerRow;
+      const x = 20 + col * staveWidth, y = 20 + row * 130;
+      const stave = new VF.Stave(x, y, staveWidth);
+      if (col === 0) stave.addClef("treble");
+      if (bi === 0) stave.addTimeSignature("4/4");
+      stave.setContext(context).draw();
+      const notes = barToNotes(bi);
+      const beams = VF.Beam.generateBeams(notes, {beam_rests:false});
+      const voice = new VF.Voice({num_beats:4, beat_value:4});
+      voice.setStrict(false);
+      voice.addTickables(notes);
+      new VF.Formatter().joinVoices([voice]).format([voice], staveWidth-30);
+      voice.draw(context, stave);
+      beams.forEach(function(b){ b.setContext(context).draw(); });
+    }
+  }, [patternData, scale, spb]);
+
+  return (
+    <div style={{background:"#fff",borderRadius:12,padding:"12px",overflowX:"auto",border:"1px solid rgba(0,0,0,0.08)"}}>
+      <p style={{fontSize:10,color:"#a87a20",background:"#fff8e8",borderLeft:"3px solid #d4a040",padding:"6px 10px",borderRadius:4,marginBottom:10,lineHeight:1.5}}>
+        🎼 試作機能です。左手・右手の区別はまだありません。
+      </p>
+      <div ref={containerRef}/>
+    </div>
+  );
+}
+
 function SetlistView({ inorionData, onClose, C }) {
   var [rows, setRows] = React.useState([]);
   React.useEffect(function(){
@@ -3784,6 +3884,7 @@ function App() {
   const [surveyModal, setSurveyModal] = useState(null);
   const [isFromAdmin, setIsFromAdmin] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
+  const [showStaffNotation, setShowStaffNotation] = useState(false);
   const [bgmPlayed, setBgmPlayed] = useState(false);
   const bgmRef = React.useRef(null);
   const pointHistoryFetchGen = React.useRef(0); // 古い応答が、後から来た正しい応答を上書きしないようにするためのガード
@@ -7582,6 +7683,22 @@ function App() {
           floatPosInit={sharedFloatPos}
           onFloatPosChange={setSharedFloatPos}
         />
+        {/* 五線譜表示（試作機能・管理者確認用） */}
+        <div style={{marginTop:10}}>
+          <button onClick={()=>setShowStaffNotation(!showStaffNotation)}
+            style={{width:"100%",padding:"8px 0",borderRadius:10,border:"1px dashed rgba(112,130,56,0.5)",background:"rgba(255,255,255,0.5)",color:C.moss,fontSize:12,fontWeight:600,cursor:"pointer"}}>
+            🎼 五線譜で見る（試作） {showStaffNotation?"▲":"▼"}
+          </button>
+          {showStaffNotation && (
+            <div style={{marginTop:8}}>
+              <StaffNotationView
+                patternData={(scorePatterns[scoreEditId]||{})[scoreEditSec]}
+                scale={(scoreEditId==="iridescence")?iridescenceScale:(scoreEditId==="kigaru")?kigaruScale:(scoreEditId==="nostalgic"||scoreEditId==="holychild")?"equinox":(scoreEditId==="aoi")?"arcane":(scoreEditId==="megumi"||scoreEditId==="inori"||scoreEditId==="regrace")?"arcane":"default"}
+                spb={(function(){var sec=(SCORE_SECTIONS[scoreEditId]||SCORE_SECTIONS.waterlily).find(function(s){return s[0]===scoreEditSec;});return (sec&&sec[2]==="triplet")?12:16;})()}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
