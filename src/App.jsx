@@ -3748,6 +3748,40 @@ function SetlistView({ inorionData, onClose, C }) {
   );
 }
 
+// 壱祈音〜Inorion〜「当日の役割分担」の一覧表示。管理画面・メンバーページ・ゲストページ、
+// 3箇所から同じ見た目で使う共通コンポーネント（別々にJSXを書くと、直したときに一部だけ
+// 直し忘れる事故につながるため、表示ロジックはここに一本化してある）
+function InorionRoleList({ roles }) {
+  if (!roles || roles.length === 0) {
+    return <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>まだ役割分担は登録されていません</p>;
+  }
+  var phases = [];
+  var byPhase = {};
+  roles.forEach(function(r){
+    var ph = r.phase || "";
+    if (!byPhase[ph]) { byPhase[ph] = []; phases.push(ph); }
+    byPhase[ph].push(r);
+  });
+  return phases.map(function(ph){
+    return (
+      <div key={ph} style={{marginBottom:14}}>
+        {ph && <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",marginBottom:6,letterSpacing:"0.05em"}}>〜{ph}〜</p>}
+        {byPhase[ph].map(function(r, ri){
+          return (
+            <div key={ri} style={{marginBottom:8,paddingBottom:8,borderBottom:ri<byPhase[ph].length-1?"1px dashed rgba(138,74,106,0.12)":"none"}}>
+              <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a"}}>
+                {r.role}
+                {r.note && <span style={{fontSize:10,fontWeight:400,color:"#8a6a7a"}}>　（{r.note}）</span>}
+              </p>
+              <p style={{fontSize:12,color:"#4a2a3a",marginTop:2}}>{r.members.join("、") || "—"}</p>
+            </div>
+          );
+        })}
+      </div>
+    );
+  });
+}
+
 function PracticeCard({ sessions, answers, loaded, memberName, onAnswer, onRefresh, C }) {
   var [localAnswers, setLocalAnswers] = React.useState(answers||[]);
   React.useEffect(function(){ setLocalAnswers(answers||[]); }, [answers]);
@@ -4142,11 +4176,8 @@ function App() {
   const [inorionListOpen, setInorionListOpen] = useState(false);
   const [songStructureOpen, setSongStructureOpen] = useState({});
   const [costumeOpen, setCostumeOpen] = useState(false);
-  const [inorionSchedOpen, setInorionSchedOpen] = useState(false);
   const [inorionGuestOpen, setInorionGuestOpen] = useState(false);
   const [inorionRehaOpen, setInorionRehaOpen] = useState(false);
-  const [inorionSchedView, setInorionSchedView] = useState("timeline");
-  const [inorionSchedFilter, setInorionSchedFilter] = useState("すべて");
   const [inorionTab, setInorionTab] = useState(false);
   const [subscUsageTab, setSubscUsageTab] = useState(false);
   const [subscUsageData, setSubscUsageData] = useState(null);
@@ -8081,6 +8112,50 @@ function App() {
               </div>
             )}
           </div>
+
+          {/* 現在のお申し込み・達成率は、ページ上部のカウントダウンカード内にすでに表示している
+              （inorionParticipantCount、アプリ起動時に自動取得されるので、ここでの追加取得は不要） */}
+
+          {/* 衣装に関して */}
+          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,overflow:"hidden",marginBottom:12}}>
+            <button onClick={()=>setCostumeOpen(!costumeOpen)}
+              style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+              <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a"}}>👗 衣装に関して</span>
+              <span style={{fontSize:12,color:"#8a4a6a",transform:costumeOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+            </button>
+            {costumeOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"14px 16px"}}>
+                <p style={{fontSize:12,color:"#6a2a4a",lineHeight:2}}>
+                  壱祈音〜Inorion〜の衣装は<br/>
+                  前半：黒系統<br/>
+                  後半：白系統<br/>
+                  共通して、赤ポイント（アクセサリー、ピアス、ストール、付け毛など）を身につけてください。
+                </p>
+                <p style={{fontSize:11,color:"#8a4a6a",lineHeight:1.9,marginTop:10,paddingTop:10,borderTop:"1px dashed rgba(138,74,106,0.2)"}}>
+                  ※前半とは、1曲目「律」〜9曲目「Heartbeat of L**E」まで<br/>
+                  　後半とは10曲目「dreamy EYES」〜アンコール「蒼〜aoi〜」まで
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* 当日の役割分担 */}
+          <div style={{background:"rgba(255,255,255,0.9)",border:"1px solid #d4a0c0",borderRadius:14,overflow:"hidden",marginBottom:12}}>
+            <button onClick={()=>{setRoleAssignOpen(!roleAssignOpen);if(!inorionRolesLoaded)fetchInorionRoles();}}
+              style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
+              <span style={{fontSize:13,fontWeight:700,color:"#6a2a4a"}}>📋 当日の役割分担</span>
+              <span style={{fontSize:12,color:"#8a4a6a",transform:roleAssignOpen?"rotate(180deg)":"rotate(0deg)",transition:"transform 0.2s"}}>▼</span>
+            </button>
+            {roleAssignOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"14px 16px"}}>
+                {!inorionRolesLoaded ? (
+                  <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>読み込み中…</p>
+                ) : (
+                  <InorionRoleList roles={inorionRoles} />
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
       </div>
@@ -11136,13 +11211,6 @@ function App() {
       ],
     };
     const myEntries = inorionData.filter(r=>r.name===m.name);
-    const INORION_SCHED_TYPES = ["幹向け〜zoom交流＆相談会〜（サブスクメンバー向け）","全体練習会（10月17日演奏会出演者向け）","対面 練習会（自由参加）"];
-    const today2 = new Date(); today2.setHours(0,0,0,0);
-    const inorionScheds = orchSchedules
-      .filter(s=>INORION_SCHED_TYPES.includes(s["種別"]))
-      .filter(s=>{ const d=new Date(s["日付"]); return !isNaN(d.getTime()) && d>=today2; })
-      .sort((a,b)=>new Date(a["日付"])-new Date(b["日付"]));
-    const WEEKDAYS2 = ["日","月","火","水","木","金","土"];
     const boxStyle = {background:"rgba(255,255,255,0.88)",border:"1px solid rgba(212,160,192,0.5)",borderRadius:14,overflow:"hidden",marginBottom:12,backdropFilter:"blur(8px)",WebkitBackdropFilter:"blur(8px)"};
     const headerBtn = (label, isOpen, toggle) => (
       <button onClick={toggle} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:"transparent",border:"none",cursor:"pointer"}}>
@@ -11535,13 +11603,6 @@ function App() {
                     </div>
                   ))}
 
-                  {/* 打ち上げ会場 */}
-                  <div style={{marginTop:12,background:"rgba(74,106,138,0.06)",borderRadius:10,padding:"12px 14px",border:"1px solid rgba(74,106,138,0.15)"}}>
-                    <p style={{fontSize:12,fontWeight:700,color:"#4a6a8a",marginBottom:4}}>🍻 打ち上げ会場</p>
-                    <a href="https://tabelog.com/hyogo/A2801/A280102/28070676/" target="_blank" rel="noreferrer"
-                      style={{fontSize:13,fontWeight:700,color:"#2a3a5a",textDecoration:"underline"}}>Kono-Hana Cafe（コノハナ カフェ）</a>
-                  </div>
-
                   {/* 業務連絡（編集可能） */}
                   <div style={{marginTop:10,background:"rgba(74,106,138,0.08)",borderRadius:10,padding:"10px 14px",border:"1px solid rgba(74,106,138,0.25)"}}>
                     {editingNotice === "当日" ? (
@@ -11647,37 +11708,9 @@ function App() {
               <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"14px 16px"}}>
                 {!inorionRolesLoaded ? (
                   <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>読み込み中…</p>
-                ) : inorionRoles.length === 0 ? (
-                  <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>まだ役割分担は登録されていません</p>
-                ) : (function(){
-                  // フェーズ（開演前／終演後など）ごとにグルーピングする。並び順はスプレッドシートに
-                  // 書かれている順番をそのまま使う（アルファベット順などに並べ替えない）
-                  var phases = [];
-                  var byPhase = {};
-                  inorionRoles.forEach(function(r){
-                    var ph = r.phase || "";
-                    if (!byPhase[ph]) { byPhase[ph] = []; phases.push(ph); }
-                    byPhase[ph].push(r);
-                  });
-                  return phases.map(function(ph){
-                    return (
-                      <div key={ph} style={{marginBottom:14}}>
-                        {ph && <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",marginBottom:6,letterSpacing:"0.05em"}}>〜{ph}〜</p>}
-                        {byPhase[ph].map(function(r, ri){
-                          return (
-                            <div key={ri} style={{marginBottom:8,paddingBottom:8,borderBottom:ri<byPhase[ph].length-1?"1px dashed rgba(138,74,106,0.12)":"none"}}>
-                              <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a"}}>
-                                {r.role}
-                                {r.note && <span style={{fontSize:10,fontWeight:400,color:"#8a6a7a"}}>　（{r.note}）</span>}
-                              </p>
-                              <p style={{fontSize:12,color:"#4a2a3a",marginTop:2}}>{r.members.join("、") || "—"}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  });
-                })()}
+                ) : (
+                  <InorionRoleList roles={inorionRoles} />
+                )}
               </div>
             )}
           </div>
@@ -11828,67 +11861,6 @@ function App() {
                     </div>
                   );
                 })}
-              </div>
-            )}
-          </div>
-
-          {/* 壱祈音スケジュール */}
-          <div style={boxStyle}>
-            {headerBtn("📅 壱祈音スケジュール", inorionSchedOpen, ()=>setInorionSchedOpen(!inorionSchedOpen))}
-            {inorionSchedOpen && (
-              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"12px 16px"}}>
-                {/* 表示切り替え */}
-                <div style={{display:"flex",gap:8,marginBottom:12}}>
-                  <button onClick={()=>setInorionSchedView("timeline")}
-                    style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:inorionSchedView==="timeline"?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionSchedView==="timeline"?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer"}}>
-                    🗓 タイムライン
-                  </button>
-                  <button onClick={()=>setInorionSchedView("category")}
-                    style={{flex:1,padding:"7px",borderRadius:8,border:"none",background:inorionSchedView==="category"?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(138,74,106,0.1)",color:inorionSchedView==="category"?"#fff":"#8a4a6a",fontSize:12,fontWeight:600,cursor:"pointer"}}>
-                    🏷 種別で見る
-                  </button>
-                </div>
-                {/* 種別フィルター */}
-                {inorionSchedView==="category" && (
-                  <div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:12}}>
-                    {["すべて",...[...new Set(inorionScheds.map(s=>s["種別"]).filter(Boolean))]].map(cat=>(
-                      <button key={cat} onClick={()=>setInorionSchedFilter(cat)}
-                        style={{padding:"4px 10px",borderRadius:6,border:"1px solid "+(inorionSchedFilter===cat?"#8a4a6a":"rgba(138,74,106,0.2)"),background:inorionSchedFilter===cat?"linear-gradient(135deg,#c87aaa,#8a4a6a)":"rgba(255,255,255,0.8)",color:inorionSchedFilter===cat?"#fff":"#6a2a4a",fontSize:11,fontWeight:inorionSchedFilter===cat?700:400,cursor:"pointer"}}>
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {/* スケジュール一覧 */}
-                {(()=>{
-                  const filtered = inorionScheds.filter(s=>inorionSchedView==="timeline" || inorionSchedFilter==="すべて" || s["種別"]===inorionSchedFilter);
-                  if (filtered.length===0) return <p style={{fontSize:13,color:"#8a6a7a",textAlign:"center",padding:8}}>予定はありません</p>;
-                  return (
-                    <div style={{display:"flex",flexDirection:"column",gap:10}}>
-                      {filtered.map((s,i)=>{
-                        const d = new Date(s["日付"]);
-                        const fmtDate = !isNaN(d.getTime()) ? d.getFullYear()+"年"+(d.getMonth()+1)+"月"+d.getDate()+"日（"+WEEKDAYS2[d.getDay()]+"）" : s["日付"];
-                        const typeColor = s["色"] || "#8a4a6a";
-                        return (
-                          <div key={i} style={{background:"rgba(138,74,106,0.05)",borderRadius:10,padding:"10px 12px",borderLeft:"3px solid "+typeColor}}>
-                            <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4,flexWrap:"wrap"}}>
-                              <p style={{fontSize:12,fontWeight:700,color:"#1a3a2a"}}>{fmtDate}</p>
-                              {s["時間"] && <p style={{fontSize:11,color:"#8a6a7a"}}>{s["時間"]}{s["終了時間"]?"〜"+s["終了時間"]:""}</p>}
-                              {s["種別"] && <span style={{fontSize:10,fontWeight:700,color:"#fff",background:typeColor,borderRadius:4,padding:"1px 6px"}}>{s["種別"]}</span>}
-                            </div>
-                            <p style={{fontSize:13,fontWeight:600,color:"#1a3a2a",marginBottom:4}}>{s["タイトル"]}</p>
-                            {s["備考"] && <p style={{fontSize:12,color:"#8a6a7a",marginBottom:6,whiteSpace:"pre-wrap"}}>{s["備考"]}</p>}
-                            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
-                              {s["ZoomURL"] && <a href={s["ZoomURL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#7a9aba,#5a7a8a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>🎥 Zoomに参加</a>}
-                              {s["詳細URL"] && <a href={s["詳細URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"rgba(138,74,106,0.15)",color:"#2a5a3a",fontSize:11,fontWeight:700,textDecoration:"none",border:"1px solid rgba(138,74,106,0.3)"}}>📄 詳細を見る</a>}
-                              {s["申込URL"] && <a href={s["申込URL"]} target="_blank" rel="noreferrer" style={{padding:"4px 10px",borderRadius:6,background:"linear-gradient(135deg,#e8c84a,#b8960a)",color:"#fff",fontSize:11,fontWeight:700,textDecoration:"none"}}>✍️ 申込む</a>}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
               </div>
             )}
           </div>
