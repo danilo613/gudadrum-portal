@@ -3458,12 +3458,18 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode, show
   const isTriplet = stepsPerBar === 12;
 
   // 左手・右手、どちらのデータに由来するかを"L"/"R"としてタグ付けする（同じ色・同じステップに
-  // 左右両方から音があった場合＝両手同時打ちは"LR"としてまとめる）
+  // 左右両方から音があった場合＝両手同時打ちは"LR"としてまとめる）。
+  // 注意：色（Object.keys(pitchMap)）を必ず外側ループにすること。pitchMapは低い音→高い音の
+  // 順で定義されているため、これで hits[localStep] に積む順番が自然にピッチ昇順になる。
+  // 逆（手を外側）にすると、和音の中の音がピッチ順に並ばなくなり、VexFlowが内部で
+  // 勝手にソートし直す（"Unsorted keys" 警告）。そうなると、setKeyStyleやaddModifierで
+  // 使っているインデックス（ki）が、実際に描画される符頭の順番とズレてしまい、色やL/R表示が
+  // 別の符頭についてしまう・五線譜のレイアウトが崩れる、という事故につながる。
   function collectHits(barIndex) {
     const hits = {};
-    [[left,"L"], [right,"R"]].forEach(function(pair){
-      const hand = pair[0], tag = pair[1];
-      Object.keys(pitchMap).forEach(function(color){
+    Object.keys(pitchMap).forEach(function(color){
+      [[left,"L"], [right,"R"]].forEach(function(pair){
+        const hand = pair[0], tag = pair[1];
         if (hand[color]) {
           hand[color].forEach(function(val, globalStep){
             if (!val) return;
@@ -3514,16 +3520,22 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode, show
     const hits = collectHits(barIndex);
     const notes = [];
     const tupletGroups = [];
+    // グループ内で一番高く積み上がるL/R表示の段数（＝一番音数が多い和音の音数）を控えておく。
+    // 3段以上積み上がると、連符の「3」の位置とぶつかってしまうため、後で「3」を持ち上げる時に使う。
+    const tupletMaxStack = [];
     for (let beat = 0; beat < 4; beat++) {
       const groupNotes = [];
+      let maxStack = 0;
       for (let sub = 0; sub < 3; sub++) {
         const step = beat * 3 + sub;
         groupNotes.push(makeNote(hits[step], "8"));
+        if (hits[step]) maxStack = Math.max(maxStack, hits[step].length);
       }
       notes.push.apply(notes, groupNotes);
       tupletGroups.push(groupNotes);
+      tupletMaxStack.push(maxStack);
     }
-    return { notes: notes, tupletGroups: tupletGroups };
+    return { notes: notes, tupletGroups: tupletGroups, tupletMaxStack: tupletMaxStack };
   }
 
   // 16分音符系（1小節=16ステップ）：次の音までの間隔をもとに、標準的な音符の長さへ変換する
@@ -3598,7 +3610,20 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode, show
     voice.draw(context, stave);
     beams.forEach(function(b){ b.setContext(context).draw(); });
     if (result.tupletGroups) {
-      tuplets.forEach(function(t){ t.setContext(context).draw(); });
+      // L/R表示（showHands）中、和音が3段以上積み重なると、連符の「3」の位置と被ってしまう。
+      // Tuplet.draw()は内部で毎回Y座標を再計算して上書きしてしまうため、tuplet.y_posを直接
+      // いじっても効果がない（実測して確認済み）。そこで、SVGのグループごとdrawした後に
+      // transformで見た目上だけ持ち上げる、という方法で回避している。
+      tuplets.forEach(function(t, gi){
+        const maxStack = (result.tupletMaxStack && result.tupletMaxStack[gi]) || 1;
+        const lift = (showHands && maxStack > 2) ? (maxStack - 2) * 22 : 0;
+        const g = (lift && context.openGroup) ? context.openGroup() : null;
+        t.setContext(context).draw();
+        if (g) {
+          if (context.closeGroup) context.closeGroup();
+          g.setAttribute("transform", "translate(0,-" + lift + ")");
+        }
+      });
     }
   }
 }
