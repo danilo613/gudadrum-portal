@@ -3498,7 +3498,12 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode, show
         ann.setFont("Arial", 9, "bold");
         ann.setVerticalJustification(VF.Annotation.VerticalJustify.TOP);
         if (colorMode) ann.setStyle({fillStyle: STAFF_COLOR_HEX[h.color], strokeStyle: STAFF_COLOR_HEX[h.color]});
-        n.addModifier(ann, ki);
+        // 注意：addModifierの引数順は (index, modifier)。世の中のVexFlow 4.x系ドキュメントでは
+        // (modifier, index) の順が案内されていることが多いが、index.htmlで読み込んでいる
+        // cdnjsの vexflow-min.js（4.2.3名義）は実際には古い3.0.9系のAPIで動いており、
+        // 引数の順番が逆。(modifier, index) で呼ぶと「symbol.setNote is not a function」と
+        // いう分かりにくいエラーになり、五線譜が真っ白（描画エラーで全部止まる）になる。
+        n.addModifier(ki, ann);
       });
     }
     return n;
