@@ -3497,12 +3497,14 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode, show
       stepHits.forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
     }
     if (showHands) {
-      // 音符ごとに、その打面を鳴らした手（L/R、同時なら両方でLR）を、符頭の真上に色付きで表示する。
-      // 和音（複数の色が同時に鳴る）の場合は、それぞれの符頭のすぐ上に個別に積み重なって表示される
+      // 音符ごとに、その打面を鳴らした手（L/R、同時なら両方でLR）を、符頭の真下に色付きで表示する。
+      // 和音（複数の色が同時に鳴る）の場合は、それぞれの符頭のすぐ下に個別に積み重なって表示される
       stepHits.forEach(function(h, ki){
         const ann = new VF.Annotation(h.hand || "");
         ann.setFont("Arial", 9, "bold");
-        ann.setVerticalJustification(VF.Annotation.VerticalJustify.TOP);
+        // 符頭の"下"に表示する。以前は上（符尾・連符の「3」と同じ領域）に出していたため、
+        // 密な和音で段数が増えると連符の数字や符尾と衝突していた。下側なら、その心配がない。
+        ann.setVerticalJustification(VF.Annotation.VerticalJustify.BOTTOM);
         if (colorMode) ann.setStyle({fillStyle: STAFF_COLOR_HEX[h.color], strokeStyle: STAFF_COLOR_HEX[h.color]});
         // 注意：addModifierの引数順は (index, modifier)。世の中のVexFlow 4.x系ドキュメントでは
         // (modifier, index) の順が案内されていることが多いが、index.htmlで読み込んでいる
@@ -3520,22 +3522,16 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode, show
     const hits = collectHits(barIndex);
     const notes = [];
     const tupletGroups = [];
-    // グループ内で一番高く積み上がるL/R表示の段数（＝一番音数が多い和音の音数）を控えておく。
-    // 3段以上積み上がると、連符の「3」の位置とぶつかってしまうため、後で「3」を持ち上げる時に使う。
-    const tupletMaxStack = [];
     for (let beat = 0; beat < 4; beat++) {
       const groupNotes = [];
-      let maxStack = 0;
       for (let sub = 0; sub < 3; sub++) {
         const step = beat * 3 + sub;
         groupNotes.push(makeNote(hits[step], "8"));
-        if (hits[step]) maxStack = Math.max(maxStack, hits[step].length);
       }
       notes.push.apply(notes, groupNotes);
       tupletGroups.push(groupNotes);
-      tupletMaxStack.push(maxStack);
     }
-    return { notes: notes, tupletGroups: tupletGroups, tupletMaxStack: tupletMaxStack };
+    return { notes: notes, tupletGroups: tupletGroups };
   }
 
   // 16分音符系（1小節=16ステップ）：次の音までの間隔をもとに、標準的な音符の長さへ変換する
@@ -3610,20 +3606,9 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode, show
     voice.draw(context, stave);
     beams.forEach(function(b){ b.setContext(context).draw(); });
     if (result.tupletGroups) {
-      // L/R表示（showHands）中、和音が3段以上積み重なると、連符の「3」の位置と被ってしまう。
-      // Tuplet.draw()は内部で毎回Y座標を再計算して上書きしてしまうため、tuplet.y_posを直接
-      // いじっても効果がない（実測して確認済み）。そこで、SVGのグループごとdrawした後に
-      // transformで見た目上だけ持ち上げる、という方法で回避している。
-      tuplets.forEach(function(t, gi){
-        const maxStack = (result.tupletMaxStack && result.tupletMaxStack[gi]) || 1;
-        const lift = (showHands && maxStack > 2) ? (maxStack - 2) * 22 : 0;
-        const g = (lift && context.openGroup) ? context.openGroup() : null;
-        t.setContext(context).draw();
-        if (g) {
-          if (context.closeGroup) context.closeGroup();
-          g.setAttribute("transform", "translate(0,-" + lift + ")");
-        }
-      });
+      // L/R表示は符頭の下に出すようにしたので、上側にある連符の「3」とはもうぶつからない
+      // （以前はここで、段数が多いときだけ「3」を持ち上げる特殊処理をしていたが、不要になったので削除）
+      tuplets.forEach(function(t){ t.setContext(context).draw(); });
     }
   }
 }
