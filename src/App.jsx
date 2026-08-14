@@ -3429,7 +3429,10 @@ const SCALE_PITCH_MAPS = {
   equinox: { pink:"f#/3", orange:"a/3", lime:"c#/4", green:"d/4", red:"e/4", purple:"f#/4", brown:"g#/4", yellow:"a/4", cyan:"c#/5" },
   default: { pink:"g/3", orange:"c/4", lime:"d/4", green:"e/4", red:"g/4", purple:"a/4", brown:"b/4", yellow:"c/5", cyan:"d/5" },
 };
-const STAFF_COLOR_HEX = { pink:"#e88ab0", orange:"#e8842a", lime:"#8ac93a", green:"#4a9a68", red:"#e05a4a", purple:"#8888cc", brown:"#a06a3a", yellow:"#e8c95a", cyan:"#4ac9c9" };
+// 五線譜の音符の色は、グーダドラムの打面の色（SCORE_DOT_COLORS、622行目あたりで定義）を
+// そのまま使う。以前はここで別に色を定義していたため、ぐだで設定してる色と五線譜の色が
+// ズレてしまっていた（重複コードの事故）。今後、打面の色を変えたら自動的にこちらにも反映される。
+const STAFF_COLOR_HEX = SCORE_DOT_COLORS;
 
 // 16分音符いくつ分か（1〜16）を、標準的な音符の長さに分解する
 function decomposeDuration_(steps) {
@@ -3443,7 +3446,7 @@ function decomposeDuration_(steps) {
 }
 
 // 1セクション分を、指定したDOMコンテナに五線譜として描画する（本体・全曲印刷、両方から使う共通処理）
-function renderStaffSection_(container, patternData, scale, spb, colorMode) {
+function renderStaffSection_(container, patternData, scale, spb, colorMode, showHands) {
   if (!container || !patternData || !window.Vex) return;
   container.innerHTML = "";
   const VF = window.Vex.Flow;
@@ -3454,17 +3457,25 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode) {
   const stepsPerBar = spb || 16;
   const isTriplet = stepsPerBar === 12;
 
+  // 左手・右手、どちらのデータに由来するかを"L"/"R"としてタグ付けする（同じ色・同じステップに
+  // 左右両方から音があった場合＝両手同時打ちは"LR"としてまとめる）
   function collectHits(barIndex) {
     const hits = {};
-    Object.keys(pitchMap).forEach(function(color){
-      [left, right].forEach(function(hand){
+    [[left,"L"], [right,"R"]].forEach(function(pair){
+      const hand = pair[0], tag = pair[1];
+      Object.keys(pitchMap).forEach(function(color){
         if (hand[color]) {
           hand[color].forEach(function(val, globalStep){
             if (!val) return;
             const localStep = globalStep - barIndex * stepsPerBar;
             if (localStep >= 0 && localStep < stepsPerBar) {
               if (!hits[localStep]) hits[localStep] = [];
-              if (hits[localStep].indexOf(pitchMap[color]) < 0) hits[localStep].push({key:pitchMap[color], color:color});
+              const existing = hits[localStep].find(function(h){ return h.key === pitchMap[color]; });
+              if (existing) {
+                if (existing.hand !== tag) existing.hand = "LR";
+              } else {
+                hits[localStep].push({key:pitchMap[color], color:color, hand:tag});
+              }
             }
           });
         }
@@ -3478,6 +3489,17 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode) {
     const n = new VF.StaveNote({keys: stepHits.map(function(h){return h.key;}), duration: duration});
     if (colorMode) {
       stepHits.forEach(function(h, ki){ n.setKeyStyle(ki, {fillStyle: STAFF_COLOR_HEX[h.color]}); });
+    }
+    if (showHands) {
+      // 音符ごとに、その打面を鳴らした手（L/R、同時なら両方でLR）を、符頭の真上に色付きで表示する。
+      // 和音（複数の色が同時に鳴る）の場合は、それぞれの符頭のすぐ上に個別に積み重なって表示される
+      stepHits.forEach(function(h, ki){
+        const ann = new VF.Annotation(h.hand || "");
+        ann.setFont("Arial", 9, "bold");
+        ann.setVerticalJustification(VF.Annotation.VerticalJustify.TOP);
+        if (colorMode) ann.setStyle({fillStyle: STAFF_COLOR_HEX[h.color], strokeStyle: STAFF_COLOR_HEX[h.color]});
+        n.addModifier(ann, ki);
+      });
     }
     return n;
   }
@@ -3579,14 +3601,15 @@ function renderStaffSection_(container, patternData, scale, spb, colorMode) {
 function StaffNotationView({ patternData, scale, spb }) {
   const containerRef = React.useRef(null);
   const [colorMode, setColorMode] = React.useState(true);
+  const [showHands, setShowHands] = React.useState(true);
   React.useEffect(function(){
-    renderStaffSection_(containerRef.current, patternData, scale, spb, colorMode);
-  }, [patternData, scale, spb, colorMode]);
+    renderStaffSection_(containerRef.current, patternData, scale, spb, colorMode, showHands);
+  }, [patternData, scale, spb, colorMode, showHands]);
 
   return (
     <div style={{background:"#fff",borderRadius:12,padding:"12px",overflowX:"auto",border:"1px solid rgba(0,0,0,0.08)"}}>
       <p style={{fontSize:10,color:"#a87a20",background:"#fff8e8",borderLeft:"3px solid #d4a040",padding:"6px 10px",borderRadius:4,marginBottom:10,lineHeight:1.5}}>
-        🎼 試作機能です。左手・右手の区別はまだありません。
+        🎼 試作機能です。
       </p>
       <div style={{display:"flex",gap:6,marginBottom:10}}>
         <button onClick={()=>setColorMode(true)}
@@ -3597,6 +3620,10 @@ function StaffNotationView({ patternData, scale, spb }) {
           style={{flex:1,padding:"6px 0",borderRadius:8,border:!colorMode?"2px solid #333":"1px solid rgba(0,0,0,0.15)",background:!colorMode?"rgba(0,0,0,0.05)":"#fff",color:!colorMode?"#333":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
           ⚫ 黒
         </button>
+        <button onClick={()=>setShowHands(!showHands)}
+          style={{flex:1,padding:"6px 0",borderRadius:8,border:showHands?"2px solid #3a6a7a":"1px solid rgba(0,0,0,0.15)",background:showHands?"rgba(58,106,122,0.1)":"#fff",color:showHands?"#3a6a7a":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+          🤚 L/R表示
+        </button>
       </div>
       <div ref={containerRef}/>
     </div>
@@ -3605,16 +3632,17 @@ function StaffNotationView({ patternData, scale, spb }) {
 
 // 曲全体（全セクション）を、1つの画面に五線譜としてまとめて表示する（印刷・PDF保存用）
 // 曲全体表示・専用の、トグルUIを持たない軽量な1セクション描画（印刷時に余計なボタンが写り込まないように）
-function StaffSectionPlain_({ patternData, scale, spb, colorMode }) {
+function StaffSectionPlain_({ patternData, scale, spb, colorMode, showHands }) {
   const containerRef = React.useRef(null);
   React.useEffect(function(){
-    renderStaffSection_(containerRef.current, patternData, scale, spb, colorMode);
-  }, [patternData, scale, spb, colorMode]);
+    renderStaffSection_(containerRef.current, patternData, scale, spb, colorMode, showHands);
+  }, [patternData, scale, spb, colorMode, showHands]);
   return <div ref={containerRef}/>;
 }
 
 function FullScoreStaffView({ songTitle, scale, sections, allPatterns }) {
   const [colorMode, setColorMode] = React.useState(true);
+  const [showHands, setShowHands] = React.useState(true);
   return (
     <div>
       <div className="staff-toggle-noprint" style={{display:"flex",gap:6,marginBottom:12}}>
@@ -3625,6 +3653,10 @@ function FullScoreStaffView({ songTitle, scale, sections, allPatterns }) {
         <button onClick={()=>setColorMode(false)}
           style={{flex:1,padding:"6px 0",borderRadius:8,border:!colorMode?"2px solid #333":"1px solid rgba(0,0,0,0.15)",background:!colorMode?"rgba(0,0,0,0.05)":"#fff",color:!colorMode?"#333":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
           ⚫ 黒
+        </button>
+        <button onClick={()=>setShowHands(!showHands)}
+          style={{flex:1,padding:"6px 0",borderRadius:8,border:showHands?"2px solid #3a6a7a":"1px solid rgba(0,0,0,0.15)",background:showHands?"rgba(58,106,122,0.1)":"#fff",color:showHands?"#3a6a7a":"#999",fontSize:11,fontWeight:700,cursor:"pointer"}}>
+          🤚 L/R表示
         </button>
       </div>
       <div style={{background:"#fff",padding:20}}>
@@ -3637,7 +3669,7 @@ function FullScoreStaffView({ songTitle, scale, sections, allPatterns }) {
           return (
             <div key={sectionKey} style={{marginBottom:24}}>
               <div style={{fontSize:14,fontWeight:700,color:"#333",marginBottom:8}}>{sectionLabel}</div>
-              <StaffSectionPlain_ patternData={pd} scale={scale} spb={sectionSpb} colorMode={colorMode}/>
+              <StaffSectionPlain_ patternData={pd} scale={scale} spb={sectionSpb} colorMode={colorMode} showHands={showHands}/>
             </div>
           );
         })}
@@ -4333,6 +4365,9 @@ function App() {
   const [setlistLoaded, setSetlistLoaded] = useState(true);
   const [practiceAnswers, setPracticeAnswers] = useState([]);
   const [practiceLoaded, setPracticeLoaded] = useState(false); // "arcane"=響ノ音 "enigma"=秘ノ音 // "single" or "queue"
+  const [inorionRoles, setInorionRoles] = useState([]);
+  const [inorionRolesLoaded, setInorionRolesLoaded] = useState(false);
+  const [roleAssignOpen, setRoleAssignOpen] = useState(false);
   const [subscriptions, setSubscriptions] = useState([]);
   const [showSubs, setShowSubs] = useState(false);
   const [subsLoaded, setSubsLoaded] = useState(false);
@@ -5975,6 +6010,16 @@ function App() {
       setPracticeAnswers([]);
     }
     setPracticeLoaded(true);
+  }
+
+  async function fetchInorionRoles() {
+    try {
+      const res = await gasRead({ action: "getinorionroles" });
+      setInorionRoles((res && res.roles) || []);
+    } catch(e) {
+      setInorionRoles([]);
+    }
+    setInorionRolesLoaded(true);
   }
 
   async function fetchMemberMap() {
@@ -11591,6 +11636,48 @@ function App() {
                   ※前半とは、1曲目「律」〜9曲目「Heartbeat of L**E」まで<br/>
                   　後半とは10曲目「dreamy EYES」〜アンコール「蒼〜aoi〜」まで
                 </p>
+              </div>
+            )}
+          </div>
+
+          {/* 当日の役割分担 */}
+          <div style={boxStyle}>
+            {headerBtn("📋 当日の役割分担", roleAssignOpen, ()=>{setRoleAssignOpen(!roleAssignOpen);if(!inorionRolesLoaded)fetchInorionRoles();})}
+            {roleAssignOpen && (
+              <div style={{borderTop:"1px solid rgba(138,74,106,0.15)",padding:"14px 16px"}}>
+                {!inorionRolesLoaded ? (
+                  <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>読み込み中…</p>
+                ) : inorionRoles.length === 0 ? (
+                  <p style={{fontSize:12,color:"#8a6a7a",textAlign:"center",padding:8}}>まだ役割分担は登録されていません</p>
+                ) : (function(){
+                  // フェーズ（開演前／終演後など）ごとにグルーピングする。並び順はスプレッドシートに
+                  // 書かれている順番をそのまま使う（アルファベット順などに並べ替えない）
+                  var phases = [];
+                  var byPhase = {};
+                  inorionRoles.forEach(function(r){
+                    var ph = r.phase || "";
+                    if (!byPhase[ph]) { byPhase[ph] = []; phases.push(ph); }
+                    byPhase[ph].push(r);
+                  });
+                  return phases.map(function(ph){
+                    return (
+                      <div key={ph} style={{marginBottom:14}}>
+                        {ph && <p style={{fontSize:12,fontWeight:700,color:"#8a4a6a",marginBottom:6,letterSpacing:"0.05em"}}>〜{ph}〜</p>}
+                        {byPhase[ph].map(function(r, ri){
+                          return (
+                            <div key={ri} style={{marginBottom:8,paddingBottom:8,borderBottom:ri<byPhase[ph].length-1?"1px dashed rgba(138,74,106,0.12)":"none"}}>
+                              <p style={{fontSize:12,fontWeight:700,color:"#6a2a4a"}}>
+                                {r.role}
+                                {r.note && <span style={{fontSize:10,fontWeight:400,color:"#8a6a7a"}}>　（{r.note}）</span>}
+                              </p>
+                              <p style={{fontSize:12,color:"#4a2a3a",marginTop:2}}>{r.members.join("、") || "—"}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             )}
           </div>
